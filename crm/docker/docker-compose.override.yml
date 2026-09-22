@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  frappe:
+    ports: !override
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:9000:9000"
+    dns:
+      - 8.8.8.8
+    command: >
+      bash -c "for i in $(seq 1 90); do getent hosts pypi.org >/dev/null 2>&1 && getent hosts api.github.com >/dev/null 2>&1 && break; echo 'Waiting for DNS...'; sleep 1; done; exec bash /workspace/init.sh"
+    volumes:
+      - .:/workspace
+      - frappe-bench-data:/home/frappe
+
+volumes:
+  frappe-bench-data:
