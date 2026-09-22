@@ -1,0 +1,8 @@
+services:
+  postgres:
+    ports: !override
+      - '127.0.0.1:15432:5432'
+    environment: !override
+      - POSTGRES_DB=chatwoot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
