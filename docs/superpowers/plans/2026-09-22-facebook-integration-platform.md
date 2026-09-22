@@ -18,6 +18,27 @@
 
 ---
 
+## Execution Status (as of 2026-09-22)
+
+Tracked here instead of only in the (gitignored) SDD ledger so this survives outside any one working tree. See `git log` for full detail on every commit named below.
+
+| Task | Status |
+|---|---|
+| 0 — Facebook App | **Not started.** Manual, external to any dev environment — needs a human with Meta Business Manager access. |
+| 1 — Init repo, clone vendored dirs | **Done.** |
+| 2 — Deploy Chatwoot | **Done.** Runs, verified `200`/`302`. |
+| 3 — Deploy Frappe CRM | **Done.** Fixed 2 real bugs in this task's own override YAML (missing `!override` on `ports:`; DNS retry window too short) — commit `33a40ef`. |
+| 4 — Deploy n8n | **Done.** |
+| 5 — Caddy reverse proxy | **Files only, not run.** Needs a real DNS domain pointed at a real VPS (Global Constraints) — this dev environment has neither. Fixed a Host-header bug for the CRM proxy block — commit `5f54914`. |
+| 6 — CRM custom field `chatwoot_contact_id` | **Done.** Also wired into `after_install`/a migrate patch and seeded `Messenger`/`Instagram` `CRM Lead Source` records, both found missing by review — commit `c371a31`. |
+| 7 — Frappe API key for n8n | **Done** (headlessly, not via UI). |
+| 8 — dedupe.js unit tests | **Done.** Filter/first_name bugs found by review, fixed with new failing-then-passing tests — commit `fb34bb9`. |
+| 9 — n8n workflow | **Done, and actually verified end-to-end** (not just built) — commits `aeed8bf`, `b78d4e3`, `38bade4`, `8292d22`. The first pass had 5 real defects (signature format, payload shape, CRM schema, wrong doctype, dedup filter) all found by a fresh-context review of the diff and confirmed against the vendored `chatwoot/`/`crm/` source, not guessed at. All fixed and re-verified against the real running stacks. |
+| 10 — End-to-end test | **Step 1 done** (wrong signature correctly rejected). **Steps 2-5 blocked** — need a real Chatwoot→n8n webhook delivery, which needs Task 5 live. The equivalent logic was exercised directly instead (see Task 9's note) as the best available substitute in this environment. |
+| 11 — Security checklist | **Done.** All 3 steps pass; no real secret anywhere in git history (checked past the plan's own grep, including a full-history high-entropy scan). |
+
+---
+
 ## Phase 0: Meta App & Business Manager Setup
 
 ### Task 0: Tạo Facebook App và lấy quyền cần thiết
