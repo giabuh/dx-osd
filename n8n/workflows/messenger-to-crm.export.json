@@ -6,41 +6,43 @@
         "httpMethod": "POST",
         "path": "chatwoot-sync",
         "responseMode": "lastNode",
-        "options": {}
+        "options": {
+          "rawBody": true
+        }
       },
       "id": "webhook-trigger",
       "name": "Chatwoot Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -400,
+        -600,
         0
       ],
-      "webhookId": "b3d122d6-244b-44a7-913f-12db1b8feb55"
+      "webhookId": "29d7f1e6-1518-4fe1-bdcd-d6f60e7efc86"
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst secret = 'SIGNING_SECRET_TU_STEP_1';\nconst rawBody = JSON.stringify($input.item.json.body ?? $input.item.json);\nconst expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');\nconst received = $input.item.json.headers['x-chatwoot-signature'];\n\nif (expected !== received) {\n\tthrow new Error('Invalid Chatwoot webhook signature');\n}\n\nreturn $input.item;\n"
+        "jsCode": "const crypto = require('crypto');\nconst secret = 'SIGNING_SECRET_TU_STEP_1';\nconst timestamp = $input.item.json.headers['x-chatwoot-timestamp'];\nconst rawBody = Buffer.from($input.item.binary.data.data, 'base64').toString('utf8');\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(timestamp + '.' + rawBody).digest('hex');\nconst received = $input.item.json.headers['x-chatwoot-signature'] || '';\n\nconst expectedBuf = Buffer.from(expected);\nconst receivedBuf = Buffer.from(received);\nconst validSignature = expectedBuf.length === receivedBuf.length && crypto.timingSafeEqual(expectedBuf, receivedBuf);\nif (!validSignature) {\n\tthrow new Error('Invalid Chatwoot webhook signature');\n}\n\nconst tsNum = parseInt(timestamp, 10);\nif (!tsNum || Math.abs(Date.now() / 1000 - tsNum) > 300) {\n\tthrow new Error('Chatwoot webhook timestamp missing or too old (possible replay)');\n}\n\nreturn $input.item;\n"
       },
       "id": "verify-signature",
       "name": "Verify Signature",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -200,
+        -400,
         0
       ]
     },
     {
       "parameters": {
-        "jsCode": "function normalizePhone(raw) {\n\tconst digits = raw.replace(/[\\s-]/g, '');\n\tif (digits.startsWith('+84')) return digits;\n\tif (digits.startsWith('0')) return '+84' + digits.slice(1);\n\treturn digits;\n}\n\nfunction buildLeadSearchFilters({ email, phone }) {\n\treturn [\n\t\t['CRM Lead', 'email', '=', email],\n\t\t['CRM Lead', 'mobile_no', '=', normalizePhone(phone)],\n\t];\n}\n\nfunction buildNewLeadPayload({ source, name, email, phone, chatwootContactId }) {\n\treturn {\n\t\tsource,\n\t\tlead_name: name,\n\t\temail,\n\t\tmobile_no: normalizePhone(phone),\n\t\tchatwoot_contact_id: chatwootContactId,\n\t};\n}\n\nconst contact = $input.item.json.body.conversation.meta.sender;\nconst conversationId = $input.item.json.body.conversation.id;\nconst email = contact.email || '';\nconst phone = contact.phone_number || '';\nconst payload = buildNewLeadPayload({\n\tsource: $input.item.json.body.conversation.channel.includes('Instagram') ? 'Instagram' : 'Messenger',\n\tname: contact.name,\n\temail,\n\tphone,\n\tchatwootContactId: String(contact.id),\n});\nconst searchFilters = buildLeadSearchFilters({ email, phone });\n\nreturn { json: { contact, payload, searchFilters, conversationId } };\n"
+        "jsCode": "function normalizePhone(raw) {\n\tconst digits = raw.replace(/[\\s-]/g, '');\n\tif (digits.startsWith('+84')) return digits;\n\tif (digits.startsWith('0')) return '+84' + digits.slice(1);\n\treturn digits;\n}\n\nfunction buildLeadSearchFilters({ email, phone }) {\n\tconst conditions = [];\n\tif (email) conditions.push(['CRM Lead', 'email', '=', email]);\n\tif (phone) conditions.push(['CRM Lead', 'mobile_no', '=', normalizePhone(phone)]);\n\treturn conditions.length ? conditions : null;\n}\n\nfunction buildNewLeadPayload({ source, name, email, phone, chatwootContactId }) {\n\treturn {\n\t\tsource,\n\t\tfirst_name: name || 'Unknown',\n\t\tlead_name: name,\n\t\temail,\n\t\tmobile_no: normalizePhone(phone),\n\t\tchatwoot_contact_id: chatwootContactId,\n\t};\n}\n\n// Chatwoot's conversation_created payload is NOT wrapped in a \"conversation\" key --\n// conversation.webhook_data.merge(event: ...) puts id/channel/meta at the top level.\nconst body = $input.item.json.body;\nif (body.event !== 'conversation_created') {\n\tthrow new Error(`Unsupported Chatwoot event: ${body.event}`);\n}\n\nconst contact = body.meta.sender;\nconst conversationId = body.id;\nconst email = contact.email || '';\nconst phone = contact.phone_number || '';\nconst payload = buildNewLeadPayload({\n\tsource: (body.channel || '').includes('Instagram') ? 'Instagram' : 'Messenger',\n\tname: contact.name,\n\temail,\n\tphone,\n\tchatwootContactId: String(contact.id),\n});\nconst searchFilters = buildLeadSearchFilters({ email, phone });\n\nreturn { json: { contact, payload, searchFilters, conversationId } };\n"
       },
       "id": "build-lead-payload",
       "name": "Build Lead Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        0,
+        -200,
         0
       ]
     },
@@ -54,7 +56,7 @@
           },
           "conditions": [
             {
-              "id": "c1",
+              "id": "if-already-mapped-c",
               "leftValue": "={{ $json.contact.custom_attributes.crm_lead_id }}",
               "rightValue": "",
               "operator": {
@@ -73,26 +75,59 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        200,
+        0,
         0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "if-has-search-filters-c",
+              "leftValue": "={{ $json.searchFilters }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-search-filters",
+      "name": "Has email or phone to search on?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        200,
+        150
       ]
     },
     {
       "parameters": {
         "method": "GET",
         "url": "https://crm.example.com/api/resource/CRM Lead",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
-              "name": "filters",
+              "name": "or_filters",
               "value": "={{ JSON.stringify($json.searchFilters) }}"
             }
           ]
-        },
-        "options": {},
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth"
+        }
       },
       "id": "search-existing-lead",
       "name": "Search Existing Lead",
@@ -100,7 +135,7 @@
       "typeVersion": 4.2,
       "position": [
         400,
-        150
+        250
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -119,7 +154,7 @@
           },
           "conditions": [
             {
-              "id": "c2",
+              "id": "if-lead-exists-c",
               "leftValue": "={{ $json.data.length }}",
               "rightValue": 0,
               "operator": {
@@ -138,19 +173,19 @@
       "typeVersion": 2,
       "position": [
         600,
-        150
+        250
       ]
     },
     {
       "parameters": {
         "method": "PATCH",
         "url": "=https://crm.example.com/api/resource/CRM Lead/{{ $json.data[0].name }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { chatwoot_contact_id: String($('Build Lead Payload').item.json.contact.id) } }}",
-        "options": {},
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ { chatwoot_contact_id: String($('Build Lead Payload').item.json.contact.id) } }}"
       },
       "id": "update-lead",
       "name": "Update existing Lead",
@@ -158,7 +193,7 @@
       "typeVersion": 4.2,
       "position": [
         800,
-        50
+        150
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -171,12 +206,12 @@
       "parameters": {
         "method": "POST",
         "url": "https://crm.example.com/api/resource/CRM Lead",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ $('Build Lead Payload').item.json.payload }}",
-        "options": {},
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ $('Build Lead Payload').item.json.payload }}"
       },
       "id": "create-lead",
       "name": "Create new Lead",
@@ -184,7 +219,7 @@
       "typeVersion": 4.2,
       "position": [
         800,
-        250
+        350
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -196,20 +231,20 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://crm.example.com/api/resource/CRM Notes",
+        "url": "https://crm.example.com/api/resource/FCRM Note",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { lead: $json.contact.custom_attributes.crm_lead_id, note: 'New message from Chatwoot conversation #' + $json.conversationId } }}",
-        "options": {},
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ { reference_doctype: 'CRM Lead', reference_docname: $json.contact.custom_attributes.crm_lead_id, title: 'New message from Chatwoot conversation #' + $json.conversationId, content: 'New message from Chatwoot conversation #' + $json.conversationId } }}"
       },
       "id": "log-activity",
       "name": "Log Activity",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        400,
+        200,
         -150
       ],
       "credentials": {
@@ -223,12 +258,12 @@
       "parameters": {
         "method": "PUT",
         "url": "=https://chat.example.com/api/v1/accounts/1/contacts/{{ $('Build Lead Payload').item.json.contact.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { custom_attributes: { crm_lead_id: $json.data.name } } }}",
-        "options": {},
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth"
+        "jsonBody": "={{ { custom_attributes: { crm_lead_id: $json.data.name } } }}"
       },
       "id": "write-back-chatwoot",
       "name": "Write crm_lead_id back to Chatwoot",
@@ -236,7 +271,7 @@
       "typeVersion": 4.2,
       "position": [
         1000,
-        150
+        250
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -291,7 +326,25 @@
         ],
         [
           {
+            "node": "Has email or phone to search on?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has email or phone to search on?": {
+      "main": [
+        [
+          {
             "node": "Search Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create new Lead",
             "type": "main",
             "index": 0
           }
