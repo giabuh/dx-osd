@@ -1,0 +1,347 @@
+{
+  "name": "messenger-to-crm",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatwoot-sync",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Chatwoot Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ],
+      "webhookId": "b3d122d6-244b-44a7-913f-12db1b8feb55"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = 'SIGNING_SECRET_TU_STEP_1';\nconst rawBody = JSON.stringify($input.item.json.body ?? $input.item.json);\nconst expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');\nconst received = $input.item.json.headers['x-chatwoot-signature'];\n\nif (expected !== received) {\n\tthrow new Error('Invalid Chatwoot webhook signature');\n}\n\nreturn $input.item;\n"
+      },
+      "id": "verify-signature",
+      "name": "Verify Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function normalizePhone(raw) {\n\tconst digits = raw.replace(/[\\s-]/g, '');\n\tif (digits.startsWith('+84')) return digits;\n\tif (digits.startsWith('0')) return '+84' + digits.slice(1);\n\treturn digits;\n}\n\nfunction buildLeadSearchFilters({ email, phone }) {\n\treturn [\n\t\t['CRM Lead', 'email', '=', email],\n\t\t['CRM Lead', 'mobile_no', '=', normalizePhone(phone)],\n\t];\n}\n\nfunction buildNewLeadPayload({ source, name, email, phone, chatwootContactId }) {\n\treturn {\n\t\tsource,\n\t\tlead_name: name,\n\t\temail,\n\t\tmobile_no: normalizePhone(phone),\n\t\tchatwoot_contact_id: chatwootContactId,\n\t};\n}\n\nconst contact = $input.item.json.body.conversation.meta.sender;\nconst conversationId = $input.item.json.body.conversation.id;\nconst email = contact.email || '';\nconst phone = contact.phone_number || '';\nconst payload = buildNewLeadPayload({\n\tsource: $input.item.json.body.conversation.channel.includes('Instagram') ? 'Instagram' : 'Messenger',\n\tname: contact.name,\n\temail,\n\tphone,\n\tchatwootContactId: String(contact.id),\n});\nconst searchFilters = buildLeadSearchFilters({ email, phone });\n\nreturn { json: { contact, payload, searchFilters, conversationId } };\n"
+      },
+      "id": "build-lead-payload",
+      "name": "Build Lead Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.contact.custom_attributes.crm_lead_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-already-mapped",
+      "name": "Already mapped to a Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://crm.example.com/api/resource/CRM Lead",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ JSON.stringify($json.searchFilters) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "search-existing-lead",
+      "name": "Search Existing Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        150
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YnWkgkOOXptzjdJ5",
+          "name": "Frappe CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.data.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-lead-exists",
+      "name": "Lead already exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://crm.example.com/api/resource/CRM Lead/{{ $json.data[0].name }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { chatwoot_contact_id: String($('Build Lead Payload').item.json.contact.id) } }}",
+        "options": {}
+      },
+      "id": "update-lead",
+      "name": "Update existing Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        50
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YnWkgkOOXptzjdJ5",
+          "name": "Frappe CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://crm.example.com/api/resource/CRM Lead",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Build Lead Payload').item.json.payload }}",
+        "options": {}
+      },
+      "id": "create-lead",
+      "name": "Create new Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        250
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YnWkgkOOXptzjdJ5",
+          "name": "Frappe CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://crm.example.com/api/resource/CRM Notes",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { lead: $json.contact.custom_attributes.crm_lead_id, note: 'New message from Chatwoot conversation #' + $json.conversationId } }}",
+        "options": {}
+      },
+      "id": "log-activity",
+      "name": "Log Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -150
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YnWkgkOOXptzjdJ5",
+          "name": "Frappe CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://chat.example.com/api/v1/accounts/1/contacts/{{ $('Build Lead Payload').item.json.contact.id }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { custom_attributes: { crm_lead_id: $json.data.name } } }}",
+        "options": {}
+      },
+      "id": "write-back-chatwoot",
+      "name": "Write crm_lead_id back to Chatwoot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        150
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SBlynpf3gwEc86ev",
+          "name": "Chatwoot API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chatwoot Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Signature": {
+      "main": [
+        [
+          {
+            "node": "Build Lead Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Lead Payload": {
+      "main": [
+        [
+          {
+            "node": "Already mapped to a Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already mapped to a Lead?": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Lead already exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead already exists?": {
+      "main": [
+        [
+          {
+            "node": "Update existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create new Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Write crm_lead_id back to Chatwoot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new Lead": {
+      "main": [
+        [
+          {
+            "node": "Write crm_lead_id back to Chatwoot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": true
+}
