@@ -3,7 +3,9 @@ chat.example.com {
 }
 
 crm.example.com {
-    reverse_proxy 127.0.0.1:8000
+    reverse_proxy 127.0.0.1:8000 {
+        header_up Host crm.localhost
+    }
 }
 
 n8n.example.com {
