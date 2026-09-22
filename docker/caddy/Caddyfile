@@ -1,0 +1,11 @@
+chat.example.com {
+    reverse_proxy 127.0.0.1:3000
+}
+
+crm.example.com {
+    reverse_proxy 127.0.0.1:8000
+}
+
+n8n.example.com {
+    reverse_proxy 127.0.0.1:5678
+}
