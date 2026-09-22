@@ -1,0 +1,5 @@
+chatwoot/
+crm/
+messenger-platform-samples/
+docker/**/.env
+n8n/.n8n/
