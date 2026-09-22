@@ -1,9 +1,3 @@
-/chatwoot/
-crm/*
-!crm/docker/
-crm/docker/*
-!crm/docker/docker-compose.override.yml
-messenger-platform-samples/
 docker/**/.env
 n8n/.n8n/
 scripts/seed-shared-accounts/credentials.local.json
