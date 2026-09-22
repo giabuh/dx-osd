@@ -1,0 +1,25 @@
+{
+  "chatwoot": {
+    "url": "http://127.0.0.1:3000",
+    "container": "chatwoot-rails-1",
+    "account_id": 1
+  },
+  "frappe": {
+    "url": "http://127.0.0.1:8000",
+    "host_header": "crm.localhost"
+  },
+  "users": [
+    {
+      "name": "Sales Agent",
+      "email": "sales.agent@dx-osd.local",
+      "chatwoot_role": "agent",
+      "frappe_roles": ["Sales User"]
+    },
+    {
+      "name": "Support Agent",
+      "email": "support.agent@dx-osd.local",
+      "chatwoot_role": "agent",
+      "frappe_roles": ["Sales User"]
+    }
+  ]
+}
