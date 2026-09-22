@@ -178,7 +178,7 @@
     },
     {
       "parameters": {
-        "method": "PATCH",
+        "method": "PUT",
         "url": "=https://crm.example.com/api/resource/CRM Lead/{{ $json.data[0].name }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
