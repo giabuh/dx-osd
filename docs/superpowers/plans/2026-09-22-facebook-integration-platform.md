@@ -96,6 +96,7 @@ Expected: `chatwoot/`, `crm/`, `messenger-platform-samples/` xuất hiện dư�
 
 **Files:**
 - Create: `chatwoot/.env` (copy từ `chatwoot/.env.example`, không tạo file mới ngoài `chatwoot/`)
+- Create: `docker/chatwoot/docker-compose.override.yaml` (fix 2 lỗi trong `chatwoot/docker-compose.production.yaml` phát hiện khi chạy thật — xem Step 3)
 
 **Interfaces:**
 - Consumes: không có
@@ -120,21 +121,47 @@ FRONTEND_URL=https://chat.example.com
 RAILS_ENV=production
 ```
 
-- [ ] **Step 3: Chạy stack và chuẩn bị database**
+- [ ] **Step 3: Viết override cố định fix 2 lỗi phát hiện khi chạy thật**
+
+`chatwoot/docker-compose.production.yaml` có 2 vấn đề không thể sửa trực tiếp (Global Constraint: không sửa code trong `chatwoot/`): (a) service `postgres` map cứng host port `127.0.0.1:5432:5432`, dễ đụng Postgres khác đã chạy sẵn trên host; (b) service `postgres` hard-code `POSTGRES_PASSWORD=` (rỗng) và không có `env_file`, nên giá trị đặt ở Step 2 không bao giờ tới được container `postgres` — nó crash-loop với lỗi "Database is uninitialized and superuser password is not specified". Viết `docker/chatwoot/docker-compose.override.yaml`:
+
+```yaml
+services:
+  postgres:
+    ports: !override
+      - '127.0.0.1:15432:5432'
+    environment: !override
+      - POSTGRES_DB=chatwoot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+```
+
+(`!override` bắt buộc — merge mặc định của Compose NỐI THÊM vào list `ports`/`environment` thay vì thay thế, để lại mapping `5432` cũ gây xung đột port. `${POSTGRES_PASSWORD}` được Compose tự lấy từ `chatwoot/.env` vì đó là thư mục chứa file `-f` đầu tiên trong lệnh ở Step 4.)
+
+- [ ] **Step 4: Chạy stack và chuẩn bị database**
 
 Run:
 ```bash
 cd /home/giabao/dev/MMM/chatwoot
-docker compose -f docker-compose.production.yaml up -d postgres redis
+docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml up -d postgres redis
 sleep 5
-docker compose -f docker-compose.production.yaml run --rm rails bundle exec rails db:chatwoot_prepare
-docker compose -f docker-compose.production.yaml up -d
+docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml run --rm rails bundle exec rails db:chatwoot_prepare
+docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml up -d
 ```
 
-- [ ] **Step 4: Verify**
+- [ ] **Step 5: Verify**
 
 Run: `curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000`
-Expected: `200` (hoặc `302` redirect tới `/app/login` — cả hai đều nghĩa là Rails đã lên). Nếu connection refused, chạy `docker compose -f docker-compose.production.yaml logs rails --tail 50` để xem lỗi thật, không đoán.
+Expected: `200` (hoặc `302` redirect tới `/app/login` hoặc `/installation/onboarding` — cả 3 đều nghĩa là Rails đã lên). Nếu connection refused, chạy `docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml logs rails --tail 50` để xem lỗi thật, không đoán.
+
+- [ ] **Step 6: Commit override file**
+
+Run:
+```bash
+cd /home/giabao/dev/MMM
+git add docker/chatwoot/docker-compose.override.yaml
+git commit -m "fix(chatwoot): pin postgres host port and wire POSTGRES_PASSWORD via override"
+```
 
 ### Task 3: Deploy Frappe CRM (fix persistence + dùng compose có sẵn)
 
