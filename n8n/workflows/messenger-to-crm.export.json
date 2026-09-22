@@ -90,7 +90,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "search-existing-lead",
       "name": "Search Existing Lead",
@@ -146,7 +148,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { chatwoot_contact_id: String($('Build Lead Payload').item.json.contact.id) } }}",
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "update-lead",
       "name": "Update existing Lead",
@@ -170,7 +174,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ $('Build Lead Payload').item.json.payload }}",
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "create-lead",
       "name": "Create new Lead",
@@ -194,7 +200,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { lead: $json.contact.custom_attributes.crm_lead_id, note: 'New message from Chatwoot conversation #' + $json.conversationId } }}",
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "log-activity",
       "name": "Log Activity",
@@ -218,7 +226,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { custom_attributes: { crm_lead_id: $json.data.name } } }}",
-        "options": {}
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "id": "write-back-chatwoot",
       "name": "Write crm_lead_id back to Chatwoot",
