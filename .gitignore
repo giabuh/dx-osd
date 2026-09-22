@@ -6,3 +6,5 @@ crm/docker/*
 messenger-platform-samples/
 docker/**/.env
 n8n/.n8n/
+__pycache__/
+*.pyc

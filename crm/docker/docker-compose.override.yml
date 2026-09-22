@@ -11,6 +11,7 @@ services:
     volumes:
       - .:/workspace
       - frappe-bench-data:/home/frappe
+      - ../../frappe-custom/mmm_custom:/home/frappe/frappe-bench/apps/mmm_custom
 
 volumes:
   frappe-bench-data:
