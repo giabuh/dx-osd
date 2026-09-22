@@ -172,9 +172,13 @@ git commit -m "fix(chatwoot): pin postgres host port and wire POSTGRES_PASSWORD 
 - Consumes: không có
 - Produces: Frappe container lắng nghe `127.0.0.1:8000`, site `crm.localhost`, admin password `admin` (từ `crm/docker/init.sh`) — Task 4 (custom field) và Task 5 (Caddy) dùng lại các giá trị này.
 
-- [ ] **Step 1: Viết override — fix port binding và persist bench**
+- [ ] **Step 1: Viết override — fix port binding, persist bench, fix DNS**
 
-`crm/docker/init.sh` chỉ `bench init` một lần rồi bỏ qua nếu `apps/frappe` đã tồn tại, nhưng `crm/docker/docker-compose.yml` KHÔNG có volume cho `/home/frappe/frappe-bench` — nghĩa là mọi state (kể cả app custom sẽ thêm ở Phase 3) mất khi container bị xoá. Override này fix cả 2 vấn đề:
+`crm/docker/init.sh` chỉ `bench init` một lần rồi bỏ qua nếu `apps/frappe` đã tồn tại, nhưng `crm/docker/docker-compose.yml` KHÔNG có volume cho `/home/frappe/frappe-bench` — nghĩa là mọi state (kể cả app custom sẽ thêm ở Phase 3) mất khi container bị xoá. Override này fix cả 2 vấn đề, cộng 2 lỗi khác phát hiện khi chạy thật (xem ledger `Task 3` cho bằng chứng đầy đủ):
+
+- **Mount target phải là `/home/frappe` (cả home dir), không phải `/home/frappe/frappe-bench`**: mount 1 named volume thẳng vào `/home/frappe/frappe-bench` khiến Docker tự tạo sẵn thư mục đó làm mount point TRƯỚC KHI `init.sh` chạy dòng đầu tiên — với BẤT KỲ volume nào, kể cả rỗng. `bench init`'s check chỉ là `os.path.exists()` trần trụi (không phân biệt rỗng hay không), nên luôn báo "already exists" và no-op, làm mọi lệnh `bench` sau đó cascade lỗi. Mount cả `/home/frappe` thì Docker tự populate volume rỗng bằng nội dung sẵn có trong image (`.bench/`, `.local/`, ...) còn `frappe-bench/` (thứ mục thực sự không có sẵn trong image, chỉ được `bench init` tạo ra) vẫn đúng nghĩa "chưa tồn tại" ở lần chạy đầu.
+- **Cần pin `dns: [8.8.8.8]` cho service `frappe`**: trên máy có Tailscale chạy, Docker daemon có thể gán nhầm `/etc/resolv.conf` của container mới tạo trỏ thẳng vào stub resolver của host (`127.0.0.53`, không dùng được từ network namespace của container) thay vì DNS nội bộ đúng của Docker — làm mọi lookup DNS ra ngoài (`bench get-app` cần GitHub, `uv venv` cần PyPI) fail với "Temporary failure in name resolution". `mariadb`/`redis` trong cùng file không bị (tự nhận đúng DNS nội bộ), chỉ `frappe` bị. (Đã thử pin `127.0.0.11` — DNS nội bộ của Docker — trước, nhưng giá trị đó tự forward-loop vào chính nó khi bị set tường minh qua `dns:`; `8.8.8.8` verify hoạt động đúng.)
+- **Cần retry-wrapper chờ DNS sẵn sàng trước khi chạy `init.sh`**: kể cả với `dns: [8.8.8.8]` đúng, có hiện tượng chập chờn ở tầng Docker/host khiến DNS fail đúng trong vài giây đầu container mới start (0.3-10s, không tái hiện được khi test container riêng lẻ) — không sửa được bằng giá trị `dns:` tĩnh. Wrapper cho container tự đợi/thử lại tối đa 15s trước khi giao cho `init.sh` chạy thật, không đụng tới `init.sh` gốc (vẫn giữ nguyên qua `exec`).
 
 ```yaml
 version: "3.7"
@@ -183,9 +187,13 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
       - "127.0.0.1:9000:9000"
+    dns:
+      - 8.8.8.8
+    command: >
+      bash -c "for i in $(seq 1 15); do getent hosts pypi.org >/dev/null 2>&1 && break; echo 'Waiting for DNS...'; sleep 1; done; exec bash /workspace/init.sh"
     volumes:
       - .:/workspace
-      - frappe-bench-data:/home/frappe/frappe-bench
+      - frappe-bench-data:/home/frappe
 
 volumes:
   frappe-bench-data:
@@ -290,6 +298,16 @@ Run: `docker compose up -d`
 
 Run: `curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:5678`
 Expected: `200`.
+
+- [ ] **Step 5: Commit**
+
+Run:
+```bash
+cd /home/giabao/dev/MMM
+git add docker/n8n/docker-compose.yml
+git commit -m "feat(n8n): add n8n stack docker-compose config"
+```
+(`docker/n8n/.env` is gitignored via `docker/**/.env` from Task 1 — do not force-add it.)
 
 ### Task 5: Caddy reverse proxy (TLS cho cả 3 subdomain)
 
