@@ -18,3 +18,19 @@ def create_custom_field():
 	}).insert(ignore_permissions=True)
 	frappe.db.commit()
 	print("Custom field created")
+
+
+def create_lead_sources():
+	# Same pattern as upstream's own crm/patches/v1_0/add_fb_lead_source.py.
+	# "Facebook" already exists upstream but doesn't distinguish Messenger from
+	# Instagram DMs, which the n8n Chatwoot-CRM sync workflow needs to set as
+	# CRM Lead.source.
+	for source_name in ("Messenger", "Instagram"):
+		frappe.get_doc({"doctype": "CRM Lead Source", "source_name": source_name}).insert(ignore_if_duplicate=True)
+	frappe.db.commit()
+	print("Lead sources created")
+
+
+def create_custom_field_and_lead_sources():
+	create_custom_field()
+	create_lead_sources()

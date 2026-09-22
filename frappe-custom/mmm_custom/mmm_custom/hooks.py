@@ -82,8 +82,7 @@ app_license = "mit"
 # Installation
 # ------------
 
-# before_install = "mmm_custom.install.before_install"
-# after_install = "mmm_custom.install.after_install"
+after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
 
 # Uninstallation
 # ------------
