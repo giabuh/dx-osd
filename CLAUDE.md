@@ -23,7 +23,8 @@ These three directories are **first-class, tracked source in this repo now** —
 
 - Each still carries its upstream `LICENSE` file — keep those; the copyright/license terms of the giants we're building on stay intact even though we no longer track upstream's CI/contribution workflow (their `.github/` directories were deliberately removed — this project doesn't run their CI or accept upstream-style PRs).
 - Each has its own `AGENTS.md`/`CLAUDE.md` (`chatwoot/CLAUDE.md`, `chatwoot/AGENTS.md`, `crm/AGENTS.md`) with useful internal dev commands (build/test/lint) — this file does not duplicate those, but their conventions no longer bind changes made for DX-OSD's own purposes.
-- There is no upstream remote wired up anymore. Pulling future upstream updates means fetching the new version manually and re-applying any local customizations — this repo has traded easy upstream syncing for a single self-contained codebase.
+- There is no upstream remote wired up anymore. Pulling future upstream updates means fetching the new version manually and re-applying any local customizations — this repo has traded easy upstream syncing for a single self-contained codebase. **`docs/vendored-upstreams.md`** holds the baselines, the re-sync procedure, and the log of every edit made inside a vendored directory — add a row there whenever you edit one.
+- **Runtime gap:** neither stack runs this vendored source yet — Chatwoot uses the `chatwoot/chatwoot:latest` image and CRM's `init.sh` does `bench get-app crm --branch main` from GitHub. Edits to Chatwoot/CRM application code have no effect until that is changed (Docker files under `crm/docker/` do take effect).
 
 ## Commands
 
@@ -56,7 +57,7 @@ Plain Node, no `package.json`/dependencies — uses the built-in `node:test` run
 ```bash
 node --test n8n/logic/dedupe.test.js
 ```
-`n8n/logic/dedupe.js` exports `normalizePhone`, `buildLeadSearchFilters`, `buildNewLeadPayload` — these are copied verbatim into an n8n Code node (not imported) because n8n's Code node can't import local files; keep the two copies in sync if this logic changes.
+`n8n/logic/dedupe.js` exports `normalizePhone`, `buildLeadSearchFilters`, `buildNewLeadPayload` — these are copied verbatim into an n8n Code node (not imported) because n8n's Code node can't import local files; keep the two copies in sync if this logic changes. The last test in `dedupe.test.js` fails if the Code node in `n8n/workflows/messenger-to-crm.export.json` no longer embeds these functions verbatim.
 
 ## Architecture notes
 

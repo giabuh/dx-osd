@@ -56,3 +56,11 @@ test('buildNewLeadPayload falls back to a placeholder first_name when name is bl
 	});
 	assert.equal(payload.first_name, 'Unknown');
 });
+
+test('n8n "Build Lead Payload" Code node embeds these functions verbatim (the two copies must not drift)', () => {
+	const workflow = require('../workflows/messenger-to-crm.export.json');
+	const node = workflow.nodes.find((n) => n.name === 'Build Lead Payload');
+	for (const fn of [normalizePhone, buildLeadSearchFilters, buildNewLeadPayload]) {
+		assert.ok(node.parameters.jsCode.includes(fn.toString()), `${fn.name} differs from n8n/logic/dedupe.js`);
+	}
+});

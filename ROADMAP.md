@@ -36,6 +36,7 @@ Every phase must respect these. If a proposed change breaks one, it needs an exp
 | Caddy reverse proxy (Task 5) | **Config only** — needs a real domain + VPS |
 | Real end-to-end webhook test (Task 10 steps 2–5) | **Blocked** on Task 5 |
 | Production deployment, backups, monitoring | **None yet** |
+| Vendored source at runtime | **Not used** — Chatwoot runs `chatwoot/chatwoot:latest`, CRM clones `crm` `main` from GitHub (see `docs/vendored-upstreams.md`) |
 
 Source of detail: `docs/superpowers/plans/2026-09-22-facebook-integration-platform.md` (Execution Status table).
 
@@ -45,7 +46,7 @@ Source of detail: `docs/superpowers/plans/2026-09-22-facebook-integration-platfo
 
 Phases are ordered by dependency, not by date. A phase may start early work in parallel, but it is only **done** when its exit criteria are met.
 
-### Phase 0 — Foundation cleanup
+### Phase 0 — Foundation cleanup ✅ Done (2026-09-23)
 
 **Goal:** the repo tells the truth about itself, so later phases build on a stable base.
 

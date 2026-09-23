@@ -1,10 +1,10 @@
 # Facebook Integration Platform — Spec
 
 ## Goal
-Kết nối 3 hệ thống độc lập tại `/home/giabao/dev/MMM` (Chatwoot, Frappe CRM, n8n) thành một nền tảng chuyển đổi số cho doanh nghiệp SMB: nhận lead từ Facebook Lead Ads, nhận/trả lời tin nhắn Messenger/Instagram, hội tụ mọi lead/contact về một CRM duy nhất.
+Kết nối 3 hệ thống độc lập tại `/home/giabao/dev/dx-osd` (Chatwoot, Frappe CRM, n8n) thành một nền tảng chuyển đổi số cho doanh nghiệp SMB: nhận lead từ Facebook Lead Ads, nhận/trả lời tin nhắn Messenger/Instagram, hội tụ mọi lead/contact về một CRM duy nhất.
 
 ## Constraints
-- KHÔNG gộp codebase. Không sửa code bên trong `chatwoot/` hoặc `crm/` (đây là clone của upstream `chatwoot/chatwoot` và `frappe/crm`, cần giữ khả năng `git pull` cập nhật).
+- `chatwoot/` và `crm/` là source vendored trong repo này (từ `3a0e4ef`, không còn upstream remote). Ưu tiên extension point (app `mmm_custom`, `custom_attributes`, webhook/API); được sửa trực tiếp khi không có extension point phù hợp, nhưng mọi chỗ sửa phải ghi vào `docs/vendored-upstreams.md` để re-sync upstream được. Lưu ý: hiện cả 2 stack chưa chạy từ source vendored (Chatwoot dùng image `chatwoot/chatwoot:latest`, CRM `bench get-app crm --branch main`) — xem file đó.
 - Tự host trên 1 VPS, dùng Docker Compose. Không cần multi-region/HA.
 - Automation layer: **n8n** (đã chốt, không dùng Activepieces).
 - Ngoài phạm vi: Airbyte, `messenger-platform-samples` (chỉ code mẫu tham khảo), Meta Business SDK độc lập.
@@ -38,4 +38,4 @@ Docker Compose trên 1 VPS, 3 project riêng (mỗi project giữ nguyên `docke
 - **Dedup 2 nguồn**: 1 khách vừa điền Lead Ads form vừa nhắn Messenger → xử lý ở bước 5 của Flow B bằng cách search email/phone trước khi tạo Lead mới.
 - **Bảo mật webhook**: verify HMAC signature ở n8n; gọi Frappe REST API bằng API key/secret (không dùng session cookie).
 - **Rate limit Meta Graph API**: `fetch_leads()` trong `facebook.py` có `# TODO: pagination` với `limit: 100000` — nợ kỹ thuật sẵn có từ upstream, chỉ cần biết trước, không cần sửa.
-- **`crm/docker/docker-compose.yml` là dev/quickstart, không persist bench**: không có named volume cho `/home/frappe/frappe-bench` → mất state khi container bị xoá. Phase 2 phải thêm volume này trước khi làm bất cứ gì khác trên CRM.
+- **`crm/docker/docker-compose.yml` là dev/quickstart**: bench đã được persist bằng named volume ở `/home/frappe` qua `crm/docker/docker-compose.override.yml` (plan Task 3), nhưng stack vẫn là cấu hình dev, chưa phải production (ROADMAP Phase 1).

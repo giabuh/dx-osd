@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Nối 3 hệ thống độc lập (Chatwoot, Frappe CRM, n8n) tại `/home/giabao/dev/MMM` thành một nền tảng nhận lead Facebook Lead Ads + tin nhắn Messenger/Instagram, hội tụ về Frappe CRM.
+**Goal:** Nối 3 hệ thống độc lập (Chatwoot, Frappe CRM, n8n) tại `/home/giabao/dev/dx-osd` thành một nền tảng nhận lead Facebook Lead Ads + tin nhắn Messenger/Instagram, hội tụ về Frappe CRM.
 
 **Architecture:** Frappe CRM là source of truth (đã tự poll Facebook Lead Ads sẵn). Chatwoot là inbox-only cho Messenger/Instagram. n8n là glue layer: nhận webhook ký HMAC từ Chatwoot, dedup theo email/phone, gọi REST API Frappe CRM để tạo/cập nhật Lead, ghi ngược `crm_lead_id` vào Chatwoot contact. Cả 3 hệ thống deploy bằng Docker Compose riêng biệt trên 1 VPS, Caddy làm reverse proxy TLS dùng `network_mode: host`.
 
@@ -11,7 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-09-22-facebook-integration-platform.md`
 
 ## Global Constraints
-- Không sửa code trong `chatwoot/` hoặc `crm/` — đây là clone upstream, chỉ thêm file mới (override compose, custom Frappe app) để giữ khả năng `git pull`.
+- ~~Không sửa code trong `chatwoot/` hoặc `crm/`~~ — **superseded** by `3a0e4ef`: both are now vendored source in this repo. Prefer extension points; edits inside them are allowed but must be recorded in `docs/vendored-upstreams.md`.
 - Mọi web port của 3 stack chỉ bind vào `127.0.0.1` trên host — Caddy là điểm vào duy nhất từ Internet.
 - Automation layer cố định là **n8n** — không cài Activepieces.
 - Domain ví dụ trong plan: `chat.example.com`, `crm.example.com`, `n8n.example.com` — thay bằng domain thật của bạn ở Task 3 trước khi chạy Caddy thật (DNS A record phải trỏ đúng VPS trước khi Caddy tự xin Let's Encrypt).
@@ -78,11 +78,13 @@ Nếu App và Page cùng một Business Manager sở hữu, `leads_retrieval` th
 
 ### Task 1: Init git repo, ignore vendored clones
 
+> **Superseded (2026-09-22, `3a0e4ef`):** `chatwoot/`, `crm/`, `messenger-platform-samples/` are no longer ignored clones — they are vendored and tracked. Kept below as the original execution record.
+
 **Files:**
-- Create: `/home/giabao/dev/MMM/.gitignore`
+- Create: `/home/giabao/dev/dx-osd/.gitignore`
 
 **Interfaces:**
-- Produces: git repo tại `/home/giabao/dev/MMM` chứa mọi file glue (`docker/`, `frappe-custom/`, `n8n/`, `docs/`), không track `chatwoot/`, `crm/`, `messenger-platform-samples/` (mỗi thư mục này đã là git repo riêng trỏ upstream — xác nhận qua `git -C chatwoot remote -v`).
+- Produces: git repo tại `/home/giabao/dev/dx-osd` chứa mọi file glue (`docker/`, `frappe-custom/`, `n8n/`, `docs/`), không track `chatwoot/`, `crm/`, `messenger-platform-samples/` (mỗi thư mục này đã là git repo riêng trỏ upstream — xác nhận qua `git -C chatwoot remote -v`).
 
 - [ ] **Step 1: Viết .gitignore**
 
@@ -98,7 +100,7 @@ n8n/.n8n/
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM
+cd /home/giabao/dev/dx-osd
 git init
 git add .gitignore docs/superpowers/specs/2026-09-22-facebook-integration-platform.md docs/superpowers/plans/2026-09-22-facebook-integration-platform.md
 git commit -m "chore: init integration repo with spec and plan"
@@ -127,7 +129,7 @@ Expected: `chatwoot/`, `crm/`, `messenger-platform-samples/` xuất hiện dư�
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/chatwoot
+cd /home/giabao/dev/dx-osd/chatwoot
 cp .env.example .env
 ```
 
@@ -163,7 +165,7 @@ services:
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/chatwoot
+cd /home/giabao/dev/dx-osd/chatwoot
 docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml up -d postgres redis
 sleep 5
 docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml run --rm rails bundle exec rails db:chatwoot_prepare
@@ -179,7 +181,7 @@ Expected: `200` (hoặc `302` redirect tới `/app/login` hoặc `/installation/
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM
+cd /home/giabao/dev/dx-osd
 git add docker/chatwoot/docker-compose.override.yaml
 git commit -m "fix(chatwoot): pin postgres host port and wire POSTGRES_PASSWORD via override"
 ```
@@ -224,7 +226,7 @@ volumes:
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/crm/docker
+cd /home/giabao/dev/dx-osd/crm/docker
 docker compose up -d
 ```
 
@@ -304,7 +306,7 @@ volumes:
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/docker/n8n
+cd /home/giabao/dev/dx-osd/docker/n8n
 cat > .env <<EOF
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
 N8N_ENCRYPTION_KEY=$(openssl rand -hex 32)
@@ -324,7 +326,7 @@ Expected: `200`.
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM
+cd /home/giabao/dev/dx-osd
 git add docker/n8n/docker-compose.yml
 git commit -m "feat(n8n): add n8n stack docker-compose config"
 ```
@@ -383,7 +385,7 @@ volumes:
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/docker/caddy
+cd /home/giabao/dev/dx-osd/docker/caddy
 docker compose up -d
 sleep 15
 curl -s -o /dev/null -w "%{http_code}\n" https://chat.example.com
@@ -409,7 +411,7 @@ Expected: cả 3 lệnh trả `200`/`302` (không phải lỗi cert hoặc conne
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/crm/docker
+cd /home/giabao/dev/dx-osd/crm/docker
 docker compose exec frappe bash -c "cd frappe-bench && bench new-app mmm_custom --title 'MMM Custom' --description 'Chatwoot-CRM integration custom fields' --publisher 'MMM' --email 'baoluu674@gmail.com' --license mit"
 docker compose exec frappe bash -c "cd frappe-bench && bench --site crm.localhost install-app mmm_custom"
 ```
@@ -419,9 +421,9 @@ Nếu `bench new-app` từ chối flag nào đó (phiên bản bench khác), ch�
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/crm/docker
-mkdir -p /home/giabao/dev/MMM/frappe-custom
-docker compose cp frappe:/home/frappe/frappe-bench/apps/mmm_custom /home/giabao/dev/MMM/frappe-custom/mmm_custom
+cd /home/giabao/dev/dx-osd/crm/docker
+mkdir -p /home/giabao/dev/dx-osd/frappe-custom
+docker compose cp frappe:/home/frappe/frappe-bench/apps/mmm_custom /home/giabao/dev/dx-osd/frappe-custom/mmm_custom
 ```
 
 - [ ] **Step 3: Thêm bind mount để container đọc từ host từ giờ trở đi**
@@ -437,7 +439,7 @@ Sửa `crm/docker/docker-compose.override.yml` (đã tạo ở Task 3), thêm d�
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/crm/docker
+cd /home/giabao/dev/dx-osd/crm/docker
 docker compose up -d --force-recreate frappe
 ```
 
@@ -472,7 +474,7 @@ def create_custom_field():
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM/crm/docker
+cd /home/giabao/dev/dx-osd/crm/docker
 docker compose exec frappe bash -c "cd frappe-bench && bench --site crm.localhost execute mmm_custom.setup.create_custom_field"
 ```
 Expected output: `Custom field created` (hoặc `Custom field already exists, skipping` nếu chạy lại lần 2 — idempotent).
@@ -489,7 +491,7 @@ Expected: JSON response chứa key `chatwoot_contact_id` trong object trả về
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM
+cd /home/giabao/dev/dx-osd
 git add frappe-custom/ crm/docker/docker-compose.override.yml
 git commit -m "feat: add chatwoot_contact_id custom field to CRM Lead"
 ```
@@ -607,7 +609,7 @@ Expected: PASS — `# pass 3`, `# fail 0`.
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM
+cd /home/giabao/dev/dx-osd
 git add n8n/logic/dedupe.js n8n/logic/dedupe.test.js
 git commit -m "feat: add dedup/mapping logic for Chatwoot-CRM sync"
 ```
@@ -709,16 +711,16 @@ Trong n8n UI → workflow menu (···) → Download. Lưu file vào:
 
 Run:
 ```bash
-mkdir -p /home/giabao/dev/MMM/n8n/workflows
+mkdir -p /home/giabao/dev/dx-osd/n8n/workflows
 # di chuyển file vừa tải từ trình duyệt/VPS vào đây
-mv ~/Downloads/*.json /home/giabao/dev/MMM/n8n/workflows/messenger-to-crm.export.json
+mv ~/Downloads/*.json /home/giabao/dev/dx-osd/n8n/workflows/messenger-to-crm.export.json
 ```
 
 - [ ] **Step 13: Commit**
 
 Run:
 ```bash
-cd /home/giabao/dev/MMM
+cd /home/giabao/dev/dx-osd
 git add n8n/workflows/messenger-to-crm.export.json
 git commit -m "feat: add n8n workflow export for Chatwoot-CRM sync"
 ```
