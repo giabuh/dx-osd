@@ -36,7 +36,7 @@ Every phase must respect these. If a proposed change breaks one, it needs an exp
 | Caddy reverse proxy (Task 5) | **Config only** — needs a real domain + VPS |
 | Real end-to-end webhook test (Task 10 steps 2–5) | **Blocked** on Task 5 |
 | Production deployment, backups, monitoring | **None yet** |
-| Vendored source at runtime | **Not used** — Chatwoot runs `chatwoot/chatwoot:latest`, CRM clones `crm` `main` from GitHub (see `docs/vendored-upstreams.md`) |
+| Vendored source at runtime | **Used** — Chatwoot built from `chatwoot/`, CRM `v1.84.0` runs from `crm/` on pinned Frappe `v15.121.1` (see `docs/vendored-upstreams.md`) |
 
 Source of detail: `docs/superpowers/plans/2026-09-22-facebook-integration-platform.md` (Execution Status table).
 

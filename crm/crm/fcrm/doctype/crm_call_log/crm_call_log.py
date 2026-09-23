@@ -140,15 +140,7 @@ class CRMCallLog(Document):
 
 	def as_dict(self, *args, **kwargs):
 		d = super().as_dict(*args, **kwargs)
-		recording_url = d.get("recording_url")
-		if not recording_url:
-			return d
-
-		# a recording uploaded to this site is played straight from its file path,
-		# the proxy only fetches recordings hosted somewhere else
-		if recording_url.startswith(("/files/", "/private/files/")):
-			d["recording_url_path"] = recording_url
-		else:
+		if d.get("recording_url"):
 			d["recording_url_path"] = (
 				f"/api/method/crm.integrations.api.get_recording_url?call_log_name={d.get('name')}"
 			)

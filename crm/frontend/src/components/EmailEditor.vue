@@ -28,12 +28,11 @@
           :class="from.length ? '' : 'border-t pt-2.5'"
         >
           <span class="text-xs text-ink-gray-4 mr-2">{{ __('TO') }}:</span>
-          <EmailMultiSelect
+          <MultiSelectEmailInput
             v-model="toEmails"
             class="flex-1"
             variant="ghost"
             :validate="validateEmail"
-            :fetchContacts="true"
             :error-message="
               (value) => __('{0} is an invalid email address', [value])
             "
@@ -63,7 +62,7 @@
         </div>
         <div v-if="cc" class="mx-4 flex items-center gap-2">
           <span class="text-xs text-ink-gray-4">{{ __('CC') }}:</span>
-          <EmailMultiSelect
+          <MultiSelectEmailInput
             ref="ccInput"
             v-model="ccEmails"
             class="flex-1"
@@ -77,7 +76,7 @@
         </div>
         <div v-if="bcc" class="mx-4 flex items-center gap-2">
           <span class="text-xs text-ink-gray-4">{{ __('BCC') }}:</span>
-          <EmailMultiSelect
+          <MultiSelectEmailInput
             ref="bccInput"
             v-model="bccEmails"
             class="flex-1"
@@ -186,7 +185,7 @@ import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import EmailTemplateIcon from '@/components/Icons/EmailTemplateIcon.vue'
 import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import AttachmentItem from '@/components/AttachmentItem.vue'
-import EmailMultiSelect from '@/components/Controls/EmailMultiSelect.vue'
+import MultiSelectEmailInput from '@/components/Controls/MultiSelectEmailInput.vue'
 import EmailTemplateSelectorModal from '@/components/Modals/EmailTemplateSelectorModal.vue'
 import {
   buildEditorExtensions,

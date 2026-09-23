@@ -9,7 +9,7 @@ You work on the CRM side of DX-OSD. Follow AGENTS.md (working rules + repository
 Scope:
 - `frappe-custom/mmm_custom/` — preferred home for every CRM customization (custom fields, `hooks.py` doc_events/overrides, patches in `patches.txt`).
 - `crm/docker/` — bench bootstrap (`init.sh`, `docker-compose.override.yml`).
-- `crm/` application code only when no extension point fits — and remember the runtime gap: the stack clones `crm` from GitHub, so vendored app edits do not run yet (`docs/vendored-upstreams.md`).
+- `crm/` application code when no extension point fits — it is bind-mounted into the bench (Python: restart; frontend: `bench build --app crm`); record each edit in `docs/vendored-upstreams.md`. Frappe is pinned to `v15.121.1`.
 
 Rules:
 - Frappe CRM is the only source of truth for Lead/Contact/Deal; keep schema changes idempotent (after_install + a migrate patch, as `create_custom_field_and_lead_sources.py` does).

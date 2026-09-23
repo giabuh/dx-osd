@@ -52,9 +52,6 @@ require_type_annotated_api_methods = True
 doctype_js = {
 	"Quotation": "public/js/erpnext_quotation_prefill.js",
 	"Sales Order": "public/js/erpnext_sales_order_customer.js",
-	"CRM Lead": "public/js/domain_enrichment.js",
-	"CRM Organization": "public/js/domain_enrichment.js",
-	"CRM Deal": "public/js/domain_enrichment.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -147,83 +144,6 @@ has_permission = {
 	"CRM Notification": "crm.fcrm.doctype.crm_notification.crm_notification.has_permission",
 }
 
-# Automation Engine
-# ---------------
-# CRM relationships, actions and events available to Automation Flows
-
-automation_relationships = ["crm.automation.relationships.CRMRelationshipProvider"]
-
-automation_actions = [
-	"crm.automation.actions.AdjustLeadScore",
-	"crm.automation.actions.SetLeadTemperature",
-	"crm.automation.actions.ConvertLeadToDeal",
-	"crm.automation.actions.SendEmailToRecord",
-	"crm.automation.actions.SendCRMNotification",
-]
-
-# Correlation options are the keys `crm.automation.events` actually emits, offered to the
-# builder so waiting on an event never means hand-writing a Jinja expression.
-MESSAGE_CORRELATIONS = [
-	{"label": "This email thread", "value": "{{ doc.message_id or doc.name }}"},
-	{
-		"label": "This lead or deal",
-		"value": "{{ doc.reference_doctype }}:{{ doc.reference_name }}",
-	},
-]
-RECORD_CORRELATION = [{"label": "This record", "value": "{{ doc.name }}"}]
-
-# `subject` names the record an event is about, so a flow triggers on that record rather than
-# on whatever document the emitter held. Either a fixed doctype with the payload key holding
-# its name, or the payload keys for a reference that may be a Lead or a Deal.
-REFERENCE_SUBJECT = {
-	"doctype_key": "reference_doctype",
-	"name_key": "reference_name",
-	"doctypes": ["CRM Lead", "CRM Deal"],
-}
-LEAD_SUBJECT = {"doctype": "CRM Lead", "name_key": "lead"}
-DEAL_SUBJECT = {"doctype": "CRM Deal", "name_key": "deal"}
-
-automation_events = [
-	{
-		"crm.prospect_message_sent": {
-			"label": "We emailed the prospect",
-			"subject": REFERENCE_SUBJECT,
-			"correlation_options": MESSAGE_CORRELATIONS,
-		},
-		"crm.prospect_message_received": {
-			"label": "The prospect replied",
-			"subject": REFERENCE_SUBJECT,
-			"correlation_options": MESSAGE_CORRELATIONS,
-		},
-		"crm.lead_qualified": {"label": "Lead was qualified", "subject": LEAD_SUBJECT},
-		"crm.lead_converted": {
-			"label": "Lead became a deal",
-			"subject": LEAD_SUBJECT,
-			"correlation_options": RECORD_CORRELATION,
-		},
-		"crm.deal_stage_changed": {
-			"label": "Deal changed stage",
-			"subject": DEAL_SUBJECT,
-			"correlation_options": RECORD_CORRELATION,
-		},
-		"crm.deal_won": {
-			"label": "Deal was won",
-			"subject": DEAL_SUBJECT,
-			"correlation_options": RECORD_CORRELATION,
-		},
-		"crm.deal_lost": {
-			"label": "Deal was lost",
-			"subject": DEAL_SUBJECT,
-			"correlation_options": RECORD_CORRELATION,
-		},
-		"crm.task_overdue": {
-			"label": "Task went overdue",
-			"subject": REFERENCE_SUBJECT,
-			"correlation_options": RECORD_CORRELATION,
-		},
-	}
-]
-
 # DocType Class
 # ---------------
 # Override standard doctype classes
@@ -250,10 +170,7 @@ doc_events = {
 		"on_update": ["crm.api.todo.on_update"],
 	},
 	"Communication": {
-		"after_insert": [
-			"crm.utils.on_communication_insert",
-			"crm.automation.events.on_communication",
-		],
+		"after_insert": ["crm.utils.on_communication_insert"],
 		"on_update": ["crm.utils.on_communication_update"],
 	},
 	"Comment": {
@@ -262,19 +179,12 @@ doc_events = {
 	},
 	"WhatsApp Message": {
 		"validate": ["crm.api.whatsapp.validate"],
-		"on_update": [
-			"crm.api.whatsapp.on_update",
-			"crm.automation.events.on_whatsapp_message",
-		],
+		"on_update": ["crm.api.whatsapp.on_update"],
 	},
 	"CRM Deal": {
 		"on_update": [
-			"crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings.create_customer_in_erpnext",
-			"crm.automation.events.on_deal_update",
+			"crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings.create_customer_in_erpnext"
 		],
-	},
-	"CRM Lead": {
-		"on_update": ["crm.automation.events.on_lead_update"],
 	},
 	"Sales Order": {
 		"before_validate": [
@@ -310,18 +220,11 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
-	"all": ["crm.api.event.trigger_offset_event_notifications"],
-	"hourly": [
-		"crm.api.event.trigger_hourly_event_notifications",
-		"crm.automation.events.emit_overdue_tasks",
-	],
 	"daily": [
-		"crm.api.event.trigger_daily_event_notifications",
 		"crm.fcrm.doctype.crm_invitation.crm_invitation.expire_invitations",
 		"crm.fcrm.doctype.crm_view_settings.crm_view_settings.clear_old_versions",
 		"crm.telemetry.capture_feature_state",
 	],
-	"weekly": ["crm.api.event.trigger_weekly_event_notifications"],
 	"daily_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_daily"],
 	"hourly_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_hourly"],
 	"monthly_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_monthly"],
@@ -404,7 +307,6 @@ ignore_links_on_delete = ["Failed Lead Sync Log"]
 after_migrate = [
 	"crm.fcrm.doctype.fcrm_settings.fcrm_settings.after_migrate",
 	"crm.api.whatsapp.add_roles",
-	"crm.domain_enrichment.install.seed_default_rules_and_mappings",
 	"crm.install.add_default_scripts",
 	"crm.install.add_web_form_custom_fields",
 ]

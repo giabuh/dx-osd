@@ -1,21 +1,9 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
-import frappe
-from frappe.tests import IntegrationTestCase
+# import frappe
+from crm.tests import CRMTestCase as FrappeTestCase
 
 
-class TestCRMOrganization(IntegrationTestCase):
-	def tearDown(self) -> None:
-		frappe.db.rollback()
-
-	def test_negative_annual_revenue_rejected(self):
-		"""Test that annual_revenue rejects negative values"""
-		with self.assertRaises(frappe.NonNegativeError):
-			frappe.get_doc(
-				{
-					"doctype": "CRM Organization",
-					"organization_name": "Negative Revenue Org",
-					"annual_revenue": -100,
-				}
-			).insert()
+class TestCRMOrganization(FrappeTestCase):
+	pass

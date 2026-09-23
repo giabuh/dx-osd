@@ -1,6 +1,5 @@
 .DS_Store
 *.pyc
-*.local.md
 *.egg-info
 *.swp
 __pycache__
@@ -26,4 +25,3 @@ CLAUDE.md
 AGENTS.md
 .claude
 .pi
-.patch

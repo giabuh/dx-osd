@@ -76,7 +76,9 @@ def check_app_permission():
 	return False
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(
+	allow_guest=True
+)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method — invite key required; rate-limited
 @rate_limit(limit=10, seconds=60 * 60)
 def accept_invitation(key: str | None = None):
 	if not key:
@@ -121,7 +123,6 @@ def invite_by_email(emails: str, role: str):
 
 	if not emails:
 		return
-
 	email_string = validate_email_address(emails, throw=False)
 	email_list = split_emails(email_string)
 	if not email_list:

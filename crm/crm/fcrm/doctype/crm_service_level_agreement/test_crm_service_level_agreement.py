@@ -4,11 +4,12 @@
 from datetime import datetime, time
 
 import frappe
-from frappe.tests import IntegrationTestCase
 from frappe.utils import add_to_date, get_datetime, now_datetime
 
+from crm.tests import CRMTestCase as FrappeTestCase
 
-class TestCRMServiceLevelAgreement(IntegrationTestCase):
+
+class TestCRMServiceLevelAgreement(FrappeTestCase):
 	def tearDown(self):
 		frappe.db.rollback()
 

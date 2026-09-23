@@ -9,23 +9,32 @@
           :options="chartTypes"
         />
         <FormControl
-          v-if="currentOptions.length"
-          v-model="selectedChart[chartType]"
+          v-if="chartType === 'number_chart'"
+          v-model="numberChart"
           type="select"
-          :label="currentTypeLabel"
-          :options="currentOptions"
+          :label="__('Number Chart')"
+          :options="numberCharts"
+        />
+        <FormControl
+          v-if="chartType === 'axis_chart'"
+          v-model="axisChart"
+          type="select"
+          :label="__('Axis Chart')"
+          :options="axisCharts"
+        />
+        <FormControl
+          v-if="chartType === 'donut_chart'"
+          v-model="donutChart"
+          type="select"
+          :label="__('Donut Chart')"
+          :options="donutCharts"
         />
       </div>
     </template>
     <template #actions>
       <div class="flex items-center justify-end gap-2">
         <Button variant="outline" :label="__('Cancel')" @click="show = false" />
-        <Button
-          variant="solid"
-          :label="__('Add')"
-          :disabled="!canAddChart"
-          @click="addChart"
-        />
+        <Button variant="solid" :label="__('Add')" @click="addChart" />
       </div>
     </template>
   </Dialog>
@@ -33,9 +42,8 @@
 
 <script setup lang="ts">
 import { getRandom } from '@/utils'
-import { chartTypes, chartOptionsByType } from '@/composables/dashboard'
-import { createResource, Dialog, FormControl, toast } from 'frappe-ui'
-import { ref, reactive, inject, computed, watch } from 'vue'
+import { createResource, Dialog, FormControl } from 'frappe-ui'
+import { ref, reactive, inject } from 'vue'
 
 const show = defineModel({
   type: Boolean,
@@ -52,37 +60,50 @@ const toDate = inject('toDate', ref(''))
 const filters = inject('filters', reactive({ period: '', user: '' }))
 
 const chartType = ref('spacer')
+const chartTypes = [
+  { label: __('Spacer'), value: 'spacer' },
+  { label: __('Number Chart'), value: 'number_chart' },
+  { label: __('Axis Chart'), value: 'axis_chart' },
+  { label: __('Donut Chart'), value: 'donut_chart' },
+]
 
-const selectedChart = reactive<Record<string, string>>({})
-
-const currentOptions = computed(
-  () => chartOptionsByType.value[chartType.value] || [],
-)
-const currentTypeLabel = computed(
-  () =>
-    chartTypes.value.find((option) => option.value === chartType.value)
-      ?.label || '',
-)
-
-watch(
-  currentOptions,
-  (options) => {
-    if (!options.length) return
-    const current = selectedChart[chartType.value]
-    if (!options.some((option) => option.value === current)) {
-      selectedChart[chartType.value] = options[0].value
-    }
+const numberChart = ref('')
+const numberCharts = [
+  { label: __('Total Leads'), value: 'total_leads' },
+  { label: __('Ongoing Deals'), value: 'ongoing_deals' },
+  { label: __('Avg Ongoing Deal Value'), value: 'average_ongoing_deal_value' },
+  { label: __('Won Deals'), value: 'won_deals' },
+  { label: __('Avg Won Deal Value'), value: 'average_won_deal_value' },
+  { label: __('Avg Deal Value'), value: 'average_deal_value' },
+  {
+    label: __('Avg Time to Close a Lead'),
+    value: 'average_time_to_close_a_lead',
   },
-  { immediate: true },
-)
+  {
+    label: __('Avg Time to Close a Deal'),
+    value: 'average_time_to_close_a_deal',
+  },
+]
 
-const canAddChart = computed(() => {
-  if (chartType.value === 'spacer') return true
-  return Boolean(selectedChart[chartType.value])
-})
+const axisChart = ref('sales_trend')
+const axisCharts = [
+  { label: __('Sales Trend'), value: 'sales_trend' },
+  { label: __('Forecasted Revenue'), value: 'forecasted_revenue' },
+  { label: __('Funnel Conversion'), value: 'funnel_conversion' },
+  { label: __('Deals by Ongoing & Won Stage'), value: 'deals_by_stage_axis' },
+  { label: __('Lost Deal Reasons'), value: 'lost_deal_reasons' },
+  { label: __('Deals by Territory'), value: 'deals_by_territory' },
+  { label: __('Deals by Salesperson'), value: 'deals_by_salesperson' },
+]
+
+const donutChart = ref('deals_by_stage_donut')
+const donutCharts = [
+  { label: __('Deals by Stage'), value: 'deals_by_stage_donut' },
+  { label: __('Leads by Source'), value: 'leads_by_source' },
+  { label: __('Deals by Source'), value: 'deals_by_source' },
+]
 
 async function addChart() {
-  if (!canAddChart.value) return
   show.value = false
   if (chartType.value == 'spacer') {
     items.value.push({
@@ -96,8 +117,12 @@ async function addChart() {
 }
 
 async function getChart(type: string) {
-  const name = selectedChart[type]
-  if (!name) return
+  let name =
+    type == 'number_chart'
+      ? numberChart.value
+      : type == 'axis_chart'
+        ? axisChart.value
+        : donutChart.value
 
   await createResource({
     url: 'crm.api.dashboard.get_chart',
@@ -110,11 +135,6 @@ async function getChart(type: string) {
     },
     auto: true,
     onSuccess: (data = {}) => {
-      if (data?.error) {
-        toast.error(data.error)
-        return
-      }
-
       let width = 4
       let height = 2
 

@@ -44,14 +44,14 @@ These three directories are **first-class, tracked source in this repo now** —
 - Each still carries its upstream `LICENSE` file — keep those; the copyright/license terms of the giants we're building on stay intact even though we no longer track upstream's CI/contribution workflow (their `.github/` directories were deliberately removed — this project doesn't run their CI or accept upstream-style PRs).
 - Each has its own `AGENTS.md`/`CLAUDE.md` (`chatwoot/CLAUDE.md`, `chatwoot/AGENTS.md`, `crm/AGENTS.md`) with useful internal dev commands (build/test/lint) — this file does not duplicate those, but their conventions no longer bind changes made for DX-OSD's own purposes.
 - There is no upstream remote wired up anymore. Pulling future upstream updates means fetching the new version manually and re-applying any local customizations — this repo has traded easy upstream syncing for a single self-contained codebase. **`docs/vendored-upstreams.md`** holds the baselines, the re-sync procedure, and the log of every edit made inside a vendored directory — add a row there whenever you edit one.
-- **Runtime gap:** neither stack runs this vendored source yet — Chatwoot uses the `chatwoot/chatwoot:latest` image and CRM's `init.sh` does `bench get-app crm --branch main` from GitHub. Edits to Chatwoot/CRM application code have no effect until that is changed (Docker files under `crm/docker/` do take effect).
+- **Both stacks run this vendored source:** Chatwoot is built locally from `chatwoot/` (image `dx-osd/chatwoot:local`), and `crm/` is bind-mounted into the CRM bench on a pinned Frappe (`v15.121.1`). Rebuild/restart to see an edit — details in `docs/vendored-upstreams.md`.
 
 ## Commands
 
-### Chatwoot (uses its own upstream compose file, plus our port/DNS override)
+### Chatwoot (uses its own upstream compose file, plus our override: local source build + port binds)
 ```bash
 cd chatwoot
-docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml up -d
+docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml up -d --build   # builds dx-osd/chatwoot:local from chatwoot/ (first build takes a while)
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000   # expect 200/302
 ```
 Secrets live in `chatwoot/.env` (gitignored, generated via `openssl rand -hex`, not committed).

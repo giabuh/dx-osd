@@ -7,21 +7,19 @@
 | Directory | Upstream | Baseline | Vendored on |
 |---|---|---|---|
 | `chatwoot/` | https://github.com/chatwoot/chatwoot | `4.18.0` (`chatwoot/VERSION`) | 2026-09-22 |
-| `crm/` | https://github.com/frappe/crm | `main` branch, `2.0.0-dev` (`crm/crm/__init__.py`) | 2026-09-22 |
+| `crm/` | https://github.com/frappe/crm | tag `v1.84.0` (`crm/crm/__init__.py`) | 2026-09-23 (was `main`/`2.0.0-dev` on 2026-09-22 — needs unreleased Frappe `develop`, so replaced by the stable tag) |
 | `messenger-platform-samples/` | https://github.com/fbsamples/messenger-platform-samples | default branch | 2026-09-22 |
 
 Update this table on every re-sync.
 
-## What actually runs (known gap)
+**Pinned, not vendored:** Frappe framework `v15.121.1` (https://github.com/frappe/frappe), cloned by `bench init --frappe-branch` in `crm/docker/init.sh`. `crm` `v1.84.0` accepts `frappe>=15,<17`. When bumping `crm`, check its `[tool.bench.frappe-dependencies]` and that every `frappe.*` module it imports exists in the pinned tag.
 
-Neither stack currently runs the vendored source:
+## What actually runs
 
-- **Chatwoot** runs the prebuilt image `chatwoot/chatwoot:latest` (`chatwoot/docker-compose.production.yaml`).
-- **Frappe CRM** clones the app from GitHub at startup: `bench get-app crm --branch main` (`crm/docker/init.sh`).
+Both stacks run the vendored source, so an edit in `chatwoot/` or `crm/` takes effect on the next build/start:
 
-Observed 2026-09-23 on a fresh bench: running `crm` is `1.84.0` while the vendored copy says `2.0.0-dev`.
-
-So edits to Chatwoot/CRM application code in this repo have **no runtime effect** yet, and the running version can differ from the vendored baseline (both track moving `latest`/`main`). Edits to the Docker files below do take effect. Closing this gap (build/install from the vendored source, pinned) is required before relying on any application-code edit.
+- **Chatwoot** — image `dx-osd/chatwoot:local`, built from `chatwoot/docker/Dockerfile` (`docker/chatwoot/docker-compose.override.yaml`). Rebuild after changes: `up -d --build` (see AGENTS.md).
+- **Frappe CRM** — `crm/` is bind-mounted into the container at `/home/frappe/crm` and symlinked into the bench as `apps/crm` (`crm/docker/init.sh`). Python changes load on restart; frontend changes need `bench build --app crm`.
 
 ## Local edits inside vendored directories
 
@@ -31,6 +29,9 @@ Every change we make inside a vendored directory is listed here, so it can be re
 |---|---|---|
 | `crm/docker/docker-compose.override.yml` | New file (ours): `127.0.0.1` port binds, `dns:` + DNS wait loop, bench volume at `/home/frappe`, bind-mount `frappe-custom/mmm_custom` at `/home/frappe/mmm_custom` | Upstream quickstart does not persist the bench and can fail first-run network calls; see plan Task 3 |
 | `crm/docker/init.sh` | Symlink `mmm_custom` into `apps/`, `pip install -e` it, add it to `sites/apps.txt`, `install-app mmm_custom` | Fresh bench comes up with our custom app installed, no manual steps |
+| `crm/docker/init.sh` | Pin Frappe with `--frappe-branch v15.121.1`; replace `bench get-app crm --branch main` with symlinking the bind-mounted vendored `crm/` (plus `/home/frappe/frappe` → bench frappe, for the frontend's `link:../../frappe/ui`), `pip install -e`, `yarn install`, `bench build --app crm` | Run the vendored CRM source at a pinned framework version |
+| `crm/docker/docker-compose.override.yml` | Bind-mount `..` (vendored `crm/`) at `/home/frappe/crm` | Same |
+| `chatwoot/docker/Dockerfile` | `git rev-parse HEAD > /app/.git_sha` falls back to `vendored` | Vendored copy has no `.git`; upstream line fails the build |
 
 ## Re-sync procedure
 

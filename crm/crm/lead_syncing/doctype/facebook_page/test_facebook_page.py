@@ -2,7 +2,7 @@
 # See license.txt
 
 # import frappe
-from frappe.tests import IntegrationTestCase
+from crm.tests import CRMTestCase as FrappeTestCase
 
 # On IntegrationTestCase, the doctype test records and all
 # link-field test record dependencies are recursively loaded
@@ -11,7 +11,7 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class IntegrationTestFacebookPage(IntegrationTestCase):
+class TestFacebookPage(FrappeTestCase):
 	"""
 	Integration tests for FacebookPage.
 	Use this class for testing interactions between multiple components.

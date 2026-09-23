@@ -4,7 +4,7 @@
 Kết nối 3 hệ thống độc lập tại `/home/giabao/dev/dx-osd` (Chatwoot, Frappe CRM, n8n) thành một nền tảng chuyển đổi số cho doanh nghiệp SMB: nhận lead từ Facebook Lead Ads, nhận/trả lời tin nhắn Messenger/Instagram, hội tụ mọi lead/contact về một CRM duy nhất.
 
 ## Constraints
-- `chatwoot/` và `crm/` là source vendored trong repo này (từ `3a0e4ef`, không còn upstream remote). Ưu tiên extension point (app `mmm_custom`, `custom_attributes`, webhook/API); được sửa trực tiếp khi không có extension point phù hợp, nhưng mọi chỗ sửa phải ghi vào `docs/vendored-upstreams.md` để re-sync upstream được. Lưu ý: hiện cả 2 stack chưa chạy từ source vendored (Chatwoot dùng image `chatwoot/chatwoot:latest`, CRM `bench get-app crm --branch main`) — xem file đó.
+- `chatwoot/` và `crm/` là source vendored trong repo này (từ `3a0e4ef`, không còn upstream remote). Ưu tiên extension point (app `mmm_custom`, `custom_attributes`, webhook/API); được sửa trực tiếp khi không có extension point phù hợp, nhưng mọi chỗ sửa phải ghi vào `docs/vendored-upstreams.md` để re-sync upstream được. Cả 2 stack chạy từ source vendored (Chatwoot build local, CRM `v1.84.0` trên Frappe cố định `v15.121.1`) — xem file đó.
 - Tự host trên 1 VPS, dùng Docker Compose. Không cần multi-region/HA.
 - Automation layer: **n8n** (đã chốt, không dùng Activepieces).
 - Ngoài phạm vi: Airbyte, `messenger-platform-samples` (chỉ code mẫu tham khảo), Meta Business SDK độc lập.

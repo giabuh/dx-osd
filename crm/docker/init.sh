@@ -8,7 +8,8 @@ else
     echo "Creating new bench..."
 fi
 
-bench init --skip-redis-config-generation frappe-bench --version version-15
+# Frappe is pinned (not vendored) to the version the vendored crm/ is tested on. See docs/vendored-upstreams.md.
+bench init --skip-redis-config-generation frappe-bench --frappe-branch v15.121.1
 
 cd frappe-bench
 
@@ -22,7 +23,14 @@ bench set-redis-socketio-host redis://redis:6379
 sed -i '/redis/d' ./Procfile
 sed -i '/watch/d' ./Procfile
 
-bench get-app crm --branch main
+# Run the vendored crm/ source (bind-mounted at /home/frappe/crm) instead of cloning it from GitHub.
+# Its frontend depends on link:../../frappe/ui, so frappe must sit beside it in /home/frappe.
+ln -sfn /home/frappe/frappe-bench/apps/frappe /home/frappe/frappe
+ln -s /home/frappe/crm apps/crm
+./env/bin/pip install -e apps/crm
+(cd apps/crm && yarn install)
+sed -i -e '$a\' sites/apps.txt && echo crm >> sites/apps.txt
+bench build --app crm
 
 # mmm_custom is bind-mounted outside the bench (mounting it under apps/ makes
 # Docker pre-create frappe-bench/, which breaks `bench init`); link it in.

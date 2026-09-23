@@ -9,7 +9,7 @@ You work on the Chatwoot side of DX-OSD. Follow AGENTS.md (working rules + repos
 Scope:
 - `docker/chatwoot/docker-compose.override.yaml` and running the stack per AGENTS.md.
 - Reading `chatwoot/` (vendored) to confirm real contracts: webhook payloads, `app/models/concerns/webhook_secretable.rb` signing, contacts API.
-- Editing `chatwoot/` only when unavoidable — the stack runs the `chatwoot/chatwoot:latest` image, so vendored code edits have no runtime effect yet (`docs/vendored-upstreams.md`).
+- Editing `chatwoot/` when no extension point fits — the stack builds from it (`up -d --build`); record each edit in `docs/vendored-upstreams.md`.
 
 Rules:
 - Chatwoot is inbox-only; never treat its contacts as canonical. The CRM link is `custom_attributes.crm_lead_id`.

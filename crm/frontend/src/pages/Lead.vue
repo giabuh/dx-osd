@@ -16,12 +16,6 @@
         v-if="document.actions?.length"
         :actions="document.actions"
       />
-      <EnrichFromWebsite
-        doctype="CRM Lead"
-        :docname="leadId"
-        :website="doc.website"
-        @done="onEnriched"
-      />
       <AssignTo v-model="assignees.data" doctype="CRM Lead" :docname="leadId" />
       <Dropdown
         v-if="doc && document.statuses"
@@ -92,7 +86,7 @@
                 size="3xl"
                 class="size-12"
                 :label="title"
-                :image="doc.image || doc.organization_logo"
+                :image="doc.image"
               />
               <component
                 :is="doc.image ? Dropdown : 'div'"
@@ -274,7 +268,6 @@ import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'
-import EnrichFromWebsite from '@/components/EnrichFromWebsite.vue'
 import {
   openWebsite,
   setupCustomizations,
@@ -513,12 +506,13 @@ function updateField(name, value) {
 
   document.save.submit(null, {
     onSuccess: () => (reload.value = true),
-    onError: () => {
+    onError: (err) => {
       if (Array.isArray(name)) {
         name.forEach((field) => (doc.value[field] = oldValues[field]))
       } else {
         doc.value[name] = oldValues
       }
+      toast.error(err.messages?.[0] || __('Error updating field'))
     },
   })
 }
@@ -568,11 +562,6 @@ function beforeStatusChange(data) {
       onSuccess: () => reloadResources(data),
     })
   }
-}
-
-function onEnriched() {
-  document.reload?.()
-  sections.reload()
 }
 
 function reloadResources(data) {

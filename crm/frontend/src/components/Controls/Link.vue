@@ -1,24 +1,14 @@
 <template>
-  <div class="-mx-[2px] space-y-1.5 px-[2px]">
-    <label
-      v-if="attrs.label"
-      class="block"
-      :class="labelClasses"
-      :for="controlId"
-    >
+  <div class="space-y-1.5 p-[2px] !-m-[2px]">
+    <label v-if="attrs.label" class="block" :class="labelClasses">
       {{ __(attrs.label) }}
-      <template v-if="required">
-        <span class="select-none text-ink-red-6" aria-hidden="true">*</span>
-        <span class="sr-only">{{ __('(required)') }}</span>
-      </template>
     </label>
     <Autocomplete
       ref="autocomplete"
-      :button-id="controlId"
       v-model="value"
       :options="options.data"
       :size="attrs.size || 'sm'"
-      :variant="props.variant"
+      :variant="attrs.variant"
       :placeholder="attrs.placeholder"
       :disabled="attrs.disabled"
       :placement="attrs.placement"
@@ -81,24 +71,20 @@ import Autocomplete from '@/components/frappe-ui/Autocomplete.vue'
 import { isTranslatable } from '@/utils'
 import { watchDebounced } from '@vueuse/core'
 import { createResource } from 'frappe-ui'
-import { useAttrs, computed, ref, useId } from 'vue'
+import { useAttrs, computed, ref } from 'vue'
 
 const props = defineProps({
   doctype: { type: String, required: true },
   filters: { type: [Array, Object, String], default: () => [] },
   modelValue: { type: String, default: '' },
   hideMe: { type: Boolean, default: false },
-  variant: { type: String, default: 'subtle' },
-  required: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
 const attrs = useAttrs()
-const controlId = useId()
 
 const valuePropPassed = computed(() => 'value' in attrs)
-const selectedOption = ref(null)
 
 const value = computed({
   get: () => {
@@ -108,9 +94,10 @@ const value = computed({
     return v
   },
   set: (val) => {
-    if (!val?.value) return
-    selectedOption.value = val
-    emit(valuePropPassed.value ? 'change' : 'update:modelValue', val.value)
+    return (
+      val?.value &&
+      emit(valuePropPassed.value ? 'change' : 'update:modelValue', val?.value)
+    )
   },
 })
 
@@ -159,7 +146,6 @@ const options = createResource({
         description: stripHtml(option.description),
       }
     })
-    retainSelectedOption(allData)
     if (!props.hideMe && props.doctype == 'User') {
       allData.unshift({
         label: '@me',
@@ -177,13 +163,6 @@ function stripHtml(html) {
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-}
-
-function retainSelectedOption(options) {
-  const selected = selectedOption.value
-  if (!selected || options.some((option) => option.value === selected.value))
-    return
-  options.unshift(selected)
 }
 
 function reload(val, force = false) {
@@ -207,7 +186,6 @@ function reload(val, force = false) {
 }
 
 function clearValue(close) {
-  selectedOption.value = null
   emit(valuePropPassed.value ? 'change' : 'update:modelValue', '')
   close()
 }
@@ -215,7 +193,7 @@ function clearValue(close) {
 const labelClasses = computed(() => {
   return [
     {
-      sm: 'text-base',
+      sm: 'text-xs',
       md: 'text-base',
     }[attrs.size || 'sm'],
     'text-ink-gray-5',

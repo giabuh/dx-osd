@@ -300,11 +300,8 @@ def get_data(
 	data = []
 	_list = get_controller(doctype)
 	default_rows = []
-	default_column_keys = []
 	if hasattr(_list, "default_list_data"):
-		default_list_data = _list.default_list_data()
-		default_rows = default_list_data.get("rows")
-		default_column_keys = [column.get("key") for column in default_list_data.get("columns", [])]
+		default_rows = _list.default_list_data().get("rows")
 
 	meta = frappe.get_meta(doctype)
 
@@ -340,23 +337,19 @@ def get_data(
 			rows = default_rows
 			columns = _list.default_list_data().get("columns")
 
-		visible_columns = []
+		# check if rows has all keys from columns if not add them
 		for column in columns:
-			key = column.get("key")
-			# hidden fields are dropped unless the doctype lists them in its own defaults
-			column_meta = meta.get_field(key)
-			if column_meta and column_meta.get("hidden") and key not in default_column_keys:
-				continue
-
-			if key not in rows:
-				rows.append(key)
+			if column.get("key") not in rows:
+				rows.append(column.get("key"))
 			column["label"] = _(column.get("label"))
 
-			if key == "_liked_by" and column.get("width") == "10rem":
+			if column.get("key") == "_liked_by" and column.get("width") == "10rem":
 				column["width"] = "50px"
 
-			visible_columns.append(column)
-		columns = visible_columns
+			# remove column if column.hidden is True
+			column_meta = meta.get_field(column.get("key"))
+			if column_meta and column_meta.get("hidden"):
+				columns.remove(column)
 
 		# check if rows has group_by_field if not add it
 		if group_by_field and group_by_field not in rows:
@@ -410,46 +403,44 @@ def get_data(
 				rows.append(field)
 
 		for kc in kanban_columns:
-			# Start with base filters
-			column_filters = []
-
-			# Convert and add the main filters first
-			if filters:
-				base_filters = convert_filter_to_tuple(doctype, filters)
-				column_filters.extend(base_filters)
-
-			# Add the column-specific filter
-			if column_field and kc.get("name"):
-				column_filters.append([doctype, column_field, "=", kc.get("name")])
-
+			column_filters = {column_field: kc.get("name")}
 			order = kc.get("order")
-			if kc.get("delete"):
+			if (column_field in filters and filters.get(column_field) != kc.get("name")) or kc.get("delete"):
 				column_data = []
 			else:
-				# don't shadow the top-level page_length echoed in the response
-				column_page_length = kc.get("page_length", 20)
+				column_filters.update(filters.copy())
+				page_length = 20
+
+				if kc.get("page_length"):
+					page_length = kc.get("page_length")
 
 				if order:
 					column_data = get_records_based_on_order(
-						doctype, rows, column_filters, column_page_length, order
+						doctype, rows, column_filters, page_length, order
 					)
 				else:
 					column_data = frappe.get_list(
 						doctype,
 						fields=rows,
-						filters=column_filters,
+						filters=convert_filter_to_tuple(doctype, column_filters),
 						order_by=order_by,
-						page_length=column_page_length,
+						page_length=page_length,
 					)
+
+				new_filters = filters.copy()
+				new_filters.update({column_field: kc.get("name")})
 
 				all_count = frappe.get_list(
 					doctype,
-					filters=column_filters,
+					filters=convert_filter_to_tuple(doctype, new_filters),
 					fields=[COUNT_NAME],
 				)[0].total_count
 
 				kc["all_count"] = all_count
 				kc["count"] = len(column_data)
+
+				for d in column_data:
+					getCounts(d, doctype)
 
 			if order:
 				column_data = sorted(
@@ -752,7 +743,6 @@ def remove_doc_link(doctype, docname):
 				"reference_doctype": "",
 				"reference_name": "",
 			}
-
 			if linked_doc_data.get("notification_type_doctype") == linked_doc_data.get("reference_doctype"):
 				delete_references.update(delete_notification_type)
 
@@ -803,7 +793,6 @@ def remove_linked_doc_reference(items: str | list, remove_contact: bool = False,
 				remove_contact_link(item["doctype"], item["docname"])
 			else:
 				remove_doc_link(item["doctype"], item["docname"])
-
 			if delete:
 				frappe.delete_doc(item["doctype"], item["docname"])
 		except (frappe.DoesNotExistError, frappe.ValidationError):

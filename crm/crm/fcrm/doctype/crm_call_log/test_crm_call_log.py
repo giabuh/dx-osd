@@ -4,7 +4,7 @@
 from unittest.mock import MagicMock, patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase
 
 from crm.fcrm.doctype.crm_call_log.crm_call_log import (
 	create_lead_from_call_log,
@@ -14,7 +14,7 @@ from crm.fcrm.doctype.crm_call_log.crm_call_log import (
 from crm.integrations.api import _get_recording_credentials
 
 
-class TestCRMCallLog(IntegrationTestCase):
+class TestCRMCallLog(FrappeTestCase):
 	def tearDown(self):
 		frappe.db.rollback()
 
@@ -64,25 +64,6 @@ class TestCRMCallLog(IntegrationTestCase):
 		)
 
 		self.assertEqual(call.recording_url, recording_url)
-
-	def test_external_recording_plays_through_proxy(self):
-		call = create_test_call_log(recording_url="https://example.com/recording.wav")
-
-		self.assertEqual(
-			call.as_dict()["recording_url_path"],
-			f"/api/method/crm.integrations.api.get_recording_url?call_log_name={call.name}",
-		)
-
-	def test_uploaded_file_recording_plays_directly(self):
-		"""A recording uploaded to the site has no host for the proxy to fetch from."""
-		for path in ("/files/4308.mp3", "/private/files/4308.wav"):
-			call = create_test_call_log(recording_url=path)
-			self.assertEqual(call.as_dict()["recording_url_path"], path)
-
-	def test_protocol_relative_recording_is_not_played_directly(self):
-		call = create_test_call_log(recording_url="//example.com/files/recording.mp3")
-
-		self.assertIn("get_recording_url", call.as_dict()["recording_url_path"])
 
 	def test_has_link_method(self):
 		"""Test has_link method to check if document link exists"""

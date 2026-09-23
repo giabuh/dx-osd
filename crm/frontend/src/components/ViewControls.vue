@@ -336,7 +336,6 @@ import { getSettings } from '@/stores/settings'
 import { globalStore } from '@/stores/global'
 import { viewsStore } from '@/stores/views'
 import { usersStore } from '@/stores/users'
-import { organizationsStore } from '@/stores/organizations'
 import { getMeta } from '@/stores/meta'
 import { isEmoji } from '@/utils'
 import {
@@ -349,15 +348,7 @@ import {
   FeatherIcon,
   usePageMeta,
 } from 'frappe-ui'
-import {
-  computed,
-  ref,
-  onMounted,
-  onBeforeUnmount,
-  watch,
-  h,
-  markRaw,
-} from 'vue'
+import { computed, ref, watch, h, markRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { isMobileView } from '@/composables/settings'
 import Draggable from 'vuedraggable'
@@ -378,10 +369,10 @@ const props = defineProps({
 })
 
 const { brand } = getSettings()
-const { $dialog, $socket } = globalStore()
+const { $dialog } = globalStore()
 const { reload: reloadView, getDefaultView, getView } = viewsStore()
+
 const { isManager, getUser } = usersStore()
-const { organizations } = organizationsStore()
 
 const list = defineModel({ type: Object, default: () => ({}) })
 const loadMore = defineModel('loadMore', { type: Boolean })
@@ -461,15 +452,8 @@ const view = ref({
   public: false,
 })
 
-// mirrors the get_data default; undefined would make "Load More" send null
-const DEFAULT_PAGE_LENGTH = 20
-
-const pageLength = computed(
-  () => list.value?.data?.page_length ?? DEFAULT_PAGE_LENGTH,
-)
-const pageLengthCount = computed(
-  () => list.value?.data?.page_length_count ?? DEFAULT_PAGE_LENGTH,
-)
+const pageLength = computed(() => list.value?.data?.page_length)
+const pageLengthCount = computed(() => list.value?.data?.page_length_count)
 
 watch(loadMore, (value) => {
   if (!value) return
@@ -576,28 +560,6 @@ listResource = createResource({
 
 list.value = listResource
 listResource.params = getParams()
-
-// Refresh the list when a Domain Enrichment enrichment finishes for this
-// doctype, so newly-filled fields (logo, etc.) show without a manual reload.
-function onEnrichmentDone(data) {
-  if (data?.status !== 'completed') return
-  if (data.reference_doctype === props.doctype) reload()
-  // The Deals list logo comes from the cached organizations store
-  // (getOrganization → organization_logo), not the deal row. Refresh that store so a
-  // newly enriched org's logo appears without a hard refresh; `rows` is a
-  // computed reading the store, so it re-renders reactively.
-  if (props.doctype === 'CRM Deal') {
-    organizations.reload()
-  }
-}
-
-onMounted(() => {
-  $socket?.on('domain_enrichment_progress', onEnrichmentDone)
-})
-
-onBeforeUnmount(() => {
-  $socket?.off('domain_enrichment_progress', onEnrichmentDone)
-})
 
 const isLoading = computed(() => list.value?.loading)
 

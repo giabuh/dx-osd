@@ -129,7 +129,7 @@
                       class="px-2 pb-2.5"
                       :class="[i == 0 ? 'pt-5' : 'pt-2.5']"
                     >
-                      <CollapsibleSection :opened="contact.opened">
+                      <Section :opened="contact.opened">
                         <template #header="{ opened, toggle }">
                           <div
                             class="flex cursor-pointer items-center justify-between gap-2 pr-1 text-base leading-5 text-ink-gray-7"
@@ -195,7 +195,7 @@
                             {{ contact.mobile_no }}
                           </div>
                         </div>
-                      </CollapsibleSection>
+                      </Section>
                     </div>
                     <div
                       v-if="i != section.contacts.length - 1"
@@ -288,7 +288,7 @@ import OrganizationModal from '@/components/Modals/OrganizationModal.vue'
 import LostReasonModal from '@/components/Modals/LostReasonModal.vue'
 import AssignTo from '@/components/AssignTo.vue'
 import ContactModal from '@/components/Modals/ContactModal.vue'
-import CollapsibleSection from '@/components/CollapsibleSection.vue'
+import Section from '@/components/CollapsibleSection.vue'
 import Link from '@/components/Controls/Link.vue'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import SLASection from '@/components/SLASection.vue'
@@ -621,12 +621,13 @@ function updateField(name, value) {
 
   document.save.submit(null, {
     onSuccess: () => (reload.value = true),
-    onError: () => {
+    onError: (err) => {
       if (Array.isArray(name)) {
         name.forEach((field) => (doc.value[field] = oldValues[field]))
       } else {
         doc.value[name] = oldValues
       }
+      toast.error(err.messages?.[0] || __('Error updating field'))
     },
   })
 }

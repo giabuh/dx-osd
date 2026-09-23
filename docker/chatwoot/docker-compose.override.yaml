@@ -1,4 +1,15 @@
+x-build: &build
+  # Run the vendored chatwoot/ source instead of the prebuilt chatwoot/chatwoot:latest image.
+  # Paths are relative to chatwoot/ (the first compose file's directory).
+  image: dx-osd/chatwoot:local
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+
 services:
+  base: *build
+  rails: *build
+  sidekiq: *build
   postgres:
     ports: !override
       - '127.0.0.1:15432:5432'

@@ -372,12 +372,13 @@ function updateField(name, value) {
 
   document.save.submit(null, {
     onSuccess: () => (reload.value = true),
-    onError: () => {
+    onError: (err) => {
       if (Array.isArray(name)) {
         name.forEach((field) => (doc.value[field] = oldValues[field]))
       } else {
         doc.value[name] = oldValues
       }
+      toast.error(err.messages?.[0] || __('Error updating field'))
     },
   })
 }

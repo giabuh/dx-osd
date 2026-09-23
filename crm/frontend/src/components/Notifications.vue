@@ -6,82 +6,79 @@
     class="absolute z-20 h-screen bg-surface-base transition-all duration-300 ease-in-out"
     :style="{
       'box-shadow': '8px 0px 8px rgba(0, 0, 0, 0.1)',
-      'max-width': '400px',
-      'min-width': '400px',
+      'max-width': '350px',
+      'min-width': '350px',
       left: 'calc(100% + 1px)',
     }"
   >
     <div class="flex h-screen flex-col text-ink-gray-9">
-      <div class="flex justify-between items-center">
-        <div class="text-lg-medium text-ink-gray-8 px-4 pt-[15px] pb-3">
+      <div class="z-20 flex items-center justify-between border-b px-4 py-2.5">
+        <div class="text-lg-medium text-ink-gray-8">
           {{ __('Notifications') }}
         </div>
-        <div class="flex gap-1 mr-3">
+        <div class="flex gap-1">
           <Button
-            v-if="activeTab == 'all' && notifications.data?.length"
             :tooltip="__('Mark all as read')"
             :icon="MarkAsDoneIcon"
             variant="ghost"
             @click="markAllAsRead"
           />
+          <Button
+            :tooltip="__('Close')"
+            icon="x"
+            variant="ghost"
+            @click="() => toggle()"
+          />
         </div>
       </div>
-      <TabButtons
-        v-model="activeTab"
-        :buttons="tabs"
-        class="flex px-4 py-0.5 [&_button]:w-full [&_div]:w-full [&_button>span]:w-full"
-      />
-      <div v-if="activeTab == 'all'" class="flex h-full">
-        <div
-          v-if="notifications.data?.length"
-          class="divide-y divide-outline-elevation-2 overflow-auto text-base"
+      <div
+        v-if="notifications.data?.length"
+        class="divide-y divide-outline-elevation-2 overflow-auto text-base"
+      >
+        <RouterLink
+          v-for="n in notifications.data"
+          :key="n.comment"
+          :to="getRoute(n)"
+          class="flex cursor-pointer items-start gap-2.5 px-4 py-2.5 hover:bg-surface-gray-2"
+          @click="markAsRead(n.comment || n.notification_type_doc)"
         >
-          <RouterLink
-            v-for="n in notifications.data"
-            :key="n.comment"
-            :to="getRoute(n)"
-            class="flex cursor-pointer items-start gap-2.5 px-4 py-2.5 hover:bg-surface-gray-2"
-            @click="markAsRead(n.comment || n.notification_type_doc)"
-          >
-            <div class="mt-1 flex items-center gap-2.5">
-              <div
-                class="size-[5px] rounded-full"
-                :class="[n.read ? 'bg-transparent' : 'bg-surface-gray-10']"
-              />
-              <WhatsAppIcon v-if="n.type == 'WhatsApp'" class="size-7" />
-              <UserAvatar v-else :user="n.from_user.name" size="lg" />
+          <div class="mt-1 flex items-center gap-2.5">
+            <div
+              class="size-[5px] rounded-full"
+              :class="[n.read ? 'bg-transparent' : 'bg-surface-gray-10']"
+            />
+            <WhatsAppIcon v-if="n.type == 'WhatsApp'" class="size-7" />
+            <UserAvatar v-else :user="n.from_user.name" size="lg" />
+          </div>
+          <div>
+            <div
+              v-if="n.notification_text"
+              v-html="sanitizeHTML(n.notification_text)"
+            />
+            <div v-else class="mb-2 space-x-1 leading-5 text-ink-gray-5">
+              <span class="font-medium text-ink-gray-9">
+                {{ n.from_user.full_name }}
+              </span>
+              <span>
+                {{ __('mentioned you in {0}', [n.reference_doctype]) }}
+              </span>
+              <span class="font-medium text-ink-gray-9">
+                {{ n.reference_name }}
+              </span>
             </div>
-            <div>
-              <div
-                v-if="n.notification_text"
-                v-html="sanitizeHTML(n.notification_text)"
-              />
-              <div v-else class="mb-2 space-x-1 leading-5 text-ink-gray-5">
-                <span class="font-medium text-ink-gray-9">
-                  {{ n.from_user.full_name }}
-                </span>
-                <span>
-                  {{ __('mentioned you in {0}', [n.reference_doctype]) }}
-                </span>
-                <span class="font-medium text-ink-gray-9">
-                  {{ n.reference_name }}
-                </span>
-              </div>
-              <div class="text-sm text-ink-gray-5">
-                {{ __(timeAgo(n.creation)) }}
-              </div>
+            <div class="text-sm text-ink-gray-5">
+              {{ __(timeAgo(n.creation)) }}
             </div>
-          </RouterLink>
-        </div>
-        <EmptyState
-          v-else
-          title="No New Notifications"
-          description="You have no new notifications"
-          :icon="NotificationsIcon"
-          width="lg"
-        />
+          </div>
+        </RouterLink>
       </div>
-      <div v-else class="flex h-full"></div>
+      <EmptyState
+        v-else
+        title="No New Notifications"
+        description="You have no new notifications"
+        :icon="NotificationsIcon"
+        width="lg"
+      />
     </div>
   </div>
 </template>
@@ -100,18 +97,11 @@ import { globalStore } from '@/stores/global'
 import { timeAgo, sanitizeHTML } from '@/utils'
 import { onClickOutside } from '@vueuse/core'
 import { useTelemetry } from 'frappe-ui/frappe'
-import { TabButtons } from 'frappe-ui'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const { $socket } = globalStore()
 const { mark_as_read, toggle, mark_doc_as_read } = notificationsStore()
 const { capture } = useTelemetry()
-
-const activeTab = ref('all')
-const tabs = [
-  { label: __('All'), value: 'all' },
-  // { label: __('Mentions'), value: 'mentions' },
-]
 
 const target = ref(null)
 onClickOutside(
@@ -139,7 +129,9 @@ onBeforeUnmount(() => {
 })
 
 onMounted(() => {
-  $socket.on('crm_notification', () => notifications.reload())
+  $socket.on('crm_notification', () => {
+    notifications.reload()
+  })
 })
 
 function getRoute(notification) {

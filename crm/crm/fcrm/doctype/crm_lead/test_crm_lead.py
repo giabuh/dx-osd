@@ -5,12 +5,12 @@ import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.desk.form.assign_to import add as assign_add
 from frappe.desk.form.assign_to import remove as assign_remove
-from frappe.tests import IntegrationTestCase
 
 from crm.fcrm.doctype.crm_lead.crm_lead import convert_to_deal
+from crm.tests import CRMTestCase as FrappeTestCase
 
 
-class TestCRMLead(IntegrationTestCase):
+class TestCRMLead(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		"""Set up test records once for all tests"""
@@ -299,29 +299,6 @@ class TestCRMLead(IntegrationTestCase):
 			lead2.create_contact()
 		self.assertIn("Contact already exists", str(context.exception))
 
-	def test_contact_not_reused_when_only_phone_matches(self):
-		"""A different person sharing only a phone must not be reused as the contact"""
-		lead1 = create_lead(
-			first_name="Jane",
-			last_name="Doe",
-			email="frappe@example.com",
-			mobile_no="+910000000099",
-		)
-		existing_contact = lead1.create_contact()
-
-		# Different person, no email, but the same mobile number
-		lead2 = create_lead(
-			first_name="John",
-			last_name="Doe",
-			mobile_no="+910000000099",
-		)
-		contact_name = lead2.create_contact()
-
-		self.assertNotEqual(contact_name, existing_contact)
-		contact = frappe.get_doc("Contact", contact_name)
-		self.assertEqual(contact.first_name, "John")
-		self.assertEqual(contact.last_name, "Doe")
-
 	def test_convert_lead_to_deal(self):
 		"""Test converting a lead to a deal with new contact and organization"""
 		lead = create_lead(
@@ -592,16 +569,6 @@ class TestCRMLead(IntegrationTestCase):
 		lead = create_lead(first_name="Override", lead_owner="crm.user1@example.com")
 		assign_add({"assign_to": ["crm.user2@example.com"], "doctype": "CRM Lead", "name": lead.name})
 		self.assertEqual(frappe.db.get_value("CRM Lead", lead.name, "lead_owner"), "crm.user2@example.com")
-
-	def test_negative_currency_fields_rejected(self):
-		"""Test that Currency fields reject negative values"""
-		for fieldname in ("annual_revenue", "total", "net_total"):
-			with self.subTest(fieldname=fieldname), self.assertRaises(frappe.NonNegativeError):
-				create_lead(
-					first_name="Negative",
-					email=f"negative.{fieldname}@example.com",
-					**{fieldname: -100},
-				)
 
 
 def create_lead(**kwargs):

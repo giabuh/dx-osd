@@ -1,6 +1,6 @@
 <template>
   <div
-    class="condition-group flex w-full flex-col gap-4 rounded-lg border border-outline-gray-2 p-3"
+    class="rounded-lg border border-outline-gray-2 p-3 flex flex-col gap-4 w-full"
   >
     <template v-for="(condition, i) in conditions" :key="condition.field">
       <CFCondition
@@ -13,7 +13,6 @@
         :conjunction="getConjunction()"
         :disableAddCondition="props.disableAddCondition"
         :doctype="props.doctype"
-        :variant="props.variant"
         @remove="removeCondition(condition)"
         @unGroupConditions="unGroupConditions(condition)"
         @toggleConjunction="toggleConjunction"
@@ -45,7 +44,6 @@ const props = defineProps({
   level: { type: Number, default: 0 },
   disableAddCondition: { type: Boolean, default: false },
   doctype: { type: String, required: true },
-  variant: { type: String, default: 'subtle' },
 })
 
 const conditions = reactive(props.conditions)
@@ -58,10 +56,6 @@ const getConjunction = () => {
     }
   })
   return conjunction
-}
-
-const turnIntoGroup = (condition) => {
-  conditions.splice(conditions.indexOf(condition), 1, [condition])
 }
 
 const isGroupCondition = (condition) => {
@@ -90,47 +84,9 @@ const dropdownOptions = computed(() => {
   return options
 })
 
-function removeCondition(condition) {
-  const conditionIndex = conditions.indexOf(condition)
-  if (conditionIndex == 0) {
-    conditions.splice(conditionIndex, 2)
-  } else {
-    conditions.splice(conditionIndex - 1, 2)
-  }
-}
-
-function unGroupConditions(condition) {
-  const conjunction = getConjunction()
-  const newConditions = condition.map((c) => {
-    if (typeof c == 'string') {
-      return conjunction
-    }
-    return c
-  })
-
-  const index = conditions.indexOf(condition)
-  if (index !== -1) {
-    conditions.splice(index, 1, ...newConditions)
-  }
-}
-
-function toggleConjunction(conjunction) {
-  for (let i = 0; i < conditions.length; i++) {
-    if (typeof conditions[i] == 'string') {
-      conditions[i] = conjunction == 'and' ? 'or' : 'and'
-    }
-  }
-}
-
 watch(
   () => props.doctype,
   (doctype) => filterableFields.submit({ doctype }),
   { immediate: true },
 )
 </script>
-
-<style scoped>
-.condition-group {
-  container-type: inline-size;
-}
-</style>

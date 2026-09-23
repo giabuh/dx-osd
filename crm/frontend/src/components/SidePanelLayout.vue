@@ -7,7 +7,7 @@
           class="w-full section-border h-px border-t"
         />
         <div class="p-1 sm:p-3">
-          <CollapsibleSection
+          <Section
             labelClass="px-2 font-semibold"
             headerClass="h-8"
             :label="section.label"
@@ -382,11 +382,6 @@
                           class="h-4 w-4 shrink-0 cursor-pointer text-ink-gray-5 hover:text-ink-gray-8"
                           @click.stop="field.link(doc[field.fieldname])"
                         />
-                        <ArrowUpRightIcon
-                          v-else-if="isExternalUrl(doc[field.fieldname])"
-                          class="h-4 w-4 shrink-0 cursor-pointer text-ink-gray-5 hover:text-ink-gray-8"
-                          @click.stop="openExternalUrl(doc[field.fieldname])"
-                        />
                         <EditIcon
                           v-if="
                             field.fieldtype === 'Link' &&
@@ -402,7 +397,7 @@
                 </template>
               </FadedScrollableDiv>
             </slot>
-          </CollapsibleSection>
+          </Section>
         </div>
       </div>
     </template>
@@ -425,7 +420,7 @@ import ButtonControl, {
   getButtonTheme,
   getButtonVariant,
 } from '@/components/Controls/ButtonControl.vue'
-import CollapsibleSection from '@/components/CollapsibleSection.vue'
+import Section from '@/components/CollapsibleSection.vue'
 import PrimaryDropdown from '@/components/PrimaryDropdown.vue'
 import FadedScrollableDiv from '@/components/FadedScrollableDiv.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
@@ -567,14 +562,6 @@ function parsedField(field) {
 
 const instance = getCurrentInstance()
 const attrs = instance?.vnode?.props ?? {}
-
-function isExternalUrl(value) {
-  return typeof value === 'string' && /^https?:\/\//i.test(value.trim())
-}
-
-function openExternalUrl(value) {
-  window.open(value.trim(), '_blank', 'noopener,noreferrer')
-}
 
 async function fieldChange(value, df) {
   if (props.preview) return

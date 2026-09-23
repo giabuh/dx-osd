@@ -20,7 +20,6 @@ module.exports = {
         "style",
         "test",
         "patch",
-        "deprecate", // deprecation decision
       ],
     ],
   },

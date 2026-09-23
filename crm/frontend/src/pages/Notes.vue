@@ -41,11 +41,6 @@
           <Dropdown
             :options="[
               {
-                label: __('Edit'),
-                icon: 'edit-2',
-                onClick: () => editNote(note.name),
-              },
-              {
                 label: __('Delete'),
                 icon: 'trash-2',
                 onClick: () => deleteNote(note.name),

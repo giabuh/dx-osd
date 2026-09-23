@@ -1,3 +1,6 @@
+<template>
+  <div></div>
+</template>
 <script setup>
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'

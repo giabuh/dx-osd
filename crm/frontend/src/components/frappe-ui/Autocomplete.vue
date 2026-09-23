@@ -14,8 +14,7 @@
         >
           <div class="w-full">
             <button
-              :id="buttonId"
-              class="relative flex h-7 w-full items-center justify-between gap-2 rounded px-2 py-1 transition-colors pr-7"
+              class="relative flex h-7 w-full items-center justify-between gap-2 rounded px-2 py-1 transition-colors"
               :class="inputClasses"
               @click="() => !disabled && togglePopover()"
             >
@@ -182,10 +181,6 @@ const props = defineProps({
   maxOptions: {
     type: Number,
     default: 20,
-  },
-  buttonId: {
-    type: String,
-    default: undefined,
   },
 })
 const emit = defineEmits(['update:modelValue', 'update:query', 'change'])

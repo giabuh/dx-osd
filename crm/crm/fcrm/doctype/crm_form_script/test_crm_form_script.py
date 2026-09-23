@@ -2,8 +2,8 @@
 # See license.txt
 
 # import frappe
-from frappe.tests import UnitTestCase
+from crm.tests import CRMTestCase as FrappeTestCase
 
 
-class TestCRMFormScript(UnitTestCase):
+class TestCRMFormScript(FrappeTestCase):
 	pass

@@ -66,9 +66,9 @@
 
 <script setup>
 import Link from '@/components/Controls/Link.vue'
+import TextEditorControl from '@/components/Controls/TextEditorControl.vue'
 import { statusesStore } from '@/stores/statuses'
 import { createDocument } from '@/composables/document'
-import TextEditorControl from '@/components/Controls/TextEditorControl.vue'
 import { useTelemetry } from 'frappe-ui/frappe'
 import {
   Combobox,
@@ -77,7 +77,6 @@ import {
   call,
   createResource,
   toast,
-  TextEditor,
   DatePicker,
 } from 'frappe-ui'
 import { ref, computed, onMounted, h } from 'vue'

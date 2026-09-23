@@ -2,6 +2,7 @@ import functools
 
 import frappe
 import phonenumbers
+import requests
 from frappe import _
 from frappe.core.doctype.comment.comment import Comment
 from frappe.core.doctype.communication.communication import Communication

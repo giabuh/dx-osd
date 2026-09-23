@@ -60,7 +60,7 @@ class ERPNextCRMSettings(Document):
 			self.create_custom_fields()
 			self.create_crm_form_script()
 			self.grant_item_access_to_sales_roles()
-			if not was_active and not self.is_erpnext_in_different_site:
+			if not was_active and not self.is_erpnext_in_different_site and self.sync_products:
 				from crm.fcrm.doctype.crm_product.reconcile_job import enqueue_reconciliation
 
 				enqueue_reconciliation()

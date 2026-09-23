@@ -2,12 +2,12 @@
 # See license.txt
 
 import frappe
-from frappe.tests import IntegrationTestCase
 
 from crm.fcrm.doctype.crm_view_settings.crm_view_settings import set_as_default
+from crm.tests import CRMTestCase as FrappeTestCase
 
 
-class TestCRMViewSettings(IntegrationTestCase):
+class TestCRMViewSettings(FrappeTestCase):
 	def setUp(self):
 		frappe.set_user("Administrator")
 		frappe.db.delete("CRM View Settings", {"user": "Administrator"})

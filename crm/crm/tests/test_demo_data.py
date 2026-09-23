@@ -2,10 +2,11 @@ import json
 import os
 
 import frappe
-from frappe.tests import IntegrationTestCase
+
+from crm.tests import CRMTestCase as FrappeTestCase
 
 
-class TestDemoData(IntegrationTestCase):
+class TestDemoData(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()

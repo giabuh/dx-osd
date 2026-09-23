@@ -227,25 +227,22 @@ const idFieldDoctypes = ['CRM Lead', 'CRM Deal']
 
 const filterFieldOptions = computed(() => {
   const fields = filterableFields.data || []
-  const markIdField = idFieldDoctypes.includes(props.doctype)
+  if (!idFieldDoctypes.includes(props.doctype)) return fields
 
-  return fields.map((field) => {
-    // Drop the description: it renders as a second line in the dropdown, and
-    // the popover has no max width, so one long description (CRM Deal's
-    // exchange rate) stretches the whole list.
-    const { description, ...option } = field
-
-    if (markIdField && option.fieldname === 'name') {
-      option.slots = {
-        suffix: () =>
-          h('span', {
-            class: 'lucide-id-card size-4 shrink-0 text-ink-gray-5',
-            title: __('Document ID, not the full name'),
-          }),
-      }
-    }
-    return option
-  })
+  return fields.map((field) =>
+    field.fieldname === 'name'
+      ? {
+          ...field,
+          slots: {
+            suffix: () =>
+              h('span', {
+                class: 'lucide-id-card size-4 shrink-0 text-ink-gray-5',
+                title: __('Document ID, not the full name'),
+              }),
+          },
+        }
+      : field,
+  )
 })
 
 const availableFilters = computed(() => {

@@ -2,11 +2,11 @@
 # See license.txt
 
 import frappe
-from frappe.tests import IntegrationTestCase
 from frappe.utils import sha256_hash
 from frappe.utils.password import update_password
 
 from crm.api.user import has_password, needs_password_setup
+from crm.tests import CRMTestCase
 from crm.www.crm import get_context, redirect_to_set_password
 
 STRONG_PASSWORD = "Qx7#mLp2vT9!"
@@ -29,7 +29,7 @@ def make_user(email, roles=None):
 	return user
 
 
-class TestPasswordSetup(IntegrationTestCase):
+class TestPasswordSetup(CRMTestCase):
 	def setUp(self):
 		self.user = make_user("no-password@example.com", roles=["System Manager"])
 		frappe.set_user(self.user.name)
@@ -61,11 +61,6 @@ class TestPasswordSetup(IntegrationTestCase):
 	def test_does_not_need_setup_for_sso_user(self):
 		"""No password is the correct state for someone who signs in via SSO."""
 		self.make_sso_user()
-
-		self.assertFalse(needs_password_setup())
-
-	def test_does_not_need_setup_for_ldap_user(self):
-		frappe.db.set_single_value("LDAP Settings", "enabled", 1)
 
 		self.assertFalse(needs_password_setup())
 

@@ -16,12 +16,6 @@
         v-if="document.actions?.length"
         :actions="document.actions"
       />
-      <EnrichFromWebsite
-        doctype="CRM Deal"
-        :docname="dealId"
-        :website="doc.website"
-        @done="onEnriched"
-      />
       <AssignTo v-model="assignees.data" doctype="CRM Deal" :docname="dealId" />
       <Dropdown
         v-if="doc && document.statuses"
@@ -76,7 +70,7 @@
               size="3xl"
               class="size-12"
               :label="title"
-              :image="doc.organization_logo || organization?.organization_logo"
+              :image="organization?.organization_logo"
             />
           </div>
         </Tooltip>
@@ -197,7 +191,7 @@
                 :key="contact.name"
               >
                 <div class="px-2 pb-2.5" :class="[i == 0 ? 'pt-5' : 'pt-2.5']">
-                  <CollapsibleSection :opened="contact.opened">
+                  <Section :opened="contact.opened">
                     <template #header="{ opened, toggle }">
                       <div
                         class="flex cursor-pointer items-center justify-between gap-2 pr-1 text-base leading-5 text-ink-gray-7"
@@ -273,7 +267,7 @@
                         {{ __('No Details Added') }}
                       </div>
                     </div>
-                  </CollapsibleSection>
+                  </Section>
                 </div>
                 <div
                   v-if="i != dealContacts.data.length - 1"
@@ -369,11 +363,10 @@ import AssignTo from '@/components/AssignTo.vue'
 import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
 import ContactModal from '@/components/Modals/ContactModal.vue'
 import Link from '@/components/Controls/Link.vue'
-import CollapsibleSection from '@/components/CollapsibleSection.vue'
+import Section from '@/components/CollapsibleSection.vue'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
-import EnrichFromWebsite from '@/components/EnrichFromWebsite.vue'
 import {
   openWebsite,
   setupCustomizations,
@@ -772,12 +765,13 @@ function updateField(name, value) {
 
   document.save.submit(null, {
     onSuccess: () => (reload.value = true),
-    onError: () => {
+    onError: (err) => {
       if (Array.isArray(name)) {
         name.forEach((field) => (doc.value[field] = oldValues[field]))
       } else {
         doc.value[name] = oldValues
       }
+      toast.error(err.messages?.[0] || __('Error updating field'))
     },
   })
 }
@@ -829,11 +823,6 @@ function beforeStatusChange(data) {
       onSuccess: () => reloadResources(data),
     })
   }
-}
-
-function onEnriched() {
-  document.reload?.()
-  sections.reload()
 }
 
 function reloadResources(data) {

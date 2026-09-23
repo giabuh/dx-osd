@@ -4,7 +4,6 @@
 import frappe
 from frappe.desk.form.assign_to import add as assign_add
 from frappe.desk.form.assign_to import remove as assign_remove
-from frappe.tests import IntegrationTestCase
 
 from crm.fcrm.doctype.crm_deal.api import get_deal_contacts
 from crm.fcrm.doctype.crm_deal.crm_deal import (
@@ -13,9 +12,10 @@ from crm.fcrm.doctype.crm_deal.crm_deal import (
 	remove_contact,
 	set_primary_contact,
 )
+from crm.tests import CRMTestCase as FrappeTestCase
 
 
-class TestCRMDeal(IntegrationTestCase):
+class TestCRMDeal(FrappeTestCase):
 	def tearDown(self) -> None:
 		frappe.set_user("Administrator")
 		frappe.db.rollback()
@@ -491,14 +491,8 @@ class TestCRMDeal(IntegrationTestCase):
 		deal.reload()
 		self.assertEqual(deal.contacts[0].is_primary, 1)
 
-	def test_negative_currency_fields_rejected(self):
-		"""Test that Currency fields reject negative values"""
-		for fieldname in ("annual_revenue", "deal_value", "expected_deal_value", "total", "net_total"):
-			with self.subTest(fieldname=fieldname), self.assertRaises(frappe.NonNegativeError):
-				create_test_deal(organization=f"Negative {fieldname}", **{fieldname: -100})
 
-
-class TestGetDealContacts(IntegrationTestCase):
+class TestGetDealContacts(FrappeTestCase):
 	def tearDown(self) -> None:
 		frappe.set_user("Administrator")
 		frappe.db.rollback()

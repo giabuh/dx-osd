@@ -214,7 +214,7 @@ import { usersStore } from '@/stores/users'
 import { formatDate, sanitizeHTML } from '@/utils'
 import { timestampCell } from '@/composables/useTimelinePreferences'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
-import { Tooltip, Avatar, Dropdown } from 'frappe-ui'
+import { Tooltip, Avatar, Dropdown, call } from 'frappe-ui'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 

@@ -23,12 +23,8 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: [
-      { find: '@', replacement: path.resolve(import.meta.dirname, 'src') },
-      {
-        find: /^~icons\/.*/,
-        replacement: path.resolve(import.meta.dirname, 'tests/stubs/icon.js'),
-      },
-    ],
+    alias: {
+      '@': path.resolve(import.meta.dirname, 'src'),
+    },
   },
 })

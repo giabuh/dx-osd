@@ -422,25 +422,15 @@ const { users, isManager } = usersStore()
 const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 
 async function getFirstLead() {
-  return await getFirstRecord('firstLead', 'crm.api.onboarding.get_first_lead')
+  let firstLead = localStorage.getItem('firstLead' + user)
+  if (firstLead) return firstLead
+  return await call('crm.api.onboarding.get_first_lead')
 }
 
 async function getFirstDeal() {
-  return await getFirstRecord('firstDeal', 'crm.api.onboarding.get_first_deal')
-}
-
-// the cached id may point to a record that was deleted (or a lead that was
-// converted) since it was stored, so let the server validate it and fall back
-async function getFirstRecord(key, method) {
-  let storageKey = key + user
-  let cached = localStorage.getItem(storageKey)
-  let name = await call(method, { name: cached })
-  if (name) {
-    localStorage.setItem(storageKey, name)
-  } else {
-    localStorage.removeItem(storageKey)
-  }
-  return name
+  let firstDeal = localStorage.getItem('firstDeal' + user)
+  if (firstDeal) return firstDeal
+  return await call('crm.api.onboarding.get_first_deal')
 }
 
 const showIntermediateModal = ref(false)

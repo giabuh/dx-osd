@@ -335,8 +335,8 @@ import ButtonControl, {
   getButtonVariant,
 } from '@/components/Controls/ButtonControl.vue'
 import EditIcon from '@/components/Icons/EditIcon.vue'
-import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
+import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import TableMultiselectInput from '@/components/Controls/TableMultiselectInput.vue'
 import Link from '@/components/Controls/Link.vue'
@@ -358,7 +358,6 @@ import {
 import { isFetchedFromLink } from '@/utils/fetchFrom'
 import { usersStore } from '@/stores/users'
 import { useDocument } from '@/data/document'
-
 import {
   Combobox,
   Tooltip,
