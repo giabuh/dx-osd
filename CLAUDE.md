@@ -13,6 +13,8 @@ DX-OSD stands on the shoulders of two mature, complete open-source products and 
 
 Full design rationale and every architectural decision is in **`docs/superpowers/specs/2026-09-22-facebook-integration-platform.md`** — read that before making any architecture-level change. The task-by-task build plan, with exact commands and the current pass/fail status of each task, is in **`docs/superpowers/plans/2026-09-22-facebook-integration-platform.md`**; its live execution ledger (what's done, parked, and why) is at `.superpowers/sdd/2026-09-22-facebook-integration-platform/progress.md`.
 
+The product-level direction — vision, guiding principles, and milestone phases beyond this first pipeline — is in **`ROADMAP.md`**; new work should trace back to a phase there.
+
 `REPO.md` is a leftover candidate-repo comparison table from before the architecture was decided — background context only, not the current design.
 
 ## Vendored source: `chatwoot/`, `crm/`, `messenger-platform-samples/`
