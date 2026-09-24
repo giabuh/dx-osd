@@ -230,9 +230,9 @@ class TestChatwootSyncApi(unittest.TestCase):
                     self.mock_frappe.get_doc.assert_any_call({
                         "doctype": "CRM Lead",
                         "first_name": "EduFlow Student",
-                        "email_id": "newbie@example.com",
+                        "email": "newbie@example.com",
                         "mobile_no": "+84901234567",
-                        "lead_source": "Messenger",
+                        "source": "Messenger",
                         "chatwoot_contact_id": "888",
                     })
                     mock_lead_doc.insert.assert_called()

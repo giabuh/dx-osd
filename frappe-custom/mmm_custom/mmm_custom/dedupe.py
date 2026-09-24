@@ -23,12 +23,12 @@ def build_lead_search_filters(email: str = None, phone: str = None) -> list:
     """Build OR search filters for querying CRM Lead by email or mobile_no.
 
     Returns a list of condition triplets, e.g.:
-    [["email_id", "=", "test@example.com"], ["mobile_no", "=", "+84901234567"]]
+    [["email", "=", "test@example.com"], ["mobile_no", "=", "+84901234567"]]
     Returns [] if neither email nor phone is provided.
     """
     filters = []
     if email and str(email).strip():
-        filters.append(["email_id", "=", str(email).strip()])
+        filters.append(["email", "=", str(email).strip()])
     norm_phone = normalize_phone(phone)
     if norm_phone:
         filters.append(["mobile_no", "=", norm_phone])
@@ -56,7 +56,7 @@ def find_matching_lead(email: str = None, phone: str = None):
     leads = frappe.get_all(
         "CRM Lead",
         or_filters=filters,
-        fields=["name", "first_name", "email_id", "mobile_no", "chatwoot_contact_id"],
+        fields=["name", "first_name", "email", "mobile_no", "chatwoot_contact_id"],
         limit=1,
     )
     return leads[0] if leads else None

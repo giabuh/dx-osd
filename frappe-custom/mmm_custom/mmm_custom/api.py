@@ -120,9 +120,9 @@ def chatwoot_sync():
             lead = frappe.get_doc({
                 "doctype": "CRM Lead",
                 "first_name": first_name,
-                "email_id": email,
+                "email": email,
                 "mobile_no": normalize_phone(phone),
-                "lead_source": "Messenger",
+                "source": "Messenger",
                 "chatwoot_contact_id": str(contact_id) if contact_id is not None else None,
             }).insert(ignore_permissions=True)
             lead_name = lead.name
@@ -138,10 +138,10 @@ def chatwoot_sync():
         conv_id = conversation.get("id") or payload.get("id") or ""
         frappe.get_doc({
             "doctype": "FCRM Note",
-            "parent": lead_name,
-            "parenttype": "CRM Lead",
-            "parentfield": "notes",
-            "content": f"[Chatwoot #{conv_id}]: {first_msg}",
+            "title": f"Chatwoot #{conv_id}",
+            "content": first_msg,
+            "reference_doctype": "CRM Lead",
+            "reference_docname": lead_name,
         }).insert(ignore_permissions=True)
     except Exception as e:
         if hasattr(frappe, "log_error"):

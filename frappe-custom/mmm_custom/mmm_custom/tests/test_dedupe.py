@@ -39,12 +39,12 @@ class TestDedupeLogic(unittest.TestCase):
         # Both email and phone present
         filters = build_lead_search_filters("test@example.com", "0901234567")
         self.assertEqual(len(filters), 2)
-        self.assertIn(["email_id", "=", "test@example.com"], filters)
+        self.assertIn(["email", "=", "test@example.com"], filters)
         self.assertIn(["mobile_no", "=", "+84901234567"], filters)
 
         # Only email present
         email_only = build_lead_search_filters("test@example.com", "")
-        self.assertEqual(email_only, [["email_id", "=", "test@example.com"]])
+        self.assertEqual(email_only, [["email", "=", "test@example.com"]])
 
         # Only phone present
         phone_only = build_lead_search_filters(None, "0901234567")
@@ -87,7 +87,7 @@ class TestDedupeLogic(unittest.TestCase):
         expected_lead = {
             "name": "CRM-LEAD-2026-00001",
             "first_name": "Nguyen Van A",
-            "email_id": "test@example.com",
+            "email": "test@example.com",
             "mobile_no": "+84901234567",
             "chatwoot_contact_id": "123",
         }
@@ -99,10 +99,10 @@ class TestDedupeLogic(unittest.TestCase):
             mock_frappe.get_all.assert_called_once_with(
                 "CRM Lead",
                 or_filters=[
-                    ["email_id", "=", "test@example.com"],
+                    ["email", "=", "test@example.com"],
                     ["mobile_no", "=", "+84901234567"],
                 ],
-                fields=["name", "first_name", "email_id", "mobile_no", "chatwoot_contact_id"],
+                fields=["name", "first_name", "email", "mobile_no", "chatwoot_contact_id"],
                 limit=1,
             )
 
