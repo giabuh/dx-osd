@@ -7,7 +7,3 @@ crm.example.com {
         header_up Host crm.localhost
     }
 }
-
-n8n.example.com {
-    reverse_proxy 127.0.0.1:5678
-}
