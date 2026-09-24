@@ -23,17 +23,17 @@ def create_custom_fields():
 			"dt": "CRM Lead",
 			"fieldname": "course_interest",
 			"label": "Course Interest",
-			"fieldtype": "Select",
-			"options": "\nTiếng Anh\nBơi lội\nToán tư duy\nChưa xác định",
+			"fieldtype": "Data",
 			"insert_after": "source",
 		}).insert(ignore_permissions=True)
 		print("Custom field course_interest created")
 	else:
 		doc = frappe.get_doc("Custom Field", "CRM Lead-course_interest")
-		doc.options = "\nTiếng Anh\nBơi lội\nToán tư duy\nChưa xác định"
+		doc.fieldtype = "Data"
+		doc.options = None
 		doc.insert_after = "source"
 		doc.save(ignore_permissions=True)
-		print("Custom field course_interest updated")
+		print("Custom field course_interest updated to Data")
 
 	if not frappe.db.exists("Custom Field", "CRM Lead-branch"):
 		frappe.get_doc({

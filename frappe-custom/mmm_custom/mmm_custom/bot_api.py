@@ -123,8 +123,9 @@ def _create_or_update_lead(contact: dict, courses: list[str],
     course_display = ", ".join(
         COURSES.get(k, k) for k in courses
     )
-    # Map branch key to display name and branch owner consultant
-    branch_display = BRANCHES.get(branch_key, branch_key)
+    # Map branch key to display name (without emoji for CRM Select option) and branch owner consultant
+    raw_branch = BRANCHES.get(branch_key, branch_key) or ""
+    branch_display = raw_branch.replace("📍 ", "").strip()
     branch_owners = {
         "binh_thanh": "mai.binhthanh@eduflow.vn",
         "quan_1": "nam.quan1@eduflow.vn",
@@ -135,8 +136,17 @@ def _create_or_update_lead(contact: dict, courses: list[str],
     custom_attrs = contact.get("custom_attributes") or {}
     crm_lead_id = custom_attrs.get("crm_lead_id")
 
+    lead_name = None
     if crm_lead_id and frappe.db.exists("CRM Lead", crm_lead_id):
         lead_name = crm_lead_id
+    elif contact_id and frappe.db.exists("CRM Lead", {"chatwoot_contact_id": str(contact_id)}):
+        lead_name = frappe.db.get_value("CRM Lead", {"chatwoot_contact_id": str(contact_id)}, "name")
+    else:
+        matched = find_matching_lead(email, phone)
+        if matched:
+            lead_name = matched.name if hasattr(matched, "name") else matched.get("name")
+
+    if lead_name:
         frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_display)
         frappe.db.set_value("CRM Lead", lead_name, "branch", branch_display)
         if lead_owner:
@@ -144,28 +154,18 @@ def _create_or_update_lead(contact: dict, courses: list[str],
         if contact_id:
             frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
     else:
-        matched = find_matching_lead(email, phone)
-        if matched:
-            lead_name = matched.name if hasattr(matched, "name") else matched.get("name")
-            frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_display)
-            frappe.db.set_value("CRM Lead", lead_name, "branch", branch_display)
-            if lead_owner:
-                frappe.db.set_value("CRM Lead", lead_name, "lead_owner", lead_owner)
-            if contact_id:
-                frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
-        else:
-            lead = frappe.get_doc({
-                "doctype": "CRM Lead",
-                "first_name": first_name,
-                "email": email,
-                "mobile_no": normalize_phone(phone),
-                "source": "Messenger Bot",
-                "course_interest": course_display,
-                "branch": branch_display,
-                "lead_owner": lead_owner,
-                "chatwoot_contact_id": str(contact_id) if contact_id else None,
-            }).insert(ignore_permissions=True)
-            lead_name = lead.name
+        lead = frappe.get_doc({
+            "doctype": "CRM Lead",
+            "first_name": first_name,
+            "email": email,
+            "mobile_no": normalize_phone(phone),
+            "source": "Messenger Bot",
+            "course_interest": course_display,
+            "branch": branch_display,
+            "lead_owner": lead_owner,
+            "chatwoot_contact_id": str(contact_id) if contact_id else None,
+        }).insert(ignore_permissions=True)
+        lead_name = lead.name
 
     return lead_name
 
