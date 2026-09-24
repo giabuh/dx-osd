@@ -200,13 +200,22 @@ def agent_bot_webhook():
 
     # Only process incoming messages (from customer, not bot/agent)
     message_type = payload.get("message_type", -1)
-    if message_type != 0:
+    if message_type not in (0, "incoming"):
         return {"status": "ignored", "reason": "outgoing_message"}
 
     # Extract conversation and contact data
     conversation = payload.get("conversation") or {}
+    # In Agent Bot webhooks, contact_inbox may be a GlobalID string, not a dict.
+    # Extract contact from meta.sender, top-level sender, or contact_inbox.contact
     contact_inbox = conversation.get("contact_inbox") or {}
-    contact = contact_inbox.get("contact") or payload.get("sender") or {}
+    meta = conversation.get("meta") or {}
+    meta_sender = meta.get("sender") if isinstance(meta, dict) else {}
+    contact = (
+        (contact_inbox.get("contact") if isinstance(contact_inbox, dict) else None)
+        or (meta_sender if isinstance(meta_sender, dict) else None)
+        or payload.get("sender")
+        or {}
+    )
     contact_id = contact.get("id")
     custom_attrs = contact.get("custom_attributes") or {}
     conversation_id = conversation.get("id") or payload.get("conversation", {}).get("id")
