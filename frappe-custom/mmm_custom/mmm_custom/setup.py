@@ -1,36 +1,58 @@
 import frappe
 
 
-def create_custom_field():
-	if frappe.db.exists("Custom Field", "CRM Lead-chatwoot_contact_id"):
-		print("Custom field already exists, skipping")
-		return
+def create_custom_fields():
+	if not frappe.db.exists("Custom Field", "CRM Lead-chatwoot_contact_id"):
+		frappe.get_doc({
+			"doctype": "Custom Field",
+			"dt": "CRM Lead",
+			"fieldname": "chatwoot_contact_id",
+			"label": "Chatwoot Contact ID",
+			"fieldtype": "Data",
+			"unique": 1,
+			"read_only": 0,
+			"insert_after": "lead_name",
+		}).insert(ignore_permissions=True)
+		print("Custom field chatwoot_contact_id created")
+	else:
+		print("Custom field chatwoot_contact_id already exists, skipping")
 
-	frappe.get_doc({
-		"doctype": "Custom Field",
-		"dt": "CRM Lead",
-		"fieldname": "chatwoot_contact_id",
-		"label": "Chatwoot Contact ID",
-		"fieldtype": "Data",
-		"unique": 1,
-		"read_only": 0,
-		"insert_after": "lead_name",
-	}).insert(ignore_permissions=True)
+	if not frappe.db.exists("Custom Field", "CRM Lead-course_interest"):
+		frappe.get_doc({
+			"doctype": "Custom Field",
+			"dt": "CRM Lead",
+			"fieldname": "course_interest",
+			"label": "Course Interest",
+			"fieldtype": "Select",
+			"options": "\nTiếng Anh\nBơi lội\nToán tư duy\nChưa xác định",
+			"insert_after": "source",
+		}).insert(ignore_permissions=True)
+		print("Custom field course_interest created")
+	else:
+		doc = frappe.get_doc("Custom Field", "CRM Lead-course_interest")
+		doc.options = "\nTiếng Anh\nBơi lội\nToán tư duy\nChưa xác định"
+		doc.insert_after = "source"
+		doc.save(ignore_permissions=True)
+		print("Custom field course_interest updated")
+
 	frappe.db.commit()
-	print("Custom field created")
+
+
+def create_custom_field():
+	create_custom_fields()
 
 
 def create_lead_sources():
-	# Same pattern as upstream's own crm/patches/v1_0/add_fb_lead_source.py.
-	# "Facebook" already exists upstream but doesn't distinguish Messenger from
-	# Instagram DMs, which the n8n Chatwoot-CRM sync workflow needs to set as
-	# CRM Lead.source.
 	for source_name in ("Messenger", "Instagram"):
 		frappe.get_doc({"doctype": "CRM Lead Source", "source_name": source_name}).insert(ignore_if_duplicate=True)
 	frappe.db.commit()
 	print("Lead sources created")
 
 
-def create_custom_field_and_lead_sources():
-	create_custom_field()
+def setup():
+	create_custom_fields()
 	create_lead_sources()
+
+
+def create_custom_field_and_lead_sources():
+	setup()
