@@ -123,8 +123,14 @@ def _create_or_update_lead(contact: dict, courses: list[str],
     course_display = ", ".join(
         COURSES.get(k, k) for k in courses
     )
-    # Map branch key to display name
+    # Map branch key to display name and branch owner consultant
     branch_display = BRANCHES.get(branch_key, branch_key)
+    branch_owners = {
+        "binh_thanh": "mai.binhthanh@eduflow.vn",
+        "quan_1": "nam.quan1@eduflow.vn",
+        "thu_duc": "phuc.thuduc@eduflow.vn",
+    }
+    lead_owner = branch_owners.get(branch_key)
 
     custom_attrs = contact.get("custom_attributes") or {}
     crm_lead_id = custom_attrs.get("crm_lead_id")
@@ -133,6 +139,8 @@ def _create_or_update_lead(contact: dict, courses: list[str],
         lead_name = crm_lead_id
         frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_display)
         frappe.db.set_value("CRM Lead", lead_name, "branch", branch_display)
+        if lead_owner:
+            frappe.db.set_value("CRM Lead", lead_name, "lead_owner", lead_owner)
         if contact_id:
             frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
     else:
@@ -141,6 +149,8 @@ def _create_or_update_lead(contact: dict, courses: list[str],
             lead_name = matched.name if hasattr(matched, "name") else matched.get("name")
             frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_display)
             frappe.db.set_value("CRM Lead", lead_name, "branch", branch_display)
+            if lead_owner:
+                frappe.db.set_value("CRM Lead", lead_name, "lead_owner", lead_owner)
             if contact_id:
                 frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
         else:
@@ -152,6 +162,7 @@ def _create_or_update_lead(contact: dict, courses: list[str],
                 "source": "Messenger Bot",
                 "course_interest": course_display,
                 "branch": branch_display,
+                "lead_owner": lead_owner,
                 "chatwoot_contact_id": str(contact_id) if contact_id else None,
             }).insert(ignore_permissions=True)
             lead_name = lead.name
@@ -294,5 +305,17 @@ def agent_bot_webhook():
             client.toggle_status(conversation_id, "open")
         except Exception:
             logger.exception("Failed to toggle conversation status")
+
+        # Add visual badges/labels to conversation in Chatwoot
+        try:
+            labels = []
+            if result.branch:
+                labels.append(BRANCHES.get(result.branch, result.branch).replace("📍 ", ""))
+            for c_key in result.selected_courses:
+                labels.append(COURSES.get(c_key, c_key).split(" ", 1)[-1])
+            if labels and conversation_id:
+                client.add_labels(conversation_id, labels)
+        except Exception:
+            logger.exception("Failed to add conversation labels")
 
     return {"status": "ok", "next_state": result.next_state}

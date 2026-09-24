@@ -115,4 +115,15 @@ class ChatwootClient:
         # Filter to only this agent's conversations
         convos = data.get("data", {}).get("payload", []) if isinstance(data, dict) else []
         return [c for c in convos
-                if c.get("meta", {}).get("assignee", {}).get("id") == agent_id]
+                if ((c.get("meta") or {}).get("assignee") or {}).get("id") == agent_id]
+
+    def add_labels(self, conversation_id: int, labels: list[str]) -> dict:
+        """Add labels to a conversation for visual categorization in inbox."""
+        resp = requests.post(
+            f"{self._base}/conversations/{conversation_id}/labels",
+            headers=self._headers,
+            json={"labels": labels},
+            timeout=REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
+        return resp.json()
