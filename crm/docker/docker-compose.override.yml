@@ -13,6 +13,8 @@ services:
       - frappe-bench-data:/home/frappe
       - ../../frappe-custom/mmm_custom:/home/frappe/mmm_custom
       - ..:/home/frappe/crm
+  redis:
+    image: redis:7.2.4-alpine
 
 volumes:
   frappe-bench-data:
