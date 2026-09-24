@@ -106,6 +106,27 @@ class TestBotEngineTransitions(unittest.TestCase):
         self.assertIn("chọn", result.message.lower())
         self.assertEqual(len(result.quick_replies), 3)
 
+    # --- button title & flexible input matching ---
+
+    def test_await_course_facebook_button_title_matched(self):
+        """Facebook Messenger sends the button title '🇬🇧 Tiếng Anh' instead of 'tieng_anh'."""
+        result = transition("await_course", "🇬🇧 Tiếng Anh", [])
+        self.assertEqual(result.next_state, "await_course")
+        self.assertIn("Tiếng Anh", result.message)
+        self.assertEqual(result.selected_courses, ["tieng_anh"])
+
+    def test_await_course_done_button_title_matched(self):
+        """Facebook Messenger sends '✅ Xong, tiếp tục' when the user taps Done."""
+        result = transition("await_course", "✅ Xong, tiếp tục", ["tieng_anh"])
+        self.assertEqual(result.next_state, "await_branch")
+        self.assertEqual(result.selected_courses, ["tieng_anh"])
+
+    def test_await_branch_facebook_button_title_matched(self):
+        """Facebook Messenger sends '📍 CS1 Bình Thạnh' when the user taps Branch."""
+        result = transition("await_branch", "📍 CS1 Bình Thạnh", ["tieng_anh"])
+        self.assertEqual(result.next_state, "completed")
+        self.assertEqual(result.branch, "binh_thanh")
+
     # --- completed state ---
 
     def test_completed_state_returns_noop(self):

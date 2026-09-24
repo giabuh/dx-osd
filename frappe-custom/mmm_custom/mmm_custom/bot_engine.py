@@ -92,6 +92,54 @@ def _invalid_input_reminder(state: str, quick_replies: list[dict],
     )
 
 
+def _match_course(user_input: str) -> str | None:
+    """Resolve user input (key, label, emoji, or text) to a course key."""
+    if not user_input:
+        return None
+    raw = user_input.strip().lower()
+    if raw in COURSES:
+        return raw
+    for key, label in COURSES.items():
+        if raw == label.lower():
+            return key
+    if "tiếng anh" in raw or "tieng anh" in raw or "tieng_anh" in raw:
+        return "tieng_anh"
+    if "bơi" in raw or "boi" in raw or "boi_loi" in raw:
+        return "boi_loi"
+    if "toán" in raw or "toan" in raw or "toan_tu_duy" in raw:
+        return "toan_tu_duy"
+    return None
+
+
+def _is_done_token(user_input: str) -> bool:
+    """Check if the user input signifies completion of course selection."""
+    if not user_input:
+        return False
+    raw = user_input.strip().lower()
+    if raw in (DONE_TOKEN, "done"):
+        return True
+    return any(w in raw for w in ("xong", "tiếp tục", "tiep tuc", "hoàn thành"))
+
+
+def _match_branch(user_input: str) -> str | None:
+    """Resolve user input (key, label, emoji, or text) to a branch key."""
+    if not user_input:
+        return None
+    raw = user_input.strip().lower()
+    if raw in BRANCHES:
+        return raw
+    for key, label in BRANCHES.items():
+        if raw == label.lower():
+            return key
+    if "bình thạnh" in raw or "binh thanh" in raw or "binh_thanh" in raw or "cs1" in raw:
+        return "binh_thanh"
+    if "quận 1" in raw or "quan 1" in raw or "quan_1" in raw or "cs2" in raw:
+        return "quan_1"
+    if "thủ đức" in raw or "thu duc" in raw or "thu_duc" in raw or "cs3" in raw:
+        return "thu_duc"
+    return None
+
+
 def transition(state: str | None, user_input: str,
                selected_courses: list[str]) -> TransitionResult | None:
     """Compute the next state given current state, user input, and context.
@@ -113,15 +161,14 @@ def transition(state: str | None, user_input: str,
         return None
 
     if state == "await_course":
-        user_input_clean = user_input.strip().lower() if user_input else ""
-
         # "Done" → transition to branch if at least one course selected
-        if user_input_clean == DONE_TOKEN and selected_courses:
+        if _is_done_token(user_input) and selected_courses:
             return _ask_branch(selected_courses)
 
         # Valid course selection
-        if user_input_clean in COURSES and user_input_clean not in selected_courses:
-            new_courses = list(selected_courses) + [user_input_clean]
+        matched_course = _match_course(user_input)
+        if matched_course and matched_course not in selected_courses:
+            new_courses = list(selected_courses) + [matched_course]
 
             # All courses selected → auto-transition to branch
             if len(new_courses) >= len(COURSES):
@@ -133,7 +180,7 @@ def transition(state: str | None, user_input: str,
                 return result
 
             # Still courses remaining → offer more
-            course_label = COURSES[user_input_clean]
+            course_label = COURSES[matched_course]
             return TransitionResult(
                 next_state="await_course",
                 message=(
@@ -153,10 +200,9 @@ def transition(state: str | None, user_input: str,
         )
 
     if state == "await_branch":
-        user_input_clean = user_input.strip().lower() if user_input else ""
-
-        if user_input_clean in BRANCHES:
-            branch_label = BRANCHES[user_input_clean]
+        matched_branch = _match_branch(user_input)
+        if matched_branch:
+            branch_label = BRANCHES[matched_branch]
             courses_display = _format_courses_display(selected_courses)
             return TransitionResult(
                 next_state="completed",
@@ -169,7 +215,7 @@ def transition(state: str | None, user_input: str,
                 quick_replies=None,
                 actions=["update_lead", "assign_agent", "bot_handoff"],
                 selected_courses=list(selected_courses),
-                branch=user_input_clean,
+                branch=matched_branch,
             )
 
         return _invalid_input_reminder(
