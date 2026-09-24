@@ -35,6 +35,23 @@ def create_custom_fields():
 		doc.save(ignore_permissions=True)
 		print("Custom field course_interest updated")
 
+	if not frappe.db.exists("Custom Field", "CRM Lead-branch"):
+		frappe.get_doc({
+			"doctype": "Custom Field",
+			"dt": "CRM Lead",
+			"fieldname": "branch",
+			"label": "Branch",
+			"fieldtype": "Select",
+			"options": "\nCS1 Bình Thạnh\nCS2 Quận 1\nCS3 Thủ Đức",
+			"insert_after": "course_interest",
+		}).insert(ignore_permissions=True)
+		print("Custom field branch created")
+	else:
+		doc = frappe.get_doc("Custom Field", "CRM Lead-branch")
+		doc.options = "\nCS1 Bình Thạnh\nCS2 Quận 1\nCS3 Thủ Đức"
+		doc.save(ignore_permissions=True)
+		print("Custom field branch updated")
+
 	frappe.db.commit()
 
 
@@ -43,7 +60,7 @@ def create_custom_field():
 
 
 def create_lead_sources():
-	for source_name in ("Messenger", "Instagram"):
+	for source_name in ("Messenger", "Instagram", "Messenger Bot"):
 		frappe.get_doc({"doctype": "CRM Lead Source", "source_name": source_name}).insert(ignore_if_duplicate=True)
 	frappe.db.commit()
 	print("Lead sources created")
