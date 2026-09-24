@@ -73,6 +73,11 @@ Run live end-to-end integration tests against running Frappe CRM and Chatwoot st
 python scripts/test-chatwoot-crm-sync.py
 ```
 
+### Bot Engine Tests
+```bash
+python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests -v
+```
+
 ## Architecture notes
 
 - **Service boundary:** Frappe CRM is the only source of truth for Lead/Contact/Deal data. Chatwoot is inbox-only — its contact records are not canonical. `mmm_custom` holds no separate persistent database state; it executes as an in-bench extension directly operating on the CRM database.

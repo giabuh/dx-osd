@@ -57,6 +57,7 @@ Phases are ordered by dependency, not by date. A phase may start early work in p
 - Pin infrastructure services (Redis `7.2.4-alpine` for BSD-3-Clause license preservation).
 - Achieve 100% test coverage for deduplication, security signature verification, and keyword detection (23 unit tests + 5 live integration tests).
 - Document upstream re-sync and FOSS compliance audit trail in `docs/vendored-upstreams.md` and `docs/foss-compliance-report.md`.
+- ✅ **Conversational Bot**: Agent Bot with Quick Reply qualification flow (course + branch), intelligent round-robin agent assignment
 
 **Exit criteria**
 - Fresh `git clone` + documented commands bring up both stacks with `mmm_custom` installed, zero manual steps.
