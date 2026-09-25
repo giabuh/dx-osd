@@ -21,7 +21,6 @@ import urllib.error
 import urllib.request
 
 DEFAULT_CRM_URL = "http://127.0.0.1:8000/api/method/mmm_custom.api.chatwoot_sync"
-DEFAULT_SECRET = "dx_osd_shared_webhook_secret_2026"
 DEFAULT_HOST = "crm.localhost"
 
 
@@ -232,7 +231,7 @@ def run_tests(url: str, secret: str, host: str):
 def main():
     parser = argparse.ArgumentParser(description="Test Chatwoot -> Frappe CRM sync webhook")
     parser.add_argument("--url", default=DEFAULT_CRM_URL, help=f"CRM Webhook URL (default: {DEFAULT_CRM_URL})")
-    parser.add_argument("--secret", default=DEFAULT_SECRET, help=f"HMAC secret (default: {DEFAULT_SECRET})")
+    parser.add_argument("--secret", required=True, help="HMAC secret: chatwoot_webhook_secret from the CRM site config")
     parser.add_argument("--host", default=DEFAULT_HOST, help=f"Host header (default: {DEFAULT_HOST})")
     args = parser.parse_args()
 

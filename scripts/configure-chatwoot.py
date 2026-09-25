@@ -3,7 +3,9 @@
 scripts/configure-chatwoot.py
 
 Configures Chatwoot with default EduFlow Academy account, admin credentials,
-and registers the webhook pointing to Frappe CRM.
+and registers the webhook pointing to Frappe CRM. The webhook signing secret is
+generated once (kept on re-runs) and copied into the CRM site config, which has
+no built-in fallback secret.
 """
 
 import subprocess
@@ -25,7 +27,7 @@ target_url = 'http://host.docker.internal:8000/api/method/mmm_custom.api.chatwoo
 webhook = Webhook.find_or_initialize_by(account: account, url: target_url)
 webhook.subscriptions = ['conversation_created']
 webhook.webhook_type = :account_type
-webhook.secret = 'dx_osd_shared_webhook_secret_2026'
+webhook.secret = SecureRandom.hex(32) if webhook.secret.blank?
 webhook.save!
 
 # Also configure Inbox for EduFlow Academy if not present
@@ -51,7 +53,7 @@ masked_token = (token.present? && token.length > 8) ? "#{token[0..4]}...#{token[
 puts "ADMIN_TOKEN: #{masked_token}"
 puts "WEBHOOK_ID: #{webhook.id}"
 puts "WEBHOOK_URL: #{webhook.url}"
-puts "WEBHOOK_SECRET: #{webhook.secret}"
+puts "WEBHOOK_SECRET_VALUE=#{webhook.secret}"
 puts "WEBHOOK_SUBSCRIPTIONS: #{webhook.subscriptions}"
 puts "INBOX_ID: #{inbox.id}"
 puts "INBOX_NAME: #{inbox.name}"
@@ -66,10 +68,19 @@ def main():
     )
     stdout = proc.stdout.decode("utf-8", errors="replace")
     stderr = proc.stderr.decode("utf-8", errors="replace")
-    print(stdout)
     if proc.returncode != 0:
         print("STDERR:\n", stderr)
         sys.exit(proc.returncode)
+    secret = next(line.split("=", 1)[1] for line in stdout.splitlines() if line.startswith("WEBHOOK_SECRET_VALUE="))
+    print("\n".join(line for line in stdout.splitlines() if not line.startswith("WEBHOOK_SECRET_VALUE=")))
+
+    # The CRM endpoint rejects every webhook until it knows the same secret.
+    subprocess.run(
+        ["docker", "exec", "crm-frappe-1", "bash", "-c",
+         f'cd /home/frappe/frappe-bench && bench --site crm.localhost set-config chatwoot_webhook_secret "{secret}"'],
+        check=True, capture_output=True,
+    )
+    print("WEBHOOK_SECRET: copied to crm.localhost site config (chatwoot_webhook_secret)")
 
 if __name__ == "__main__":
     main()

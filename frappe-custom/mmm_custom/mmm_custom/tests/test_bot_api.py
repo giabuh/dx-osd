@@ -89,6 +89,17 @@ class TestBotApiWebhook(unittest.TestCase):
             with self.assertRaises(self.mock_frappe.AuthenticationError):
                 agent_bot_webhook()
 
+    def test_unconfigured_secret_rejects_even_the_old_public_default(self):
+        # A site without chatwoot_bot_webhook_secret must not fall back to a secret anyone can read in the repo.
+        self.conf.pop("chatwoot_bot_webhook_secret")
+        ts = str(int(time.time()))
+        payload = {"event": "message_created", "message_type": "incoming"}
+        body = json.dumps(payload).encode("utf-8")
+        self._setup_request(payload, ts=ts, sig=compute_sig("dx_osd_bot_webhook_secret_2026", ts, body))
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with self.assertRaises(self.mock_frappe.AuthenticationError):
+                bot_api_mod.agent_bot_webhook()
+
     def test_outgoing_message_ignored(self):
         payload = make_message_created_payload(message_type=1)
         self._setup_request(payload)

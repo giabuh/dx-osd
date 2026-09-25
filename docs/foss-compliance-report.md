@@ -157,7 +157,8 @@ Bộ kiểm thử Python Unittest độc lập đặt tại `frappe-custom/mmm_c
 Kịch bản kiểm thử tích hợp trực tiếp trên cụm Docker container đang chạy thông qua công cụ [scripts/test-chatwoot-crm-sync.py](file:///C:/TepD/HUTECH/OLP1/dx-osd/scripts/test-chatwoot-crm-sync.py):
 - **Lệnh thực thi:**
   ```bash
-  python scripts/test-chatwoot-crm-sync.py
+  SECRET=$(docker exec crm-frappe-1 python3 -c "import json; print(json.load(open('/home/frappe/frappe-bench/sites/crm.localhost/site_config.json'))['chatwoot_webhook_secret'])")
+  python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"
   ```
 - **Kết quả thực tế:**
   - **[Test 1/5] Kiểm tra Từ chối Chữ ký HMAC Giả mạo:** Máy chủ trả về HTTP 401 Unauthorized -> **ĐẠT (PASS)**.

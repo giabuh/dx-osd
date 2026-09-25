@@ -91,7 +91,10 @@ def chatwoot_sync():
         raw_body = bytes(raw_body or b"")
 
     conf = getattr(frappe, "conf", None)
-    secret = (conf.get("chatwoot_webhook_secret") if conf else None) or "dx_osd_shared_webhook_secret_2026"
+    secret = conf.get("chatwoot_webhook_secret") if conf else None
+    if not secret:
+        # No built-in fallback: a default secret in a public repo would let anyone forge webhooks.
+        frappe.throw("chatwoot_webhook_secret is not configured", frappe.AuthenticationError)
     secret_bytes = secret.encode("utf-8") if isinstance(secret, str) else secret
 
     # 1. Anti Replay Attack & Verify HMAC Signature

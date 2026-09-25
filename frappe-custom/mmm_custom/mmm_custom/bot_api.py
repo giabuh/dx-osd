@@ -204,10 +204,10 @@ def agent_bot_webhook():
         raw_body = bytes(raw_body or b"")
 
     conf = getattr(frappe, "conf", None)
-    secret = (
-        (conf.get("chatwoot_bot_webhook_secret") if conf else None)
-        or "dx_osd_bot_webhook_secret_2026"
-    )
+    secret = conf.get("chatwoot_bot_webhook_secret") if conf else None
+    if not secret:
+        # No built-in fallback: a default secret in a public repo would let anyone forge webhooks.
+        frappe.throw("chatwoot_bot_webhook_secret is not configured", frappe.AuthenticationError)
 
     _verify_hmac(raw_body, secret, ts, sig)
 

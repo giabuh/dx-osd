@@ -84,9 +84,10 @@ Run the Python unit test suite:
 ```bash
 python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests
 ```
-Run live end-to-end integration tests against running Frappe CRM and Chatwoot stacks:
+Run live end-to-end integration tests against running Frappe CRM and Chatwoot stacks. The endpoints have no fallback secret: `scripts/configure-chatwoot.py` generates the webhook secret and copies it into the site config (`chatwoot_webhook_secret`), and the test reads it from there:
 ```bash
-python scripts/test-chatwoot-crm-sync.py
+SECRET=$(docker exec crm-frappe-1 python3 -c "import json; print(json.load(open('/home/frappe/frappe-bench/sites/crm.localhost/site_config.json'))['chatwoot_webhook_secret'])")
+python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"
 ```
 
 ### Bot Engine Tests

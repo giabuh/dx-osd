@@ -50,6 +50,16 @@ class TestChatwootSyncApi(unittest.TestCase):
         mock_req.data = body_bytes
         self.mock_frappe.request = mock_req
 
+    def test_unconfigured_secret_rejects_even_the_old_public_default(self):
+        # A site without chatwoot_webhook_secret must not fall back to a secret anyone can read in the repo.
+        self.conf.pop("chatwoot_webhook_secret")
+        ts = str(int(time.time()))
+        body = b'{"event": "conversation_created"}'
+        self._setup_request(ts=ts, sig=compute_signature("dx_osd_shared_webhook_secret_2026", ts, body), body_bytes=body)
+        with patch.object(api_mod, "frappe", self.mock_frappe):
+            with self.assertRaises(self.mock_frappe.AuthenticationError):
+                chatwoot_sync()
+
     def test_missing_timestamp_raises(self):
         self._setup_request(ts=None, sig="dummy_sig", body_bytes=b"{}")
         with patch.object(api_mod, "frappe", self.mock_frappe):
