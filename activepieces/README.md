@@ -51,7 +51,7 @@ Import them like the first flow, then set the inputs (same Chatwoot/CRM values a
 | Which phone/email found in the chat (regex) is the customer's own | Filled in on the Lead if it has none; if another Lead already has it, a "Possible duplicate" note — never an automatic merge |
 | Best template from `replyTemplates` (JSON, editable in the step) | Private note in the conversation for the agent to send or ignore (never for spam) |
 
-If the first message arrives before the "Messenger to CRM" flow has linked the contact, the step fails with "Contact not linked to a CRM Lead yet" and Activepieces retries it.
+If the first message arrives before the "Messenger to CRM" flow has linked the contact, the step fails with "Contact not linked to a CRM Lead yet" before calling Jev, and Activepieces retries it (up to 4 attempts, 4 s / 8 s / 16 s apart — about 28 s for the link to appear; verified: message sent 1 s before its conversation, analyzed on the first retry).
 
 **`flows/cold-lead-followup.json`** — every day at 08:00 (Asia/Ho_Chi_Minh) → **Plan follow-ups with Jev** (`logic/followup.mjs`). For up to `maxLeads` Leads in `openStatuses` not modified for `staleDays`, Jev picks `call` / `message` / `review_close` / `wait`, and the agent creates a CRM Task for the Lead owner (due tomorrow). Leads with an open Task are skipped, so it never piles up duplicates; it never changes a Lead's status.
 
