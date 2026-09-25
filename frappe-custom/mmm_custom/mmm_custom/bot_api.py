@@ -113,10 +113,11 @@ _PLACEHOLDER_NAME = "Khách Messenger"
 
 
 def _create_or_update_lead(contact: dict, courses: list[str],
-                           branch_key: str, contact_id: int | None):
+                           branch_key: str, contact_id: int | None,
+                           phone_override: str | None = None):
     """Create or update a CRM Lead with bot-collected data."""
     email = contact.get("email")
-    phone = contact.get("phone_number") or contact.get("phone")
+    phone = phone_override or contact.get("phone_number") or contact.get("phone")
     raw_name = contact.get("name")
     first_name = (
         str(raw_name).strip() if raw_name and str(raw_name).strip()
@@ -157,6 +158,8 @@ def _create_or_update_lead(contact: dict, courses: list[str],
             frappe.db.set_value("CRM Lead", lead_name, "lead_owner", lead_owner)
         if contact_id:
             frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
+        if phone:
+            frappe.db.set_value("CRM Lead", lead_name, "mobile_no", normalize_phone(phone))
         # Fix placeholder name if we now have the real name from Chatwoot
         if first_name != _PLACEHOLDER_NAME:
             stored = frappe.db.get_value(
@@ -261,6 +264,10 @@ def agent_bot_webhook():
     if result is None:
         return {"status": "ignored", "reason": "completed"}
 
+    # Recover branch from contact custom_attrs if not set in result
+    # (await_phone state doesn't know the branch — it was saved earlier)
+    effective_branch = result.branch or custom_attrs.get("bot_branch")
+
     # Initialize Chatwoot client
     bot_token = (conf.get("chatwoot_bot_api_token") if conf else None) or ""
     account_id = (conf.get("chatwoot_bot_account_id") if conf else None) or 1
@@ -298,7 +305,8 @@ def agent_bot_webhook():
     if "update_lead" in result.actions:
         try:
             lead_name = _create_or_update_lead(
-                contact, result.selected_courses, result.branch, contact_id,
+                contact, result.selected_courses, effective_branch, contact_id,
+                phone_override=result.phone,
             )
             # Write back crm_lead_id to Chatwoot
             if contact_id and lead_name:
@@ -317,7 +325,7 @@ def agent_bot_webhook():
 
     if "assign_agent" in result.actions:
         try:
-            agent_id = _find_best_agent(result.branch, user_client)
+            agent_id = _find_best_agent(effective_branch, client)
             if agent_id:
                 client.assign_conversation(conversation_id, agent_id)
         except Exception:

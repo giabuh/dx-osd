@@ -141,12 +141,34 @@ class TestBotApiWebhook(unittest.TestCase):
                 MockClient.return_value.send_message.assert_not_called()
                 MockClient.return_value.send_quick_replies.assert_not_called()
 
-    def test_branch_selection_triggers_handoff(self):
+    def test_branch_selection_asks_for_phone(self):
+        """Branch selection now transitions to await_phone."""
         payload = make_message_created_payload(
             content="binh_thanh",
             custom_attributes={
                 "bot_state": "await_branch",
                 "bot_courses": ["tieng_anh"],
+            },
+        )
+        self._setup_request(payload)
+        mock_client = MagicMock()
+
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with patch.object(bot_api_mod, "ChatwootClient", return_value=mock_client):
+                result = agent_bot_webhook()
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["next_state"], "await_phone")
+        mock_client.send_quick_replies.assert_called_once()  # skip button
+
+    def test_phone_input_completes_handoff(self):
+        """Providing a valid phone in await_phone triggers full handoff."""
+        payload = make_message_created_payload(
+            content="0901234567",
+            custom_attributes={
+                "bot_state": "await_phone",
+                "bot_courses": ["tieng_anh"],
+                "bot_branch": "binh_thanh",
             },
         )
         self._setup_request(payload)
@@ -169,8 +191,9 @@ class TestBotApiWebhook(unittest.TestCase):
                     result = agent_bot_webhook()
 
         self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["next_state"], "completed")
         mock_client.send_message.assert_called_once()  # confirmation message
-        mock_client.assign_conversation.assert_called_once_with(1, 1)  # agent 1 matches branch
+        mock_client.assign_conversation.assert_called_once_with(1, 1)
         mock_client.toggle_status.assert_called_once_with(1, "open")
 
     def test_contact_and_agent_calls_use_the_user_token_messages_use_the_bot_token(self):
@@ -209,11 +232,12 @@ class TestBotApiWebhook(unittest.TestCase):
         """When a lead already exists with placeholder name, bot handoff
         should fix first_name and lead_name to the real contact name."""
         payload = make_message_created_payload(
-            content="binh_thanh",
+            content="0901234567",
             contact_name="Hoàng Thành",
             custom_attributes={
-                "bot_state": "await_branch",
+                "bot_state": "await_phone",
                 "bot_courses": ["tieng_anh"],
+                "bot_branch": "binh_thanh",
                 "crm_lead_id": "CRM-LEAD-PLACEHOLDER",
             },
         )

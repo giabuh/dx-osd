@@ -87,16 +87,12 @@ class TestBotEngineTransitions(unittest.TestCase):
 
     # --- await_branch state ---
 
-    def test_await_branch_valid_selection_completes(self):
-        """Selecting a branch transitions to completed with handoff actions."""
+    def test_await_branch_valid_selection_transitions_to_phone(self):
+        """Selecting a branch transitions to await_phone (asks for SĐT)."""
         result = transition("await_branch", "binh_thanh", ["tieng_anh"])
-        self.assertEqual(result.next_state, "completed")
-        self.assertIn("Tiếng Anh", result.message)
-        self.assertIn("Bình Thạnh", result.message)
-        self.assertIsNone(result.quick_replies)
-        self.assertIn("update_lead", result.actions)
-        self.assertIn("assign_agent", result.actions)
-        self.assertIn("bot_handoff", result.actions)
+        self.assertEqual(result.next_state, "await_phone")
+        self.assertIn("số điện thoại", result.message.lower())
+        self.assertIsNotNone(result.quick_replies)  # skip button
         self.assertEqual(result.branch, "binh_thanh")
 
     def test_await_branch_invalid_input_resends_menu(self):
@@ -124,8 +120,57 @@ class TestBotEngineTransitions(unittest.TestCase):
     def test_await_branch_facebook_button_title_matched(self):
         """Facebook Messenger sends '📍 CS1 Bình Thạnh' when the user taps Branch."""
         result = transition("await_branch", "📍 CS1 Bình Thạnh", ["tieng_anh"])
-        self.assertEqual(result.next_state, "completed")
+        self.assertEqual(result.next_state, "await_phone")
         self.assertEqual(result.branch, "binh_thanh")
+
+    # --- await_phone state ---
+
+    def test_await_phone_valid_number_completes(self):
+        """A valid VN phone number completes the flow with handoff actions."""
+        result = transition("await_phone", "0901234567", ["tieng_anh"])
+        self.assertEqual(result.next_state, "completed")
+        self.assertEqual(result.phone, "+84901234567")
+        self.assertIn("update_lead", result.actions)
+        self.assertIn("assign_agent", result.actions)
+        self.assertIn("bot_handoff", result.actions)
+        self.assertIn("+84901234567", result.message)
+
+    def test_await_phone_plus84_format(self):
+        """Phone with +84 prefix is accepted."""
+        result = transition("await_phone", "+84901234567", ["boi_loi"])
+        self.assertEqual(result.next_state, "completed")
+        self.assertEqual(result.phone, "+84901234567")
+
+    def test_await_phone_with_spaces(self):
+        """Phone with spaces/dashes is accepted."""
+        result = transition("await_phone", "090 123 4567", ["boi_loi"])
+        self.assertEqual(result.next_state, "completed")
+        self.assertEqual(result.phone, "+84901234567")
+
+    def test_await_phone_skip(self):
+        """Skip button works — completes without phone."""
+        result = transition("await_phone", "skip_phone", ["tieng_anh"])
+        self.assertEqual(result.next_state, "completed")
+        self.assertIsNone(result.phone)
+        self.assertIn("update_lead", result.actions)
+
+    def test_await_phone_skip_vietnamese(self):
+        """Vietnamese skip works too."""
+        result = transition("await_phone", "bỏ qua", ["tieng_anh"])
+        self.assertEqual(result.next_state, "completed")
+        self.assertIsNone(result.phone)
+
+    def test_await_phone_invalid_resends(self):
+        """Invalid phone re-asks with error message."""
+        result = transition("await_phone", "abc123", ["tieng_anh"])
+        self.assertEqual(result.next_state, "await_phone")
+        self.assertIn("chưa đúng", result.message.lower())
+        self.assertIsNotNone(result.quick_replies)
+
+    def test_await_phone_too_short(self):
+        """Too-short number is rejected."""
+        result = transition("await_phone", "0901234", ["tieng_anh"])
+        self.assertEqual(result.next_state, "await_phone")
 
     # --- completed state ---
 

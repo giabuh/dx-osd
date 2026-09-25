@@ -35,6 +35,7 @@ class TransitionResult:
     actions: list = field(default_factory=list)
     selected_courses: list = field(default_factory=list)
     branch: str | None = None
+    phone: str | None = None
 
 
 def _build_course_replies(exclude: list[str]) -> list[dict]:
@@ -140,6 +141,53 @@ def _match_branch(user_input: str) -> str | None:
     return None
 
 
+SKIP_TOKEN = "skip_phone"
+
+
+def _is_skip_token(user_input: str) -> bool:
+    """Check if the user wants to skip providing a phone number."""
+    if not user_input:
+        return False
+    raw = user_input.strip().lower()
+    return raw in (SKIP_TOKEN, "skip", "bỏ qua", "bo qua", "không", "khong")
+
+
+def _normalize_vn_phone(raw: str) -> str | None:
+    """Validate and normalize a Vietnamese phone number.
+
+    Accepts:
+      - 10-digit starting with 0 (e.g. 0901234567)
+      - With +84 prefix (e.g. +84901234567)
+      - With 84 prefix (e.g. 84901234567)
+      - Spaces/dots/dashes are stripped
+
+    Returns the normalized phone (e.g. +84901234567) or None if invalid.
+    """
+    import re
+    digits = re.sub(r"[\s.\-\(\)]+", "", raw.strip())
+    if digits.startswith("+84"):
+        digits = "0" + digits[3:]
+    elif digits.startswith("84") and len(digits) == 11:
+        digits = "0" + digits[2:]
+    if re.fullmatch(r"0\d{9}", digits):
+        return "+84" + digits[1:]
+    return None
+
+
+def _ask_phone(selected_courses: list[str], branch: str) -> TransitionResult:
+    """Transition to the phone collection step."""
+    return TransitionResult(
+        next_state="await_phone",
+        message=(
+            "📞 Bạn vui lòng cho em số điện thoại để tư vấn viên liên hệ nhé!\n"
+            "(Ví dụ: 0901234567)"
+        ),
+        quick_replies=[{"title": "⏭ Bỏ qua", "value": SKIP_TOKEN}],
+        selected_courses=list(selected_courses),
+        branch=branch,
+    )
+
+
 def transition(state: str | None, user_input: str,
                selected_courses: list[str]) -> TransitionResult | None:
     """Compute the next state given current state, user input, and context.
@@ -202,25 +250,63 @@ def transition(state: str | None, user_input: str,
     if state == "await_branch":
         matched_branch = _match_branch(user_input)
         if matched_branch:
-            branch_label = BRANCHES[matched_branch]
+            return _ask_phone(selected_courses, matched_branch)
+
+        return _invalid_input_reminder(
+            "await_branch", _build_branch_replies(), selected_courses
+        )
+
+    if state == "await_phone":
+        # Read branch from context — stored in custom_attributes by bot_api
+        # The branch is passed via selected_courses context workaround:
+        # bot_api stores bot_branch in custom_attrs, we receive it here
+        branch = None  # caller must pass via context; we extract from input
+
+        # Skip phone
+        if _is_skip_token(user_input):
+            courses_display = _format_courses_display(selected_courses)
+            return TransitionResult(
+                next_state="completed",
+                message=(
+                    f"✅ Cảm ơn bạn đã cung cấp thông tin!\n"
+                    f"📚 Bộ môn: {courses_display}\n\n"
+                    f"Chuyên viên tư vấn sẽ liên hệ bạn ngay bây giờ nhé! 😊"
+                ),
+                quick_replies=None,
+                actions=["update_lead", "assign_agent", "bot_handoff"],
+                selected_courses=list(selected_courses),
+                phone=None,
+            )
+
+        # Validate phone
+        normalized = _normalize_vn_phone(user_input)
+        if normalized:
             courses_display = _format_courses_display(selected_courses)
             return TransitionResult(
                 next_state="completed",
                 message=(
                     f"✅ Cảm ơn bạn đã cung cấp thông tin!\n"
                     f"📚 Bộ môn: {courses_display}\n"
-                    f"📍 Cơ sở: {branch_label}\n\n"
+                    f"📞 SĐT: {normalized}\n\n"
                     f"Chuyên viên tư vấn sẽ liên hệ bạn ngay bây giờ nhé! 😊"
                 ),
                 quick_replies=None,
                 actions=["update_lead", "assign_agent", "bot_handoff"],
                 selected_courses=list(selected_courses),
-                branch=matched_branch,
+                phone=normalized,
             )
 
-        return _invalid_input_reminder(
-            "await_branch", _build_branch_replies(), selected_courses
+        # Invalid phone format
+        return TransitionResult(
+            next_state="await_phone",
+            message=(
+                "Số điện thoại chưa đúng định dạng. Vui lòng nhập lại nhé!\n"
+                "(Ví dụ: 0901234567 hoặc +84901234567)"
+            ),
+            quick_replies=[{"title": "⏭ Bỏ qua", "value": SKIP_TOKEN}],
+            selected_courses=list(selected_courses),
         )
 
     # Unknown state — treat as greeting
     return _greeting()
+
