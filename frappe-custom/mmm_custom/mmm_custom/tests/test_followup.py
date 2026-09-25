@@ -56,6 +56,11 @@ class TestPlanFollowups(unittest.TestCase):
         self.assertEqual(call[1]["filters"], {"status": ["in", ["New", "Contacted", "Nurture"]], "modified": ["<", datetime(2026, 9, 22, 8, 0, 0)]})
         self.assertEqual(call[1]["order_by"], "modified asc")
 
+    def test_stale_days_zero_is_honoured_not_replaced_by_the_default(self):
+        self.frappe.conf["ai_followup_stale_days"] = 0
+        self.run_plan({})
+        self.assertEqual(self.frappe.get_all.call_args_list[0][1]["filters"]["modified"], ["<", NOW])
+
     def test_confident_call_creates_a_high_priority_task_for_the_owner_due_tomorrow(self):
         self.leads = [lead("L1")]
         result, jev = self.run_plan({"L1": {"choice": "call", "confidence": 0.9}})

@@ -43,7 +43,7 @@ def plan_followups(now: datetime | None = None) -> dict:
         return {"status": "ai_disabled"}
     # Frappe stores datetimes in the site timezone; now_datetime() is in the same zone.
     now = now or frappe.utils.now_datetime()
-    stale_days = int(conf.get("ai_followup_stale_days") or 3)
+    stale_days = int(conf.get("ai_followup_stale_days", 3))  # 0 is valid: every open Lead
     threshold = float(conf.get("typesafe_confidence_threshold") or DEFAULT_THRESHOLD)
     open_statuses = conf.get("ai_followup_statuses") or ["New", "Contacted", "Nurture"]
 
@@ -52,7 +52,7 @@ def plan_followups(now: datetime | None = None) -> dict:
         filters={"status": ["in", open_statuses], "modified": ["<", now - timedelta(days=stale_days)]},
         fields=LEAD_FIELDS,
         order_by="modified asc",
-        limit=int(conf.get("ai_followup_max_leads") or 20),
+        limit=int(conf.get("ai_followup_max_leads", 20)),
     )
     results = []
     for lead in leads:
