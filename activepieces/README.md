@@ -8,8 +8,8 @@
 ## Set up
 
 1. Start the stack (`docker/activepieces/`, see `AGENTS.md`) and create the first user at http://127.0.0.1:8080.
-2. **Flows → Import flow** → choose `flows/messenger-to-crm.json`.
-3. Open the **Sync to CRM** step and replace the placeholder inputs — these are secrets, they stay on the instance and never go back into git:
+2. **Automations → Import** → choose `flows/messenger-to-crm.json` → **Import** ([screenshot](../docs/screenshots/activepieces-flow-imported.png)).
+3. Open the **Sync to CRM** step ([screenshot](../docs/screenshots/activepieces-sync-step-inputs.png)) and replace the placeholder inputs — these are secrets, they stay on the instance and never go back into git:
 
    | Input | Value |
    |---|---|
@@ -19,9 +19,9 @@
    | `chatwootApiToken` | Chatwoot → Profile Settings → Access Token |
    | `crmBaseUrl` | `http://127.0.0.1:8000` locally, `https://crm.<domain>` behind Caddy |
    | `crmApiToken` | `<api_key>:<api_secret>` of a CRM user (User → API Access → Generate Keys) |
-   | `crmHost` | `crm.localhost` locally (Frappe picks the site from the Host header); leave empty behind Caddy |
+   | `crmHost` | Locally only: add it with **+ Add Item**, value `crm.localhost` (Frappe picks the site from the Host header). Not in the export because Activepieces drops empty inputs; not needed behind Caddy |
 
-4. **Publish**, then copy the trigger's webhook URL (`<AP_FRONTEND_URL>/api/v1/webhooks/<flow id>`).
+4. **Publish**. On a fresh install the piece catalog syncs for about a minute after startup; publishing before that fails with "missing piece" (`@activepieces/piece-webhook@0.1.42`) — wait and publish again. Then copy the trigger's webhook URL (`<AP_FRONTEND_URL>/api/v1/webhooks/<flow id>`).
 5. Chatwoot → Settings → Integrations → Webhooks → add that URL, subscribe to `conversation_created`, and put its signing secret into step 3.
 
 Chatwoot calls the webhook from inside its container, so it needs a URL it can reach — in practice the public `automation.<domain>` behind Caddy (`docker/caddy/Caddyfile`). Locally you can exercise the flow with a signed `curl`:

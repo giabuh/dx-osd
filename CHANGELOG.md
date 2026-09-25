@@ -13,6 +13,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - `messenger-platform-samples/` — Facebook Platform License is not OSI-approved; it was reference code only and never deployed.
 - `chatwoot/enterprise/` and `chatwoot/spec/enterprise/` — proprietary Chatwoot Enterprise License; Chatwoot now runs as Community Edition (MIT).
 
+### Changed
+- Docker images pinned (by digest where upstream uses floating tags) so a build from source reproduces the verified stack.
+
 ### Fixed
 - `frappe-custom/mmm_custom/license.txt` had an unfilled `[year] [fullname]` placeholder.
 
