@@ -159,7 +159,7 @@ class TestBotApiWebhook(unittest.TestCase):
 
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["next_state"], "await_phone")
-        mock_client.send_quick_replies.assert_called_once()  # skip button
+        mock_client.send_message.assert_called_once()  # plain text phone prompt
 
     def test_phone_input_completes_handoff(self):
         """Providing a valid phone in await_phone triggers full handoff."""
@@ -201,8 +201,12 @@ class TestBotApiWebhook(unittest.TestCase):
         # could never save its state or pick a branch agent with its own token.
         self.conf["chatwoot_api_token"] = "user_token"
         payload = make_message_created_payload(
-            content="binh_thanh",
-            custom_attributes={"bot_state": "await_branch", "bot_courses": ["tieng_anh"]},
+            content="0901234567",
+            custom_attributes={
+                "bot_state": "await_phone",
+                "bot_courses": ["tieng_anh"],
+                "bot_branch": "binh_thanh",
+            },
         )
         self._setup_request(payload)
         clients = {"mock_bot_token": MagicMock(), "user_token": MagicMock()}

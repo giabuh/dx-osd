@@ -325,7 +325,7 @@ def agent_bot_webhook():
 
     if "assign_agent" in result.actions:
         try:
-            agent_id = _find_best_agent(effective_branch, client)
+            agent_id = _find_best_agent(effective_branch, user_client)
             if agent_id:
                 client.assign_conversation(conversation_id, agent_id)
         except Exception:
