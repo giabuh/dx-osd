@@ -70,6 +70,9 @@ const chartTypes = [
 const numberChart = ref('')
 const numberCharts = [
   { label: __('Total Leads'), value: 'total_leads' },
+  { label: __('Messenger Bot Leads'), value: 'messenger_bot_leads' },
+  { label: __('Facebook Ads Leads'), value: 'facebook_ads_leads' },
+  { label: __('Leads with Phone'), value: 'leads_with_phone' },
   { label: __('Ongoing Deals'), value: 'ongoing_deals' },
   { label: __('Avg Ongoing Deal Value'), value: 'average_ongoing_deal_value' },
   { label: __('Won Deals'), value: 'won_deals' },
@@ -87,6 +90,8 @@ const numberCharts = [
 
 const axisChart = ref('sales_trend')
 const axisCharts = [
+  { label: __('Lead Trend by Source'), value: 'lead_trend_by_source' },
+  { label: __('Leads by Branch'), value: 'leads_by_branch' },
   { label: __('Sales Trend'), value: 'sales_trend' },
   { label: __('Forecasted Revenue'), value: 'forecasted_revenue' },
   { label: __('Funnel Conversion'), value: 'funnel_conversion' },
@@ -96,10 +101,11 @@ const axisCharts = [
   { label: __('Deals by Salesperson'), value: 'deals_by_salesperson' },
 ]
 
-const donutChart = ref('deals_by_stage_donut')
+const donutChart = ref('leads_by_course_interest')
 const donutCharts = [
-  { label: __('Deals by Stage'), value: 'deals_by_stage_donut' },
+  { label: __('Leads by Course Interest'), value: 'leads_by_course_interest' },
   { label: __('Leads by Source'), value: 'leads_by_source' },
+  { label: __('Deals by Stage'), value: 'deals_by_stage_donut' },
   { label: __('Deals by Source'), value: 'deals_by_source' },
 ]
 
