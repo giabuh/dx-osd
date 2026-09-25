@@ -92,7 +92,7 @@ class TestBotEngineTransitions(unittest.TestCase):
         result = transition("await_branch", "binh_thanh", ["tieng_anh"])
         self.assertEqual(result.next_state, "await_phone")
         self.assertIn("số điện thoại", result.message.lower())
-        self.assertIsNone(result.quick_replies)  # plain text, no buttons
+        self.assertIsNotNone(result.quick_replies)  # skip button
         self.assertEqual(result.branch, "binh_thanh")
 
     def test_await_branch_invalid_input_resends_menu(self):
@@ -165,7 +165,7 @@ class TestBotEngineTransitions(unittest.TestCase):
         result = transition("await_phone", "abc123", ["tieng_anh"])
         self.assertEqual(result.next_state, "await_phone")
         self.assertIn("chưa đúng", result.message.lower())
-        self.assertIsNone(result.quick_replies)
+        self.assertIsNotNone(result.quick_replies)
 
     def test_await_phone_too_short(self):
         """Too-short number is rejected."""

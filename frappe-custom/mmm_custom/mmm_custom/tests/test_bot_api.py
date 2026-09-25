@@ -159,7 +159,7 @@ class TestBotApiWebhook(unittest.TestCase):
 
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["next_state"], "await_phone")
-        mock_client.send_message.assert_called_once()  # plain text phone prompt
+        mock_client.send_quick_replies.assert_called_once()  # skip button
 
     def test_phone_input_completes_handoff(self):
         """Providing a valid phone in await_phone triggers full handoff."""

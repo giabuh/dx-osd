@@ -180,10 +180,9 @@ def _ask_phone(selected_courses: list[str], branch: str) -> TransitionResult:
         next_state="await_phone",
         message=(
             "📞 Bạn vui lòng cho em số điện thoại để tư vấn viên liên hệ nhé!\n"
-            "(Ví dụ: 0901234567)\n\n"
-            "Hoặc nhắn \"bỏ qua\" nếu bạn chưa muốn cung cấp."
+            "(Ví dụ: 0901234567)"
         ),
-        quick_replies=None,
+        quick_replies=[{"title": "⏭ Bỏ qua", "value": SKIP_TOKEN}],
         selected_courses=list(selected_courses),
         branch=branch,
     )
@@ -302,10 +301,9 @@ def transition(state: str | None, user_input: str,
             next_state="await_phone",
             message=(
                 "Số điện thoại chưa đúng định dạng. Vui lòng nhập lại nhé!\n"
-                "(Ví dụ: 0901234567 hoặc +84901234567)\n\n"
-                "Hoặc nhắn \"bỏ qua\" nếu bạn chưa muốn cung cấp."
+                "(Ví dụ: 0901234567 hoặc +84901234567)"
             ),
-            quick_replies=None,
+            quick_replies=[{"title": "⏭ Bỏ qua", "value": SKIP_TOKEN}],
             selected_courses=list(selected_courses),
         )
 
