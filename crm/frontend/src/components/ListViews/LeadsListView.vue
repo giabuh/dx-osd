@@ -170,6 +170,28 @@
               "
             />
           </div>
+          <div
+            v-else-if="column.key === 'data_quality'"
+            class="truncate text-base"
+          >
+            <Badge
+              v-if="item.value"
+              :variant="'subtle'"
+              :theme="item.color"
+              size="md"
+              :label="item.value"
+              @click="
+                (event) =>
+                  emit('applyFilter', {
+                    event,
+                    idx,
+                    column,
+                    item,
+                    firstColumn: columns[0],
+                  })
+              "
+            />
+          </div>
           <div v-else-if="column.type === 'Check'">
             <FormControl
               type="checkbox"

@@ -43,6 +43,7 @@ except ImportError:
 from mmm_custom.bot_engine import BRANCHES, COURSES, transition
 from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.dedupe import find_matching_lead, normalize_phone
+from mmm_custom.data_quality import compute_data_quality
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +109,9 @@ def _find_best_agent(branch_key: str, client: ChatwootClient) -> int | None:
     return best_agent_id
 
 
+_PLACEHOLDER_NAME = "Khách Messenger"
+
+
 def _create_or_update_lead(contact: dict, courses: list[str],
                            branch_key: str, contact_id: int | None):
     """Create or update a CRM Lead with bot-collected data."""
@@ -116,7 +120,7 @@ def _create_or_update_lead(contact: dict, courses: list[str],
     raw_name = contact.get("name")
     first_name = (
         str(raw_name).strip() if raw_name and str(raw_name).strip()
-        else "EduFlow Student"
+        else _PLACEHOLDER_NAME
     )
 
     # Map course keys to display names
@@ -153,6 +157,16 @@ def _create_or_update_lead(contact: dict, courses: list[str],
             frappe.db.set_value("CRM Lead", lead_name, "lead_owner", lead_owner)
         if contact_id:
             frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
+        # Fix placeholder name if we now have the real name from Chatwoot
+        if first_name != _PLACEHOLDER_NAME:
+            stored = frappe.db.get_value(
+                "CRM Lead", lead_name, ["first_name", "lead_name"], as_dict=True,
+            )
+            if stored and stored.get("first_name") in (
+                _PLACEHOLDER_NAME, "EduFlow Student", None, "",
+            ):
+                frappe.db.set_value("CRM Lead", lead_name, "first_name", first_name)
+                frappe.db.set_value("CRM Lead", lead_name, "lead_name", first_name)
     else:
         lead = frappe.get_doc({
             "doctype": "CRM Lead",
@@ -289,6 +303,12 @@ def agent_bot_webhook():
                     client.update_contact(contact_id, {"crm_lead_id": lead_name})
                 except Exception:
                     logger.exception("Failed to write crm_lead_id back to Chatwoot")
+            # Compute data quality indicator
+            if lead_name:
+                try:
+                    compute_data_quality(lead_name)
+                except Exception:
+                    logger.exception("Failed to compute data quality")
         except Exception:
             logger.exception("Failed to create/update CRM Lead")
 

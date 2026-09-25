@@ -36,6 +36,7 @@ except ImportError:
     frappe.throw = _throw
 
 from mmm_custom.dedupe import find_matching_lead, normalize_phone
+from mmm_custom.data_quality import compute_data_quality
 
 
 COURSE_KEYWORD_PATTERNS = [
@@ -66,6 +67,9 @@ def extract_message_text(conversation: dict, payload: dict) -> str:
     if payload.get("content") and isinstance(payload.get("content"), str):
         texts.append(payload.get("content"))
     return " ".join(texts)
+
+
+_PLACEHOLDER_NAME = "Khách Messenger"
 
 
 @frappe.whitelist(allow_guest=True)
@@ -127,10 +131,18 @@ def chatwoot_sync():
 
     conversation = payload.get("conversation") or payload
     contact_inbox = conversation.get("contact_inbox") or payload.get("contact_inbox") or {}
-    contact = contact_inbox.get("contact") or conversation.get("sender") or payload.get("sender") or {}
+    meta = payload.get("meta") or conversation.get("meta") or {}
+    meta_sender = meta.get("sender") if isinstance(meta, dict) else {}
+    contact = (
+        contact_inbox.get("contact")
+        or meta_sender
+        or conversation.get("sender")
+        or payload.get("sender")
+        or {}
+    )
     contact_id = contact.get("id")
     raw_name = contact.get("name")
-    first_name = str(raw_name).strip() if raw_name and str(raw_name).strip() else "EduFlow Student"
+    first_name = str(raw_name).strip() if raw_name and str(raw_name).strip() else _PLACEHOLDER_NAME
     email = contact.get("email")
     phone = contact.get("phone_number") or contact.get("phone")
     custom_attrs = contact.get("custom_attributes") or {}
@@ -139,13 +151,37 @@ def chatwoot_sync():
     msg_text = extract_message_text(conversation, payload)
     course_interest = detect_course_interest(msg_text)
 
-    # 2. Dedup & Lead Convergence
+    # 2. Dedup & Lead Convergence — 3-tier: crm_lead_id → chatwoot_contact_id → email/phone
     if crm_lead_id and frappe.db.exists("CRM Lead", crm_lead_id):
         lead_name = crm_lead_id
         if contact_id:
             frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
         if course_interest:
             frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_interest)
+        # Fix placeholder name if we now have the real name
+        if first_name != _PLACEHOLDER_NAME:
+            stored = frappe.db.get_value(
+                "CRM Lead", lead_name, ["first_name", "lead_name"], as_dict=True,
+            )
+            if stored and stored.get("first_name") in (
+                _PLACEHOLDER_NAME, "EduFlow Student", None, "",
+            ):
+                frappe.db.set_value("CRM Lead", lead_name, "first_name", first_name)
+                frappe.db.set_value("CRM Lead", lead_name, "lead_name", first_name)
+    elif contact_id and frappe.db.exists("CRM Lead", {"chatwoot_contact_id": str(contact_id)}):
+        lead_name = frappe.db.get_value("CRM Lead", {"chatwoot_contact_id": str(contact_id)}, "name")
+        if course_interest:
+            frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_interest)
+        # Fix placeholder name if we now have the real name
+        if first_name != _PLACEHOLDER_NAME:
+            stored = frappe.db.get_value(
+                "CRM Lead", lead_name, ["first_name", "lead_name"], as_dict=True,
+            )
+            if stored and stored.get("first_name") in (
+                _PLACEHOLDER_NAME, "EduFlow Student", None, "",
+            ):
+                frappe.db.set_value("CRM Lead", lead_name, "first_name", first_name)
+                frappe.db.set_value("CRM Lead", lead_name, "lead_name", first_name)
     else:
         matched = find_matching_lead(email, phone)
         if matched:
@@ -154,6 +190,16 @@ def chatwoot_sync():
                 frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
             if course_interest:
                 frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_interest)
+            # Fix placeholder name if we now have the real name
+            if first_name != _PLACEHOLDER_NAME:
+                stored = frappe.db.get_value(
+                    "CRM Lead", lead_name, ["first_name", "lead_name"], as_dict=True,
+                )
+                if stored and stored.get("first_name") in (
+                    _PLACEHOLDER_NAME, "EduFlow Student", None, "",
+                ):
+                    frappe.db.set_value("CRM Lead", lead_name, "first_name", first_name)
+                    frappe.db.set_value("CRM Lead", lead_name, "lead_name", first_name)
         else:
             lead_data = {
                 "doctype": "CRM Lead",
@@ -202,5 +248,11 @@ def chatwoot_sync():
         except Exception as e:
             if hasattr(frappe, "log_error"):
                 frappe.log_error(f"Failed to update Chatwoot contact: {str(e)}")
+
+    # 5. Compute data quality indicator
+    try:
+        compute_data_quality(lead_name)
+    except Exception:
+        pass
 
     return {"status": "success", "lead_id": lead_name}

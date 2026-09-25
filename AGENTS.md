@@ -47,15 +47,31 @@ These two directories are **first-class, tracked source in this repo now** — v
 
 ## Commands
 
-### Chatwoot (uses its own upstream compose file, plus our override: local source build + port binds)
+### Unified Stack (Chatwoot + Frappe CRM)
+Run the entire platform from the repository root:
+```bash
+docker compose up -d          # brings up both Chatwoot (:3000) and Frappe CRM (:8000)
+docker compose ps             # verify all 7 services running
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000   # expect 200/302
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000   # expect 200
+```
+To stop the entire stack safely (preserving persistent dev data):
+```bash
+docker compose stop
+```
+*Never pass `-v` to `docker compose down` as named volumes hold the active database state.*
+
+### Individual Stacks (Optional / Component-specific dev)
+
+#### Chatwoot
 ```bash
 cd chatwoot
-docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml up -d --build   # builds dx-osd/chatwoot:local from chatwoot/ (first build takes a while)
+docker compose -f docker-compose.production.yaml -f ../docker/chatwoot/docker-compose.override.yaml up -d --build   # builds dx-osd/chatwoot:local from chatwoot/
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000   # expect 200/302
 ```
 Secrets live in `chatwoot/.env` (gitignored, generated via `openssl rand -hex`, not committed).
 
-### Frappe CRM (uses its own upstream compose file + our override in the same directory)
+#### Frappe CRM
 ```bash
 cd crm/docker
 docker compose up -d          # auto-loads docker-compose.override.yml from this same directory

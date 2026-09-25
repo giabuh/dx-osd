@@ -8,8 +8,14 @@ x-build: &build
 
 services:
   base: *build
-  rails: *build
-  sidekiq: *build
+  rails:
+    <<: *build
+    environment:
+      - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true
+  sidekiq:
+    <<: *build
+    environment:
+      - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true
   postgres:
     ports: !override
       - '127.0.0.1:15432:5432'

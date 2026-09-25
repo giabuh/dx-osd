@@ -33,6 +33,9 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/docker/docker-compose.override.yml` | Bind-mount `..` (vendored `crm/`) at `/home/frappe/crm` | Same |
 | `chatwoot/docker/Dockerfile` | `git rev-parse HEAD > /app/.git_sha` falls back to `vendored` | Vendored copy has no `.git`; upstream line fails the build |
 | chatwoot/config/application.rb | Guard enterprise/ eager load | Boots cleanly as pure Community Edition (MIT) when enterprise/ is removed |
+| `crm/crm/fcrm/doctype/crm_lead/crm_lead.py` | Add `data_quality` column and row to `default_list_data()` | Shows Data Quality badge in the default Lead list view |
+| `crm/frontend/src/pages/Leads.vue` | Add `data_quality` case in `parseRows()` with green/orange/red color mapping | Colors the Data Quality badge based on value |
+| `crm/frontend/src/components/ListViews/LeadsListView.vue` | Add `<Badge>` rendering block for `data_quality` column | Renders a colored badge (like SLA Status) instead of plain text |
 
 ## Re-sync procedure
 

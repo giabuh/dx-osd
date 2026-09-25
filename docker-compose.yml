@@ -1,0 +1,177 @@
+name: dx-osd
+
+# Unified Docker Compose configuration for DX-OSD
+# Orchestrates Chatwoot (inbox) and Frappe CRM in a single unified stack.
+# Usage:
+#   docker compose up -d
+#   docker compose ps
+#   docker compose down (never use -v to preserve data)
+
+services:
+  # =========================================================================
+  # CHATWOOT STACK (Omnichannel Inbox & Customer Messaging)
+  # =========================================================================
+  chatwoot-postgres:
+    container_name: chatwoot-postgres-1
+    image: pgvector/pgvector:pg16
+    restart: always
+    env_file: ./chatwoot/.env
+    environment:
+      - POSTGRES_DB=chatwoot
+      - POSTGRES_USER=postgres
+    volumes:
+      - chatwoot_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:15432:5432"
+    networks:
+      chatwoot_net:
+        aliases:
+          - postgres
+
+  chatwoot-redis:
+    container_name: chatwoot-redis-1
+    image: redis:7.2.4-alpine
+    restart: always
+    command: ["sh", "-c", "redis-server --requirepass \"$$REDIS_PASSWORD\""]
+    env_file: ./chatwoot/.env
+    volumes:
+      - chatwoot_redis_data:/data
+    ports:
+      - "127.0.0.1:16379:6379"
+    networks:
+      chatwoot_net:
+        aliases:
+          - redis
+
+  chatwoot-rails:
+    container_name: chatwoot-rails-1
+    image: dx-osd/chatwoot:local
+    build:
+      context: ./chatwoot
+      dockerfile: docker/Dockerfile
+    restart: always
+    depends_on:
+      - chatwoot-postgres
+      - chatwoot-redis
+    env_file: ./chatwoot/.env
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - chatwoot_storage_data:/app/storage
+    networks:
+      - chatwoot_net
+      - shared_net
+
+  chatwoot-sidekiq:
+    container_name: chatwoot-sidekiq-1
+    image: dx-osd/chatwoot:local
+    build:
+      context: ./chatwoot
+      dockerfile: docker/Dockerfile
+    restart: always
+    depends_on:
+      - chatwoot-postgres
+      - chatwoot-redis
+    env_file: ./chatwoot/.env
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - chatwoot_storage_data:/app/storage
+    networks:
+      - chatwoot_net
+      - shared_net
+
+  # =========================================================================
+  # FRAPPE CRM STACK (Single Source of Truth & Pipeline Management)
+  # =========================================================================
+  crm-mariadb:
+    container_name: crm-mariadb-1
+    image: mariadb:10.8
+    restart: always
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+    volumes:
+      - crm_mariadb_data:/var/lib/mysql
+    networks:
+      crm_net:
+        aliases:
+          - mariadb
+
+  crm-redis:
+    container_name: crm-redis-1
+    image: redis:7.2.4-alpine
+    restart: always
+    networks:
+      crm_net:
+        aliases:
+          - redis
+
+  crm-frappe:
+    container_name: crm-frappe-1
+    image: frappe/bench:latest
+    restart: always
+    depends_on:
+      - crm-mariadb
+      - crm-redis
+    dns:
+      - 8.8.8.8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: >
+      bash -c "for i in $$(seq 1 90); do getent hosts pypi.org >/dev/null 2>&1 && getent hosts api.github.com >/dev/null 2>&1 && break; echo 'Waiting for DNS...'; sleep 1; done; exec bash /workspace/init.sh"
+    environment:
+      - SHELL=/bin/bash
+    working_dir: /home/frappe
+    volumes:
+      - ./crm/docker:/workspace
+      - crm_frappe_bench_data:/home/frappe
+      - ./frappe-custom/mmm_custom:/home/frappe/mmm_custom
+      - ./crm:/home/frappe/crm
+    ports:
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:9000:9000"
+    networks:
+      - crm_net
+      - shared_net
+
+networks:
+  chatwoot_net:
+  crm_net:
+  shared_net:
+
+volumes:
+  chatwoot_postgres_data:
+    external: true
+    name: chatwoot_postgres_data
+  chatwoot_redis_data:
+    external: true
+    name: chatwoot_redis_data
+  chatwoot_storage_data:
+    external: true
+    name: chatwoot_storage_data
+  crm_mariadb_data:
+    external: true
+    name: crm_mariadb-data
+  crm_frappe_bench_data:
+    external: true
+    name: crm_frappe-bench-data

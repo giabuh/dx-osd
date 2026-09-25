@@ -162,6 +162,45 @@ class TestBotApiWebhook(unittest.TestCase):
         mock_client.assign_conversation.assert_called_once_with(1, 1)  # agent 1 matches branch
         mock_client.toggle_status.assert_called_once_with(1, "open")
 
+    def test_handoff_fixes_placeholder_name_on_existing_lead(self):
+        """When a lead already exists with placeholder name, bot handoff
+        should fix first_name and lead_name to the real contact name."""
+        payload = make_message_created_payload(
+            content="binh_thanh",
+            contact_name="Hoàng Thành",
+            custom_attributes={
+                "bot_state": "await_branch",
+                "bot_courses": ["tieng_anh"],
+                "crm_lead_id": "CRM-LEAD-PLACEHOLDER",
+            },
+        )
+        self._setup_request(payload)
+        mock_client = MagicMock()
+        mock_client.list_agents.return_value = [
+            {"id": 1, "name": "Agent A", "custom_attributes": {"branch": "binh_thanh"}},
+        ]
+        mock_client.list_agent_conversations.return_value = []
+
+        self.mock_frappe.db.exists.return_value = True
+        # Simulate stored lead has old placeholder name
+        self.mock_frappe.db.get_value.return_value = {
+            "first_name": "EduFlow Student",
+            "lead_name": "EduFlow Student",
+        }
+
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with patch.object(bot_api_mod, "ChatwootClient", return_value=mock_client):
+                result = agent_bot_webhook()
+
+        self.assertEqual(result["status"], "ok")
+        # Verify name was fixed
+        self.mock_frappe.db.set_value.assert_any_call(
+            "CRM Lead", "CRM-LEAD-PLACEHOLDER", "first_name", "Hoàng Thành"
+        )
+        self.mock_frappe.db.set_value.assert_any_call(
+            "CRM Lead", "CRM-LEAD-PLACEHOLDER", "lead_name", "Hoàng Thành"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

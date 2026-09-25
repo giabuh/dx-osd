@@ -205,7 +205,7 @@ class TestChatwootSyncApi(unittest.TestCase):
                 "contact_inbox": {
                     "contact": {
                         "id": 888,
-                        "name": "",  # Empty name -> should fallback to "EduFlow Student"
+                        "name": "",  # Empty name -> should fallback to "Khách Messenger"
                         "email": "newbie@example.com",
                         "phone_number": "0901234567",
                     }
@@ -230,7 +230,7 @@ class TestChatwootSyncApi(unittest.TestCase):
                     self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-NEW-001"})
                     self.mock_frappe.get_doc.assert_any_call({
                         "doctype": "CRM Lead",
-                        "first_name": "EduFlow Student",
+                        "first_name": "Khách Messenger",
                         "email": "newbie@example.com",
                         "mobile_no": "+84901234567",
                         "source": "Messenger",
@@ -263,6 +263,7 @@ class TestChatwootSyncApi(unittest.TestCase):
         mock_lead.name = "CRM-LEAD-HOANG-01"
         mock_lead.insert.return_value = mock_lead
         self.mock_frappe.get_doc.return_value = mock_lead
+        self.mock_frappe.db.exists.return_value = False
 
         with patch.object(api_mod, "frappe", self.mock_frappe):
             with patch("mmm_custom.api.find_matching_lead", return_value=None):
@@ -371,6 +372,105 @@ class TestChatwootSyncApi(unittest.TestCase):
                 self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-EXISTING-01"})
                 self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-EXISTING-01", "chatwoot_contact_id", "456")
                 self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-EXISTING-01", "course_interest", "Bơi lội")
+
+    def test_existing_lead_placeholder_name_gets_fixed(self):
+        """When an existing lead has "EduFlow Student" or "Khách Messenger" as
+        first_name, updating it with a real contact name should fix first_name
+        and lead_name."""
+        valid_ts = str(int(time.time()))
+        payload = {
+            "event": "conversation_created",
+            "conversation": {
+                "id": 106,
+                "contact_inbox": {
+                    "contact": {
+                        "id": 456,
+                        "name": "Nguyễn Văn A",
+                        "email": "nguyena@example.com",
+                        "phone_number": "0912345678",
+                        "custom_attributes": {"crm_lead_id": "CRM-LEAD-PLACEHOLDER"},
+                    }
+                },
+                "messages": [{"content": "Xin chào"}],
+            },
+        }
+        body = json.dumps(payload).encode("utf-8")
+        sig = compute_signature(self.secret, valid_ts, body)
+        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
+
+        self.mock_frappe.db.exists.return_value = True
+        # Simulate the stored lead has old placeholder name
+        self.mock_frappe.db.get_value.return_value = {
+            "first_name": "EduFlow Student",
+            "lead_name": "EduFlow Student",
+        }
+        mock_note = MagicMock()
+        self.mock_frappe.get_doc.return_value = mock_note
+
+        with patch.object(api_mod, "frappe", self.mock_frappe):
+            with patch("requests.put"):
+                res = chatwoot_sync()
+                self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-PLACEHOLDER"})
+                # Verify first_name and lead_name were updated
+                self.mock_frappe.db.set_value.assert_any_call(
+                    "CRM Lead", "CRM-LEAD-PLACEHOLDER", "first_name", "Nguyễn Văn A"
+                )
+                self.mock_frappe.db.set_value.assert_any_call(
+                    "CRM Lead", "CRM-LEAD-PLACEHOLDER", "lead_name", "Nguyễn Văn A"
+                )
+
+    def test_dedup_by_chatwoot_contact_id(self):
+        """When crm_lead_id is not set but the contact_id matches an existing
+        lead's chatwoot_contact_id, the lead should be updated (not duplicated)."""
+        valid_ts = str(int(time.time()))
+        payload = {
+            "event": "conversation_created",
+            "conversation": {
+                "id": 107,
+                "contact_inbox": {
+                    "contact": {
+                        "id": 777,
+                        "name": "Trần Văn B",
+                        "email": None,
+                        "phone_number": None,
+                        "custom_attributes": {},  # no crm_lead_id set yet
+                    }
+                },
+                "messages": [{"content": "Xin chào"}],
+            },
+        }
+        body = json.dumps(payload).encode("utf-8")
+        sig = compute_signature(self.secret, valid_ts, body)
+        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
+
+        # First call: crm_lead_id not found → chatwoot_contact_id matches
+        def exists_side_effect(doctype, name_or_filters=None):
+            if isinstance(name_or_filters, dict) and "chatwoot_contact_id" in name_or_filters:
+                return True  # found by chatwoot_contact_id
+            return False  # crm_lead_id not found
+
+        self.mock_frappe.db.exists.side_effect = exists_side_effect
+
+        def get_value_side_effect(*args, **kwargs):
+            # First call: get lead name by chatwoot_contact_id filter
+            if kwargs.get("as_dict"):
+                return {"first_name": "Trần Văn B", "lead_name": "Trần Văn B"}
+            return "CRM-LEAD-EXISTING-BY-CW"
+
+        self.mock_frappe.db.get_value.side_effect = get_value_side_effect
+        mock_note = MagicMock()
+        self.mock_frappe.get_doc.return_value = mock_note
+
+        with patch.object(api_mod, "frappe", self.mock_frappe):
+            with patch("requests.put"):
+                res = chatwoot_sync()
+                self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-EXISTING-BY-CW"})
+                # Should NOT have called get_doc with "CRM Lead" for insert
+                insert_calls = [
+                    c for c in self.mock_frappe.get_doc.call_args_list
+                    if isinstance(c[0][0], dict) and c[0][0].get("doctype") == "CRM Lead"
+                ]
+                self.assertEqual(len(insert_calls), 0, "Should not create new lead")
 
 
 if __name__ == "__main__":

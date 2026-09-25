@@ -60,6 +60,29 @@ def create_custom_fields():
 		doc.save(ignore_permissions=True)
 		print("Custom field branch updated")
 
+	if not frappe.db.exists("Custom Field", "CRM Lead-data_quality"):
+		frappe.get_doc({
+			"doctype": "Custom Field",
+			"dt": "CRM Lead",
+			"fieldname": "data_quality",
+			"label": "Data Quality",
+			"fieldtype": "Select",
+			"options": "\nĐầy đủ\nThiếu SĐT/Email\nNghi trùng",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"read_only": 1,
+			"insert_after": "branch",
+		}).insert(ignore_permissions=True)
+		print("Custom field data_quality created")
+	else:
+		doc = frappe.get_doc("Custom Field", "CRM Lead-data_quality")
+		doc.options = "\nĐầy đủ\nThiếu SĐT/Email\nNghi trùng"
+		doc.in_list_view = 1
+		doc.in_standard_filter = 1
+		doc.read_only = 1
+		doc.save(ignore_permissions=True)
+		print("Custom field data_quality updated")
+
 	frappe.db.commit()
 
 
@@ -88,7 +111,7 @@ def update_crm_fields_layout():
 					columns = section.get("columns", [])
 					if columns:
 						col_fields = columns[-1].setdefault("fields", [])
-						for f in ("course_interest", "branch"):
+						for f in ("course_interest", "branch", "data_quality"):
 							if f not in col_fields:
 								col_fields.append(f)
 			doc.layout = json.dumps(layout)
