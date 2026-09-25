@@ -31,7 +31,10 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/docker/init.sh` | Symlink `mmm_custom` into `apps/`, `pip install -e` it, add it to `sites/apps.txt`, `install-app mmm_custom` | Fresh bench comes up with our custom app installed, no manual steps |
 | `crm/docker/init.sh` | Pin Frappe with `--frappe-branch v15.121.1`; replace `bench get-app crm --branch main` with symlinking the bind-mounted vendored `crm/` (plus `/home/frappe/frappe` → bench frappe, for the frontend's `link:../../frappe/ui`), `pip install -e`, `yarn install`, `bench build --app crm` | Run the vendored CRM source at a pinned framework version |
 | `crm/docker/docker-compose.override.yml` | Bind-mount `..` (vendored `crm/`) at `/home/frappe/crm` | Same |
+| `crm/docker/docker-compose.override.yml` | Pin `mariadb`, `frappe/bench` by digest (`redis` by tag) | Upstream uses floating tags (`latest`, `10.8`); reproducible build from source |
 | `chatwoot/docker/Dockerfile` | `git rev-parse HEAD > /app/.git_sha` falls back to `vendored` | Vendored copy has no `.git`; upstream line fails the build |
+| `chatwoot/enterprise/` | Deleted (Community Edition) | Chatwoot Enterprise License is proprietary; competition requires OSI licenses |
+| `chatwoot/spec/enterprise/` | Deleted | Specs for the removed proprietary `enterprise/` code (upstream's CE build drops both) |
 | chatwoot/config/application.rb | Guard enterprise/ eager load | Boots cleanly as pure Community Edition (MIT) when enterprise/ is removed |
 | `crm/crm/fcrm/doctype/crm_lead/crm_lead.py` | Add `data_quality` column and row to `default_list_data()` | Shows Data Quality badge in the default Lead list view |
 | `crm/frontend/src/pages/Leads.vue` | Add `data_quality` case in `parseRows()` with green/orange/red color mapping | Colors the Data Quality badge based on value |
@@ -41,8 +44,8 @@ Every change we make inside a vendored directory is listed here, so it can be re
 
 1. Fetch the new upstream version into a scratch location (not over the vendored directory):
    `git clone --depth 1 --branch <tag-or-branch> <upstream-url> /tmp/<name>-upstream`
-2. Replace the vendored directory's contents with the new version, excluding `.git/` and `.github/` (both are deliberately not vendored). Keep the upstream `LICENSE`.
+2. Replace the vendored directory's contents with the new version, excluding `.git/`, `.github/`, and for Chatwoot `enterprise/` + `spec/enterprise/` (deliberately not vendored). Keep the upstream `LICENSE`.
 3. Re-apply every row of **Local edits** above; drop any row upstream has made unnecessary.
 4. Review `git diff --stat` for the directory — anything changed that is neither upstream nor in the edits table is a mistake.
-5. Bring the affected stack up per `AGENTS.md` and re-run the checks for it: HTTP status on its port, `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests`, and `python scripts/test-chatwoot-crm-sync.py`.
+5. Bring the affected stack up per `AGENTS.md` and re-run the checks for it: HTTP status on its port, `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests`, and `python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"` (see AGENTS.md for reading the secret).
 6. Update the **Baselines** table and commit the re-sync as one commit (`chore(vendor): sync <name> to <version>`).

@@ -78,9 +78,8 @@ def configure_frappe(bot_secret: str, bot_token: str):
     ]
     for cmd in cmds:
         subprocess.run(
-            ["docker", "compose", "-f", "crm/docker/docker-compose.yml",
-             "-f", "crm/docker/docker-compose.override.yml",
-             "exec", "-T", "frappe", "bash", "-c", cmd],
+            # crm-frappe-1 is the container name in both the unified and the per-stack compose setup.
+            ["docker", "exec", "-w", "/home/frappe/frappe-bench", "crm-frappe-1", "bash", "-c", cmd],
             check=True,
         )
 
@@ -88,9 +87,7 @@ def configure_frappe(bot_secret: str, bot_token: str):
 def run_setup():
     """Run mmm_custom.setup.setup to create custom fields."""
     subprocess.run(
-        ["docker", "compose", "-f", "crm/docker/docker-compose.yml",
-         "-f", "crm/docker/docker-compose.override.yml",
-         "exec", "-T", "frappe",
+        ["docker", "exec", "-w", "/home/frappe/frappe-bench", "crm-frappe-1",
          "bench", "--site", "crm.localhost", "execute",
          "mmm_custom.setup.setup"],
         check=True,

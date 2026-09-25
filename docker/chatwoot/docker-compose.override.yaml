@@ -17,6 +17,7 @@ services:
     environment:
       - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true
   postgres:
+    image: pgvector/pgvector@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b  # PostgreSQL 16.15, pgvector 0.8.6
     ports: !override
       - '127.0.0.1:15432:5432'
     environment: !override

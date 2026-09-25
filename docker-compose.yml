@@ -13,7 +13,7 @@ services:
   # =========================================================================
   chatwoot-postgres:
     container_name: chatwoot-postgres-1
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b  # PostgreSQL 16.15, pgvector 0.8.6
     restart: always
     env_file: ./chatwoot/.env
     environment:
@@ -101,7 +101,7 @@ services:
   # =========================================================================
   crm-mariadb:
     container_name: crm-mariadb-1
-    image: mariadb:10.8
+    image: mariadb@sha256:456709ab146585d6189da05669b84384518baecd83670c9e5221f8c20a47cf1e  # MariaDB 10.8.8
     restart: always
     command:
       - --character-set-server=utf8mb4
@@ -128,7 +128,7 @@ services:
 
   crm-frappe:
     container_name: crm-frappe-1
-    image: frappe/bench:latest
+    image: frappe/bench@sha256:7cf2354c5024d8362c507619566fec700740e31bcd71a2e745e3ec9a3a778a2a  # bench 5.31.0, Python 3.14, Node 24
     restart: always
     depends_on:
       - crm-mariadb
@@ -159,19 +159,16 @@ networks:
   crm_net:
   shared_net:
 
+# Named explicitly so a fresh clone creates them and an existing dev setup (created by the
+# per-stack compose projects) keeps its data. Not `external`: that fails on a fresh clone.
 volumes:
   chatwoot_postgres_data:
-    external: true
     name: chatwoot_postgres_data
   chatwoot_redis_data:
-    external: true
     name: chatwoot_redis_data
   chatwoot_storage_data:
-    external: true
     name: chatwoot_storage_data
   crm_mariadb_data:
-    external: true
     name: crm_mariadb-data
   crm_frappe_bench_data:
-    external: true
     name: crm_frappe-bench-data
