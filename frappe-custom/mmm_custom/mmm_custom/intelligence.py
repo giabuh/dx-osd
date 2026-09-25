@@ -230,7 +230,10 @@ def analyze_conversation(conversation_id: int, sleep=time.sleep) -> dict:
     candidates = find_candidates([m["text"] for m in chat if m["from"] == "customer"])
     lead = frappe.db.get_value("CRM Lead", lead_id, ["mobile_no", "email"], as_dict=True) or {}
 
-    answers = ask_jev(api_key, {"chat": chat}, build_questions(candidates, templates), model=conf.get("typesafe_model") or "jev-latest")
+    answers = ask_jev(
+        api_key, {"chat": chat}, build_questions(candidates, templates),
+        model=conf.get("typesafe_model") or "jev-latest", url=conf.get("typesafe_api_url") or JEV_URL,
+    )
     threshold = float(conf.get("typesafe_confidence_threshold") or DEFAULT_THRESHOLD)
     plan = decide_actions(answers, templates, threshold, lead)
 

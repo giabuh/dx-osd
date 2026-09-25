@@ -16,7 +16,7 @@ except ImportError:
 
     frappe = MagicMock()
 
-from mmm_custom.intelligence import DEFAULT_THRESHOLD, ask_jev
+from mmm_custom.intelligence import DEFAULT_THRESHOLD, JEV_URL, ask_jev
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def plan_followups(now: datetime | None = None) -> dict:
         state = {"lead": {**{k: str(v) for k, v in lead.items() if v is not None}, "days_since_update": days_since_update}, "recent_notes": notes}
         answer = ask_jev(api_key, state, {
             "next_action": {"type": "choice", "instructions": "What should the salesperson do next with this quiet sales lead?", "criteria": NEXT_ACTIONS},
-        }, model=conf.get("typesafe_model") or "jev-latest")["next_action"]
+        }, model=conf.get("typesafe_model") or "jev-latest", url=conf.get("typesafe_api_url") or JEV_URL)["next_action"]
         choice, confidence = answer["choice"], answer.get("confidence") or 0
         if confidence < threshold or choice == "wait":
             results.append({"lead": lead["name"], "action": "none", "choice": choice, "confidence": confidence})

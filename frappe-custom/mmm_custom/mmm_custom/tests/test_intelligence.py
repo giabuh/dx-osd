@@ -147,6 +147,7 @@ class TestAnalyzeConversation(unittest.TestCase):
 
         api_key, state, questions = ask.call_args[0]
         self.assertEqual(api_key, "jev-key")
+        self.assertEqual(ask.call_args[1]["url"], intel.JEV_URL)
         self.assertEqual([m["from"] for m in state["chat"]], ["customer", "business", "customer"], "private notes and activity are not sent")
         self.assertEqual(list(questions["phone"]["criteria"]), ["+84901234567", "none"])
         self.assertEqual(set(questions["reply"]["criteria"]) - {"none"}, set(DEFAULT_REPLY_TEMPLATES))
@@ -155,6 +156,11 @@ class TestAnalyzeConversation(unittest.TestCase):
         dq.assert_called_once_with("LEAD-1")
         self.client.add_labels.assert_called_once_with(5, ["ai-price_inquiry", "hot"])
         self.assertIn("bảng giá", self.client.send_private_note.call_args[0][1])
+
+    def test_jev_url_can_point_at_a_proxy(self):
+        self.frappe.conf["typesafe_api_url"] = "http://proxy.local/v1/systemone"
+        _, ask, _ = self.run_job(CONFIDENT)
+        self.assertEqual(ask.call_args[1]["url"], "http://proxy.local/v1/systemone")
 
     def test_flags_never_merges_another_lead_with_the_newly_found_phone(self):
         self.frappe.get_all.return_value = ["LEAD-ADS-7"]

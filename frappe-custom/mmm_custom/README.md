@@ -28,7 +28,7 @@ bench --site crm.localhost set-config typesafe_api_key "<key from https://consol
 bench --site crm.localhost set-config chatwoot_api_token "<Chatwoot access token>"   # already set if you ran scripts/configure-chatwoot.py
 ```
 
-Optional keys: `typesafe_confidence_threshold` (0.7), `typesafe_model` (`jev-latest`), `ai_reply_templates` (JSON object of `key: text`, replaces the built-in Vietnamese templates), `ai_followup_stale_days` (3), `ai_followup_statuses` (`["New", "Contacted", "Nurture"]`), `ai_followup_max_leads` (20), `chatwoot_account_id` (1).
+Optional keys: `typesafe_confidence_threshold` (0.7), `typesafe_model` (`jev-latest`), `typesafe_api_url` (the Jev endpoint, e.g. behind a proxy), `ai_reply_templates` (JSON object of `key: text`, replaces the built-in Vietnamese templates), `ai_followup_stale_days` (3), `ai_followup_statuses` (`["New", "Contacted", "Nurture"]`), `ai_followup_max_leads` (20), `chatwoot_account_id` (1).
 
 The Chatwoot webhook must subscribe to `message_created` (`scripts/configure-chatwoot.py` does). If the first message arrives before the conversation webhook has created the Lead, the job waits for it (4 s, 8 s, 16 s) before giving up, and it never calls Jev without a Lead. Jev is strongest in English; on 10 hand-labelled Vietnamese chats every wrong answer came back below 0.7 — check real chats before lowering the threshold.
 

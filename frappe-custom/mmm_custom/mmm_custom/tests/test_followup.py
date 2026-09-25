@@ -37,7 +37,7 @@ class TestPlanFollowups(unittest.TestCase):
         self.frappe.get_all.side_effect = get_all
 
     def run_plan(self, answers):
-        def ask(api_key, state, questions, model="jev-latest"):
+        def ask(api_key, state, questions, model="jev-latest", url=None):
             return {"next_action": answers[state["lead"]["name"]]}
 
         with patch.object(followup, "frappe", self.frappe), patch.object(followup, "ask_jev", side_effect=ask) as jev:
