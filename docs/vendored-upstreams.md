@@ -1,6 +1,6 @@
 # Vendored upstreams
 
-`chatwoot/`, `crm/`, and `messenger-platform-samples/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote — this file is the record of where each copy came from, what we changed inside it, and how to re-sync.
+`chatwoot/` and `crm/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote — this file is the record of where each copy came from, what we changed inside it, and how to re-sync.
 
 ## Baselines
 
@@ -8,7 +8,6 @@
 |---|---|---|---|
 | `chatwoot/` | https://github.com/chatwoot/chatwoot | `4.18.0` (`chatwoot/VERSION`) | 2026-09-22 |
 | `crm/` | https://github.com/frappe/crm | tag `v1.84.0` (`crm/crm/__init__.py`) | 2026-09-23 (was `main`/`2.0.0-dev` on 2026-09-22 — needs unreleased Frappe `develop`, so replaced by the stable tag) |
-| `messenger-platform-samples/` | https://github.com/fbsamples/messenger-platform-samples | default branch | 2026-09-22 |
 
 Update this table on every re-sync.
 
@@ -31,13 +30,14 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/docker/init.sh` | Symlink `mmm_custom` into `apps/`, `pip install -e` it, add it to `sites/apps.txt`, `install-app mmm_custom` | Fresh bench comes up with our custom app installed, no manual steps |
 | `crm/docker/init.sh` | Pin Frappe with `--frappe-branch v15.121.1`; replace `bench get-app crm --branch main` with symlinking the bind-mounted vendored `crm/` (plus `/home/frappe/frappe` → bench frappe, for the frontend's `link:../../frappe/ui`), `pip install -e`, `yarn install`, `bench build --app crm` | Run the vendored CRM source at a pinned framework version |
 | `crm/docker/docker-compose.override.yml` | Bind-mount `..` (vendored `crm/`) at `/home/frappe/crm` | Same |
+| `chatwoot/enterprise/`, `chatwoot/spec/enterprise/` | Deleted (Community Edition, same as upstream's CE build) | Chatwoot Enterprise License is proprietary; competition requires OSI licenses. `ChatwootApp.enterprise?` is false when the directory is absent |
 | `chatwoot/docker/Dockerfile` | `git rev-parse HEAD > /app/.git_sha` falls back to `vendored` | Vendored copy has no `.git`; upstream line fails the build |
 
 ## Re-sync procedure
 
 1. Fetch the new upstream version into a scratch location (not over the vendored directory):
    `git clone --depth 1 --branch <tag-or-branch> <upstream-url> /tmp/<name>-upstream`
-2. Replace the vendored directory's contents with the new version, excluding `.git/` and `.github/` (both are deliberately not vendored). Keep the upstream `LICENSE`.
+2. Replace the vendored directory's contents with the new version, excluding `.git/`, `.github/`, and for Chatwoot `enterprise/` + `spec/enterprise/` (deliberately not vendored). Keep the upstream `LICENSE`.
 3. Re-apply every row of **Local edits** above; drop any row upstream has made unnecessary.
 4. Review `git diff --stat` for the directory — anything changed that is neither upstream nor in the edits table is a mistake.
 5. Bring the affected stack up per `CLAUDE.md` and re-run the checks for it: HTTP status on its port, `node --test n8n/logic/dedupe.test.js`, and the Messenger → CRM flow from the plan's Task 9/10.

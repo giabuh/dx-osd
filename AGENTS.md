@@ -6,7 +6,7 @@ Shared guidance for every AI coding agent working in this repository — Claude 
 
 - **Trace work to the roadmap.** New work belongs to a phase in `ROADMAP.md`; respect its guiding principles.
 - **Know which area you are in** (see the map below) and run that area's check before calling a change done. Quote the actual output — "should work" is not "works".
-- **Vendored edits get recorded.** Any change inside `chatwoot/`, `crm/`, or `messenger-platform-samples/` needs a row in `docs/vendored-upstreams.md`.
+- **Vendored edits get recorded.** Any change inside `chatwoot/` or `crm/` needs a row in `docs/vendored-upstreams.md`.
 - **Never destroy shared state.** Do not run `docker compose down -v`, `docker volume rm`, or `docker system prune` on the `chatwoot`, `crm`, or `n8n` projects — they hold the working dev data. To test from scratch, use a separate compose project (`docker compose -p <name>-verify ...`) and remove only that.
 - **Secrets stay out.** Never commit or print `.env` files or `scripts/seed-shared-accounts/credentials.local.json`.
 - **Language:** code, identifiers, comments, commit messages, and docs in English.
@@ -29,7 +29,6 @@ DX-OSD stands on the shoulders of two mature, complete open-source products and 
 - **Chatwoot** (`chatwoot/`) — inbox for Messenger/Instagram conversations, vendored in from [chatwoot/chatwoot](https://github.com/chatwoot/chatwoot).
 - **Frappe CRM** (`crm/`) — source of truth for Lead/Contact/Deal/pipeline, vendored in from [frappe/crm](https://github.com/frappe/crm). Already has native Facebook Lead Ads polling built in (`crm/lead_syncing/`), no custom code needed for that flow.
 - **n8n** (deployed via `docker/n8n/`) — glue layer: receives Chatwoot webhooks, dedups against CRM by email/phone, creates/updates CRM Leads.
-- **`messenger-platform-samples/`** — reference sample code from Meta ([fbsamples/messenger-platform-samples](https://github.com/fbsamples/messenger-platform-samples)), vendored in for reference; not deployed anywhere in this architecture.
 
 Full design rationale and every architectural decision is in **`docs/superpowers/specs/2026-09-22-facebook-integration-platform.md`** — read that before making any architecture-level change. The task-by-task build plan, with exact commands and the current pass/fail status of each task, is in **`docs/superpowers/plans/2026-09-22-facebook-integration-platform.md`**; its live execution ledger (what's done, parked, and why) is at `.superpowers/sdd/2026-09-22-facebook-integration-platform/progress.md`.
 
@@ -37,11 +36,11 @@ The product-level direction — vision, guiding principles, and milestone phases
 
 `REPO.md` is a leftover candidate-repo comparison table from before the architecture was decided — background context only, not the current design.
 
-## Vendored source: `chatwoot/`, `crm/`, `messenger-platform-samples/`
+## Vendored source: `chatwoot/`, `crm/`
 
-These three directories are **first-class, tracked source in this repo now** — vendored in (their own `.git` histories removed) rather than kept as separate clones, so the whole product ships from one repo and one `git clone`. They are ordinary files here: edit them directly when a change belongs in Chatwoot or Frappe CRM itself, and commit at the top level like any other change in this repo.
+These two directories are **first-class, tracked source in this repo now** — vendored in (their own `.git` histories removed) rather than kept as separate clones, so the whole product ships from one repo and one `git clone`. They are ordinary files here: edit them directly when a change belongs in Chatwoot or Frappe CRM itself, and commit at the top level like any other change in this repo.
 
-- Each still carries its upstream `LICENSE` file — keep those; the copyright/license terms of the giants we're building on stay intact even though we no longer track upstream's CI/contribution workflow (their `.github/` directories were deliberately removed — this project doesn't run their CI or accept upstream-style PRs).
+- Each still carries its upstream `LICENSE` file — keep those, and keep every dependency OSI-licensed (competition requirement; see `THIRD_PARTY_LICENSES.md`). `chatwoot/` is Community Edition: `enterprise/` is proprietary and must not be re-added on a re-sync; the copyright/license terms of the giants we're building on stay intact even though we no longer track upstream's CI/contribution workflow (their `.github/` directories were deliberately removed — this project doesn't run their CI or accept upstream-style PRs).
 - Each has its own `AGENTS.md`/`CLAUDE.md` (`chatwoot/CLAUDE.md`, `chatwoot/AGENTS.md`, `crm/AGENTS.md`) with useful internal dev commands (build/test/lint) — this file does not duplicate those, but their conventions no longer bind changes made for DX-OSD's own purposes.
 - There is no upstream remote wired up anymore. Pulling future upstream updates means fetching the new version manually and re-applying any local customizations — this repo has traded easy upstream syncing for a single self-contained codebase. **`docs/vendored-upstreams.md`** holds the baselines, the re-sync procedure, and the log of every edit made inside a vendored directory — add a row there whenever you edit one.
 - **Both stacks run this vendored source:** Chatwoot is built locally from `chatwoot/` (image `dx-osd/chatwoot:local`), and `crm/` is bind-mounted into the CRM bench on a pinned Frappe (`v15.121.1`). Rebuild/restart to see an edit — details in `docs/vendored-upstreams.md`.

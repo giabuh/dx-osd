@@ -154,7 +154,6 @@ Phases are ordered by dependency, not by date. A phase may start early work in p
 - Multi-region, high-availability deployment — single VPS per deployment is the target.
 - Building our own ads-management / campaign-editing tool — we read from Meta, we don't replace Ads Manager.
 - Airbyte or a separate data warehouse — only reconsidered if Phase 4 dashboards can't be served from CRM data.
-- `messenger-platform-samples/` as a deployed component — reference code only.
 
 ## How to use this roadmap
 
