@@ -19,7 +19,7 @@ Dự án **DX-OSD** được thiết kế và triển khai nhằm cung cấp gi�
 
 Đội ngũ phát triển cam kết tuân thủ tuyệt đối quy chế thi đấu của Khối Phần Mềm Nguồn Mở (OLP PMNM) và các tiêu chuẩn bản quyền của **Open Source Initiative (OSI)** cũng như **Free Software Foundation (FSF)**:
 1. **100% Giấy phép Chuẩn Nguồn mở:** Toàn bộ thành phần phần mềm được sử dụng, tích hợp và triển khai trong kiến trúc DX-OSD đều mang giấy phép được OSI công nhận (GNU AGPLv3, MIT, Apache 2.0, BSD-3-Clause, GPLv2).
-2. **Không chứa mã nguồn độc quyền:** Không sử dụng bất kỳ phần mềm nguồn đóng, phần mềm thương mại, hoặc phần mềm mang giấy phép "nguồn mở giả tạo" (Fair-code, Source-Available, BSL, SSPL, RSAL).
+2. **Không chứa mã nguồn độc quyền:** Không sử dụng bất kỳ phần mềm nguồn đóng, phần mềm thương mại, hoặc phần mềm mang giấy phép "nguồn mở giả tạo" (Fair-code, Source-Available, BSL, SSPL, RSAL). Các dịch vụ bên ngoài chỉ được gọi qua API công khai và không có mã nào của chúng nằm trong sản phẩm (xem mục 5.4).
 3. **Kiến trúc tinh gọn 2 cụm (2-Stack Model):** Loại bỏ hoàn toàn tầng trung gian tự động hóa `n8n` (do vấn đề bản quyền Sustainable Use License không thuộc OSI) và thay thế bằng Frappe Custom App `mmm_custom` chạy trực tiếp trên nền tảng Python/Frappe Bench theo giấy phép MIT.
 4. **Minh bạch và Có thể Kiểm chứng:** Báo cáo này đính kèm bằng chứng kiểm toán (audit trail), đối chiếu mã nguồn, kết quả kiểm thử tự động (23 unit tests) và kiểm thử tích hợp thực tế (5 live integration tests) với tỷ lệ vượt qua đạt 100%.
 
@@ -45,7 +45,7 @@ Hệ thống DX-OSD vận hành dựa trên 2 cụm dịch vụ chính độc l�
 ┌────────────────────────────────────────────────────────┐
 │ Cụm 2: Frappe CRM & Custom In-Bench App (`mmm_custom`) │
 │ - Frappe CRM v1.84.0 (GNU AGPLv3)                      │
-│ - Frappe Framework v15.121.1 (GNU AGPLv3)              │
+│ - Frappe Framework v15.121.1 (MIT)                     │
 │ - In-Bench Webhook Endpoint: mmm_custom (MIT)          │
 │   + Deduplication Engine (chống trùng lặp SĐT/Email)   │
 │   + Keyword Detection (phân loại khoá học tự động)     │
@@ -65,7 +65,7 @@ Bảng dưới đây liệt kê toàn bộ các thành phần phần mềm, thư
 | STT | Thành phần / Module | Thư mục / Image | Phiên bản / Tag | Giấy phép (SPDX) | Được OSI công nhận? | Vai trò trong hệ thống |
 |:---:|---|---|---|---|:---:|---|
 | 1 | **Frappe CRM** | `crm/` (vendored) | `v1.84.0` | **GNU AGPL-3.0-only** | **CÓ** | Nền tảng CRM, quản lý Lead, Contact, Deal, đồng bộ Meta Lead Ads |
-| 2 | **Frappe Framework** | Docker bench image | `v15.121.1` | **GNU AGPL-3.0-only** | **CÓ** | Framework nền tảng full-stack Python / MariaDB |
+| 2 | **Frappe Framework** | cloned by `bench init` | `v15.121.1` | **MIT** | **CÓ** | Framework nền tảng full-stack Python / MariaDB |
 | 3 | **Chatwoot Community** | `chatwoot/` (vendored) | `4.18.0` | **MIT** | **CÓ** | Cổng giao tiếp hội thoại Facebook Messenger / Instagram Direct |
 | 4 | **Frappe Custom App (`mmm_custom`)** | `frappe-custom/mmm_custom/` | `0.0.1` | **MIT** | **CÓ** | Nhận webhook, xác thực chữ ký HMAC-SHA256, deduplication, phân tích khoá học |
 | 5 | **Caddy Server** | `docker/caddy/` | `caddy:2-alpine` | **Apache-2.0** | **CÓ** | Cổng Reverse Proxy biên, tự động hóa chứng chỉ SSL/TLS |
@@ -126,6 +126,9 @@ Một yêu cầu tối quan trọng trong việc xây dựng sản phẩm FOSS l
    - Giao tiếp giữa Chatwoot và Frappe CRM hoàn toàn thông qua giao thức mạng tiêu chuẩn mở (HTTP POST Webhook và REST API qua cổng JSON). Theo quy định của FSF về "Aggregate and Independent Programs", việc truyền tin qua mạng giữa hai phần mềm độc lập không cấu thành hành vi vi phạm hay "nhiễm bản quyền" chéo giữa các hệ thống.
 3. **Caddy Server (Apache 2.0) và MariaDB (GPLv2):**
    - Đóng vai trò các dịch vụ hạ tầng mạng độc lập, tuân thủ hoàn toàn quyền phân phối và thực thi nhị phân.
+4. **Dịch vụ bên ngoài gọi qua API (không phân phối kèm sản phẩm):**
+   - **Meta Graph API** — nguồn dữ liệu Lead Ads / Messenger / Instagram (bắt buộc cho kênh Facebook).
+   - **TypeSafe Jev** (`api.typesafe.ai`) — mô hình ra quyết định dùng cho tầng [I] AI **tuỳ chọn** trong `mmm_custom` (`intelligence.py`, `followup.py`). Đây là API thương mại, không phải phần mềm được đóng gói: không có mã nguồn hay thư viện nào của TypeSafe trong kho mã, mã gọi API là của chúng tôi (MIT). Tầng này **mặc định tắt** và chỉ bật khi site config có `typesafe_api_key`; toàn bộ luồng Chatwoot → CRM, bot và chống trùng hoạt động đầy đủ khi không có nó.
 
 ---
 
@@ -135,7 +138,7 @@ Hệ thống tích hợp tuân thủ nghiêm ngặt các nguyên tắc bảo m�
 - **Xác thực Chữ ký HMAC-SHA256:** Endpoint `chatwoot_sync()` trong `mmm_custom/api.py` kiểm tra chữ ký số `X-Chatwoot-Signature` thông qua hàm so sánh an toàn thời gian thực `hmac.compare_digest`, ngăn chặn hoàn toàn tấn công giả mạo yêu cầu (Request Forgery).
 - **Chống Tấn công Phát lại (Anti-Replay Attack Protection):** Kiểm tra header `X-Chatwoot-Timestamp`. Mọi yêu cầu có độ lệch thời gian vượt quá ±300 giây đều bị từ chối ngay lập tức với mã lỗi HTTP 401.
 - **Ràng buộc Địa chỉ Cục bộ (Localhost Binding):** Toàn bộ các cổng dịch vụ nội bộ (`3000`, `8000`, `9000`, `15432`, `16379`) chỉ liên kết với giao diện loopback `127.0.0.1`. Chỉ có cổng của Caddy mới được phép tiếp xúc với Internet công cộng khi triển khai máy chủ thật.
-- **Không Lưu trữ Khóa Bí mật:** Không có mật khẩu, Access Token hoặc HMAC Secret nào bị lưu vết (hardcode) trong lịch sử git. Mọi định danh truy cập đều dùng biến môi trường hoặc script cấu hình an toàn tự động che dấu token (token masking).
+- **Không Lưu trữ Khóa Bí mật:** Không có mật khẩu, Access Token hoặc HMAC Secret thật nào bị lưu vết (hardcode) trong lịch sử git. Các endpoint webhook không có secret dự phòng: nếu site chưa cấu hình `chatwoot_webhook_secret` / `chatwoot_bot_webhook_secret` thì mọi webhook bị từ chối (trước đây có một giá trị mặc định công khai trong mã — đã gỡ bỏ); `scripts/configure-chatwoot.py` sinh secret ngẫu nhiên và ghi vào site config. Mọi định danh truy cập đều dùng biến môi trường hoặc script cấu hình an toàn tự động che dấu token (token masking).
 
 ---
 

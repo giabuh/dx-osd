@@ -25,7 +25,7 @@ account_user.update!(role: :administrator)
 # Ensure webhook is configured
 target_url = 'http://host.docker.internal:8000/api/method/mmm_custom.api.chatwoot_sync'
 webhook = Webhook.find_or_initialize_by(account: account, url: target_url)
-webhook.subscriptions = ['conversation_created']
+webhook.subscriptions = ['conversation_created', 'message_created']  # message_created feeds the optional [I] AI agents
 webhook.webhook_type = :account_type
 webhook.secret = SecureRandom.hex(32) if webhook.secret.blank?
 webhook.save!

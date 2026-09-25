@@ -83,7 +83,36 @@ def create_custom_fields():
 		doc.save(ignore_permissions=True)
 		print("Custom field data_quality updated")
 
+	# Written by the optional [I] AI agents (intelligence.py); options must match its INTENTS / HOTNESS.
+	for field in AI_FIELDS:
+		if not frappe.db.exists("Custom Field", f"CRM Lead-{field['fieldname']}"):
+			frappe.get_doc({"doctype": "Custom Field", "dt": "CRM Lead", **field}).insert(ignore_permissions=True)
+			print(f"Custom field {field['fieldname']} created")
+
 	frappe.db.commit()
+
+
+AI_FIELDS = [
+	{
+		"fieldname": "ai_intent",
+		"label": "AI Intent",
+		"fieldtype": "Select",
+		"options": "\npurchase\nprice_inquiry\nsupport\ncomplaint\nspam\nother",
+		"in_standard_filter": 1,
+		"read_only": 1,
+		"insert_after": "data_quality",
+	},
+	{
+		"fieldname": "ai_hotness",
+		"label": "AI Hotness",
+		"fieldtype": "Select",
+		"options": "\ncold\nwarm\nhot",
+		"in_list_view": 1,
+		"in_standard_filter": 1,
+		"read_only": 1,
+		"insert_after": "ai_intent",
+	},
+]
 
 
 def create_custom_field():
@@ -111,7 +140,10 @@ def update_crm_fields_layout():
 					columns = section.get("columns", [])
 					if columns:
 						col_fields = columns[-1].setdefault("fields", [])
-						for f in ("course_interest", "branch", "data_quality"):
+						fields = ["course_interest", "branch", "data_quality"]
+						if layout_name != "CRM Lead-Quick Entry":
+							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
+						for f in fields:
 							if f not in col_fields:
 								col_fields.append(f)
 			doc.layout = json.dumps(layout)

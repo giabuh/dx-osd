@@ -37,6 +37,7 @@ except ImportError:
 
 from mmm_custom.dedupe import find_matching_lead, normalize_phone
 from mmm_custom.data_quality import compute_data_quality
+from mmm_custom.intelligence import enqueue_analysis
 
 
 COURSE_KEYWORD_PATTERNS = [
@@ -128,6 +129,9 @@ def chatwoot_sync():
 
     if not isinstance(payload, dict):
         return {"status": "error", "message": "Invalid JSON body"}
+
+    if payload.get("event") == "message_created":
+        return enqueue_analysis(payload)  # [I] layer; ignores everything unless an API key is set
 
     if payload.get("event") != "conversation_created":
         return {"status": "ignored", "event": payload.get("event")}

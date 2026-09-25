@@ -136,5 +136,49 @@ class TestChatwootClient(unittest.TestCase):
         self.assertEqual(call_args[1]["headers"]["api_access_token"], "test_token_123")
 
 
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_add_labels_keeps_existing_labels(self, mock_requests):
+        # Chatwoot's POST /labels replaces the whole list, so adding must merge with what is there.
+        get_resp = MagicMock()
+        get_resp.json.return_value = {"payload": ["ai-purchase", "vip"]}
+        mock_requests.get.return_value = get_resp
+        mock_requests.post.return_value = MagicMock()
+
+        self.client.add_labels(42, ["Tiếng Anh", "vip"])
+
+        self.assertIn("/conversations/42/labels", mock_requests.get.call_args[0][0])
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"labels": ["ai-purchase", "vip", "Tiếng Anh"]})
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_add_labels_skips_the_write_when_nothing_is_new(self, mock_requests):
+        get_resp = MagicMock()
+        get_resp.json.return_value = {"payload": ["hot"]}
+        mock_requests.get.return_value = get_resp
+
+        self.client.add_labels(42, ["hot"])
+
+        mock_requests.post.assert_not_called()
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_list_messages_returns_meta_and_payload(self, mock_requests):
+        resp = MagicMock()
+        resp.json.return_value = {"meta": {"labels": []}, "payload": [{"id": 1}]}
+        mock_requests.get.return_value = resp
+
+        data = self.client.list_messages(42)
+
+        self.assertIn("/conversations/42/messages", mock_requests.get.call_args[0][0])
+        self.assertEqual(data["payload"], [{"id": 1}])
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_send_private_note(self, mock_requests):
+        mock_requests.post.return_value = MagicMock()
+
+        self.client.send_private_note(42, "Gợi ý trả lời")
+
+        body = mock_requests.post.call_args[1]["json"]
+        self.assertEqual(body, {"content": "Gợi ý trả lời", "message_type": "outgoing", "private": True})
+
+
 if __name__ == "__main__":
     unittest.main()

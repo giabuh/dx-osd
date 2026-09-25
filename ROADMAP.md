@@ -32,6 +32,7 @@ Every phase must respect these. If a proposed change breaks one, it needs an exp
 | CRM customization | `mmm_custom` app: `chatwoot_contact_id` field, `course_interest` field, `Messenger`/`Instagram` lead sources, keyword course interest detection, HMAC-SHA256 webhook security with anti-replay protection. |
 | Dedup & Ingestion logic | `frappe-custom/mmm_custom/mmm_custom/dedupe.py` & `api.py` with 23 unit tests (100% pass) + 5 live end-to-end sync verification tests. |
 | FOSS / License Compliance | 100% OSI-compliant. Chatwoot stripped of `enterprise/` (pure MIT), Redis pinned to `7.2.4-alpine` (BSD-3-Clause), Frappe CRM (AGPLv3), MariaDB (GPLv2), Caddy (Apache 2.0). n8n and messenger-platform-samples purged. |
+| [I] Intelligence (optional) | `mmm_custom/intelligence.py` + `followup.py` on TypeSafe Jev, off unless `typesafe_api_key` is set; confidence-gated (0.7). Same decisions and thresholds as the Activepieces prototype, which was verified on the real local stacks with the real Jev API: on 10 hand-labelled Vietnamese chats every wrong answer came back below 0.7. |
 | Shared demo accounts | `scripts/seed-shared-accounts/` & `scripts/configure-chatwoot.py` |
 | Security checklist | Passed (no secrets in git history; anti-replay timestamp & HMAC-SHA256 verification on webhook). |
 | Meta App (plan Task 0) | **Not started** — needs Business Manager access |

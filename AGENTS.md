@@ -18,7 +18,8 @@ Shared guidance for every AI coding agent working in this repository — Claude 
 |---|---|---|
 | CRM customization | `frappe-custom/mmm_custom/`, `crm/docker/` | Fresh bench via a `-p crmverify` project: `bench --site crm.localhost list-apps` shows `mmm_custom`; CRM answers 200 on `:8000` |
 | Chatwoot | `docker/chatwoot/`, `chatwoot/` (vendored) | Chatwoot answers 200/302 on `:3000` |
-| CRM Integration & Webhooks | `frappe-custom/mmm_custom/mmm_custom/`, `scripts/test-chatwoot-crm-sync.py` | `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests` passes (23 tests); `python scripts/test-chatwoot-crm-sync.py` passes (5/5) against running stacks |
+| CRM Integration & Webhooks | `frappe-custom/mmm_custom/mmm_custom/`, `scripts/test-chatwoot-crm-sync.py` | `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests` passes; `python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"` passes (5/5) against running stacks |
+| [I] AI agents (optional) | `frappe-custom/mmm_custom/mmm_custom/intelligence.py`, `followup.py` | Unit tests pass; with `typesafe_api_key` set, an incoming message on a Lead's conversation updates `ai_intent`/`ai_hotness` and labels the conversation |
 | Deployment / ops | `docker/`, `docker/caddy/`, `scripts/` | Affected stack comes up with the documented commands; ports still bind `127.0.0.1` only |
 | Docs & planning | `ROADMAP.md`, `REPO.md`, `docs/` | Claims match the code and `git log` |
 

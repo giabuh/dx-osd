@@ -118,11 +118,37 @@ class ChatwootClient:
                 if ((c.get("meta") or {}).get("assignee") or {}).get("id") == agent_id]
 
     def add_labels(self, conversation_id: int, labels: list[str]) -> dict:
-        """Add labels to a conversation for visual categorization in inbox."""
+        """Add labels to a conversation, keeping the ones it already has.
+
+        Chatwoot's POST /labels replaces the whole list, so read it first and merge;
+        otherwise the bot hand-off would wipe labels set by agents or the AI layer.
+        """
+        url = f"{self._base}/conversations/{conversation_id}/labels"
+        resp = requests.get(url, headers=self._headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        existing = resp.json().get("payload") or []
+        merged = existing + [label for label in dict.fromkeys(labels) if label not in existing]
+        if len(merged) == len(existing):
+            return {"payload": existing}
+        resp = requests.post(url, headers=self._headers, json={"labels": merged}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_messages(self, conversation_id: int) -> dict:
+        """Conversation messages plus `meta` (labels, contact with custom_attributes)."""
+        resp = requests.get(
+            f"{self._base}/conversations/{conversation_id}/messages",
+            headers=self._headers, timeout=REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def send_private_note(self, conversation_id: int, content: str) -> dict:
+        """Post a note only agents can see."""
         resp = requests.post(
-            f"{self._base}/conversations/{conversation_id}/labels",
+            f"{self._base}/conversations/{conversation_id}/messages",
             headers=self._headers,
-            json={"labels": labels},
+            json={"content": content, "message_type": "outgoing", "private": True},
             timeout=REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
