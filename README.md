@@ -63,7 +63,7 @@ python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"
 | Chatwoot | http://127.0.0.1:3000 | set by `scripts/configure-chatwoot.py` |
 | Frappe CRM | http://127.0.0.1:8000 | `Administrator` / `admin123` (dev only) |
 
-All ports bind to `127.0.0.1`; Caddy (`docker/caddy/`) is the public entry once a domain exists. Never run `docker compose down -v` — the named volumes hold the data.
+All ports bind to `127.0.0.1`, so Chatwoot and the CRM reach each other by service name (`chatwoot-rails`, `crm-frappe`) on the unified stack's `shared_net` — run them with the root `docker-compose.yml`. Caddy (`docker/caddy/`) is the public entry once a domain exists. Never run `docker compose down -v` — the named volumes hold the data.
 
 ### Optional: [I] AI agents
 

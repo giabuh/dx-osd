@@ -108,7 +108,13 @@ class TestEnqueue(unittest.TestCase):
         with patch.object(intel, "frappe", self.frappe):
             result = intel.enqueue_analysis({"event": "message_created", "message_type": "incoming", "conversation": {"id": 5}})
         self.assertEqual(result["status"], "queued")
-        self.frappe.enqueue.assert_called_once_with("mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=5)
+        self.frappe.enqueue.assert_called_once_with("mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=5, suggest_reply=True)
+
+    def test_no_reply_suggestion_while_the_bot_handles_the_conversation(self):
+        # Pending = the agent bot is still qualifying; a note on every Quick Reply click is noise.
+        with patch.object(intel, "frappe", self.frappe):
+            intel.enqueue_analysis({"message_type": "incoming", "conversation": {"id": 5, "status": "pending"}})
+        self.assertEqual(self.frappe.enqueue.call_args.kwargs["suggest_reply"], False)
 
     def test_ignores_outgoing_and_private_messages(self):
         with patch.object(intel, "frappe", self.frappe):
@@ -133,13 +139,29 @@ class TestAnalyzeConversation(unittest.TestCase):
         self.client = MagicMock()
         self.client.list_messages.return_value = conversation({"crm_lead_id": "LEAD-1"})
 
-    def run_job(self, answers, sleep=None):
+    def run_job(self, answers, sleep=None, suggest_reply=True):
         with patch.object(intel, "frappe", self.frappe), \
                 patch.object(intel, "_chatwoot_client", return_value=self.client), \
                 patch.object(intel, "ask_jev", return_value=answers) as ask, \
                 patch.object(intel, "compute_data_quality") as dq:
-            result = intel.analyze_conversation(5, sleep=sleep or MagicMock())
+            result = intel.analyze_conversation(5, suggest_reply=suggest_reply, sleep=sleep or MagicMock())
         return result, ask, dq
+
+    def test_without_suggest_reply_it_still_classifies_but_posts_no_note(self):
+        result, ask, _ = self.run_job(CONFIDENT, suggest_reply=False)
+        self.assertNotIn("reply", ask.call_args[0][2])
+        self.assertEqual(result["applied"], ["lead_updated", "labels_added"])
+        self.client.send_private_note.assert_not_called()
+
+    def test_does_not_repeat_the_same_suggestion_as_the_last_note(self):
+        convo = conversation({"crm_lead_id": "LEAD-1"})
+        note = intel.decide_actions(CONFIDENT, DEFAULT_REPLY_TEMPLATES, 0.7, {"mobile_no": "", "email": ""})["reply_note"]
+        convo["payload"].append({"message_type": 1, "private": True, "content": note})
+        self.client.list_messages.return_value = convo
+        answers = {**CONFIDENT, "reply": {"choice": "send_price", "confidence": 0.85}}
+        result, _, _ = self.run_job(answers)
+        self.assertNotIn("reply_suggested", result["applied"])
+        self.client.send_private_note.assert_not_called()
 
     def test_sends_only_the_chat_to_jev_and_applies_confident_decisions(self):
         result, ask, dq = self.run_job(CONFIDENT)

@@ -23,7 +23,9 @@ account_user = AccountUser.find_or_create_by!(account: account, user: user)
 account_user.update!(role: :administrator)
 
 # Ensure webhook is configured
-target_url = 'http://host.docker.internal:8000/api/method/mmm_custom.api.chatwoot_sync'
+# Service names on the unified stack's shared_net; host.docker.internal cannot reach ports bound to 127.0.0.1.
+target_url = 'http://crm-frappe:8000/api/method/mmm_custom.api.chatwoot_sync'
+Webhook.where(account: account).where("url LIKE ?", '%/mmm_custom.api.chatwoot_sync').where.not(url: target_url).destroy_all
 webhook = Webhook.find_or_initialize_by(account: account, url: target_url)
 webhook.subscriptions = ['conversation_created', 'message_created']  # message_created feeds the optional [I] AI agents
 webhook.webhook_type = :account_type
@@ -54,6 +56,7 @@ puts "ADMIN_TOKEN: #{masked_token}"
 puts "WEBHOOK_ID: #{webhook.id}"
 puts "WEBHOOK_URL: #{webhook.url}"
 puts "WEBHOOK_SECRET_VALUE=#{webhook.secret}"
+puts "ADMIN_TOKEN_VALUE=#{token}"
 puts "WEBHOOK_SUBSCRIPTIONS: #{webhook.subscriptions}"
 puts "INBOX_ID: #{inbox.id}"
 puts "INBOX_NAME: #{inbox.name}"
@@ -71,16 +74,23 @@ def main():
     if proc.returncode != 0:
         print("STDERR:\n", stderr)
         sys.exit(proc.returncode)
-    secret = next(line.split("=", 1)[1] for line in stdout.splitlines() if line.startswith("WEBHOOK_SECRET_VALUE="))
-    print("\n".join(line for line in stdout.splitlines() if not line.startswith("WEBHOOK_SECRET_VALUE=")))
+    values = {k: v for k, _, v in (line.partition("=") for line in stdout.splitlines()) if k in ("WEBHOOK_SECRET_VALUE", "ADMIN_TOKEN_VALUE")}
+    print("\n".join(line for line in stdout.splitlines() if "_VALUE=" not in line))  # never print secrets
 
-    # The CRM endpoint rejects every webhook until it knows the same secret.
-    subprocess.run(
-        ["docker", "exec", "crm-frappe-1", "bash", "-c",
-         f'cd /home/frappe/frappe-bench && bench --site crm.localhost set-config chatwoot_webhook_secret "{secret}"'],
-        check=True, capture_output=True,
-    )
-    print("WEBHOOK_SECRET: copied to crm.localhost site config (chatwoot_webhook_secret)")
+    # The CRM endpoint rejects every webhook until it knows the same secret, and needs an API token and a
+    # URL reachable from inside the CRM container to write crm_lead_id back (and for the optional AI agents).
+    site_config = {
+        "chatwoot_webhook_secret": values["WEBHOOK_SECRET_VALUE"],
+        "chatwoot_api_token": values["ADMIN_TOKEN_VALUE"],
+        "chatwoot_api_url": "http://chatwoot-rails:3000",
+    }
+    for key, value in site_config.items():
+        subprocess.run(
+            ["docker", "exec", "-w", "/home/frappe/frappe-bench", "crm-frappe-1",
+             "bench", "--site", "crm.localhost", "set-config", key, value],
+            check=True, capture_output=True,
+        )
+    print("CRM site config: chatwoot_webhook_secret, chatwoot_api_token, chatwoot_api_url set")
 
 if __name__ == "__main__":
     main()

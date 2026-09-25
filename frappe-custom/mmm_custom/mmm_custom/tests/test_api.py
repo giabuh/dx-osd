@@ -285,7 +285,10 @@ class TestChatwootSyncApi(unittest.TestCase):
                     res = chatwoot_sync()
                     # Should succeed and return lead_id despite Chatwoot network error
                     self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-HOANG-01"})
-                    self.mock_frappe.log_error.assert_called()
+                    # Error Log titles are capped at 140 chars; a long title raises and rolls the Lead back.
+                    kwargs = self.mock_frappe.log_error.call_args.kwargs
+                    self.assertLessEqual(len(kwargs["title"]), 140)
+                    self.assertIn("Chatwoot offline", kwargs["message"])
 
     def test_detect_course_interest_various_keywords(self):
         # Tiếng Anh

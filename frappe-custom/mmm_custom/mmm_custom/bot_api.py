@@ -264,9 +264,12 @@ def agent_bot_webhook():
     # Initialize Chatwoot client
     bot_token = (conf.get("chatwoot_bot_api_token") if conf else None) or ""
     account_id = (conf.get("chatwoot_bot_account_id") if conf else None) or 1
-    base_url = (conf.get("chatwoot_base_url") if conf else None) or "http://host.docker.internal:3000"
+    base_url = (conf.get("chatwoot_base_url") if conf else None) or "http://chatwoot-rails:3000"
 
     client = ChatwootClient(base_url, bot_token, int(account_id))
+    # Chatwoot rejects Agent Bot tokens on /contacts and /agents (401), so contact updates and agent
+    # lookup need a user token; messages, labels, assignment and status stay on the bot token.
+    user_client = ChatwootClient(base_url, (conf.get("chatwoot_api_token") if conf else None) or bot_token, int(account_id))
 
     # Send the bot's response message
     try:
@@ -287,7 +290,7 @@ def agent_bot_webhook():
 
     try:
         if contact_id:
-            client.update_contact(contact_id, new_attrs)
+            user_client.update_contact(contact_id, new_attrs)
     except Exception:
         logger.exception("Failed to update contact attributes")
 
@@ -300,7 +303,7 @@ def agent_bot_webhook():
             # Write back crm_lead_id to Chatwoot
             if contact_id and lead_name:
                 try:
-                    client.update_contact(contact_id, {"crm_lead_id": lead_name})
+                    user_client.update_contact(contact_id, {"crm_lead_id": lead_name})
                 except Exception:
                     logger.exception("Failed to write crm_lead_id back to Chatwoot")
             # Compute data quality indicator
@@ -314,7 +317,7 @@ def agent_bot_webhook():
 
     if "assign_agent" in result.actions:
         try:
-            agent_id = _find_best_agent(result.branch, client)
+            agent_id = _find_best_agent(result.branch, user_client)
             if agent_id:
                 client.assign_conversation(conversation_id, agent_id)
         except Exception:

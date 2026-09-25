@@ -23,7 +23,7 @@ raise "No inbox found" unless inbox
 bot_name = 'EduFlow Qualification Bot'
 bot = AgentBot.find_or_initialize_by(name: bot_name, account: account)
 bot.description = 'Collects course interest and branch preference via Quick Reply buttons'
-bot.outgoing_url = 'http://host.docker.internal:8000/api/method/mmm_custom.bot_api.agent_bot_webhook'
+bot.outgoing_url = 'http://crm-frappe:8000/api/method/mmm_custom.bot_api.agent_bot_webhook'  # unified stack's shared_net
 
 # Generate a webhook secret for HMAC validation
 require 'securerandom'
@@ -74,7 +74,7 @@ def configure_frappe(bot_secret: str, bot_token: str):
         f'bench --site crm.localhost set-config chatwoot_bot_webhook_secret "{bot_secret}"',
         f'bench --site crm.localhost set-config chatwoot_bot_api_token "{bot_token}"',
         'bench --site crm.localhost set-config chatwoot_bot_account_id 1',
-        'bench --site crm.localhost set-config chatwoot_base_url "http://host.docker.internal:3000"',
+        'bench --site crm.localhost set-config chatwoot_base_url "http://chatwoot-rails:3000"',
     ]
     for cmd in cmds:
         subprocess.run(

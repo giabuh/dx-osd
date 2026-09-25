@@ -31,6 +31,7 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/docker/init.sh` | Symlink `mmm_custom` into `apps/`, `pip install -e` it, add it to `sites/apps.txt`, `install-app mmm_custom` | Fresh bench comes up with our custom app installed, no manual steps |
 | `crm/docker/init.sh` | Pin Frappe with `--frappe-branch v15.121.1`; replace `bench get-app crm --branch main` with symlinking the bind-mounted vendored `crm/` (plus `/home/frappe/frappe` → bench frappe, for the frontend's `link:../../frappe/ui`), `pip install -e`, `yarn install`, `bench build --app crm` | Run the vendored CRM source at a pinned framework version |
 | `crm/docker/docker-compose.override.yml` | Bind-mount `..` (vendored `crm/`) at `/home/frappe/crm` | Same |
+| `crm/docker/init.sh` | `--admin-password admin123` instead of upstream's `admin` | Matches the documented dev login and `scripts/seed-branch-agents.py` on a fresh bench |
 | `crm/docker/docker-compose.override.yml` | Pin `mariadb`, `frappe/bench` by digest (`redis` by tag) | Upstream uses floating tags (`latest`, `10.8`); reproducible build from source |
 | `chatwoot/docker/Dockerfile` | `git rev-parse HEAD > /app/.git_sha` falls back to `vendored` | Vendored copy has no `.git`; upstream line fails the build |
 | `chatwoot/enterprise/` | Deleted (Community Edition) | Chatwoot Enterprise License is proprietary; competition requires OSI licenses |

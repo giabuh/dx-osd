@@ -23,6 +23,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ### Fixed
 - Security: the webhook endpoints no longer fall back to a hardcoded secret published in the repository; `scripts/configure-chatwoot.py` generates the secret and copies it into the CRM site config.
+- Chatwoot and the CRM could not reach each other: `host.docker.internal` cannot reach ports bound to `127.0.0.1`. Webhooks, the agent bot and the `crm_lead_id` write-back now use service names on the unified stack's `shared_net`, and `configure-chatwoot.py` sets the CRM's Chatwoot API URL and token (the write-back had never run).
+- Agent bot: Chatwoot rejects Agent Bot tokens on `/contacts` and `/agents` (401), so the bot never saved its state or picked a branch agent; those calls now use the user token.
+- Adding conversation labels replaced the existing ones (Chatwoot's API sets the whole list); labels are now merged.
+- A failed Chatwoot write-back raised on the Error Log title length and rolled back the new Lead.
+- A fresh bench's Administrator password is `admin123`, matching the docs and seed scripts (upstream default `admin`).
 - `frappe-custom/mmm_custom/license.txt` had an unfilled `[year] [fullname]` placeholder.
 
 ## [0.1.0] - 2026-09-23

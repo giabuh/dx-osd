@@ -173,6 +173,38 @@ class TestBotApiWebhook(unittest.TestCase):
         mock_client.assign_conversation.assert_called_once_with(1, 1)  # agent 1 matches branch
         mock_client.toggle_status.assert_called_once_with(1, "open")
 
+    def test_contact_and_agent_calls_use_the_user_token_messages_use_the_bot_token(self):
+        # Chatwoot answers 401 to an Agent Bot token on /contacts and /agents (verified live), so the bot
+        # could never save its state or pick a branch agent with its own token.
+        self.conf["chatwoot_api_token"] = "user_token"
+        payload = make_message_created_payload(
+            content="binh_thanh",
+            custom_attributes={"bot_state": "await_branch", "bot_courses": ["tieng_anh"]},
+        )
+        self._setup_request(payload)
+        clients = {"mock_bot_token": MagicMock(), "user_token": MagicMock()}
+        clients["user_token"].list_agents.return_value = [{"id": 1, "custom_attributes": {"branch": "binh_thanh"}}]
+        clients["user_token"].list_agent_conversations.return_value = []
+        self.mock_frappe.db.exists.return_value = False
+        mock_lead = MagicMock()
+        mock_lead.name = "CRM-LEAD-BOT-002"
+        mock_lead.insert.return_value = mock_lead
+        self.mock_frappe.get_doc.return_value = mock_lead
+
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with patch.object(bot_api_mod, "ChatwootClient", side_effect=lambda url, token, account: clients[token]):
+                with patch("mmm_custom.bot_api.find_matching_lead", return_value=None):
+                    agent_bot_webhook()
+
+        bot, user = clients["mock_bot_token"], clients["user_token"]
+        bot.send_message.assert_called_once()
+        bot.assign_conversation.assert_called_once_with(1, 1)
+        bot.toggle_status.assert_called_once_with(1, "open")
+        bot.update_contact.assert_not_called()
+        bot.list_agents.assert_not_called()
+        self.assertTrue(user.update_contact.called)
+        user.list_agents.assert_called_once()
+
     def test_handoff_fixes_placeholder_name_on_existing_lead(self):
         """When a lead already exists with placeholder name, bot handoff
         should fix first_name and lead_name to the real contact name."""

@@ -159,7 +159,7 @@ def decide_actions(answers: dict, templates: dict, threshold: float, lead: dict)
             plan["skipped"].append(key)
 
     reply = answers.get("reply")
-    if reply and reply.get("choice") != "none" and not is_spam:
+    if reply and reply.get("choice") in templates and not is_spam:
         if sure(reply):
             plan["reply_note"] = f"Gợi ý trả lời (AI, độ tin cậy {reply['confidence']:.2f}):\n\n{templates[reply['choice']]}"
         else:
@@ -173,7 +173,7 @@ def _conf():
 
 def _chatwoot_client(conf) -> ChatwootClient:
     return ChatwootClient(
-        conf.get("chatwoot_api_url") or "http://127.0.0.1:3000",
+        conf.get("chatwoot_api_url") or "http://chatwoot-rails:3000",
         conf.get("chatwoot_api_token") or "",
         int(conf.get("chatwoot_account_id") or 1),
     )
@@ -194,14 +194,18 @@ def enqueue_analysis(payload: dict) -> dict:
         return {"status": "ignored", "reason": "ai_disabled"}
     if payload.get("message_type") not in ("incoming", 0) or payload.get("private"):
         return {"status": "ignored", "reason": "not_incoming"}
-    conversation_id = (payload.get("conversation") or {}).get("id")
-    if not conversation_id:
+    conversation = payload.get("conversation") or {}
+    if not conversation.get("id"):
         return {"status": "error", "message": "Missing conversation id"}
-    frappe.enqueue("mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=conversation_id)
-    return {"status": "queued", "conversation_id": conversation_id}
+    frappe.enqueue(
+        "mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=conversation["id"],
+        # Pending = the agent bot is still qualifying the lead; a suggestion per Quick Reply click is noise.
+        suggest_reply=conversation.get("status") != "pending",
+    )
+    return {"status": "queued", "conversation_id": conversation["id"]}
 
 
-def analyze_conversation(conversation_id: int, sleep=time.sleep) -> dict:
+def analyze_conversation(conversation_id: int, suggest_reply: bool = True, sleep=time.sleep) -> dict:
     """Background job: read the conversation, ask Jev, apply the confident decisions."""
     conf = _conf()
     api_key = conf.get("typesafe_api_key")
@@ -224,7 +228,7 @@ def analyze_conversation(conversation_id: int, sleep=time.sleep) -> dict:
         for m in convo["payload"]
         if not m.get("private") and m.get("message_type") in (0, 1) and m.get("content")
     ][-20:]
-    templates = conf.get("ai_reply_templates") or DEFAULT_REPLY_TEMPLATES
+    templates = (conf.get("ai_reply_templates") or DEFAULT_REPLY_TEMPLATES) if suggest_reply else {}
     if isinstance(templates, str):
         templates = json.loads(templates)
     candidates = find_candidates([m["text"] for m in chat if m["from"] == "customer"])
@@ -265,7 +269,8 @@ def analyze_conversation(conversation_id: int, sleep=time.sleep) -> dict:
     if plan["labels"]:
         client.add_labels(conversation_id, plan["labels"])
         applied.append("labels_added")
-    if plan["reply_note"]:
+    last_note = next((m.get("content") for m in reversed(convo["payload"]) if m.get("private")), None)
+    if plan["reply_note"] and plan["reply_note"] != last_note:
         client.send_private_note(conversation_id, plan["reply_note"])
         applied.append("reply_suggested")
     return {"status": "analyzed", "lead_id": lead_id, "decisions": plan["lead_update"], "skipped": plan["skipped"], "applied": applied}

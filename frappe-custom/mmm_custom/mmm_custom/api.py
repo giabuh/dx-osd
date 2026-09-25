@@ -239,10 +239,10 @@ def chatwoot_sync():
         }).insert(ignore_permissions=True)
     except Exception as e:
         if hasattr(frappe, "log_error"):
-            frappe.log_error(f"Failed to create FCRM Note: {str(e)}")
+            frappe.log_error(title="Failed to create FCRM Note", message=str(e))
 
     # 4. Write back crm_lead_id to Chatwoot Contact
-    chatwoot_url = (conf.get("chatwoot_api_url") if conf else None) or "http://127.0.0.1:3000"
+    chatwoot_url = (conf.get("chatwoot_api_url") if conf else None) or "http://chatwoot-rails:3000"
     chatwoot_token = conf.get("chatwoot_api_token") if conf else None
     if chatwoot_token and contact_id and requests:
         try:
@@ -254,7 +254,7 @@ def chatwoot_sync():
             )
         except Exception as e:
             if hasattr(frappe, "log_error"):
-                frappe.log_error(f"Failed to update Chatwoot contact: {str(e)}")
+                frappe.log_error(title="Failed to update Chatwoot contact", message=str(e))
 
     # 5. Compute data quality indicator
     try:
