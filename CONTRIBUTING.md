@@ -4,7 +4,7 @@ Thanks for helping. By contributing you agree your contribution is licensed unde
 
 ## Reporting bugs and requesting features
 
-Use [GitHub Issues](https://github.com/giabuh/dx-osd/issues) with the **Bug report** or **Feature request** template. For a bug, include the steps to reproduce, what you expected, what happened, and which stack (Chatwoot / CRM / n8n) is involved. Never paste `.env` contents or API keys.
+Use [GitHub Issues](https://github.com/giabuh/dx-osd/issues) with the **Bug report** or **Feature request** template. For a bug, include the steps to reproduce, what you expected, what happened, and which stack (Chatwoot / CRM / Activepieces) is involved. Never paste `.env` contents or API keys.
 
 ## Making a change
 
@@ -15,8 +15,8 @@ Use [GitHub Issues](https://github.com/giabuh/dx-osd/issues) with the **Bug repo
 
    | Area | Check |
    |---|---|
-   | Dedup/mapping logic (`n8n/logic/`) | `node --test n8n/logic/dedupe.test.js` |
-   | n8n workflow (`n8n/workflows/`) | Re-import into n8n and exercise the Messenger → CRM flow |
+   | Sync/dedup logic (`activepieces/logic/`) | `node --test activepieces/logic/sync.test.mjs` |
+   | Flow (`activepieces/flows/`) | Re-import into Activepieces and exercise the Messenger → CRM flow |
    | Chatwoot (`chatwoot/`, `docker/chatwoot/`) | Rebuild; `http://127.0.0.1:3000` answers 200/302 |
    | CRM (`crm/`, `frappe-custom/mmm_custom/`) | `bench --site crm.localhost list-apps` shows `mmm_custom`; `http://127.0.0.1:8000` answers 200 |
 

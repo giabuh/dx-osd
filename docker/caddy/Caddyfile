@@ -8,6 +8,6 @@ crm.example.com {
     }
 }
 
-n8n.example.com {
-    reverse_proxy 127.0.0.1:5678
+automation.example.com {
+    reverse_proxy 127.0.0.1:8080
 }

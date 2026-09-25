@@ -22,7 +22,7 @@ Both stacks run the vendored source, so an edit in `chatwoot/` or `crm/` takes e
 
 ## Local edits inside vendored directories
 
-Every change we make inside a vendored directory is listed here, so it can be re-applied after a re-sync. Customizations that live outside vendored directories (`frappe-custom/mmm_custom/`, `n8n/`, `docker/`, `scripts/`) do not belong here.
+Every change we make inside a vendored directory is listed here, so it can be re-applied after a re-sync. Customizations that live outside vendored directories (`frappe-custom/mmm_custom/`, `activepieces/`, `docker/`, `scripts/`) do not belong here.
 
 | File | Change | Why |
 |---|---|---|
@@ -40,5 +40,5 @@ Every change we make inside a vendored directory is listed here, so it can be re
 2. Replace the vendored directory's contents with the new version, excluding `.git/`, `.github/`, and for Chatwoot `enterprise/` + `spec/enterprise/` (deliberately not vendored). Keep the upstream `LICENSE`.
 3. Re-apply every row of **Local edits** above; drop any row upstream has made unnecessary.
 4. Review `git diff --stat` for the directory — anything changed that is neither upstream nor in the edits table is a mistake.
-5. Bring the affected stack up per `CLAUDE.md` and re-run the checks for it: HTTP status on its port, `node --test n8n/logic/dedupe.test.js`, and the Messenger → CRM flow from the plan's Task 9/10.
+5. Bring the affected stack up per `CLAUDE.md` and re-run the checks for it: HTTP status on its port, `node --test activepieces/logic/sync.test.mjs`, and the Messenger → CRM flow from the plan's Task 9/10.
 6. Update the **Baselines** table and commit the re-sync as one commit (`chore(vendor): sync <name> to <version>`).

@@ -9,7 +9,7 @@ License: **AGPL-3.0** (see [`LICENSE`](LICENSE)). Third-party components keep th
 | Space | Component | Role |
 |---|---|---|
 | **[H] Human** | Chatwoot (`chatwoot/`) | One inbox for staff: Messenger/Instagram conversations, shared accounts (`scripts/seed-shared-accounts/`) |
-| **[P] Process** | n8n workflow (`n8n/`) | Event-driven: Chatwoot webhook → dedup by email/phone → create/update CRM Lead |
+| **[P] Process** | Activepieces flow (`activepieces/`) | Event-driven: Chatwoot webhook → dedup by email/phone → create/update CRM Lead |
 | **[D] Data** | Frappe CRM (`crm/`, `frappe-custom/mmm_custom/`) | Single source of truth for Lead/Contact/Deal; native Facebook Lead Ads sync |
 | **[I] Intelligence** | Planned — see [`ROADMAP.md`](ROADMAP.md) | |
 
@@ -22,8 +22,8 @@ Design rationale: [`docs/superpowers/specs/2026-09-22-facebook-integration-platf
 | `chatwoot/` | Vendored Chatwoot Community Edition (MIT), built locally |
 | `crm/` | Vendored Frappe CRM `v1.84.0` (AGPL-3.0), run from source |
 | `frappe-custom/mmm_custom/` | Our Frappe app: custom fields and lead sources |
-| `n8n/` | Integration workflow and dedup logic (`n8n/logic/`) |
-| `docker/` | Compose overrides, n8n stack, Caddy reverse proxy |
+| `activepieces/` | Integration flow and its sync/dedup logic (`activepieces/logic/`) |
+| `docker/` | Compose overrides, Activepieces stack, Caddy reverse proxy |
 | `scripts/` | Seed scripts for demo accounts |
 | `docs/` | Spec, plan, vendored-source log |
 
@@ -43,20 +43,20 @@ cd ..
 # 2. Frappe CRM — crm/ is bind-mounted into the bench
 cd crm/docker && docker compose up -d && cd ../..
 
-# 3. n8n — docker/n8n/.env needs POSTGRES_PASSWORD and N8N_ENCRYPTION_KEY (openssl rand -hex 32)
-cd docker/n8n && docker compose up -d && cd ../..
+# 3. Activepieces — cp .env.example .env and fill the empty values first (see the file)
+cd docker/activepieces && docker compose up -d && cd ../..
 
 # 4. Run the tests
-node --test n8n/logic/dedupe.test.js
+node --test activepieces/logic/sync.test.mjs
 ```
 
 | Service | URL | Login |
 |---|---|---|
 | Chatwoot | http://127.0.0.1:3000 | created on first visit |
 | Frappe CRM | http://127.0.0.1:8000 | `Administrator` / `admin123` (dev only) |
-| n8n | http://127.0.0.1:5678 | created on first visit |
+| Activepieces | http://127.0.0.1:8080 | created on first visit |
 
-All ports bind to `127.0.0.1`. Import `n8n/workflows/messenger-to-crm.export.json` into n8n and point a Chatwoot webhook at it. Full step-by-step setup: [`docs/superpowers/plans/2026-09-22-facebook-integration-platform.md`](docs/superpowers/plans/2026-09-22-facebook-integration-platform.md).
+All ports bind to `127.0.0.1`. Import the flow and point a Chatwoot webhook at it: [`activepieces/README.md`](activepieces/README.md). Full step-by-step setup: [`docs/superpowers/plans/2026-09-22-facebook-integration-platform.md`](docs/superpowers/plans/2026-09-22-facebook-integration-platform.md).
 
 ## Contributing, bugs, changes
 

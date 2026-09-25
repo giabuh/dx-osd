@@ -5,9 +5,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- Activepieces Community Edition (MIT) stack in `docker/activepieces/` and flow `activepieces/flows/messenger-to-crm.json`: Chatwoot webhook → one Code step (`activepieces/logic/sync.mjs`) that verifies the signature, dedups by email/phone, creates or links the CRM Lead and writes `crm_lead_id` back to Chatwoot. Tests now cover signature checks and every sync branch, not only the dedup helpers.
 - Project `LICENSE` (AGPL-3.0), `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `THIRD_PARTY_LICENSES.md`, GitHub issue templates.
 
 ### Removed
+- n8n (`n8n/`, `docker/n8n/`) — Sustainable Use License is not OSI-approved; replaced by Activepieces with the same behavior.
 - `messenger-platform-samples/` — Facebook Platform License is not OSI-approved; it was reference code only and never deployed.
 - `chatwoot/enterprise/` and `chatwoot/spec/enterprise/` — proprietary Chatwoot Enterprise License; Chatwoot now runs as Community Edition (MIT).
 

@@ -1,0 +1,81 @@
+{
+  "name": "Messenger to CRM",
+  "type": "SHARED",
+  "summary": "",
+  "description": "",
+  "tags": [],
+  "blogUrl": "",
+  "metadata": {
+    "externalId": "bbRTeaKyw1jUMJlb3hV4Y"
+  },
+  "author": "Admin Local",
+  "categories": [],
+  "pieces": [
+    "@activepieces/piece-webhook"
+  ],
+  "flows": [
+    {
+      "displayName": "Messenger to CRM",
+      "trigger": {
+        "name": "trigger",
+        "valid": true,
+        "displayName": "Chatwoot webhook",
+        "nextAction": {
+          "name": "step_1",
+          "type": "CODE",
+          "valid": true,
+          "settings": {
+            "input": {
+              "headers": "{{trigger['output']['headers']}}",
+              "rawBody": "{{trigger['output']['rawBody']}}",
+              "crmBaseUrl": "https://crm.example.com",
+              "crmApiToken": "CRM_API_KEY:CRM_API_SECRET",
+              "chatwootBaseUrl": "https://chat.example.com",
+              "chatwootApiToken": "CHATWOOT_API_ACCESS_TOKEN",
+              "chatwootAccountId": "1",
+              "chatwootSigningSecret": "CHATWOOT_WEBHOOK_SIGNING_SECRET"
+            },
+            "sampleData": {},
+            "sourceCode": {
+              "code": "// Chatwoot -> Frappe CRM sync. This whole file is the source of the \"Sync to CRM\" Code step in\n// activepieces/flows/messenger-to-crm.json (Activepieces Code steps can't import local files);\n// sync.test.mjs fails if the two copies drift.\nimport crypto from 'crypto'; // bare specifier: the Activepieces sandbox rejects 'node:' imports\n\nexport function normalizePhone(raw) {\n\tconst digits = raw.replace(/[\\s-]/g, '');\n\tif (digits.startsWith('+84')) return digits;\n\tif (digits.startsWith('0')) return '+84' + digits.slice(1);\n\treturn digits;\n}\n\nexport function buildLeadSearchFilters({ email, phone }) {\n\tconst conditions = [];\n\tif (email) conditions.push(['CRM Lead', 'email', '=', email]);\n\tif (phone) conditions.push(['CRM Lead', 'mobile_no', '=', normalizePhone(phone)]);\n\t// Caller must send this as or_filters (not filters) -- Frappe ANDs a plain filters list,\n\t// and an unfiltered blank-vs-blank match would attach a contact to an unrelated Lead.\n\treturn conditions.length ? conditions : null;\n}\n\nexport function buildNewLeadPayload({ source, name, email, phone, chatwootContactId }) {\n\treturn {\n\t\tsource,\n\t\tfirst_name: name || 'Unknown', // CRM Lead.first_name is mandatory; Messenger contacts can have no name\n\t\tlead_name: name,\n\t\temail,\n\t\tmobile_no: normalizePhone(phone),\n\t\tchatwoot_contact_id: chatwootContactId,\n\t};\n}\n\n// Chatwoot signs \"<timestamp>.<raw body>\" with HMAC-SHA256 and sends \"sha256=<hex>\".\nexport function verifyChatwootSignature({ secret, timestamp, signature, rawBody, nowSeconds }) {\n\tconst expected = Buffer.from('sha256=' + crypto.createHmac('sha256', secret).update(timestamp + '.' + rawBody).digest('hex'));\n\tconst received = Buffer.from(signature || '');\n\tif (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {\n\t\tthrow new Error('Invalid Chatwoot webhook signature');\n\t}\n\tconst tsNum = parseInt(timestamp, 10);\n\tif (!tsNum || Math.abs(nowSeconds - tsNum) > 300) {\n\t\tthrow new Error('Chatwoot webhook timestamp missing or too old (possible replay)');\n\t}\n}\n\nasync function request(fetchFn, method, url, headers, body) {\n\tconst res = await fetchFn(url, {\n\t\tmethod,\n\t\theaders: { 'Content-Type': 'application/json', ...headers },\n\t\tbody: body === undefined ? undefined : JSON.stringify(body),\n\t});\n\tif (!res.ok) throw new Error(`${method} ${url} failed: ${res.status} ${await res.text()}`);\n\treturn res.json();\n}\n\nexport async function syncConversation({ event, config, fetchFn }) {\n\t// Chatwoot's conversation_created payload is NOT wrapped in a \"conversation\" key --\n\t// conversation.webhook_data.merge(event: ...) puts id/channel/meta at the top level.\n\tif (event.event !== 'conversation_created') {\n\t\tthrow new Error(`Unsupported Chatwoot event: ${event.event}`);\n\t}\n\t// crmHost: Frappe picks the site from the Host header; set it when crmBaseUrl is not the site's own domain.\n\tconst crmHeaders = { Authorization: `token ${config.crmApiToken}`, ...(config.crmHost && { Host: config.crmHost }) };\n\tconst crm = (method, path, body) => request(fetchFn, method, config.crmBaseUrl + path, crmHeaders, body);\n\tconst contact = event.meta.sender;\n\tconst conversationId = event.id;\n\n\tconst mappedLeadId = contact.custom_attributes?.crm_lead_id;\n\tif (mappedLeadId) {\n\t\tconst note = 'New message from Chatwoot conversation #' + conversationId;\n\t\tawait crm('POST', '/api/resource/FCRM Note', {\n\t\t\treference_doctype: 'CRM Lead',\n\t\t\treference_docname: mappedLeadId,\n\t\t\ttitle: note,\n\t\t\tcontent: note,\n\t\t});\n\t\treturn { action: 'note_logged', leadId: mappedLeadId };\n\t}\n\n\tconst email = contact.email || '';\n\tconst phone = contact.phone_number || '';\n\tconst searchFilters = buildLeadSearchFilters({ email, phone });\n\tlet leadId;\n\tlet action;\n\tif (searchFilters) {\n\t\tconst found = await crm('GET', '/api/resource/CRM Lead?or_filters=' + encodeURIComponent(JSON.stringify(searchFilters)));\n\t\tif (found.data.length > 0) {\n\t\t\tleadId = found.data[0].name;\n\t\t\tawait crm('PUT', '/api/resource/CRM Lead/' + encodeURIComponent(leadId), { chatwoot_contact_id: String(contact.id) });\n\t\t\taction = 'lead_linked';\n\t\t}\n\t}\n\tif (!leadId) {\n\t\tconst payload = buildNewLeadPayload({\n\t\t\tsource: (event.channel || '').includes('Instagram') ? 'Instagram' : 'Messenger',\n\t\t\tname: contact.name,\n\t\t\temail,\n\t\t\tphone,\n\t\t\tchatwootContactId: String(contact.id),\n\t\t});\n\t\tleadId = (await crm('POST', '/api/resource/CRM Lead', payload)).data.name;\n\t\taction = 'lead_created';\n\t}\n\n\tawait request(\n\t\tfetchFn,\n\t\t'PUT',\n\t\t`${config.chatwootBaseUrl}/api/v1/accounts/${config.chatwootAccountId}/contacts/${contact.id}`,\n\t\t{ api_access_token: config.chatwootApiToken },\n\t\t{ custom_attributes: { crm_lead_id: leadId } },\n\t);\n\treturn { action, leadId };\n}\n\n// Activepieces Code step entry point. inputs.rawBody / inputs.headers come from the Catch Webhook trigger.\nexport const code = async (inputs) => {\n\tverifyChatwootSignature({\n\t\tsecret: inputs.chatwootSigningSecret,\n\t\ttimestamp: inputs.headers['x-chatwoot-timestamp'],\n\t\tsignature: inputs.headers['x-chatwoot-signature'],\n\t\trawBody: inputs.rawBody,\n\t\tnowSeconds: Date.now() / 1000,\n\t});\n\treturn syncConversation({ event: JSON.parse(inputs.rawBody), config: inputs, fetchFn: fetch });\n};\n",
+              "packageJson": "{}"
+            },
+            "errorHandlingOptions": {
+              "retryOnFailure": {
+                "value": false
+              },
+              "continueOnFailure": {
+                "value": false
+              }
+            }
+          },
+          "displayName": "Sync to CRM",
+          "lastUpdatedDate": "2026-09-25T01:58:47.546Z"
+        },
+        "lastUpdatedDate": "2026-09-25T01:58:47.540Z",
+        "type": "PIECE_TRIGGER",
+        "settings": {
+          "propertySettings": {
+            "authType": {
+              "type": "MANUAL"
+            },
+            "authFields": {
+              "type": "MANUAL"
+            }
+          },
+          "pieceName": "@activepieces/piece-webhook",
+          "pieceVersion": "0.1.42",
+          "triggerName": "catch_webhook",
+          "input": {
+            "authType": "none",
+            "authFields": {}
+          }
+        }
+      },
+      "valid": true,
+      "schemaVersion": "27",
+      "notes": []
+    }
+  ],
+  "status": "PUBLISHED"
+}
