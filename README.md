@@ -11,7 +11,7 @@ License: **AGPL-3.0** (see [`LICENSE`](LICENSE)). Third-party components keep th
 | **[H] Human** | Chatwoot (`chatwoot/`) | One inbox for staff: Messenger/Instagram conversations, shared accounts (`scripts/seed-shared-accounts/`) |
 | **[P] Process** | Activepieces flow (`activepieces/`) | Event-driven: Chatwoot webhook → dedup by email/phone → create/update CRM Lead |
 | **[D] Data** | Frappe CRM (`crm/`, `frappe-custom/mmm_custom/`) | Single source of truth for Lead/Contact/Deal; native Facebook Lead Ads sync |
-| **[I] Intelligence** | Planned — see [`ROADMAP.md`](ROADMAP.md) | |
+| **[I] Intelligence** | Activepieces flows + [TypeSafe Jev](https://docs.typesafe.ai) (`activepieces/logic/intelligence.mjs`, `followup.mjs`) | Agents that read each conversation and act on their own when confident: classify intent and hotness, pick the customer's phone/email out of the chat (and flag a possible duplicate Lead), label the conversation, suggest a reply template; every morning, create follow-up Tasks for quiet Leads. Optional — needs a TypeSafe API key |
 
 Design rationale: [`docs/superpowers/specs/2026-09-22-facebook-integration-platform.md`](docs/superpowers/specs/2026-09-22-facebook-integration-platform.md).
 
@@ -47,7 +47,7 @@ cd crm/docker && docker compose up -d && cd ../..
 cd docker/activepieces && docker compose up -d && cd ../..
 
 # 4. Run the tests
-node --test activepieces/logic/sync.test.mjs
+node --test activepieces/logic/*.test.mjs
 ```
 
 | Service | URL | Login |

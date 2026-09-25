@@ -18,7 +18,7 @@ Shared guidance for every AI coding agent working in this repository — Claude 
 |---|---|---|
 | CRM customization | `frappe-custom/mmm_custom/`, `crm/docker/` | Fresh bench via a `-p crmverify` project: `bench --site crm.localhost list-apps` shows `mmm_custom`; CRM answers 200 on `:8000` |
 | Chatwoot | `docker/chatwoot/`, `chatwoot/` (vendored) | Chatwoot answers 200/302 on `:3000` |
-| Activepieces integration | `activepieces/logic/`, `activepieces/flows/`, `docker/activepieces/` | `node --test activepieces/logic/sync.test.mjs` passes; flow re-imported and exercised if it changed |
+| Activepieces integration | `activepieces/logic/`, `activepieces/flows/`, `docker/activepieces/` | `node --test activepieces/logic/*.test.mjs` passes; changed flow re-imported and exercised |
 | Deployment / ops | `docker/`, `docker/caddy/`, `scripts/` | Affected stack comes up with the documented commands; ports still bind `127.0.0.1` only |
 | Docs & planning | `ROADMAP.md`, `docs/` | Claims match the code and `git log` |
 
@@ -77,9 +77,11 @@ Secrets live in `docker/activepieces/.env` (gitignored). The worker runs with `n
 ### Sync logic (signature, dedup, CRM/Chatwoot calls)
 Plain Node, no `package.json`/dependencies — uses the built-in `node:test` runner:
 ```bash
-node --test activepieces/logic/sync.test.mjs
+node --test activepieces/logic/*.test.mjs
 ```
-`activepieces/logic/sync.mjs` is the whole source of the flow's "Sync to CRM" Code step (Activepieces Code steps can't import local files). The last test fails if the Code step in `activepieces/flows/messenger-to-crm.json` is not byte-identical to `sync.mjs`.
+Each file in `activepieces/logic/` is the whole source of one flow's Code step (Activepieces Code steps can't import local files): `sync.mjs` → `messenger-to-crm.json`, `intelligence.mjs` → `lead-intelligence.json`, `followup.mjs` → `cold-lead-followup.json`. Tests fail if a flow export's Code step is not byte-identical to its file, or if the helpers copied between files (`request`, `verifyChatwootSignature`, `askJev`, …) drift apart.
+
+The [I] agents call [TypeSafe Jev](https://docs.typesafe.ai) (`POST https://api.typesafe.ai/v1/systemone`), a closed decision API: it returns choices/scores with a confidence and does not generate text. Agents act only above the `confidenceThreshold` input; `ai_intent`/`ai_hotness` on CRM Lead come from `mmm_custom` and must match `INTENTS`/`HOTNESS` in `intelligence.mjs` (a test checks).
 
 ## Architecture notes
 

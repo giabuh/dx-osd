@@ -36,10 +36,29 @@ curl -X POST http://127.0.0.1:8080/api/v1/webhooks/<flow id> -H 'Content-Type: a
 
 The run's output (**Runs** page) is `{ action: "lead_created" | "lead_linked" | "note_logged", leadId }`; a bad signature makes the run fail with `Invalid Chatwoot webhook signature`.
 
+## [I] Intelligence flows (optional, TypeSafe Jev)
+
+Both flows call [TypeSafe Jev](https://docs.typesafe.ai) (`POST https://api.typesafe.ai/v1/systemone`), which returns typed decisions with a confidence instead of generated text. An agent acts only when the confidence is at least `confidenceThreshold` (default `0.7`); otherwise it records what it skipped in the run output and changes nothing. Jev is strongest in English, so check the run outputs on your own Vietnamese chats before lowering the threshold.
+
+Import them like the first flow, then set the inputs (same Chatwoot/CRM values as above, plus `jevApiKey` from the [TypeSafe console](https://console.typesafe.ai/keys); add `crmHost` locally).
+
+**`flows/lead-intelligence.json`** — Catch Webhook → **Analyze with Jev** (`logic/intelligence.mjs`, retry on failure on). Add its webhook URL as a second Chatwoot webhook subscribed to `message_created`. For each incoming message it reads the last 20 chat messages and, in one Jev call, decides:
+
+| Decision | Applied when confident |
+|---|---|
+| Intent (`purchase`, `price_inquiry`, `support`, `complaint`, `spam`, `other`) | CRM Lead `ai_intent`; Chatwoot label `ai-<intent>` |
+| Hotness (`cold`, `warm`, `hot`) | CRM Lead `ai_hotness`; label `hot` |
+| Which phone/email found in the chat (regex) is the customer's own | Filled in on the Lead if it has none; if another Lead already has it, a "Possible duplicate" note — never an automatic merge |
+| Best template from `replyTemplates` (JSON, editable in the step) | Private note in the conversation for the agent to send or ignore (never for spam) |
+
+If the first message arrives before the "Messenger to CRM" flow has linked the contact, the step fails with "Contact not linked to a CRM Lead yet" and Activepieces retries it.
+
+**`flows/cold-lead-followup.json`** — every day at 08:00 (Asia/Ho_Chi_Minh) → **Plan follow-ups with Jev** (`logic/followup.mjs`). For up to `maxLeads` Leads in `openStatuses` not modified for `staleDays`, Jev picks `call` / `message` / `review_close` / `wait`, and the agent creates a CRM Task for the Lead owner (due tomorrow). Leads with an open Task are skipped, so it never piles up duplicates; it never changes a Lead's status.
+
 ## Changing the logic
 
-1. Edit `logic/sync.mjs` test-first; run `node --test activepieces/logic/sync.test.mjs`.
-2. Paste the new `sync.mjs` into the **Sync to CRM** step, with the inputs set back to the placeholders from the committed file.
-3. Export the flow (flow menu → **Export**, or `GET /api/v1/flows/<id>/template`) over `flows/messenger-to-crm.json`, then re-enter your real inputs and republish.
+1. Edit the flow's file in `logic/` test-first; run `node --test activepieces/logic/*.test.mjs`.
+2. Paste it into the flow's Code step, with the inputs set back to the placeholders from the committed file.
+3. Export the flow (flow menu → **Export**, or `GET /api/v1/flows/<id>/template`) over its file in `flows/`, then re-enter your real inputs and republish.
 
-The last test fails until the export's Code step matches `sync.mjs` byte for byte. Code steps cannot use `node:`-prefixed imports — the sandbox rejects them.
+Tests fail until each export's Code step matches its `.mjs` byte for byte. Code steps cannot use `node:`-prefixed imports — the sandbox rejects them.

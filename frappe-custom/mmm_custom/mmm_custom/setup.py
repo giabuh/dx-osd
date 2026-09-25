@@ -31,6 +31,36 @@ def create_lead_sources():
 	print("Lead sources created")
 
 
+# Written by the Activepieces "Lead intelligence" flow (activepieces/logic/intelligence.mjs);
+# options must match its INTENTS / HOTNESS keys.
+AI_FIELDS = [
+	{
+		"fieldname": "ai_intent",
+		"label": "AI Intent",
+		"fieldtype": "Select",
+		"options": "\npurchase\nprice_inquiry\nsupport\ncomplaint\nspam\nother",
+		"insert_after": "chatwoot_contact_id",
+	},
+	{
+		"fieldname": "ai_hotness",
+		"label": "AI Hotness",
+		"fieldtype": "Select",
+		"options": "\ncold\nwarm\nhot",
+		"insert_after": "ai_intent",
+	},
+]
+
+
+def create_ai_fields():
+	for field in AI_FIELDS:
+		if frappe.db.exists("Custom Field", f"CRM Lead-{field['fieldname']}"):
+			continue
+		frappe.get_doc({"doctype": "Custom Field", "dt": "CRM Lead", **field}).insert(ignore_permissions=True)
+	frappe.db.commit()
+	print("AI fields ready")
+
+
 def create_custom_field_and_lead_sources():
 	create_custom_field()
 	create_lead_sources()
+	create_ai_fields()

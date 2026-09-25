@@ -30,6 +30,7 @@ Every phase must respect these. If a proposed change breaks one, it needs an exp
 | Messenger/IG → Chatwoot → Activepieces → CRM | Flow `activepieces/flows/messenger-to-crm.json` verified against the real local stacks with signed webhooks (create, link, note, bad signature), including the Lead-Ads-then-Messenger convergence case (1 Lead, not duplicated). Replaced n8n on 2026-09-25 (n8n's Sustainable Use License is not OSI-approved) |
 | CRM customization | `mmm_custom` app: `chatwoot_contact_id` field, `Messenger`/`Instagram` lead sources |
 | Sync + dedup logic | `activepieces/logic/sync.mjs` + `node:test` suite |
+| [I] Intelligence agents | `lead-intelligence` + `cold-lead-followup` flows on TypeSafe Jev, confidence-gated (0.7). Verified end to end on the real local stacks with the real Jev API (2026-09-25). On 10 hand-labelled Vietnamese chats: intent 9/10, hotness 8/10, reply template 8/9, phone 3/4, email 1/1 — every wrong answer had confidence < 0.7, so none would have been applied |
 | Shared demo accounts | `scripts/seed-shared-accounts/` |
 | Security checklist | Passed (no secrets in git history) |
 | Meta App (plan Task 0) | **Not started** — needs Business Manager access |

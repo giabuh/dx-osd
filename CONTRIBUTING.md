@@ -15,8 +15,8 @@ Use [GitHub Issues](https://github.com/giabuh/dx-osd/issues) with the **Bug repo
 
    | Area | Check |
    |---|---|
-   | Sync/dedup logic (`activepieces/logic/`) | `node --test activepieces/logic/sync.test.mjs` |
-   | Flow (`activepieces/flows/`) | Re-import into Activepieces and exercise the Messenger → CRM flow |
+   | Sync/dedup and AI agent logic (`activepieces/logic/`) | `node --test activepieces/logic/*.test.mjs` |
+   | Flows (`activepieces/flows/`) | Re-import into Activepieces and exercise the changed flow |
    | Chatwoot (`chatwoot/`, `docker/chatwoot/`) | Rebuild; `http://127.0.0.1:3000` answers 200/302 |
    | CRM (`crm/`, `frappe-custom/mmm_custom/`) | `bench --site crm.localhost list-apps` shows `mmm_custom`; `http://127.0.0.1:8000` answers 200 |
 

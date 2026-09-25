@@ -27,6 +27,13 @@ Every modification we made to vendored code is logged in [`docs/vendored-upstrea
 | [Node.js](https://nodejs.org/), [Ruby](https://www.ruby-lang.org/) base images | Chatwoot build | `24-alpine`, `3.4.4-alpine3.21` | MIT, BSD-2-Clause |
 | [Caddy](https://github.com/caddyserver/caddy) | Reverse proxy | `2.10.2-alpine` | Apache-2.0 |
 
+## External services (called over HTTPS, no code in this repository)
+
+| Service | Used by | License / terms | Required? |
+|---|---|---|---|
+| [Meta Graph API](https://developers.facebook.com/docs/graph-api/) | Frappe CRM Lead Ads sync, Chatwoot Messenger/Instagram channels | Meta Platform Terms | For Facebook channels |
+| [TypeSafe Jev](https://docs.typesafe.ai) (`api.typesafe.ai`) | [I] agents: `activepieces/flows/lead-intelligence.json`, `cold-lead-followup.json` | Proprietary API, [TypeSafe terms](https://docs.typesafe.ai/legal) | No — the pipeline runs without it; only these two flows need a key |
+
 ## Removed for license reasons
 
 | Component | License | Why removed |

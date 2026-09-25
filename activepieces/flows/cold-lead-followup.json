@@ -1,0 +1,107 @@
+{
+  "name": "Cold lead follow-up",
+  "type": "SHARED",
+  "summary": "",
+  "description": "",
+  "tags": [],
+  "blogUrl": "",
+  "metadata": {
+    "externalId": "k0LH4O3oKAJCbc4yyhvri"
+  },
+  "author": "Admin Local",
+  "categories": [],
+  "pieces": [
+    "@activepieces/piece-schedule"
+  ],
+  "flows": [
+    {
+      "displayName": "Cold lead follow-up",
+      "trigger": {
+        "name": "trigger",
+        "valid": true,
+        "displayName": "Every morning",
+        "nextAction": {
+          "name": "step_1",
+          "type": "CODE",
+          "valid": true,
+          "settings": {
+            "input": {
+              "maxLeads": "20",
+              "jevApiKey": "TYPESAFE_API_KEY",
+              "staleDays": "3",
+              "crmBaseUrl": "https://crm.example.com",
+              "crmApiToken": "CRM_API_KEY:CRM_API_SECRET",
+              "openStatuses": "New,Contacted,Nurture",
+              "confidenceThreshold": "0.7"
+            },
+            "sampleData": {},
+            "sourceCode": {
+              "code": "// Cold-lead follow-up agent (DX-OS [I] space). Source of the \"Plan follow-ups with Jev\" Code step in\n// activepieces/flows/cold-lead-followup.json, which runs on a daily schedule. For every open Lead with\n// no change in `staleDays`, Jev decides the next action and a CRM Task is created for the Lead owner.\n// It never changes a Lead's status itself -- closing a Lead stays a human decision.\n\n// --- Copied verbatim from sync.mjs / intelligence.mjs; followup.test.mjs fails if the copies drift. ---\n\nasync function request(fetchFn, method, url, headers, body) {\n\tconst res = await fetchFn(url, {\n\t\tmethod,\n\t\theaders: { 'Content-Type': 'application/json', ...headers },\n\t\tbody: body === undefined ? undefined : JSON.stringify(body),\n\t});\n\tif (!res.ok) throw new Error(`${method} ${url} failed: ${res.status} ${await res.text()}`);\n\treturn res.json();\n}\n\n// One TypeSafe System One call: every question is evaluated against the same state.\nexport async function askJev({ config, fetchFn, state, questions }) {\n\tconst res = await request(\n\t\tfetchFn,\n\t\t'POST',\n\t\t(config.jevBaseUrl || 'https://api.typesafe.ai') + '/v1/systemone',\n\t\t{ Authorization: `Bearer ${config.jevApiKey}` },\n\t\t{ model: config.jevModel || 'jev-latest', state, questions },\n\t);\n\treturn res.answers;\n}\n\n// --- Follow-up-specific. ---\n\nexport const NEXT_ACTIONS = {\n\tcall: 'Call the customer: they showed buying interest or left a phone number',\n\tmessage: 'Send a follow-up message: they were interested but went quiet in chat',\n\treview_close: 'The Lead looks dead, spam, or not a real customer; a salesperson should review closing it',\n\twait: 'Too early or nothing useful to do yet',\n};\nconst TASKS = {\n\tcall: { title: 'Gọi lại khách', priority: 'High' },\n\tmessage: { title: 'Nhắn tin chăm sóc lại khách', priority: 'Medium' },\n\treview_close: { title: 'Xem xét đóng Lead', priority: 'Low' },\n};\n\n// Frappe stores datetimes as \"YYYY-MM-DD HH:MM:SS\" in the site timezone (Asia/Kolkata when unset), so\n// every date we compare or write is rendered in that zone. Date math stays in code, not in Jev.\nconst siteDatetime = (d, timeZone) =>\n\tnew Intl.DateTimeFormat('sv-SE', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(d);\nconst daysBetween = (earlier, later) => Math.floor((Date.parse(later.replace(' ', 'T') + 'Z') - Date.parse(earlier.replace(' ', 'T') + 'Z')) / 86400000);\n\nexport async function planFollowups({ config, fetchFn, now = new Date() }) {\n\tconst crmHeaders = { Authorization: `token ${config.crmApiToken}`, ...(config.crmHost && { Host: config.crmHost }) };\n\tconst crm = (method, path, body) => request(fetchFn, method, config.crmBaseUrl + path, crmHeaders, body);\n\tconst query = (doctype, params) =>\n\t\tcrm('GET', `/api/resource/${doctype}?` + new URLSearchParams(Object.fromEntries(Object.entries(params).map(([k, v]) => [k, JSON.stringify(v)]))));\n\n\tconst staleDays = Number(config.staleDays ?? 3);\n\tconst threshold = Number(config.confidenceThreshold ?? 0.7);\n\tconst openStatuses = String(config.openStatuses ?? 'New,Contacted,Nurture').split(',').map((s) => s.trim());\n\tconst timeZone = (await crm('GET', '/api/method/frappe.client.get_time_zone')).message.time_zone || 'Asia/Kolkata';\n\tconst siteNow = siteDatetime(now, timeZone);\n\n\tconst leads = (\n\t\tawait query('CRM Lead', {\n\t\t\tfilters: [['status', 'in', openStatuses], ['modified', '<', siteDatetime(new Date(now.getTime() - staleDays * 86400000), timeZone)]],\n\t\t\tfields: ['name', 'lead_name', 'status', 'source', 'lead_owner', 'modified', 'mobile_no', 'email', 'ai_intent', 'ai_hotness'],\n\t\t\torder_by: 'modified asc',\n\t\t\tlimit_page_length: Number(config.maxLeads ?? 20),\n\t\t})\n\t).data;\n\n\tconst results = [];\n\tfor (const lead of leads) {\n\t\tconst openTasks = (\n\t\t\tawait query('CRM Task', {\n\t\t\t\tfilters: [['reference_doctype', '=', 'CRM Lead'], ['reference_docname', '=', lead.name], ['status', 'in', ['Backlog', 'Todo', 'In Progress']]],\n\t\t\t\tfields: ['name'],\n\t\t\t})\n\t\t).data;\n\t\tif (openTasks.length) {\n\t\t\tresults.push({ lead: lead.name, action: 'skipped', reason: 'open task exists' });\n\t\t\tcontinue;\n\t\t}\n\t\tconst notes = (\n\t\t\tawait query('FCRM Note', {\n\t\t\t\tfilters: [['reference_doctype', '=', 'CRM Lead'], ['reference_docname', '=', lead.name]],\n\t\t\t\tfields: ['title', 'content'],\n\t\t\t\torder_by: 'creation desc',\n\t\t\t\tlimit_page_length: 5,\n\t\t\t})\n\t\t).data;\n\t\tconst daysSinceUpdate = daysBetween(lead.modified.slice(0, 19), siteNow);\n\t\tconst answers = await askJev({\n\t\t\tconfig,\n\t\t\tfetchFn,\n\t\t\tstate: { lead: { ...lead, days_since_update: daysSinceUpdate }, recent_notes: notes },\n\t\t\tquestions: { next_action: { type: 'choice', instructions: 'What should the salesperson do next with this quiet sales lead?', criteria: NEXT_ACTIONS } },\n\t\t});\n\t\tconst { choice, confidence } = answers.next_action;\n\t\tif (confidence < threshold || choice === 'wait') {\n\t\t\tresults.push({ lead: lead.name, action: 'none', choice, confidence });\n\t\t\tcontinue;\n\t\t}\n\t\tconst task = TASKS[choice];\n\t\tawait crm('POST', '/api/resource/CRM Task', {\n\t\t\ttitle: `${task.title}: ${lead.lead_name || lead.name}`,\n\t\t\tdescription: `AI (độ tin cậy ${confidence.toFixed(2)}): Lead không có cập nhật ${daysSinceUpdate} ngày. ${NEXT_ACTIONS[choice]}.`,\n\t\t\tpriority: task.priority,\n\t\t\tstatus: 'Todo',\n\t\t\tassigned_to: lead.lead_owner || undefined,\n\t\t\treference_doctype: 'CRM Lead',\n\t\t\treference_docname: lead.name,\n\t\t\tdue_date: siteDatetime(new Date(now.getTime() + 86400000), timeZone),\n\t\t});\n\t\tresults.push({ lead: lead.name, action: 'task_created', choice, confidence });\n\t}\n\treturn { checked: leads.length, results };\n}\n\n// Activepieces Code step entry point (Schedule trigger; all configuration comes from step inputs).\nexport const code = async (inputs) => planFollowups({ config: inputs, fetchFn: fetch });\n",
+              "packageJson": "{}"
+            },
+            "propertySettings": {
+              "maxLeads": {
+                "type": "MANUAL"
+              },
+              "jevApiKey": {
+                "type": "MANUAL"
+              },
+              "staleDays": {
+                "type": "MANUAL"
+              },
+              "crmBaseUrl": {
+                "type": "MANUAL"
+              },
+              "crmApiToken": {
+                "type": "MANUAL"
+              },
+              "openStatuses": {
+                "type": "MANUAL"
+              },
+              "confidenceThreshold": {
+                "type": "MANUAL"
+              }
+            },
+            "errorHandlingOptions": {
+              "retryOnFailure": {
+                "value": false
+              },
+              "continueOnFailure": {
+                "value": false
+              }
+            }
+          },
+          "displayName": "Plan follow-ups with Jev",
+          "lastUpdatedDate": "2026-09-25T03:18:10.234Z"
+        },
+        "lastUpdatedDate": "2026-09-25T03:18:10.234Z",
+        "type": "PIECE_TRIGGER",
+        "settings": {
+          "propertySettings": {
+            "timezone": {
+              "type": "MANUAL"
+            },
+            "hour_of_the_day": {
+              "type": "MANUAL"
+            },
+            "run_on_weekends": {
+              "type": "MANUAL"
+            }
+          },
+          "pieceName": "@activepieces/piece-schedule",
+          "pieceVersion": "0.1.22",
+          "triggerName": "every_day",
+          "input": {
+            "timezone": "Asia/Ho_Chi_Minh",
+            "hour_of_the_day": 8,
+            "run_on_weekends": true
+          }
+        }
+      },
+      "valid": true,
+      "schemaVersion": "27",
+      "notes": []
+    }
+  ],
+  "status": "PUBLISHED"
+}

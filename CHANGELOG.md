@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- DX-OS [I] Intelligence layer (optional, TypeSafe Jev API): flow `lead-intelligence` classifies each incoming conversation (intent, hotness), picks the customer's phone/email out of the chat and flags a possible duplicate Lead, labels the Chatwoot conversation and posts a suggested reply template as a private note — only when Jev's confidence is above the threshold; flow `cold-lead-followup` creates a CRM Task every morning for open Leads that went quiet. `mmm_custom` adds `ai_intent` / `ai_hotness` fields to CRM Lead (patch `create_ai_fields`).
 - Activepieces Community Edition (MIT) stack in `docker/activepieces/` and flow `activepieces/flows/messenger-to-crm.json`: Chatwoot webhook → one Code step (`activepieces/logic/sync.mjs`) that verifies the signature, dedups by email/phone, creates or links the CRM Lead and writes `crm_lead_id` back to Chatwoot. Tests now cover signature checks and every sync branch, not only the dedup helpers.
 - Project `LICENSE` (AGPL-3.0), `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `THIRD_PARTY_LICENSES.md`, GitHub issue templates.
 
