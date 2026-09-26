@@ -2,8 +2,9 @@
 """
 scripts/setup-facebook-channel.py
 
-Configures Chatwoot with a live Facebook Page Channel (EduFlow Academy)
-and creates the corresponding Facebook Inbox and Verify Token.
+Configures Chatwoot with a live Facebook Page channel and its inbox.
+Required: FB_PAGE_ID, page access token (argument or FB_PAGE_ACCESS_TOKEN).
+Optional: FB_VERIFY_TOKEN (default: keep the one already in Chatwoot), FB_INBOX_NAME.
 """
 
 import os
@@ -11,22 +12,24 @@ import sys
 import subprocess
 
 RUBY_SCRIPT = """
-account = Account.first || Account.create!(name: 'EduFlow Academy')
-user = User.find_by(email: 'admin@eduflow.vn') || User.find_by(email: 'admin@dx-osd.local')
-
-page_id = ENV['FB_PAGE_ID'] || '1334466483083776'
+account = Account.first
+page_id = ENV['FB_PAGE_ID']
 page_token = ENV['FB_PAGE_ACCESS_TOKEN']
-verify_token = ENV['FB_VERIFY_TOKEN'] || 'eduflow_verify_2026'
 
-if page_token.blank?
-  puts "ERROR: FB_PAGE_ACCESS_TOKEN is required."
+if account.nil? || page_id.blank? || page_token.blank?
+  puts "ERROR: an existing Account, FB_PAGE_ID and FB_PAGE_ACCESS_TOKEN are required."
   exit 1
 end
 
-# Set verify token in Chatwoot
+# Set verify token in Chatwoot; keep the existing one unless FB_VERIFY_TOKEN is given
 cfg = InstallationConfig.find_or_initialize_by(name: 'FB_VERIFY_TOKEN')
-cfg.value = verify_token
+cfg.value = ENV['FB_VERIFY_TOKEN'] if ENV['FB_VERIFY_TOKEN'].present?
+if cfg.value.blank?
+  puts "ERROR: no FB_VERIFY_TOKEN in Chatwoot yet; pass FB_VERIFY_TOKEN."
+  exit 1
+end
 cfg.save!
+verify_token = cfg.value
 
 # Check or create Facebook Page Channel
 channel = Channel::FacebookPage.find_or_initialize_by(page_id: page_id, account_id: account.id)
@@ -37,8 +40,8 @@ channel.save!
 # Create Inbox for this channel if not exists
 inbox = account.inboxes.find_by(channel: channel)
 if !inbox
-  inbox = Inbox.create!(account: account, channel: channel, name: 'EduFlow Messenger')
-  InboxMember.find_or_create_by!(inbox: inbox, user: user) if user
+  inbox = Inbox.create!(account: account, channel: channel, name: ENV['FB_INBOX_NAME'].presence || "Facebook #{page_id}")
+  account.administrators.each { |admin| InboxMember.find_or_create_by!(inbox: inbox, user: admin) }
 end
 
 puts "SUCCESS"
@@ -54,19 +57,18 @@ def main():
     if not token and len(sys.argv) > 1:
         token = sys.argv[1]
 
-    if not token:
-        print("Usage: python scripts/setup-facebook-channel.py <PAGE_ACCESS_TOKEN>")
+    page_id = os.environ.get("FB_PAGE_ID")
+    if not token or not page_id:
+        print("Usage: FB_PAGE_ID=<PAGE_ID> python scripts/setup-facebook-channel.py <PAGE_ACCESS_TOKEN>")
         sys.exit(1)
-
-    page_id = os.environ.get("FB_PAGE_ID", "1334466483083776")
-    verify_token = os.environ.get("FB_VERIFY_TOKEN", "eduflow_verify_2026")
 
     proc = subprocess.run(
         [
             "docker", "exec", "-i",
             "-e", f"FB_PAGE_ACCESS_TOKEN={token}",
             "-e", f"FB_PAGE_ID={page_id}",
-            "-e", f"FB_VERIFY_TOKEN={verify_token}",
+            *[arg for name in ("FB_VERIFY_TOKEN", "FB_INBOX_NAME") if name in os.environ
+              for arg in ("-e", f"{name}={os.environ[name]}")],
             "chatwoot-rails-1",
             "bundle", "exec", "rails", "runner", "-"
         ],
