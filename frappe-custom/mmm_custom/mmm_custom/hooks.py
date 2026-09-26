@@ -161,23 +161,13 @@ scheduler_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"mmm_custom.tasks.all"
-# 	],
-# 	"daily": [
-# 		"mmm_custom.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"mmm_custom.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"mmm_custom.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"mmm_custom.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"cron": {
+		"*/5 * * * *": [
+			"mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.check_scheduled_posts"
+		]
+	}
+}
 
 # Testing
 # -------

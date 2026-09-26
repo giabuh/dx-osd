@@ -1,0 +1,159 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "autoincrement",
+ "creation": "2026-09-26 11:40:00.000000",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "course",
+  "status",
+  "scheduled_time",
+  "column_break_main",
+  "posted_at",
+  "fb_post_id",
+  "fb_post_url",
+  "section_break_content",
+  "content",
+  "image",
+  "section_break_status",
+  "error_message"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tiêu đề / Chiến dịch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "course",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Khóa học",
+   "options": "Tiếng Anh\nBơi lội\nToán tư duy\nChung",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Trạng thái",
+   "options": "Draft\nScheduled\nPosted\nFailed"
+  },
+  {
+   "fieldname": "scheduled_time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lịch hẹn đăng"
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posted_at",
+   "fieldtype": "Datetime",
+   "label": "Thời điểm đã đăng",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fb_post_id",
+   "fieldtype": "Data",
+   "label": "Mã bài viết Facebook (Post ID)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fb_post_url",
+   "fieldtype": "Data",
+   "label": "Đường dẫn bài viết (URL)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_content",
+   "fieldtype": "Section Break",
+   "label": "Nội dung & Hình ảnh"
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Small Text",
+   "label": "Nội dung bài viết (Caption)"
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Ảnh đăng tải (Banner)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_status",
+   "fieldtype": "Section Break",
+   "label": "Ghi chú lỗi (nếu có)"
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Small Text",
+   "label": "Thông báo lỗi",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-26 11:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Facebook Post",
+ "naming_rule": "Autoincrement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
