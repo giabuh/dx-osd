@@ -143,12 +143,12 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C1.2 | Course groups → courses on CRM Product (custom fields) | M | 📝 |
 | C1.3 | Consultants: branch, specialties, level, B2B flag | M | 📝 |
 | C1.4 | Course schedules + promotions | M | 📝 |
-| C1.5 | Bot Skills (data) + `Lead Engine Settings` brand/voice + Jinja templates (D-035, D-037) | M | 📝 |
+| C1.5 | Bot data DocTypes: `Bot Slot`, `Bot Skill` (+ children), `Lead Engine Settings` brand/voice (D-035, D-037, D-064) | M | 📝 |
 | C1.6 | Sao Việt demo dataset + idempotent loader + Chatwoot agents/teams | M | 📝 |
 
 **C2 — Conversation engine, no Jev yet** · milestone: a Messenger customer is fully served with buttons only, and every step is visible in the Playground · design §7.2
 | C2.1 | `Bot Conversation` + async pipeline (enqueue with dedup, per-conversation lock) + event hooks (D-024, D-025, D-036) | M | 📝 |
-| C2.2 | `Bot Slot` + slot-type registry + diacritic-folded keyword matcher + tiered buttons + exact quick-reply mapping (D-023, D-034) | M | 📝 |
+| C2.2 | Slot behaviour: slot-type registry + diacritic-folded keyword matcher + tiered buttons + exact quick-reply mapping (D-023, D-034) | M | 📝 |
 | C2.3 | Skill executor: action registry + template rendering with brand context (D-035, D-037) | M | 📝 |
 | C2.4 | Lead writes (`territory`, `products`, new slot fields) + returning-customer prefill (D-014, D-022) | M | 📝 |
 | C2.5 | AI Decision Log + learning-signal capture (D-043) | M | 📝 |
@@ -269,7 +269,7 @@ Rules:
 | Course groups / courses | 8 / ~45 | **Real names**: Tin học văn phòng, Đồ họa, Vẽ kỹ thuật, Kế toán, Lập trình, Tin học trẻ em (+ Robotics), Digital Marketing, AI & Automation |
 | Fees, durations | ~45 | Invented, `is_demo_data = 1` |
 | Consultants | ~45 (3 per branch + B2B team + central team) | Invented, non-routable demo email domain |
-| Schedules | ~400 (next 8 weeks) | Generated deterministically from per-course branch offerings |
+| Schedules | ~1,000 (next 8 weeks, 4-week cadence) | Generated deterministically from branch tier × course `offer` (D-066) |
 | Promotions / Bot Skills | ~10 / ~30 | Invented; copy built on real selling points ("học không giới hạn buổi đến khi thành thạo", certificate lookup at `chungnhan.tinhocsaoviet.com`) |
 
 Loader: JSON files under `mmm_custom/demo/saoviet/`, run with
@@ -284,7 +284,7 @@ the Consultant. It supersedes `scripts/seed-branch-agents.py`.
 
 - Unit tests for the loader's upsert/idempotency and the deterministic schedule generator.
 - On a fresh `-p crmverify` bench: `bench migrate` succeeds; loader run twice gives identical counts
-  (4 areas, 13 branches, 8 groups, ~45 courses, ~45 consultants, ~400 schedules); Chatwoot shows the
+  (4 areas, 13 branches, 8 groups, 46 courses, 44 consultants, schedules as computed by the generator test); Chatwoot shows the
   15 teams with their agents.
 - Existing suites still pass: `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests`
   and `scripts/test-chatwoot-crm-sync.py` (5/5).
