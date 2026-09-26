@@ -1,8 +1,13 @@
 """Every side effect of a bot turn goes through an Effects object (D-060): real Chatwoot/CRM calls
 in production (`ChatwootEffects`), a recorder in the Playground and in tests (`RecordingEffects`)."""
 
+import logging
+
 from mmm_custom.chatwoot_client import ChatwootClient
+from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.engine import events
+
+logger = logging.getLogger(__name__)
 
 
 class RecordingEffects:
@@ -19,6 +24,10 @@ class RecordingEffects:
 
     def emit(self, event, payload):
         self.calls.append(("emit", {"event": event, **payload}))
+
+    def save_lead(self, state, fields, courses, contact):
+        self.calls.append(("save_lead", {"fields": dict(fields), "courses": [c.code for c in courses]}))
+        return state.lead
 
 
 class ChatwootEffects:
@@ -39,6 +48,21 @@ class ChatwootEffects:
 
     def emit(self, event, payload):
         events.emit(event, payload)
+
+    def save_lead(self, state, fields, courses, contact):
+        from mmm_custom.engine import repo
+
+        name = repo.save_lead(state, fields, courses, contact)
+        if state.contact_id and (contact.get("custom_attributes") or {}).get("crm_lead_id") != name:
+            try:
+                self.user.update_contact(state.contact_id, {"crm_lead_id": name})
+            except Exception:
+                logger.exception("crm_lead_id write-back to Chatwoot failed")
+        try:
+            compute_data_quality(name)
+        except Exception:
+            logger.exception("data quality update failed")
+        return name
 
 
 def chatwoot_effects(conf):

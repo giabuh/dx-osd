@@ -79,9 +79,8 @@ class TestRunTurn(unittest.TestCase):
     def test_events_for_filled_slots(self):
         with patch("mmm_custom.engine.pipeline.understand", return_value=Understanding(fills={"course": fill("VP-EXCEL")})):
             self.turn("excel")
-        emitted = self.fx.of("emit")
-        self.assertEqual(emitted[0]["event"], "slot_filled")
-        self.assertEqual((emitted[0]["slot"], emitted[0]["value"]), ("course", "VP-EXCEL"))
+        filled = [e for e in self.fx.of("emit") if e["event"] == "slot_filled"]
+        self.assertEqual([(e["slot"], e["value"]) for e in filled], [("course", "VP-EXCEL")])
 
     def test_handoff_changes_status_and_emits(self):
         with patch("mmm_custom.engine.pipeline.understand", return_value=Understanding(handoff=True)):
@@ -89,6 +88,28 @@ class TestRunTurn(unittest.TestCase):
         self.assertEqual(self.repo.states["7"].status, "handed_off")
         self.assertIn("handed_off", [e["event"] for e in self.fx.of("emit")])
 
+    def test_lead_saved_when_a_lead_field_slot_is_filled(self):
+        with patch("mmm_custom.engine.pipeline.understand", return_value=Understanding(fills={"course": fill("VP-EXCEL")})):
+            self.turn("excel")
+        self.assertEqual(self.fx.of("save_lead")[0]["courses"], ["VP-EXCEL"])
+        self.assertIn("lead_updated", [e["event"] for e in self.fx.of("emit")])
+
+    def test_no_lead_write_for_greeting_or_no_lead_skill(self):
+        self.turn("xin chào")
+        with patch("mmm_custom.engine.pipeline.understand", return_value=Understanding(skills=["certificate_lookup"])):
+            self.turn("tra cứu chứng nhận", message_id=6)
+        self.assertEqual(self.fx.of("save_lead"), [])
+        with patch("mmm_custom.engine.pipeline.understand", return_value=Understanding(skills=["hotline"])):
+            self.turn("hotline", message_id=7)
+        self.assertEqual(len(self.fx.of("save_lead")), 1)
+
+    def test_lead_failure_is_recorded(self):
+        fx = RecordingEffects()
+        fx.save_lead = MagicMock(side_effect=RuntimeError("db"))
+        with patch("mmm_custom.engine.pipeline.understand", return_value=Understanding(fills={"course": fill("VP-EXCEL")})):
+            t = run_turn(parse_event(incoming("excel")), self.repo, fx, render)
+        self.assertEqual(t.reply.errors[-1]["type"], "lead_failed")
+        self.assertEqual(self.repo.states["7"].slots["course"]["value"], "VP-EXCEL")
 
 class TestEvents(unittest.TestCase):
     def test_handlers_receive_payload_and_failures_are_logged(self):

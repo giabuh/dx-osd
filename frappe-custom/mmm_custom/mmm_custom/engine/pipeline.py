@@ -10,6 +10,7 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.engine.decide import decide
+from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.understand import understand
 
@@ -87,6 +88,24 @@ def emit_events(effects, state, decision):
         effects.emit("handed_off", {**base, "reason": decision.handoff_reason, "consultant": state.consultant})
 
 
+def write_lead(turn, effects, catalog):
+    """C2.4: write what the conversation learned to the CRM Lead (D-014, D-022)."""
+    state, decision = turn.state, turn.decision
+    lead_slots = [k for k in decision.new_slots if catalog.slot(k) and catalog.slot(k).lead_field]
+    wanted = not state.lead and any(catalog.skills[k].creates_lead for k in decision.skills)
+    if not (lead_slots or wanted):
+        return
+    fields, courses = lead_updates(state.slots, catalog)
+    try:
+        state.lead = effects.save_lead(state, fields, courses, turn.event.contact) or state.lead
+    except Exception as e:
+        turn.reply.errors.append({"type": "lead_failed", "detail": str(e)[:300]})
+        return
+    effects.emit("lead_updated", {"conversation_id": state.conversation_id, "lead": state.lead,
+                                  "is_sandbox": state.is_sandbox, "fields": sorted(fields),
+                                  "courses": [c.code for c in courses]})
+
+
 def run_turn(event, repo, effects, render):
     catalog = repo.catalog()
     state = repo.load_state(event)
@@ -104,6 +123,7 @@ def run_turn(event, repo, effects, render):
         except Exception as e:  # never raise into RQ: a retry would answer twice
             turn.reply.errors.append({"type": "send_failed", "detail": str(e)[:300]})
     apply_decision(state, turn.decision, turn.reply, event)
+    write_lead(turn, effects, catalog)
     repo.save_state(state)
     emit_events(effects, state, turn.decision)
     return turn

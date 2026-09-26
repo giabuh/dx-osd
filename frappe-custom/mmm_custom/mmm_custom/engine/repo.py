@@ -8,6 +8,8 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
+from mmm_custom.dedupe import find_matching_lead, normalize_phone
+from mmm_custom.engine.lead import PLACEHOLDER_NAMES, contact_prefill, prefill_slots
 from mmm_custom.engine.catalog import DEFAULT_SETTINGS, build_catalog
 from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
@@ -97,6 +99,76 @@ def _json(value):
     return json.loads(value) if value else {}
 
 
+def find_lead(contact_id, contact, phone=None, email=None):
+    """The Lead for a Chatwoot contact: crm_lead_id → chatwoot_contact_id → phone/email match."""
+    attrs = contact.get("custom_attributes") or {}
+    if attrs.get("crm_lead_id") and frappe.db.exists("CRM Lead", attrs["crm_lead_id"]):
+        return attrs["crm_lead_id"]
+    if contact_id:
+        name = frappe.db.get_value("CRM Lead", {"chatwoot_contact_id": str(contact_id)})
+        if name:
+            return name
+    if phone or email:
+        matched = find_matching_lead(email, phone)
+        if matched:
+            return matched.name if hasattr(matched, "name") else matched.get("name")
+    return None
+
+
+def _append_products(doc, courses):
+    have = {p.product_code for p in doc.get("products") or []}
+    for c in courses:
+        if c.code not in have:
+            doc.append("products", {"product_code": c.code, "product_name": c.name, "qty": 1, "rate": c.fee,
+                                    "amount": c.fee, "net_amount": c.fee})
+    names = [p.product_name or p.product_code for p in doc.get("products") or []]
+    if names:
+        doc.course_interest = ", ".join(names)[:140]  # readable summary kept beside products (D-014)
+
+
+def add_products(lead_name, courses):
+    doc = frappe.get_doc("CRM Lead", lead_name)
+    _append_products(doc, courses)
+    doc.flags.lead_engine = True
+    doc.save(ignore_permissions=True)
+
+
+def save_lead(state, fields, courses, contact):
+    """Create or update the conversation's Lead. Never overwrites a real name or a different phone a
+    person entered; courses are appended, not replaced (D-022)."""
+    name = state.lead if state.lead and frappe.db.exists("CRM Lead", state.lead) else None
+    name = name or find_lead(state.contact_id, contact, fields.get("mobile_no"), contact.get("email"))
+    if name:
+        doc = frappe.get_doc("CRM Lead", name)
+    else:
+        raw_name = " ".join(str(contact.get("name") or "").split())
+        doc = frappe.new_doc("CRM Lead")
+        doc.update({"first_name": raw_name or PLACEHOLDER_NAMES[0], "email": contact.get("email") or None})
+        if frappe.db.exists("CRM Lead Source", "Messenger Bot"):  # created by after_install; older sites may lack it
+            doc.source = "Messenger Bot"
+    if state.contact_id and not doc.get("chatwoot_contact_id"):
+        doc.chatwoot_contact_id = state.contact_id  # link a phone-matched Lead so the next conversation finds it
+    for field, val in fields.items():
+        if not doc.meta.has_field(field):
+            continue
+        if field == "first_name":
+            if doc.first_name not in PLACEHOLDER_NAMES:
+                continue
+            doc.lead_name = val
+        if field == "mobile_no":
+            val = normalize_phone(val)
+            if doc.mobile_no and doc.mobile_no != val:
+                continue
+        doc.set(field, val)
+    _append_products(doc, courses)
+    doc.flags.lead_engine = True  # learning.on_lead_update skips the engine's own saves (D-057)
+    if name:
+        doc.save(ignore_permissions=True)
+    else:
+        doc.insert(ignore_permissions=True)
+    return doc.name
+
+
 class FrappeRepo:
     def __init__(self, sandbox=False, sandbox_lead=None):
         self.sandbox, self.sandbox_lead = sandbox, sandbox_lead
@@ -124,8 +196,24 @@ class FrappeRepo:
             turns=d.turns or 0)
 
     def new_state(self, event):
-        return ConversationState(conversation_id=event.conversation_id, contact_id=str(event.contact.get("id") or ""),
-                                 inbox_id=event.inbox_id, is_sandbox=self.sandbox)
+        """A new conversation starts from what CRM already knows about the contact (D-022, D-070)."""
+        catalog = self.catalog()
+        state = ConversationState(conversation_id=event.conversation_id, contact_id=str(event.contact.get("id") or ""),
+                                  inbox_id=event.inbox_id, is_sandbox=self.sandbox,
+                                  slots=contact_prefill(event.contact, catalog))
+        lead = self.sandbox_lead if self.sandbox else find_lead(state.contact_id, event.contact)
+        if not lead or not frappe.db.exists("CRM Lead", lead):
+            return state
+        meta = frappe.get_meta("CRM Lead")
+        fields = sorted({s.lead_field for s in catalog.slots
+                         if s.lead_field and s.lead_field != "products" and meta.has_field(s.lead_field)})
+        values = (frappe.db.get_value("CRM Lead", lead, fields, as_dict=True) or {}) if fields else {}
+        state.slots.update(prefill_slots(values, catalog))
+        state.lead = lead
+        earlier = state.contact_id and frappe.db.exists("Bot Conversation", {"contact_id": state.contact_id, "is_sandbox": 0})
+        has_products = frappe.db.count("CRM Products", {"parenttype": "CRM Lead", "parent": lead})
+        state.is_returning = bool(earlier or has_products or values.get("territory"))
+        return state
 
     def save_state(self, state):
         values = {

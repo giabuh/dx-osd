@@ -186,6 +186,12 @@ CATALOG_FIELDS = {
 		{"fieldname": "next_courses", "label": "Next Courses", "fieldtype": "Table MultiSelect", "options": "Course Link", "insert_after": "aliases"},
 		{"fieldname": "is_demo_data", "label": "Demo Data", "fieldtype": "Check", "insert_after": "next_courses"},
 	],
+	# Bot Slot lead_field targets that are not standard CRM Lead fields.
+	"CRM Lead": [
+		{"fieldname": "learner_type", "label": "Learner", "fieldtype": "Data", "insert_after": "course_interest"},
+		{"fieldname": "learner_age", "label": "Learner Age", "fieldtype": "Int", "insert_after": "learner_type"},
+		{"fieldname": "preferred_shift", "label": "Preferred Shift", "fieldtype": "Data", "insert_after": "learner_age"},
+	],
 }
 
 

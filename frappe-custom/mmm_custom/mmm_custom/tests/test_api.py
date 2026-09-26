@@ -12,6 +12,11 @@ APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from engine_fixtures import demo_catalog
+
+CAT = demo_catalog()
+
 if "requests" not in sys.modules:
     mock_requests_mod = MagicMock()
     sys.modules["requests"] = mock_requests_mod
@@ -37,6 +42,12 @@ class TestChatwootSyncApi(unittest.TestCase):
         self.mock_frappe.conf = self.conf
         self.mock_frappe.AuthenticationError = api_mod.frappe.AuthenticationError
         self.mock_frappe.throw = api_mod.frappe.throw
+        catalog_patch = patch("mmm_custom.api.load_catalog", return_value=CAT)
+        products_patch = patch("mmm_custom.api.add_products")
+        catalog_patch.start()
+        self.mock_add_products = products_patch.start()
+        self.addCleanup(catalog_patch.stop)
+        self.addCleanup(products_patch.stop)
 
     def _setup_request(self, ts=None, sig=None, body_bytes=b""):
         mock_req = MagicMock()
@@ -190,7 +201,7 @@ class TestChatwootSyncApi(unittest.TestCase):
                         "custom_attributes": {},
                     }
                 },
-                "messages": [{"content": "Dang ky hoc tieng Anh"}],
+                "messages": [{"content": "Dang ky hoc excel"}],
             },
         }
         body = json.dumps(payload).encode("utf-8")
@@ -207,7 +218,7 @@ class TestChatwootSyncApi(unittest.TestCase):
                     self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-MATCHED-99"})
                     mock_find.assert_called_once_with("lethic@example.com", "0987654321")
                     self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-MATCHED-99", "chatwoot_contact_id", "789")
-                    self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-MATCHED-99", "course_interest", "Tiếng Anh")
+                    self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-MATCHED-99", "course_interest", "Excel từ cơ bản đến nâng cao")
                     mock_put.assert_called_once()
 
     def test_create_new_lead_when_no_match(self):
@@ -290,30 +301,13 @@ class TestChatwootSyncApi(unittest.TestCase):
                     self.assertLessEqual(len(kwargs["title"]), 140)
                     self.assertIn("Chatwoot offline", kwargs["message"])
 
-    def test_detect_course_interest_various_keywords(self):
-        # Tiếng Anh
-        self.assertEqual(detect_course_interest("Em muốn học tiếng Anh cho bé"), "Tiếng Anh")
-        self.assertEqual(detect_course_interest("Dang ky lop tieng anh giao tiep"), "Tiếng Anh")
-        self.assertEqual(detect_course_interest("Do you offer English courses?"), "Tiếng Anh")
-
-        # Bơi lội
-        self.assertEqual(detect_course_interest("Học bơi lội vào mùa hè"), "Bơi lội")
-        self.assertEqual(detect_course_interest("Lớp học bơi cho trẻ em"), "Bơi lội")
-        self.assertEqual(detect_course_interest("Interested in swimming lessons"), "Bơi lội")
-        self.assertEqual(detect_course_interest("dang ky lop boi loi"), "Bơi lội")
-
-        # Toán tư duy
-        self.assertEqual(detect_course_interest("Tư vấn khóa học Toán tư duy"), "Toán tư duy")
-        self.assertEqual(detect_course_interest("Học toán cho học sinh cấp 1"), "Toán tư duy")
-        self.assertEqual(detect_course_interest("Lớp toan tu duy"), "Toán tư duy")
-        self.assertEqual(detect_course_interest("Do you have math class?"), "Toán tư duy")
-
-        # Negative / No match
-        self.assertIsNone(detect_course_interest("Xin chào trung tâm!"))
-        self.assertIsNone(detect_course_interest("Tư vấn học phí giúp em"))
-        self.assertIsNone(detect_course_interest("Tôi hoàn toàn đồng ý"))
-        self.assertIsNone(detect_course_interest(""))
-        self.assertIsNone(detect_course_interest(None))
+    def test_detect_course_interest_from_catalog(self):
+        self.assertEqual(detect_course_interest("Em muốn học Excel nâng cao", CAT), "Excel nâng cao & Dashboard")
+        self.assertEqual(detect_course_interest("hoc autocad o dau"), "AutoCAD 2D")
+        self.assertEqual(detect_course_interest("Robotics cho con 8 tuoi", CAT), "Robotics cơ bản")
+        self.assertEqual(detect_course_interest("photoshop va illustrator", CAT), "Photoshop cơ bản, Illustrator")
+        for text in ("Xin chào trung tâm!", "Tư vấn học phí giúp em", "", None):
+            self.assertIsNone(detect_course_interest(text, CAT))
 
     def test_create_new_lead_with_course_interest(self):
         valid_ts = str(int(time.time()))
@@ -329,7 +323,7 @@ class TestChatwootSyncApi(unittest.TestCase):
                         "phone_number": "0933445566",
                     }
                 },
-                "messages": [{"content": "Chào cô, em muốn đăng ký học toán tư duy cho cháu"}],
+                "messages": [{"content": "Chào cô, em muốn đăng ký học AutoCAD cho cháu"}],
             },
         }
         body = json.dumps(payload).encode("utf-8")
@@ -354,8 +348,10 @@ class TestChatwootSyncApi(unittest.TestCase):
                         "mobile_no": "+84933445566",
                         "source": "Messenger",
                         "chatwoot_contact_id": "999",
-                        "course_interest": "Toán tư duy",
+                        "course_interest": "AutoCAD 2D",
                     })
+                    args = self.mock_add_products.call_args[0]
+                    self.assertEqual((args[0], [c.code for c in args[1]]), ("CRM-LEAD-MATH-001", ["VKT-CAD2D"]))
 
     def test_existing_lead_updates_course_interest(self):
         valid_ts = str(int(time.time()))
@@ -372,7 +368,7 @@ class TestChatwootSyncApi(unittest.TestCase):
                         "custom_attributes": {"crm_lead_id": "CRM-LEAD-EXISTING-01"},
                     }
                 },
-                "messages": [{"content": "Toi muon cho con hoc boi loi"}],
+                "messages": [{"content": "Toi muon cho con hoc robotics"}],
             },
         }
         body = json.dumps(payload).encode("utf-8")
@@ -388,7 +384,7 @@ class TestChatwootSyncApi(unittest.TestCase):
                 res = chatwoot_sync()
                 self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-EXISTING-01"})
                 self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-EXISTING-01", "chatwoot_contact_id", "456")
-                self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-EXISTING-01", "course_interest", "Bơi lội")
+                self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-EXISTING-01", "course_interest", "Robotics cơ bản")
 
     def test_existing_lead_placeholder_name_gets_fixed(self):
         """When an existing lead has "EduFlow Student" or "Khách Messenger" as
