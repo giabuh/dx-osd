@@ -28,5 +28,26 @@ class TestAssertLeafBranch(unittest.TestCase):
             assert_leaf_branch("CN Mars", TREE.get)
 
 
+from datetime import date
+from mmm_custom.catalog_rules import validate_promotion
+
+
+class TestValidatePromotion(unittest.TestCase):
+    def test_valid_percent(self):
+        validate_promotion("Percent", 10, date(2026, 10, 1), date(2026, 11, 30))
+
+    def test_validate_promotion_percent_over_100(self):
+        with self.assertRaisesRegex(ValueError, "100"):
+            validate_promotion("Percent", 120, None, None)
+
+    def test_validate_promotion_non_positive(self):
+        with self.assertRaisesRegex(ValueError, "greater than 0"):
+            validate_promotion("Amount", 0, None, None)
+
+    def test_validate_promotion_inverted_dates(self):
+        with self.assertRaisesRegex(ValueError, "before"):
+            validate_promotion("Amount", 500000, date(2026, 11, 1), date(2026, 10, 1))
+
+
 if __name__ == "__main__":
     unittest.main()
