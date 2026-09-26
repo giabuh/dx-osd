@@ -9,7 +9,8 @@ Features:
 - Can be run manually or via cron/scheduler
 
 Usage:
-    python scripts/auto-post.py                    # Post random course
+    python scripts/auto-post.py                    # Post random course (template caption)
+    python scripts/auto-post.py --ai               # Post with AI-generated caption (9Router)
     python scripts/auto-post.py --course tieng_anh # Post specific course
     python scripts/auto-post.py --dry-run          # Preview without posting
 
@@ -242,6 +243,52 @@ def post_to_facebook(page_id: str, token: str, message: str, image_path: str | N
     return resp.json()
 
 
+def generate_ai_caption(course_key: str) -> str | None:
+    """Generate a creative caption using 9Router AI. Returns None if unavailable."""
+    api_key = os.getenv("NINE_ROUTER_API_KEY")
+    base_url = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
+    model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
+
+    if not api_key:
+        return None
+
+    template = COURSE_TEMPLATES[course_key]
+    prompt = (
+        f"Viết một bài đăng Facebook quảng cáo khóa học {template['name']} "
+        f"cho trung tâm EduFlow Academy. Yêu cầu:\n"
+        f"- Dưới 150 từ, tiếng Việt\n"
+        f"- Có emoji phù hợp\n"
+        f"- Có hashtag (#EduFlow, #EduFlowAcademy, và hashtag liên quan)\n"
+        f"- Kêu gọi inbox trang để tư vấn\n"
+        f"- Đề cập chi nhánh: Bình Thạnh, Quận 1, Thủ Đức\n"
+        f"- Giọng văn thân thiện, chuyên nghiệp\n"
+        f"- KHÔNG dùng markdown (**, ##, etc.)\n"
+        f"Chỉ trả về nội dung bài viết, không thêm giải thích."
+    )
+
+    try:
+        resp = requests.post(
+            f"{base_url}/chat/completions",
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 400,
+                "stream": False,
+            },
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"].strip()
+        # Remove any markdown formatting
+        content = content.replace("**", "").replace("##", "").replace("# ", "")
+        return content
+    except Exception as e:
+        print(f"⚠️ AI caption failed ({e}), using template")
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="EduFlow Auto-Post to Facebook Page")
     parser.add_argument(
@@ -249,6 +296,7 @@ def main():
         choices=["tieng_anh", "boi_loi", "toan_tu_duy"],
         help="Specific course to post about (random if not specified)",
     )
+    parser.add_argument("--ai", action="store_true", help="Use 9Router AI to generate caption")
     parser.add_argument("--dry-run", action="store_true", help="Preview without posting")
     parser.add_argument("--no-image", action="store_true", help="Post text only, no image")
     args = parser.parse_args()
@@ -268,10 +316,19 @@ def main():
     course_key = args.course or random.choice(list(COURSE_TEMPLATES.keys()))
     template = COURSE_TEMPLATES[course_key]
 
-    # Select random caption
-    caption = random.choice(template["captions"])
+    # Generate caption
+    if args.ai:
+        print("🤖 Generating AI caption via 9Router...")
+        caption = generate_ai_caption(course_key)
+        if caption:
+            print("✨ AI caption generated!")
+        else:
+            caption = random.choice(template["captions"])
+            print("📝 Fell back to template caption")
+    else:
+        caption = random.choice(template["captions"])
 
-    print(f"📝 Course: {template['name']} {template['emoji']}")
+    print(f"\n📝 Course: {template['name']} {template['emoji']}")
     print(f"📄 Caption:\n{caption}\n")
 
     if args.dry_run:
