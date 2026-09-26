@@ -82,7 +82,9 @@
   "jev_description": "The customer asks where a branch is, for an address or the nearest location",
   "examples": "trung tâm ở đâu vậy\ngần dĩ an có cơ sở nào không\ncho xin địa chỉ",
   "aliases": "dia chi, o dau, chi nhanh, co so, gan nhat",
-  "parameters": [],
+  "parameters": [
+   "branch"
+  ],
   "missing_policy": "ask",
   "action_type": "branch_info",
   "action_config": {},
@@ -338,7 +340,8 @@
   "missing_policy": "ask",
   "action_type": "recommend_courses",
   "action_config": {
-   "top": 3
+   "top": 3,
+   "audience": "Trẻ em"
   },
   "templates": [
    {
@@ -430,7 +433,20 @@
   "missing_policy": "ask",
   "action_type": "recommend_courses",
   "action_config": {
-   "top": 3
+   "top": 3,
+   "audience_by_learner": {
+    "child": [
+     "Trẻ em"
+    ],
+    "self": [
+     "Người đi làm",
+     "Học sinh – Sinh viên"
+    ],
+    "staff": [
+     "Người đi làm",
+     "Doanh nghiệp"
+    ]
+   }
   },
   "templates": [
    {
@@ -718,7 +734,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "{{ brand.me | capitalize }} chào {{ brand.you }}! {{ brand.you | capitalize }} đang quan tâm khóa học nào ạ?"
+    "template": "Dạ {{ brand.me }} chào {{ brand.you }} ạ!"
    }
   ],
   "follow_ups": [],

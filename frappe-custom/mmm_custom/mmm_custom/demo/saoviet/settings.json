@@ -7,7 +7,8 @@
  "zalo": "0931144858",
  "website": "https://tinhocsaoviet.com",
  "email": "trungtamtinhocsaoviet@gmail.com",
- "greeting_template": "Dạ {{ brand.me }} là {{ brand.bot_name }}, {{ brand.me }} có thể giúp gì cho {{ brand.you }} ạ?",
+ "greeting_template": "Dạ {{ brand.me }} là {{ brand.bot_name }} của {{ brand.name }}, rất vui được hỗ trợ {{ brand.you }} ạ.",
  "fallback_template": "Dạ {{ brand.me }} chưa hiểu ý {{ brand.you }}, {{ brand.you }} chọn giúp {{ brand.me }} một mục bên dưới hoặc gọi {{ brand.hotline }} nhé ạ.",
- "signoff": "Sao Việt"
+ "signoff": "Sao Việt",
+ "max_skills_per_reply": 3
 }

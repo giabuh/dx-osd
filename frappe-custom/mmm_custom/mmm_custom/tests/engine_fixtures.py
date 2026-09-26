@@ -9,18 +9,13 @@ APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-import jinja2
-import jinja2.sandbox
-
 from mmm_custom.demo.loader import load_dataset
 from mmm_custom.engine.catalog import build_catalog
 from mmm_custom.engine.state import ConversationState
 
-_ENV = jinja2.sandbox.SandboxedEnvironment(undefined=jinja2.DebugUndefined)
+from mmm_custom.engine.render import jinja_renderer
 
-
-def render(template, context):
-    return _ENV.from_string(template).render(context)
+render = jinja_renderer()
 
 
 def demo_catalog(**settings):
@@ -40,6 +35,7 @@ class FakeRepo:
         self._catalog, self._today = catalog, today
         self.states = {}
         self.prefill = {}
+        self.schedules, self.promotions = [], []
 
     def catalog(self):
         return self._catalog
@@ -55,3 +51,21 @@ class FakeRepo:
 
     def save_state(self, state):
         self.states[state.conversation_id] = copy.deepcopy(state)
+
+    def open_schedules(self, course, branch, shift, today, limit):
+        rows = [s for s in self.schedules if s["course"] == course and s["date"] >= today
+                and (not branch or s["branch"] == branch) and (not shift or s["shift"].startswith(shift))]
+        return sorted(rows, key=lambda s: s["date"])[:limit]
+
+    def active_promotions(self, today):
+        return list(self.promotions)
+
+
+def schedule(course, branch, day, shift="Tối 17:00–21:00", weekdays="T3, T5, T7", seats=6):
+    return {"course": course, "branch": branch, "date": day, "shift": shift, "weekdays": weekdays,
+            "seats_left": seats}
+
+
+def promo(title, kind="Percent", amount=10, courses=(), groups=(), branches=()):
+    return {"title": title, "discount_type": kind, "discount_value": amount, "courses": list(courses),
+            "course_groups": list(groups), "branches": list(branches)}

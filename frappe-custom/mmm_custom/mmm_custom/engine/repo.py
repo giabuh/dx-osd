@@ -9,6 +9,7 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.engine.catalog import DEFAULT_SETTINGS, build_catalog
+from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
 
 CACHE_KEY = "lead_engine_catalog_rows"
@@ -142,3 +143,26 @@ class FrappeRepo:
             doc.save(ignore_permissions=True)
         else:
             frappe.get_doc({"doctype": "Bot Conversation", **values}).insert(ignore_permissions=True)
+
+    def open_schedules(self, course, branch, shift, today, limit):
+        filters = {"course": course, "status": "Open", "start_date": [">=", today]}
+        if branch:
+            filters["branch"] = branch
+        if shift:
+            filters["shift"] = ["like", f"{shift}%"]
+        rows = frappe.get_all("Course Schedule", filters=filters, fields=["start_date", "shift", "weekdays", "branch", "seats"],
+                              order_by="start_date asc", limit=limit)
+        return [{"date": r.start_date, "weekday": WEEKDAYS[r.start_date.weekday()], "shift": r.shift,
+                 "weekdays": r.weekdays, "branch": r.branch, "seats_left": r.seats} for r in rows]
+
+    def active_promotions(self, today):
+        rows = frappe.get_all("Course Promotion", filters={"active": 1},
+                              fields=["name", "title", "discount_type", "discount_value", "valid_from", "valid_to"])
+        rows = [r for r in rows if (not r.valid_from or r.valid_from <= today) and (not r.valid_to or today <= r.valid_to)]
+        courses = _children("Course Link", "Course Promotion", "courses", ["course"])
+        groups = _children("Course Group Link", "Course Promotion", "course_groups", ["course_group"])
+        branches = _children("Territory Link", "Course Promotion", "branches", ["branch"])
+        return [{"title": r.title, "discount_type": r.discount_type, "discount_value": r.discount_value,
+                 "courses": [c["course"] for c in courses.get(r.name, [])],
+                 "course_groups": [g["course_group"] for g in groups.get(r.name, [])],
+                 "branches": [b["branch"] for b in branches.get(r.name, [])]} for r in rows]

@@ -97,7 +97,7 @@ def run_turn(event, repo, effects, render):
     turn.understanding = understand(event.text, state, catalog)
     turn.decision = decide(state, turn.understanding, catalog)
     turn.reason = turn.decision.reason
-    turn.reply = compose(turn.decision, state, catalog, render)
+    turn.reply = compose(turn.decision, state, catalog, render, repo, repo.today())
     if turn.reply.messages:
         try:
             effects.send(state.conversation_id, turn.reply)
@@ -114,11 +114,12 @@ def process_event(payload):
     from frappe.utils.synchronization import filelock
 
     from mmm_custom.engine.effects import chatwoot_effects
+    from mmm_custom.engine.render import frappe_renderer
     from mmm_custom.engine.repo import FrappeRepo
 
     event = parse_event(payload)
     if event.kind != "customer_message" or not event.conversation_id:
         return
     with filelock(f"lead_engine_conversation_{event.conversation_id}", timeout=60):
-        run_turn(event, FrappeRepo(), chatwoot_effects(frappe.conf), frappe.render_template)
+        run_turn(event, FrappeRepo(), chatwoot_effects(frappe.conf), frappe_renderer)
         frappe.db.commit()

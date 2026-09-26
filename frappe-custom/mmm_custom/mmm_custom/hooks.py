@@ -94,6 +94,9 @@ doc_events = {
 	for dt in _LEAD_ENGINE_DATA
 }
 
+# Template filters for bot copy: {{ course.fee | vnd }} → "1.800.000đ", {{ s.date | date_vi }} → "Thứ 7, 04/10".
+jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.date_vi"]}
+
 # Other apps subscribe to engine events with their own `lead_engine_events` hook (see engine/events.py).
 
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.

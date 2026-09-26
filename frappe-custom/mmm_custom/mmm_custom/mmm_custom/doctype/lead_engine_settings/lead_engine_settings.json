@@ -14,7 +14,9 @@
   "email",
   "greeting_template",
   "fallback_template",
-  "signoff"
+  "signoff",
+  "engine_section",
+  "max_skills_per_reply"
  ],
  "fields": [
   {
@@ -74,6 +76,18 @@
    "fieldname": "signoff",
    "fieldtype": "Data",
    "label": "Signoff"
+  },
+  {
+   "fieldname": "engine_section",
+   "fieldtype": "Section Break",
+   "label": "Conversation engine"
+  },
+  {
+   "fieldname": "max_skills_per_reply",
+   "fieldtype": "Int",
+   "label": "Max Skills Per Reply",
+   "default": "3",
+   "description": "Most answers combined into one reply (D-054)"
   }
  ],
  "issingle": 1,
