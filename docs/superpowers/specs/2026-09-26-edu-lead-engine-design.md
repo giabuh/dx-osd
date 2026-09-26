@@ -139,12 +139,12 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 **C1 — Data foundation [D]** · milestone: open CRM and see all of Sao Việt · design §7.1
 | ID | Layer | Size | Status |
 |---|---|---|---|
-| C1.1 | Areas → branches on CRM Territory | S | 📝 |
-| C1.2 | Course groups → courses on CRM Product (custom fields) | M | 📝 |
-| C1.3 | Consultants: branch, specialties, level, B2B flag | M | 📝 |
-| C1.4 | Course schedules + promotions | M | 📝 |
-| C1.5 | Bot data DocTypes: `Bot Slot`, `Bot Skill` (+ children), `Lead Engine Settings` brand/voice (D-035, D-037, D-064) | M | 📝 |
-| C1.6 | Sao Việt demo dataset + idempotent loader + Chatwoot agents/teams | M | 📝 |
+| C1.1 | Areas → branches on CRM Territory | S | ✅ |
+| C1.2 | Course groups → courses on CRM Product (custom fields) | M | ✅ |
+| C1.3 | Consultants: branch, specialties, level, B2B flag | M | ✅ |
+| C1.4 | Course schedules + promotions | M | ✅ |
+| C1.5 | Bot data DocTypes: `Bot Slot`, `Bot Skill` (+ children), `Lead Engine Settings` brand/voice (D-035, D-037, D-064) | M | ✅ |
+| C1.6 | Sao Việt demo dataset + idempotent loader + Chatwoot agents/teams | M | ✅ |
 
 **C2 — Conversation engine, no Jev yet** · milestone: a Messenger customer is fully served with buttons only, and every step is visible in the Playground · design §7.2
 | C2.1 | `Bot Conversation` + async pipeline (enqueue with dedup, per-conversation lock) + event hooks (D-024, D-025, D-036) | M | 📝 |

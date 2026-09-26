@@ -1,4 +1,4 @@
-# Current State — Code Map (as of 2026-09-26, commit 615cc82)
+# Current State — Code Map (as of 2026-09-26, C1 done)
 
 What exists today, where it lives, and which layer changes it. Line numbers drift; re-check with
 `grep -n` before relying on one.
@@ -27,8 +27,17 @@ Site config keys present on `crm.localhost`: `chatwoot_api_token`, `chatwoot_api
 | `intelligence.py:74` `ask_jev` | One System One call (`/v1/systemone`), typed questions | Reused |
 | `followup.py:39` `plan_followups` | Daily 08:00 (`hooks.py` cron): Jev picks follow-up for stale open leads → CRM Task | C6.4 |
 | `dedupe.py`, `data_quality.py` | Email/phone normalisation and matching; data-quality label | Reused; C7.2 |
-| `chatwoot_client.py` | Chatwoot REST v1 wrapper | Reused/extended |
-| `setup.py` | Custom fields on CRM Lead via `after_install` + patches (`patches.txt`) | Extended by C1.1–C1.5 |
+| `chatwoot_client.py` | Chatwoot REST v1 wrapper; C1 added inbox/agent/team methods | Reused/extended |
+| `setup.py` | Custom fields on CRM Lead via `after_install` + patches (`patches.txt`); catalog custom fields on CRM Territory/CRM Product in `CATALOG_FIELDS`, applied idempotently by `create_catalog_fields()` on install and every migrate (`after_migrate` hook) | Add new catalog fields to `CATALOG_FIELDS` |
+| `catalog_rules.py` | Pure validation rules + Select option constants (`SLOT_TYPES`, `ACTION_TYPES`, …) used by DocType controllers | C2 registries must use the same constants |
+| `mmm_custom/doctype/` | C1 DocTypes: Course Group, Consultant, Course Schedule, Course Promotion, Bot Slot, Bot Skill, Lead Engine Settings; child tables Course Link, Course Group Link, Territory Link, Bot Slot Option, Bot Slot Link, Bot Skill Template, Bot Skill Follow Up | C2–C3 read them |
+| `demo/loader.py`, `demo/saoviet/*.json` | Idempotent Sao Việt demo loader (`bench execute mmm_custom.demo.loader.load`, optional `anchor`); `purge_demo()` | — |
+| `demo/chatwoot_seed.py` | Creates demo agents, 15 teams (13 branches + B2B + Tổng đài), inbox membership; writes `Consultant.chatwoot_agent_id` | Supersedes `scripts/seed-branch-agents.py` |
+
+## Live demo data (crm.localhost, loaded 2026-09-26, anchor 2026-09-28)
+
+18 territories (root + 4 areas + 13 branches), 8 course groups, 46 courses, 44 users/consultants, 1,070 course
+schedules, 10 promotions, 7 bot slots, 30 bot skills, Lead Engine Settings; Chatwoot: 44 agents, 15 teams.
 
 ## CRM Lead custom fields (from `setup.py`)
 
