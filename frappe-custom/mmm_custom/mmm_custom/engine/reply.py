@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass, field
 
+from mmm_custom.engine.slot_types import REGISTRY
+
 MAX_MESSAGE = 2000  # Messenger text limit
 MAX_BUTTONS = 13    # Messenger quick replies per message
 MAX_TITLE = 20      # Messenger quick-reply title
@@ -69,6 +71,9 @@ def compose(decision, state, catalog, render):
     if decision.fallback and settings["fallback_template"]:
         paragraphs.append(render(settings["fallback_template"], ctx))
     if decision.ask:
-        paragraphs.append(render(catalog.slot(decision.ask).ask_template, ctx))
+        slot = catalog.slot(decision.ask)
+        paragraphs.append(render(slot.ask_template, ctx))
+        if slot.type in REGISTRY:
+            add_buttons(reply, REGISTRY[slot.type].buttons(slot, decision.slots, catalog))
     reply.messages = split_messages(paragraphs)
     return reply

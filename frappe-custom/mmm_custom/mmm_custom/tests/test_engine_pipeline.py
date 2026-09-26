@@ -51,7 +51,7 @@ class TestRunTurn(unittest.TestCase):
     def setUp(self):
         self.repo, self.fx = FakeRepo(CAT), RecordingEffects()
 
-    def turn(self, text="xin chào", message_id=5):
+    def turn(self, text="alo", message_id=5):
         return run_turn(parse_event(incoming(text, message_id)), self.repo, self.fx, render)
 
     def test_first_message_greets_asks_and_saves_state(self):
