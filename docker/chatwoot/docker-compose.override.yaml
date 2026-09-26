@@ -8,8 +8,14 @@ x-build: &build
 
 services:
   base: *build
-  rails: *build
-  sidekiq: *build
+  rails:
+    <<: *build
+    environment:
+      - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true
+  sidekiq:
+    <<: *build
+    environment:
+      - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true
   postgres:
     image: pgvector/pgvector@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b  # PostgreSQL 16.15, pgvector 0.8.6
     ports: !override
@@ -19,4 +25,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
   redis:
-    image: redis@sha256:ba6e394f6acc2a695ef1b6944f161b9ca813711739be68319fa0db3470673f1d  # Redis 8.10.2
+    image: redis:7.2.4-alpine
+    ports: !override
+      - '127.0.0.1:16379:6379'

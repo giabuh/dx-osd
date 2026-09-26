@@ -41,7 +41,7 @@ sed -i -e '$a\' sites/apps.txt && echo mmm_custom >> sites/apps.txt
 bench new-site crm.localhost \
     --force \
     --mariadb-root-password 123 \
-    --admin-password admin \
+    --admin-password admin123 \
     --no-mariadb-socket
 
 bench --site crm.localhost install-app crm

@@ -458,6 +458,12 @@ class CRMLead(Document):
 				"width": "10rem",
 			},
 			{
+				"label": "Data Quality",
+				"type": "Select",
+				"key": "data_quality",
+				"width": "9rem",
+			},
+			{
 				"label": "Last Modified",
 				"type": "Datetime",
 				"key": "modified",
@@ -471,6 +477,7 @@ class CRMLead(Document):
 			"status",
 			"email",
 			"mobile_no",
+			"data_quality",
 			"lead_owner",
 			"first_name",
 			"sla_status",

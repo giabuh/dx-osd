@@ -1,15 +1,15 @@
 version: "3.7"
 services:
-  # Upstream uses floating tags; pinned to the digests verified with this repo.
+  # Upstream uses floating tags; pinned to the digests verified with this repo (same as docker-compose.yml).
   mariadb:
     image: mariadb@sha256:456709ab146585d6189da05669b84384518baecd83670c9e5221f8c20a47cf1e  # MariaDB 10.8.8
-  redis:
-    image: redis@sha256:ba6e394f6acc2a695ef1b6944f161b9ca813711739be68319fa0db3470673f1d  # Redis 8.10.2
   frappe:
     image: frappe/bench@sha256:7cf2354c5024d8362c507619566fec700740e31bcd71a2e745e3ec9a3a778a2a  # bench 5.31.0, Python 3.14, Node 24
     ports: !override
       - "127.0.0.1:8000:8000"
       - "127.0.0.1:9000:9000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     dns:
       - 8.8.8.8
     command: >
@@ -19,6 +19,8 @@ services:
       - frappe-bench-data:/home/frappe
       - ../../frappe-custom/mmm_custom:/home/frappe/mmm_custom
       - ..:/home/frappe/crm
+  redis:
+    image: redis:7.2.4-alpine
 
 volumes:
   frappe-bench-data:

@@ -3,3 +3,6 @@ scripts/seed-shared-accounts/credentials.local.json
 __pycache__/
 *.pyc
 .claude/settings.local.json
+cloudflared.exe
+cloudflared.log
+*.exe

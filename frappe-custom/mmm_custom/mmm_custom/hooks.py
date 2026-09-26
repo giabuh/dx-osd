@@ -84,6 +84,14 @@ app_license = "mit"
 
 after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
 
+# [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
+# It does nothing unless the site config has typesafe_api_key.
+scheduler_events = {
+	"cron": {
+		"0 8 * * *": ["mmm_custom.followup.run_daily"],
+	},
+}
+
 # Uninstallation
 # ------------
 

@@ -481,6 +481,17 @@ function parseRows(rows, columns = []) {
           value: value,
           color: color,
         }
+      } else if (row == 'data_quality') {
+        let value = lead.data_quality || ''
+        let color = 'gray'
+        if (value === 'Đầy đủ') color = 'green'
+        else if (value === 'Thiếu SĐT/Email') color = 'orange'
+        else if (value === 'Nghi trùng') color = 'red'
+        _rows[row] = {
+          label: value,
+          value: value,
+          color: color,
+        }
       } else if (row == 'lead_owner') {
         _rows[row] = {
           label: lead.lead_owner && getUser(lead.lead_owner).full_name,

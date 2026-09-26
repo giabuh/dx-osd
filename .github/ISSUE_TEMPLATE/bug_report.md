@@ -4,7 +4,7 @@ about: Something in DX-OSD does not work as expected
 labels: bug
 ---
 
-**Stack involved:** Chatwoot / Frappe CRM / Activepieces / Docker / other
+**Stack involved:** Chatwoot / Frappe CRM / `mmm_custom` (webhook, bot, AI agents) / Docker / other
 
 **Steps to reproduce**
 1.

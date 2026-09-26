@@ -1,6 +1,6 @@
 # Vendored upstreams
 
-`chatwoot/` and `crm/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote — this file is the record of where each copy came from, what we changed inside it, and how to re-sync.
+`chatwoot/`, `crm/`, and `messenger-platform-samples/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote — this file is the record of where each copy came from, what we changed inside it, and how to re-sync.
 
 ## Baselines
 
@@ -8,6 +8,7 @@
 |---|---|---|---|
 | `chatwoot/` | https://github.com/chatwoot/chatwoot | `4.18.0` (`chatwoot/VERSION`) | 2026-09-22 |
 | `crm/` | https://github.com/frappe/crm | tag `v1.84.0` (`crm/crm/__init__.py`) | 2026-09-23 (was `main`/`2.0.0-dev` on 2026-09-22 — needs unreleased Frappe `develop`, so replaced by the stable tag) |
+| `messenger-platform-samples/` | https://github.com/fbsamples/messenger-platform-samples | default branch | 2026-09-22 |
 
 Update this table on every re-sync.
 
@@ -22,7 +23,7 @@ Both stacks run the vendored source, so an edit in `chatwoot/` or `crm/` takes e
 
 ## Local edits inside vendored directories
 
-Every change we make inside a vendored directory is listed here, so it can be re-applied after a re-sync. Customizations that live outside vendored directories (`frappe-custom/mmm_custom/`, `activepieces/`, `docker/`, `scripts/`) do not belong here.
+Every change we make inside a vendored directory is listed here, so it can be re-applied after a re-sync. Customizations that live outside vendored directories (`frappe-custom/mmm_custom/`, `n8n/`, `docker/`, `scripts/`) do not belong here.
 
 | File | Change | Why |
 |---|---|---|
@@ -30,9 +31,15 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/docker/init.sh` | Symlink `mmm_custom` into `apps/`, `pip install -e` it, add it to `sites/apps.txt`, `install-app mmm_custom` | Fresh bench comes up with our custom app installed, no manual steps |
 | `crm/docker/init.sh` | Pin Frappe with `--frappe-branch v15.121.1`; replace `bench get-app crm --branch main` with symlinking the bind-mounted vendored `crm/` (plus `/home/frappe/frappe` → bench frappe, for the frontend's `link:../../frappe/ui`), `pip install -e`, `yarn install`, `bench build --app crm` | Run the vendored CRM source at a pinned framework version |
 | `crm/docker/docker-compose.override.yml` | Bind-mount `..` (vendored `crm/`) at `/home/frappe/crm` | Same |
-| `crm/docker/docker-compose.override.yml` | Pin `mariadb`, `redis`, `frappe/bench` images by digest | Upstream uses floating tags (`latest`, `alpine`); reproducible build from source |
-| `chatwoot/enterprise/`, `chatwoot/spec/enterprise/` | Deleted (Community Edition, same as upstream's CE build) | Chatwoot Enterprise License is proprietary; competition requires OSI licenses. `ChatwootApp.enterprise?` is false when the directory is absent |
+| `crm/docker/init.sh` | `--admin-password admin123` instead of upstream's `admin` | Matches the documented dev login and `scripts/seed-branch-agents.py` on a fresh bench |
+| `crm/docker/docker-compose.override.yml` | Pin `mariadb`, `frappe/bench` by digest (`redis` by tag) | Upstream uses floating tags (`latest`, `10.8`); reproducible build from source |
 | `chatwoot/docker/Dockerfile` | `git rev-parse HEAD > /app/.git_sha` falls back to `vendored` | Vendored copy has no `.git`; upstream line fails the build |
+| `chatwoot/enterprise/` | Deleted (Community Edition) | Chatwoot Enterprise License is proprietary; competition requires OSI licenses |
+| `chatwoot/spec/enterprise/` | Deleted | Specs for the removed proprietary `enterprise/` code (upstream's CE build drops both) |
+| chatwoot/config/application.rb | Guard enterprise/ eager load | Boots cleanly as pure Community Edition (MIT) when enterprise/ is removed |
+| `crm/crm/fcrm/doctype/crm_lead/crm_lead.py` | Add `data_quality` column and row to `default_list_data()` | Shows Data Quality badge in the default Lead list view |
+| `crm/frontend/src/pages/Leads.vue` | Add `data_quality` case in `parseRows()` with green/orange/red color mapping | Colors the Data Quality badge based on value |
+| `crm/frontend/src/components/ListViews/LeadsListView.vue` | Add `<Badge>` rendering block for `data_quality` column | Renders a colored badge (like SLA Status) instead of plain text |
 
 ## Re-sync procedure
 
@@ -41,5 +48,5 @@ Every change we make inside a vendored directory is listed here, so it can be re
 2. Replace the vendored directory's contents with the new version, excluding `.git/`, `.github/`, and for Chatwoot `enterprise/` + `spec/enterprise/` (deliberately not vendored). Keep the upstream `LICENSE`.
 3. Re-apply every row of **Local edits** above; drop any row upstream has made unnecessary.
 4. Review `git diff --stat` for the directory — anything changed that is neither upstream nor in the edits table is a mistake.
-5. Bring the affected stack up per `CLAUDE.md` and re-run the checks for it: HTTP status on its port, `node --test activepieces/logic/*.test.mjs`, and the Messenger → CRM flow from the plan's Task 9/10.
+5. Bring the affected stack up per `AGENTS.md` and re-run the checks for it: HTTP status on its port, `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests`, and `python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"` (see AGENTS.md for reading the secret).
 6. Update the **Baselines** table and commit the re-sync as one commit (`chore(vendor): sync <name> to <version>`).

@@ -9,13 +9,22 @@ class Webhooks::InstagramController < ActionController::API
       entry_params = params.to_unsafe_hash[:entry]
 
       if contains_echo_event?(entry_params)
-        # Add delay to prevent race condition where echo arrives before send message API completes
-        # This avoids duplicate messages when echo comes early during API processing
         ::Webhooks::InstagramEventsJob.set(wait: 2.seconds).perform_later(entry_params)
       else
         ::Webhooks::InstagramEventsJob.perform_later(entry_params)
       end
 
+      render json: :ok
+    elsif params['object'].casecmp('page').zero?
+      # Facebook Messenger events routed through the same webhook endpoint
+      entries = params.to_unsafe_hash[:entry]
+      Rails.logger.info("Facebook Page webhook: dispatching #{entries&.size || 0} entries to FacebookEventsJob")
+      Array(entries).each do |entry|
+        Array(entry[:messaging]).each do |messaging|
+          # FacebookEventsJob -> MessageParser expects a JSON string with 'messaging' key
+          ::Webhooks::FacebookEventsJob.perform_later({ messaging: messaging }.to_json)
+        end
+      end
       render json: :ok
     else
       Rails.logger.warn("Message is not received from the instagram webhook event: #{params['object']}")
