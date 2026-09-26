@@ -27,7 +27,7 @@ During the development and architectural refinement of DX-OSD, several candidate
 |---|---|---|
 | **n8n** | Workflow automation pipe | **Decommissioned & Purged.** n8n is distributed under the *Sustainable Use License* (Fair-code), which is not OSI-approved and restricts commercial and hosting rights. Replaced entirely by the native, zero-overhead Frappe custom app `frappe-custom/mmm_custom/` executing directly in Python within the Frappe bench. |
 | **Messenger Platform Samples** | Meta reference code | **Purged.** Vendored reference samples from Meta (`messenger-platform-samples/`) contained proprietary and non-FOSS licensing constraints. Cleanly excised; Chatwoot handles all Messenger and Instagram Graph API interactions natively. |
-| **Activepieces** | Workflow automation | **Excluded.** Evaluated as an alternative to n8n, but discarded in favor of zero-dependency, in-bench Python execution in `mmm_custom`, eliminating external node processes and network hops. |
+| **Activepieces** | Workflow automation | **Not the default.** Kept in `activepieces/` + `docker/activepieces/` as a working alternative to n8n (same sync + [I] agents as flows), but the default pipeline is zero-dependency, in-bench Python in `mmm_custom`; do not run both at once. |
 | **Airbyte** | Data integration / ETL | **Excluded.** Heavyweight overhead; marketing and lead attribution data is captured directly upon webhook ingress and stored in Frappe CRM. |
 | **Meta Business SDK** | Direct Meta API client | **Excluded.** Redundant because Frappe CRM natively handles Facebook Lead Ads webhooks/polling, and Chatwoot natively handles Messenger Graph API protocols. |
 

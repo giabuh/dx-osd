@@ -1,0 +1,119 @@
+{
+  "name": "Lead intelligence",
+  "type": "SHARED",
+  "summary": "",
+  "description": "",
+  "tags": [],
+  "blogUrl": "",
+  "metadata": {
+    "externalId": "XZX5rWns8V54PDBWY1B6z"
+  },
+  "author": "Admin Local",
+  "categories": [],
+  "pieces": [
+    "@activepieces/piece-webhook"
+  ],
+  "flows": [
+    {
+      "displayName": "Lead intelligence",
+      "trigger": {
+        "name": "trigger",
+        "valid": true,
+        "displayName": "Chatwoot message webhook",
+        "nextAction": {
+          "name": "step_1",
+          "type": "CODE",
+          "valid": true,
+          "settings": {
+            "input": {
+              "headers": "{{trigger['output']['headers']}}",
+              "rawBody": "{{trigger['output']['rawBody']}}",
+              "jevApiKey": "TYPESAFE_API_KEY",
+              "crmBaseUrl": "https://crm.example.com",
+              "crmApiToken": "CRM_API_KEY:CRM_API_SECRET",
+              "replyTemplates": "{\n \"send_price\": \"Dạ em gửi anh/chị bảng giá mới nhất ạ: [link/ảnh bảng giá]. Anh/chị quan tâm mẫu nào để em tư vấn kỹ hơn nhé!\",\n \"ask_phone\": \"Dạ để tư vấn nhanh và chính xác hơn, anh/chị cho em xin số điện thoại, bên em gọi lại ngay ạ.\",\n \"confirm_order\": \"Dạ em xác nhận đơn của anh/chị. Anh/chị cho em xin tên, số điện thoại và địa chỉ nhận hàng ạ.\",\n \"book_consult\": \"Dạ anh/chị muốn bên em tư vấn trực tiếp vào khung giờ nào ạ? Em sắp xếp nhân viên liên hệ đúng giờ.\",\n \"order_support\": \"Dạ anh/chị cho em xin mã đơn hàng hoặc số điện thoại đặt hàng để em kiểm tra ngay ạ.\",\n \"apologize_complaint\": \"Dạ em rất xin lỗi vì trải nghiệm chưa tốt. Anh/chị mô tả giúp em vấn đề, bên em sẽ xử lý và phản hồi trong hôm nay ạ.\",\n \"greeting\": \"Dạ em chào anh/chị! Anh/chị đang quan tâm sản phẩm/dịch vụ nào để em hỗ trợ ạ?\",\n \"thanks\": \"Dạ em cảm ơn anh/chị đã tin tưởng. Cần hỗ trợ gì thêm anh/chị cứ nhắn em nhé!\"\n}",
+              "chatwootBaseUrl": "https://chat.example.com",
+              "chatwootApiToken": "CHATWOOT_API_ACCESS_TOKEN",
+              "chatwootAccountId": "1",
+              "confidenceThreshold": "0.7",
+              "chatwootSigningSecret": "CHATWOOT_WEBHOOK_SIGNING_SECRET"
+            },
+            "sampleData": {},
+            "sourceCode": {
+              "code": "// Lead intelligence agent (DX-OS [I] space). Source of the \"Analyze with Jev\" Code step in\n// activepieces/flows/lead-intelligence.json (Activepieces Code steps can't import local files).\n// On every incoming Chatwoot message it asks TypeSafe Jev for structured decisions about the\n// conversation and applies only the ones Jev is confident about.\nimport crypto from 'crypto'; // bare specifier: the Activepieces sandbox rejects 'node:' imports\n\n// --- Copied verbatim from sync.mjs; intelligence.test.mjs fails if the copies drift. ---\n\nexport function normalizePhone(raw) {\n\tconst digits = raw.replace(/[\\s-]/g, '');\n\tif (digits.startsWith('+84')) return digits;\n\tif (digits.startsWith('0')) return '+84' + digits.slice(1);\n\treturn digits;\n}\n\nexport function buildLeadSearchFilters({ email, phone }) {\n\tconst conditions = [];\n\tif (email) conditions.push(['CRM Lead', 'email', '=', email]);\n\tif (phone) conditions.push(['CRM Lead', 'mobile_no', '=', normalizePhone(phone)]);\n\t// Caller must send this as or_filters (not filters) -- Frappe ANDs a plain filters list,\n\t// and an unfiltered blank-vs-blank match would attach a contact to an unrelated Lead.\n\treturn conditions.length ? conditions : null;\n}\n\n// Chatwoot signs \"<timestamp>.<raw body>\" with HMAC-SHA256 and sends \"sha256=<hex>\".\nexport function verifyChatwootSignature({ secret, timestamp, signature, rawBody, nowSeconds }) {\n\tconst expected = Buffer.from('sha256=' + crypto.createHmac('sha256', secret).update(timestamp + '.' + rawBody).digest('hex'));\n\tconst received = Buffer.from(signature || '');\n\tif (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {\n\t\tthrow new Error('Invalid Chatwoot webhook signature');\n\t}\n\tconst tsNum = parseInt(timestamp, 10);\n\tif (!tsNum || Math.abs(nowSeconds - tsNum) > 300) {\n\t\tthrow new Error('Chatwoot webhook timestamp missing or too old (possible replay)');\n\t}\n}\n\nasync function request(fetchFn, method, url, headers, body) {\n\tconst res = await fetchFn(url, {\n\t\tmethod,\n\t\theaders: { 'Content-Type': 'application/json', ...headers },\n\t\tbody: body === undefined ? undefined : JSON.stringify(body),\n\t});\n\tif (!res.ok) throw new Error(`${method} ${url} failed: ${res.status} ${await res.text()}`);\n\treturn res.json();\n}\n\n// --- Also copied verbatim into followup.mjs. ---\n\n// One TypeSafe System One call: every question is evaluated against the same state.\nexport async function askJev({ config, fetchFn, state, questions }) {\n\tconst res = await request(\n\t\tfetchFn,\n\t\t'POST',\n\t\t(config.jevBaseUrl || 'https://api.typesafe.ai') + '/v1/systemone',\n\t\t{ Authorization: `Bearer ${config.jevApiKey}` },\n\t\t{ model: config.jevModel || 'jev-latest', state, questions },\n\t);\n\treturn res.answers;\n}\n\n// --- Intelligence-specific. ---\n\n// Keys must match the ai_intent / ai_hotness Select options in frappe-custom/mmm_custom/mmm_custom/setup.py.\nexport const INTENTS = {\n\tpurchase: 'The customer wants to buy, order, or book something now',\n\tprice_inquiry: 'The customer asks about price, promotions, or availability before deciding',\n\tsupport: 'The customer already bought and needs help or information about an existing order',\n\tcomplaint: 'The customer is unhappy or complains about a product or service',\n\tspam: 'Spam, advertising, or a message that is not from a real prospective customer',\n\tother: 'Anything else, such as a greeting with no clear request',\n};\nexport const HOTNESS = ['cold', 'warm', 'hot'];\nconst HOTNESS_CRITERIA = [\n\t'Cold: no buying signal, just browsing or off-topic',\n\t'Warm: interested and asking questions, but not ready to buy yet',\n\t'Hot: clear intent to buy soon, asks how to order, or gives contact details to be called',\n];\n\nconst PHONE_RE = /(?:\\+84|0)(?:[\\s.-]?\\d){9}/g;\nconst EMAIL_RE = /[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+/g;\n\n// Regex finds candidates; Jev only decides which one (if any) is the customer's own.\nexport function findCandidates(texts) {\n\tconst all = texts.join('\\n');\n\tconst phones = [...new Set((all.match(PHONE_RE) || []).map((p) => normalizePhone(p.replace(/\\./g, ''))))];\n\tconst emails = [...new Set((all.match(EMAIL_RE) || []).map((e) => e.toLowerCase()))];\n\treturn { phones, emails };\n}\n\nexport function buildQuestions({ candidates, templates }) {\n\tconst questions = {\n\t\tintent: {\n\t\t\ttype: 'choice',\n\t\t\tinstructions: 'What does the customer want in this Vietnamese chat with a shop?',\n\t\t\tcriteria: INTENTS,\n\t\t},\n\t\thotness: {\n\t\t\ttype: 'score',\n\t\t\tinstructions: 'How close is the customer to buying, based on the whole chat?',\n\t\t\tcriteria: HOTNESS_CRITERIA,\n\t\t},\n\t};\n\tconst pick = (values, what) => ({\n\t\ttype: 'choice',\n\t\tinstructions: `Which of these ${what} did the customer give as their own contact? Answer \"none\" if it belongs to someone else or is not a contact.`,\n\t\tcriteria: { ...Object.fromEntries(values.map((v) => [v, null])), none: 'None of these is the customer’s own contact' },\n\t});\n\tif (candidates.phones.length) questions.phone = pick(candidates.phones, 'phone numbers');\n\tif (candidates.emails.length) questions.email = pick(candidates.emails, 'email addresses');\n\tif (Object.keys(templates).length) {\n\t\tquestions.reply = {\n\t\t\ttype: 'choice',\n\t\t\tinstructions: 'Which reply template best answers the customer’s latest message?',\n\t\t\tcriteria: { ...templates, none: 'No template fits the latest message' },\n\t\t};\n\t}\n\treturn questions;\n}\n\n// Pure decision step: turns Jev's answers into the changes to apply, gated on confidence.\nexport function decideActions({ answers, templates, threshold, lead }) {\n\tconst sure = (a) => a && (a.confidence ?? 0) >= threshold;\n\tconst plan = { leadUpdate: {}, labels: [], replyNote: null, skipped: [] };\n\n\tif (sure(answers.intent)) {\n\t\tplan.leadUpdate.ai_intent = answers.intent.choice;\n\t\tplan.labels.push('ai-' + answers.intent.choice);\n\t} else plan.skipped.push('intent');\n\n\tif (sure(answers.hotness)) {\n\t\tconst hotness = HOTNESS[Math.round(answers.hotness.score)];\n\t\tplan.leadUpdate.ai_hotness = hotness;\n\t\tif (hotness === 'hot') plan.labels.push('hot');\n\t} else plan.skipped.push('hotness');\n\n\tfor (const [key, field] of [['phone', 'mobile_no'], ['email', 'email']]) {\n\t\tconst a = answers[key];\n\t\t// Spam ads carry their own phone numbers; never copy those onto the Lead.\n\t\tif (!a || a.choice === 'none' || lead[field] || plan.leadUpdate.ai_intent === 'spam') continue;\n\t\tif (sure(a)) plan.leadUpdate[field] = a.choice;\n\t\telse plan.skipped.push(key);\n\t}\n\n\tconst reply = answers.reply;\n\tif (reply && reply.choice !== 'none' && plan.leadUpdate.ai_intent !== 'spam') {\n\t\tif (sure(reply)) plan.replyNote = `Gợi ý trả lời (AI, độ tin cậy ${reply.confidence.toFixed(2)}):\\n\\n${templates[reply.choice]}`;\n\t\telse plan.skipped.push('reply');\n\t}\n\treturn plan;\n}\n\nexport async function analyzeMessage({ event, config, fetchFn }) {\n\tif (event.event !== 'message_created') throw new Error(`Unsupported Chatwoot event: ${event.event}`);\n\tif (event.message_type !== 'incoming' || event.private) return { action: 'ignored' };\n\n\tconst chatwoot = (method, path, body) =>\n\t\trequest(fetchFn, method, `${config.chatwootBaseUrl}/api/v1/accounts/${config.chatwootAccountId}${path}`, { api_access_token: config.chatwootApiToken }, body);\n\tconst crmHeaders = { Authorization: `token ${config.crmApiToken}`, ...(config.crmHost && { Host: config.crmHost }) };\n\tconst crm = (method, path, body) => request(fetchFn, method, config.crmBaseUrl + path, crmHeaders, body);\n\n\tconst conversationId = event.conversation.id;\n\tconst convo = await chatwoot('GET', `/conversations/${conversationId}/messages`);\n\tconst leadId = convo.meta.contact.custom_attributes?.crm_lead_id;\n\t// The \"Messenger to CRM\" flow links the Lead on conversation_created, which races the first\n\t// message; throwing lets this step's retry-on-failure run it again once the link exists.\n\tif (!leadId) throw new Error('Contact not linked to a CRM Lead yet');\n\n\tconst chat = convo.payload\n\t\t.filter((m) => !m.private && (m.message_type === 0 || m.message_type === 1) && m.content)\n\t\t.slice(-20)\n\t\t.map((m) => ({ from: m.message_type === 0 ? 'customer' : 'shop', text: m.content }));\n\tconst templates = typeof config.replyTemplates === 'string' ? JSON.parse(config.replyTemplates) : config.replyTemplates || {};\n\tconst candidates = findCandidates(chat.filter((m) => m.from === 'customer').map((m) => m.text));\n\tconst lead = (await crm('GET', '/api/resource/CRM Lead/' + encodeURIComponent(leadId))).data;\n\n\tconst answers = await askJev({ config, fetchFn, state: { chat }, questions: buildQuestions({ candidates, templates }) });\n\tconst plan = decideActions({ answers, templates, threshold: Number(config.confidenceThreshold ?? 0.7), lead });\n\n\tconst applied = [];\n\tif (Object.keys(plan.leadUpdate).length) {\n\t\tawait crm('PUT', '/api/resource/CRM Lead/' + encodeURIComponent(leadId), plan.leadUpdate);\n\t\tapplied.push('lead_updated');\n\t\t// A newly found contact may belong to another Lead (e.g. from Lead Ads): flag it, never auto-merge.\n\t\tconst filters = buildLeadSearchFilters({ email: plan.leadUpdate.email, phone: plan.leadUpdate.mobile_no });\n\t\tif (filters) {\n\t\t\tconst others = (await crm('GET', '/api/resource/CRM Lead?or_filters=' + encodeURIComponent(JSON.stringify(filters)))).data\n\t\t\t\t.map((l) => l.name)\n\t\t\t\t.filter((name) => name !== leadId);\n\t\t\tif (others.length) {\n\t\t\t\tconst note = `AI: số điện thoại/email khách vừa cung cấp trùng với ${others.join(', ')} — có thể là cùng một khách, cần kiểm tra và gộp.`;\n\t\t\t\tawait crm('POST', '/api/resource/FCRM Note', { reference_doctype: 'CRM Lead', reference_docname: leadId, title: 'Possible duplicate', content: note });\n\t\t\t\tapplied.push('duplicate_flagged');\n\t\t\t}\n\t\t}\n\t}\n\tconst labels = [...new Set([...convo.meta.labels, ...plan.labels])];\n\tif (labels.length !== convo.meta.labels.length) {\n\t\tawait chatwoot('POST', `/conversations/${conversationId}/labels`, { labels }); // replaces the list, hence the union\n\t\tapplied.push('labels_added');\n\t}\n\tif (plan.replyNote) {\n\t\tawait chatwoot('POST', `/conversations/${conversationId}/messages`, { content: plan.replyNote, message_type: 'outgoing', private: true });\n\t\tapplied.push('reply_suggested');\n\t}\n\treturn { action: 'analyzed', leadId, decisions: plan.leadUpdate, skipped: plan.skipped, applied };\n}\n\n// Activepieces Code step entry point. inputs.rawBody / inputs.headers come from the Catch Webhook trigger.\nexport const code = async (inputs) => {\n\tverifyChatwootSignature({\n\t\tsecret: inputs.chatwootSigningSecret,\n\t\ttimestamp: inputs.headers['x-chatwoot-timestamp'],\n\t\tsignature: inputs.headers['x-chatwoot-signature'],\n\t\trawBody: inputs.rawBody,\n\t\tnowSeconds: Date.now() / 1000,\n\t});\n\treturn analyzeMessage({ event: JSON.parse(inputs.rawBody), config: inputs, fetchFn: fetch });\n};\n",
+              "packageJson": "{}"
+            },
+            "propertySettings": {
+              "headers": {
+                "type": "MANUAL"
+              },
+              "rawBody": {
+                "type": "MANUAL"
+              },
+              "jevApiKey": {
+                "type": "MANUAL"
+              },
+              "crmBaseUrl": {
+                "type": "MANUAL"
+              },
+              "crmApiToken": {
+                "type": "MANUAL"
+              },
+              "replyTemplates": {
+                "type": "MANUAL"
+              },
+              "chatwootBaseUrl": {
+                "type": "MANUAL"
+              },
+              "chatwootApiToken": {
+                "type": "MANUAL"
+              },
+              "chatwootAccountId": {
+                "type": "MANUAL"
+              },
+              "confidenceThreshold": {
+                "type": "MANUAL"
+              },
+              "chatwootSigningSecret": {
+                "type": "MANUAL"
+              }
+            },
+            "errorHandlingOptions": {
+              "retryOnFailure": {
+                "value": true
+              },
+              "continueOnFailure": {
+                "value": false
+              }
+            }
+          },
+          "displayName": "Analyze with Jev",
+          "lastUpdatedDate": "2026-09-25T03:30:31.647Z"
+        },
+        "lastUpdatedDate": "2026-09-25T03:30:31.647Z",
+        "type": "PIECE_TRIGGER",
+        "settings": {
+          "propertySettings": {
+            "authType": {
+              "type": "MANUAL"
+            },
+            "authFields": {
+              "type": "MANUAL"
+            }
+          },
+          "pieceName": "@activepieces/piece-webhook",
+          "pieceVersion": "0.1.42",
+          "triggerName": "catch_webhook",
+          "input": {
+            "authType": "none",
+            "authFields": {}
+          }
+        }
+      },
+      "valid": true,
+      "schemaVersion": "27",
+      "notes": []
+    }
+  ],
+  "status": "PUBLISHED"
+}

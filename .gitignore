@@ -1,5 +1,4 @@
 docker/**/.env
-n8n/.n8n/
 scripts/seed-shared-accounts/credentials.local.json
 __pycache__/
 *.pyc

@@ -23,6 +23,7 @@ Images are pinned by digest (or exact tag) in `docker-compose.yml` and the per-s
 | [MariaDB](https://mariadb.org/) | CRM database | `10.8.8` | GPL-2.0 |
 | [Redis](https://redis.io/) | Chatwoot and CRM queues/cache | `7.2.4-alpine` | BSD-3-Clause (last release before the 7.4 SSPL/RSAL change) |
 | [PostgreSQL](https://www.postgresql.org/) + [pgvector](https://github.com/pgvector/pgvector) | Chatwoot database | `16.15` / `0.8.6` | PostgreSQL License |
+| [Activepieces](https://github.com/activepieces/activepieces) Community Edition | Optional alternative flow (`docker/activepieces/`), not deployed by default | `0.92.0` | MIT (`AP_EDITION=ce`; its `packages/ee/` is not used and not in this repository) |
 | [Node.js](https://nodejs.org/), [Ruby](https://www.ruby-lang.org/) base images | Chatwoot build | `24-alpine`, `3.4.4-alpine3.21` | MIT, BSD-2-Clause |
 | [Caddy](https://github.com/caddyserver/caddy) | Reverse proxy | `2.10.2-alpine` | Apache-2.0 |
 

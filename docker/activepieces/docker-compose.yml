@@ -1,0 +1,54 @@
+# Activepieces Community Edition (MIT). Based on upstream's docker-compose.yml at 0.92.0.
+services:
+  app:
+    image: ghcr.io/activepieces/activepieces:0.92.0
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "127.0.0.1:8080:80"
+    env_file: .env
+    environment:
+      - AP_CONTAINER_TYPE=APP
+      # Also handed to the worker, which downloads piece bundles from it -- must be reachable from both.
+      # Behind Caddy in production, change it (here and on the worker) to the public URL.
+      - AP_FRONTEND_URL=http://127.0.0.1:8080
+    volumes:
+      - ap-cache:/usr/src/app/cache
+
+  worker:
+    image: ghcr.io/activepieces/activepieces:0.92.0
+    restart: unless-stopped
+    depends_on:
+      - app
+    env_file: .env
+    environment:
+      - AP_CONTAINER_TYPE=WORKER
+      - AP_FRONTEND_URL=http://127.0.0.1:8080
+    # Host network: the worker reaches the app at AP_FRONTEND_URL, and flows reach Chatwoot (:3000)
+    # and CRM (:8000), which all bind 127.0.0.1 only.
+    network_mode: host
+    volumes:
+      - ap-cache:/usr/src/app/cache
+
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg14
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=activepieces
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${AP_POSTGRES_PASSWORD}
+    volumes:
+      - ap-postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.0.7
+    restart: unless-stopped
+    volumes:
+      - ap-redis-data:/data
+
+volumes:
+  ap-cache:
+  ap-postgres-data:
+  ap-redis-data:
