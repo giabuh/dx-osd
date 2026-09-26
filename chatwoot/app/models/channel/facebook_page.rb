@@ -30,6 +30,8 @@ class Channel::FacebookPage < ApplicationRecord
   self.table_name = 'channel_facebook_pages'
 
   validates :page_id, uniqueness: { scope: :account_id }
+  # Meta's current access tokens exceed the generic 255-char string guard in ApplicationRecord.
+  validates :page_access_token, :user_access_token, length: { maximum: 4096 }
 
   after_create_commit :subscribe
   before_destroy :unsubscribe
