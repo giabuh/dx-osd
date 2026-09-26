@@ -25,7 +25,8 @@ except ImportError:
         return decorator
     frappe.whitelist = _whitelist
     class Document:
-        pass
+        def is_new(self):
+            return getattr(self, "name", None) is None
     def now_datetime():
         from datetime import datetime
         return datetime.now()
@@ -109,7 +110,7 @@ class FacebookPost(Document):
                     data = resp.json()
                     content = data["candidates"][0]["content"]["parts"][0]["text"].strip()
             except Exception as e:
-                frappe.log_error(f"Gemini API error: {e}", "FacebookPost AI Content")
+                frappe.log_error(title="Gemini API Error", message=str(e)[:500])
 
         if not content:
             nine_key = os.getenv("NINE_ROUTER_API_KEY") or frappe.conf.get("nine_router_api_key")
@@ -126,11 +127,15 @@ class FacebookPost(Document):
                     if resp.status_code == 200:
                         content = resp.json()["choices"][0]["message"]["content"].strip()
                 except Exception as e:
-                    frappe.log_error(f"9Router error: {e}", "FacebookPost AI Content")
+                    frappe.log_error(title="9Router Error", message=str(e)[:500])
 
         if content:
             self.content = content.replace("**", "").replace("##", "")
-            self.save()
+            if not self.is_new():
+                try:
+                    self.save()
+                except Exception:
+                    pass
             return {"status": "success", "content": self.content}
         else:
             frappe.throw(_("Không thể tạo nội dung qua AI. Vui lòng kiểm tra API Key."))
@@ -197,6 +202,9 @@ class FacebookPost(Document):
         buf = io.BytesIO()
         img.save(buf, format="PNG", quality=95)
         buf.seek(0)
+
+        if self.is_new():
+            self.insert(ignore_permissions=True)
 
         file_name = f"banner_{meta['key']}_{self.name}.png"
         file_doc = save_file(file_name, buf.getvalue(), self.doctype, self.name, is_private=0)
