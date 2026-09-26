@@ -4,8 +4,8 @@ Start here if you are an AI agent (or a new human) picking up this work. It tell
 in what order, and how to turn the spec into a correct plan without loading everything.
 
 **The spec:** [`../2026-09-26-edu-lead-engine-design.md`](../2026-09-26-edu-lead-engine-design.md).
-This folder holds its companions. **Current position:** C1 designed; C2 + C3 parts A–B approved,
-part C (skills, replies, advisor, log, handoff, playground, cost guard) is the next design step.
+This folder holds its companions. **Current position:** C1, C2 and C3 designed (spec §7.1–§7.2);
+waiting for the user's review of the written spec, then the C1 implementation plan. C4+ not designed.
 Layer IDs are `Cn.m` (D-047); old numbers 1–39 in early decisions map via spec §6.3.
 
 ## Read order (stop as soon as you have what you need)
