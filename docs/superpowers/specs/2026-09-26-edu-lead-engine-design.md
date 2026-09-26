@@ -147,13 +147,13 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C1.6 | Sao Việt demo dataset + idempotent loader + Chatwoot agents/teams | M | ✅ |
 
 **C2 — Conversation engine, no Jev yet** · milestone: a Messenger customer is fully served with buttons only, and every step is visible in the Playground · design §7.2
-| C2.1 | `Bot Conversation` + async pipeline (enqueue with dedup, per-conversation lock) + event hooks (D-024, D-025, D-036) | M | 📝 |
-| C2.2 | Slot behaviour: slot-type registry + diacritic-folded keyword matcher + tiered buttons + exact quick-reply mapping (D-023, D-034) | M | 📝 |
-| C2.3 | Skill executor: action registry + template rendering with brand context (D-035, D-037) | M | 📝 |
-| C2.4 | Lead writes (`territory`, `products`, new slot fields) + returning-customer prefill (D-014, D-022) | M | 📝 |
-| C2.5 | AI Decision Log + learning-signal capture (D-043) | M | 📝 |
-| C2.6 | Handoff + summary note + Chatwoot labels/conversation attributes + silence rules (D-021, D-026, D-027) | M | 📝 |
-| C2.7 | Playground: simulate a message, replay a logged decision (D-038) | M | 📝 |
+| C2.1 | `Bot Conversation` + async pipeline (enqueue with dedup, per-conversation lock) + event hooks (D-024, D-025, D-036) | M | ✅ |
+| C2.2 | Slot behaviour: slot-type registry + diacritic-folded keyword matcher + tiered buttons + exact quick-reply mapping (D-023, D-034) | M | ✅ |
+| C2.3 | Skill executor: action registry + template rendering with brand context (D-035, D-037) | M | ✅ |
+| C2.4 | Lead writes (`territory`, `products`, new slot fields) + returning-customer prefill (D-014, D-022) | M | ✅ |
+| C2.5 | AI Decision Log + learning-signal capture (D-043) | M | ✅ |
+| C2.6 | Handoff + summary note + Chatwoot labels/conversation attributes + silence rules (D-021, D-026, D-027) | M | ✅ |
+| C2.7 | Playground: simulate a message, replay a logged decision (D-038) | M | ✅ |
 
 **C3 — Jev understanding [I]** · milestone: free-text messages are understood, answered and advised correctly · design §7.2
 | C3.1 | Labelled Vietnamese utterance set (~100) + evaluation tool — the gate for going live (D-033) | M | 📝 |

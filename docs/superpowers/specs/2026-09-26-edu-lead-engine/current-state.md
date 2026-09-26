@@ -1,4 +1,4 @@
-# Current State — Code Map (as of 2026-09-26, C1 done)
+# Current State — Code Map (as of 2026-09-26, C1 + C2 done)
 
 What exists today, where it lives, and which layer changes it. Line numbers drift; re-check with
 `grep -n` before relying on one.
@@ -9,20 +9,25 @@ Site config keys present on `crm.localhost`: `chatwoot_api_token`, `chatwoot_api
 `chatwoot_webhook_secret` (sync pipeline configured).
 
 **Absent:** `chatwoot_bot_webhook_secret`, `chatwoot_bot_api_token`, `typesafe_api_key`.
-→ The agent bot and the [I] AI agents are **off**; only Chatwoot → CRM lead sync runs.
+→ The agent bot (the C2 engine) and the [I] AI agents are **off**; only Chatwoot → CRM lead sync runs. Turning the bot on
+(`scripts/setup-agent-bot.py`) makes it answer real Messenger customers — a user decision. Chatwoot already has the 7 `bot_*`
+conversation attributes (`engine.chatwoot_setup`).
 
 ## Modules in `frappe-custom/mmm_custom/mmm_custom/`
 
 | File | What it does today | Changed by |
 |---|---|---|
-| `api.py:77` `chatwoot_sync` | Chatwoot webhook → HMAC + anti-replay → 3-tier dedup → create/update CRM Lead, note log; forwards `message_created` to `intelligence.enqueue_analysis` | C2.4 (write `territory`/`products`), C3.2 |
-| `api.py:50` `detect_course_interest` | Keyword match for 3 hardcoded courses (Tiếng Anh, Bơi lội, Toán tư duy) | C2.2 / C3.2 (replaced by data-driven matching) |
-| `bot_engine.py:15` `COURSES`, `:21` `BRANCHES` | Hardcoded 3 courses, 3 branches (EduFlow demo) | C2.2 (read from CRM data) |
-| `bot_engine.py:191` `transition` | Pure state machine: greeting → await_course (multi-select) → await_branch → await_phone → completed | C2.1–C2.2 (slot-filling engine, `decide`) |
-| `bot_api.py:191` `agent_bot_webhook` | Chatwoot Agent Bot webhook; state kept in contact `custom_attributes` (`bot_state`, `bot_courses`, `bot_branch`) | C2.1–C2.6 |
-| `bot_api.py:134` `branch_owners` | Hardcoded branch → lead_owner email map | C4.1 (Consultant DocType) |
-| `bot_api.py:78` `_find_best_agent` | Filter Chatwoot agents by `custom_attributes.branch`, pick fewest open conversations | C4.1 (rule D) |
-| `bot_api.py:115` `_create_or_update_lead` | Writes `course_interest`, `branch`, `lead_owner`, `mobile_no` | C2.4 |
+| `api.py` `chatwoot_sync` | Chatwoot webhook → HMAC + anti-replay → 3-tier dedup → create/update CRM Lead, note log; courses detected from the catalog (`detect_courses`) → Lead `products` + `course_interest` summary; forwards `message_created` to `intelligence.enqueue_analysis` | C3.2 |
+| `bot_api.py` `agent_bot_webhook` | Agent Bot webhook: HMAC → `engine.pipeline.parse_event` → customer message enqueued (`job_id` = message id, deduplicated); human agent message → `consultant_replied`; resolved → conversation closed | — |
+| `engine/catalog.py`, `state.py` | Immutable catalog snapshot (`build_catalog` from dataset-shaped dicts) and `ConversationState` | C3 reads |
+| `engine/text.py`, `slot_types.py`, `understand.py` | Keyword tier: diacritic folding, whole-word longest-match phrases, VN phone; slot-type registry (catalog/choice/phone/number/text: understand + buttons); exact quick-reply mapping (D-034) | C3.2 adds the Jev tier |
+| `engine/decide.py` | Pure `decide()` → answer / ask_slot / handoff / silent; stuck counter, pending skill, optional slots asked once | C3.2 adds confirm |
+| `engine/context.py`, `render.py`, `actions.py`, `reply.py` | Template context contract (D-050), render guard + `vnd`/`date_vi` filters (also as Jinja hooks), action registry (D-049), reply composition + button source rule (D-072) | C3.6 advisor scoring, C6.3 `book_appointment` |
+| `engine/lead.py`, `repo.py` | Slots ↔ Lead fields (`territory`, `products`, `learner_type`, `learner_age`, `preferred_shift`, `first_name`, `mobile_no`), returning-customer prefill; all database access (catalog cache cleared by `doc_events`) | — |
+| `engine/log.py`, `learning.py` | AI Decision Log rows + learning signals; daily retention purge; `consultant_corrected` on CRM Lead update | C9.2 review UI |
+| `engine/routing.py`, `handoff.py`, `chatwoot_setup.py` | C2.6 pick (Lead owner → least-loaded branch consultant → Tổng đài), team, labels, `bot_*` conversation attributes, summary note | C4.1 replaces routing with rule D |
+| `engine/effects.py`, `events.py`, `pipeline.py` | `ChatwootEffects` / `RecordingEffects`; `lead_engine_events` hook; `run_turn` + RQ job `process_event` with per-conversation `filelock` | — |
+| `engine/playground.py`, `mmm_custom/page/bot_playground/` | `/app/bot-playground`: simulate (dry), reset, replay a logged decision | C3.2 adds the Jev toggle |
 | `intelligence.py:208` `analyze_conversation` | Jev: intent, hotness, customer phone/email, reply-template choice → Lead fields, labels, private note; gate 0.7 (`:38`) | C3.2–C3.4 (skips conversations with an active Bot Conversation, D-032) |
 | `intelligence.py:74` `ask_jev` | One System One call (`/v1/systemone`), typed questions | Reused |
 | `followup.py:39` `plan_followups` | Daily 08:00 (`hooks.py` cron): Jev picks follow-up for stale open leads → CRM Task | C6.4 |
@@ -30,7 +35,7 @@ Site config keys present on `crm.localhost`: `chatwoot_api_token`, `chatwoot_api
 | `chatwoot_client.py` | Chatwoot REST v1 wrapper; C1 added inbox/agent/team methods | Reused/extended |
 | `setup.py` | Custom fields on CRM Lead via `after_install` + patches (`patches.txt`); catalog custom fields on CRM Territory/CRM Product in `CATALOG_FIELDS`, applied idempotently by `create_catalog_fields()` on install and every migrate (`after_migrate` hook) | Add new catalog fields to `CATALOG_FIELDS` |
 | `catalog_rules.py` | Pure validation rules + Select option constants (`SLOT_TYPES`, `ACTION_TYPES`, …) used by DocType controllers | C2 registries must use the same constants |
-| `mmm_custom/doctype/` | C1 DocTypes: Course Group, Consultant, Course Schedule, Course Promotion, Bot Slot, Bot Skill, Lead Engine Settings; child tables Course Link, Course Group Link, Territory Link, Bot Slot Option, Bot Slot Link, Bot Skill Template, Bot Skill Follow Up | C2–C3 read them |
+| `mmm_custom/doctype/` | C2 DocTypes: Bot Conversation, AI Decision Log, Bot Learning Signal. C1 DocTypes: Course Group, Consultant, Course Schedule, Course Promotion, Bot Slot, Bot Skill, Lead Engine Settings; child tables Course Link, Course Group Link, Territory Link, Bot Slot Option, Bot Slot Link, Bot Skill Template, Bot Skill Follow Up | C2–C3 read them |
 | `demo/loader.py`, `demo/saoviet/*.json` | Idempotent Sao Việt demo loader (`bench execute mmm_custom.demo.loader.load`, optional `anchor`); `purge_demo()` | — |
 | `demo/chatwoot_seed.py` | Creates demo agents, 15 teams (13 branches + B2B + Tổng đài), inbox membership; writes `Consultant.chatwoot_agent_id` | Supersedes `scripts/seed-branch-agents.py` |
 
@@ -41,8 +46,8 @@ schedules, 10 promotions, 7 bot slots, 30 bot skills, Lead Engine Settings; Chat
 
 ## CRM Lead custom fields (from `setup.py`)
 
-`chatwoot_contact_id` (Data, unique) · `course_interest` (Data) · `branch` (Select, **3 hardcoded
-options**) · `data_quality` (Select) · `ai_intent` (Select) · `ai_hotness` (Select).
+`chatwoot_contact_id` (Data, unique) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
+options**, no longer written) · `data_quality` (Select) · `ai_intent` (Select) · `ai_hotness` (Select).
 
 ## Standard Frappe CRM pieces we will reuse (vendored `crm/`, not edited)
 
