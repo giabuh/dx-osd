@@ -1,0 +1,136 @@
+{
+ "actions": [],
+ "autoname": "field:slot_key",
+ "creation": "2026-09-26 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "slot_key",
+  "label",
+  "slot_type",
+  "catalog_source",
+  "required",
+  "sort_order",
+  "ask_template",
+  "options",
+  "depends_on_slot",
+  "depends_on_value",
+  "lead_field",
+  "active"
+ ],
+ "fields": [
+  {
+   "fieldname": "slot_key",
+   "fieldtype": "Data",
+   "label": "Slot Key",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "slot_type",
+   "fieldtype": "Select",
+   "label": "Slot Type",
+   "options": "catalog\nchoice\nphone\nnumber\ntext",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "catalog_source",
+   "fieldtype": "Select",
+   "label": "Catalog Source",
+   "options": "\ncourse\nbranch"
+  },
+  {
+   "fieldname": "required",
+   "fieldtype": "Check",
+   "label": "Required",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sort_order",
+   "fieldtype": "Int",
+   "label": "Sort Order",
+   "default": "0"
+  },
+  {
+   "fieldname": "ask_template",
+   "fieldtype": "Small Text",
+   "label": "Ask Template",
+   "reqd": 1,
+   "description": "Jinja; see spec §7.2 template context"
+  },
+  {
+   "fieldname": "options",
+   "fieldtype": "Table",
+   "label": "Options",
+   "options": "Bot Slot Option"
+  },
+  {
+   "fieldname": "depends_on_slot",
+   "fieldtype": "Link",
+   "label": "Depends On Slot",
+   "options": "Bot Slot"
+  },
+  {
+   "fieldname": "depends_on_value",
+   "fieldtype": "Data",
+   "label": "Depends On Value"
+  },
+  {
+   "fieldname": "lead_field",
+   "fieldtype": "Data",
+   "label": "Lead Field",
+   "description": "CRM Lead fieldname the value is written to"
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Active",
+   "default": "1"
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Bot Slot",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

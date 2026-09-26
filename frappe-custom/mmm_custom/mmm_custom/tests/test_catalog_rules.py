@@ -49,5 +49,22 @@ class TestValidatePromotion(unittest.TestCase):
             validate_promotion("Amount", 500000, date(2026, 11, 1), date(2026, 10, 1))
 
 
+from mmm_custom.catalog_rules import validate_slot_dependency
+
+
+class TestValidateSlotDependency(unittest.TestCase):
+    def test_catalog_needs_source(self):
+        with self.assertRaisesRegex(ValueError, "catalog_source"):
+            validate_slot_dependency("catalog", None, None, None)
+
+    def test_dependency_needs_both_parts(self):
+        with self.assertRaisesRegex(ValueError, "depends_on"):
+            validate_slot_dependency("number", None, "learner", None)
+
+    def test_valid(self):
+        validate_slot_dependency("number", None, "learner", "child")
+        validate_slot_dependency("catalog", "course", None, None)
+
+
 if __name__ == "__main__":
     unittest.main()

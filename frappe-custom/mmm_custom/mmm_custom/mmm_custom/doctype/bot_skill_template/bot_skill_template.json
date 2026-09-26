@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "creation": "2026-09-26 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "variant_key",
+  "when",
+  "template"
+ ],
+ "fields": [
+  {
+   "fieldname": "variant_key",
+   "fieldtype": "Data",
+   "label": "Variant Key",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "when",
+   "fieldtype": "Data",
+   "label": "When",
+   "description": "Jinja expression; empty = always"
+  },
+  {
+   "fieldname": "template",
+   "fieldtype": "Small Text",
+   "label": "Template",
+   "reqd": 1,
+   "in_list_view": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Bot Skill Template",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
