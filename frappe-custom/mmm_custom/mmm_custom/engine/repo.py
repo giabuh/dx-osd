@@ -169,6 +169,30 @@ def save_lead(state, fields, courses, contact):
     return doc.name
 
 
+def set_lead_owner(lead, user):
+    doc = frappe.get_doc("CRM Lead", lead)
+    doc.lead_owner = user
+    doc.flags.lead_engine = True
+    doc.save(ignore_permissions=True)
+
+
+def mark_consultant_replied(conversation_id):
+    """D-059: a human answered — the bot stays silent in this conversation from now on. A conversation the
+    bot never saw gets a row too, so the bot does not talk over an agent who is already chatting."""
+    name = frappe.db.get_value("Bot Conversation", {"conversation_id": conversation_id})
+    if name:
+        frappe.db.set_value("Bot Conversation", name, "consultant_replied", 1)
+    else:
+        frappe.get_doc({"doctype": "Bot Conversation", "conversation_id": conversation_id, "status": "active",
+                        "consultant_replied": 1, "slots": "{}", "pending": "{}"}).insert(ignore_permissions=True)
+
+
+def close_conversation(conversation_id):
+    name = frappe.db.get_value("Bot Conversation", {"conversation_id": conversation_id})
+    if name:
+        frappe.db.set_value("Bot Conversation", name, "status", "closed")
+
+
 class FrappeRepo:
     def __init__(self, sandbox=False, sandbox_lead=None):
         self.sandbox, self.sandbox_lead = sandbox, sandbox_lead
@@ -193,7 +217,7 @@ class FrappeRepo:
             pending_skill=d.pending_skill or "", stuck_turns=d.stuck_turns or 0,
             last_message_id=int(d.last_message_id or 0), consultant_replied=bool(d.consultant_replied),
             consultant=d.consultant or "", is_sandbox=bool(d.is_sandbox), is_returning=bool(d.is_returning),
-            turns=d.turns or 0)
+            turns=d.turns or 0, answered=json.loads(d.answered_skills) if d.answered_skills else [])
 
     def new_state(self, event):
         """A new conversation starts from what CRM already knows about the contact (D-022, D-070)."""
@@ -223,6 +247,7 @@ class FrappeRepo:
             "stuck_turns": state.stuck_turns, "last_message_id": state.last_message_id,
             "consultant_replied": int(state.consultant_replied), "consultant": state.consultant or None,
             "is_sandbox": int(state.is_sandbox), "is_returning": int(state.is_returning), "turns": state.turns,
+            "answered_skills": json.dumps(state.answered),
         }
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": state.conversation_id})
         if name:
@@ -260,3 +285,15 @@ class FrappeRepo:
 
     def write_signal(self, row):
         frappe.get_doc({"doctype": "Bot Learning Signal", **row}).insert(ignore_permissions=True)
+
+    def consultants(self):
+        return [dict(r) for r in frappe.get_all("Consultant", filters={"active": 1}, fields=[
+            "name", "full_name", "branch", "chatwoot_agent_id", "level", "handles_b2b", "active"])]
+
+    def consultant_load(self):
+        rows = frappe.get_all("Bot Conversation", filters={"status": "handed_off", "is_sandbox": 0, "consultant": ["is", "set"]},
+                              fields=["consultant", "count(name) as open"], group_by="consultant")
+        return {r.consultant: r.open for r in rows}
+
+    def lead_owner(self, lead):
+        return frappe.db.get_value("CRM Lead", lead, "lead_owner") or ""

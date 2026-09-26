@@ -10,5 +10,8 @@
  "greeting_template": "Dạ {{ brand.me }} là {{ brand.bot_name }} của {{ brand.name }}, rất vui được hỗ trợ {{ brand.you }} ạ.",
  "fallback_template": "Dạ {{ brand.me }} chưa hiểu ý {{ brand.you }}, {{ brand.you }} chọn giúp {{ brand.me }} một mục bên dưới hoặc gọi {{ brand.hotline }} nhé ạ.",
  "signoff": "Sao Việt",
- "max_skills_per_reply": 3
+ "max_skills_per_reply": 3,
+ "max_stuck_turns": 2,
+ "handoff_template": "Dạ {{ brand.me }} đã chuyển {{ brand.you }} cho {% if consultant %}tư vấn viên {{ consultant.name }} ({{ consultant.branch }}){% else %}tư vấn viên{% endif %}, bạn ấy sẽ nhắn {{ brand.you }} ngay ạ.",
+ "summary_template": "🤖 Tóm tắt từ bot{% if customer.is_returning %} · khách QUAY LẠI{% endif %}\n👤 {{ customer.name or 'Khách' }}{% if slots.phone %} · {{ slots.phone }}{% endif %}{% if customer.learner %} · người học: {{ customer.learner }}{% if customer.learner_age %} ({{ customer.learner_age }} tuổi){% endif %}{% endif %}\n🎓 {{ course.name or 'chưa rõ khóa học' }}{% if course.fee %} ({{ course.fee | vnd }}){% endif %}{% if customer.shift %} · ca {{ customer.shift }}{% endif %} · {{ branch.name or 'chưa rõ chi nhánh' }}\n💬 Đã trả lời: {% if answered %}{{ answered | join(' ✓ · ') }} ✓{% else %}—{% endif %}\n➡️ Gợi ý: {{ next_step }}\n📌 Vì sao giao cho bạn: {{ why }}"
 }

@@ -37,6 +37,7 @@ class FakeRepo:
         self.prefill = {}
         self.schedules, self.promotions = [], []
         self.logs, self.signals = [], []
+        self.consultant_rows, self.load, self.owners = [], {}, {}
 
     def catalog(self):
         return self._catalog
@@ -67,6 +68,15 @@ class FakeRepo:
     def write_signal(self, row):
         self.signals.append(row)
 
+    def consultants(self):
+        return list(self.consultant_rows)
+
+    def consultant_load(self):
+        return dict(self.load)
+
+    def lead_owner(self, lead):
+        return self.owners.get(lead, "")
+
 
 def schedule(course, branch, day, shift="Tối 17:00–21:00", weekdays="T3, T5, T7", seats=6):
     return {"course": course, "branch": branch, "date": day, "shift": shift, "weekdays": weekdays,
@@ -76,3 +86,9 @@ def schedule(course, branch, day, shift="Tối 17:00–21:00", weekdays="T3, T5,
 def promo(title, kind="Percent", amount=10, courses=(), groups=(), branches=()):
     return {"title": title, "discount_type": kind, "discount_value": amount, "courses": list(courses),
             "course_groups": list(groups), "branches": list(branches)}
+
+
+def demo_consultants():
+    return [{"name": c["email"], "full_name": c["full_name"], "branch": c["branch"], "chatwoot_agent_id": i + 1,
+             "active": 1, "handles_b2b": c["handles_b2b"], "level": c["level"]}
+            for i, c in enumerate(load_dataset()["consultants"])]

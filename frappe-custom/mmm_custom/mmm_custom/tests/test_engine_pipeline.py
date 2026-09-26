@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeRepo, demo_catalog, fill, render
+from engine_fixtures import FakeRepo, demo_catalog, demo_consultants, fill, render
 
 from mmm_custom.engine import events
 from mmm_custom.engine.effects import RecordingEffects
@@ -110,6 +110,18 @@ class TestRunTurn(unittest.TestCase):
             t = run_turn(parse_event(incoming("excel")), self.repo, fx, render)
         self.assertEqual(t.reply.errors[-1]["type"], "lead_failed")
         self.assertEqual(self.repo.states["7"].slots["course"]["value"], "VP-EXCEL")
+    def test_handoff_turn_assigns_and_tells_the_customer(self):
+        self.repo.consultant_rows = demo_consultants()
+        u = Understanding(fills={"course": fill("VP-EXCEL"), "branch": fill("CN Dĩ An"), "phone": fill("+84901234567")})
+        with patch("mmm_custom.engine.pipeline.understand", return_value=u):
+            t = self.turn("0901234567")
+        handoff = self.fx.of("handoff")[0]
+        self.assertTrue(handoff["agent_id"])
+        self.assertEqual(handoff["team"], "CN Dĩ An")
+        consultant = next(c for c in demo_consultants() if c["name"] == self.repo.states["7"].consultant)
+        self.assertIn(f"tư vấn viên {consultant['full_name']} (CN Dĩ An)", self.fx.of("send")[0]["messages"][0])
+        self.assertIn("CN Dĩ An · ít khách nhất", t.reason)
+        self.assertEqual([e["consultant"] for e in self.fx.of("emit") if e["event"] == "handed_off"], [consultant["name"]])
 
 class TestEvents(unittest.TestCase):
     def test_handlers_receive_payload_and_failures_are_logged(self):

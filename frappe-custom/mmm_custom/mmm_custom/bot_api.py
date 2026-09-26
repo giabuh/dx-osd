@@ -35,6 +35,7 @@ except ImportError:
     frappe.throw = _throw
 
 from mmm_custom.engine.pipeline import parse_event
+from mmm_custom.engine.repo import close_conversation, mark_consultant_replied
 
 
 def _verify_hmac(raw_body: bytes, secret: str, timestamp: str, signature: str):
@@ -101,4 +102,10 @@ def agent_bot_webhook():
         frappe.enqueue("mmm_custom.engine.pipeline.process_event", queue="short",
                        job_id=f"lead_engine_msg_{event.message_id}", deduplicate=True, payload=payload)
         return {"status": "queued"}
+    if event.kind == "agent_message" and event.conversation_id:
+        mark_consultant_replied(event.conversation_id)  # D-059: never talk over a person
+        return {"status": "consultant_replied"}
+    if event.kind == "resolved" and event.conversation_id:
+        close_conversation(event.conversation_id)
+        return {"status": "closed"}
     return {"status": "ignored", "event": payload.get("event")}

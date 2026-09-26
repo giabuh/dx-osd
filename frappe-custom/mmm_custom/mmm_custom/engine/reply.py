@@ -128,6 +128,9 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None)
         follow_ups += [{"title": f.title, "action": FOLLOW_UP_ACTIONS[f.target_type](f.target)}
                        for f in skill.follow_ups if f.target_type in FOLLOW_UP_ACTIONS]
 
+    if decision.type == "handoff":
+        say(settings["handoff_template"], ctx, "handoff")
+
     ask_buttons = []
     if decision.ask:
         slot = catalog.slot(decision.ask)

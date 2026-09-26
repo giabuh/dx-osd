@@ -29,6 +29,12 @@ class RecordingEffects:
         self.calls.append(("save_lead", {"fields": dict(fields), "courses": [c.code for c in courses]}))
         return state.lead
 
+    def handoff(self, conversation_id, plan, lead):
+        self.calls.append(("handoff", {"agent_id": plan.agent_id, "team": plan.team, "labels": list(plan.labels),
+                                       "attributes": dict(plan.attributes), "summary": plan.summary,
+                                       "owner": plan.owner, "lead": lead}))
+        return []
+
 
 class ChatwootEffects:
     """Customer-facing calls use the Agent Bot token so Chatwoot marks them as the bot's own messages
@@ -63,6 +69,38 @@ class ChatwootEffects:
         except Exception:
             logger.exception("data quality update failed")
         return name
+
+    def handoff(self, conversation_id, plan, lead):
+        """D-058 steps 2–3; each step is independent so one failing call never blocks the rest."""
+        from mmm_custom.engine import repo
+
+        errors = []
+
+        def step(name, fn, *args):
+            try:
+                fn(*args)
+            except Exception as e:
+                errors.append({"type": "handoff_step_failed", "step": name, "detail": str(e)[:300]})
+
+        team_id = None
+        try:
+            team_id = next((t["id"] for t in self.user.list_teams() if t["name"].lower() == plan.team.lower()), None)
+        except Exception as e:
+            errors.append({"type": "handoff_step_failed", "step": "list_teams", "detail": str(e)[:300]})
+        if team_id:  # team before agent: Chatwoot keeps the agent when they belong to the team
+            step("assign_team", self.bot.assign_team, conversation_id, team_id)
+        if plan.agent_id:
+            step("assign_agent", self.bot.assign_conversation, conversation_id, plan.agent_id)
+        step("open", self.bot.toggle_status, conversation_id, "open")
+        if plan.labels:
+            step("labels", self.bot.add_labels, conversation_id, plan.labels)
+        if plan.attributes:
+            step("attributes", self.bot.set_conversation_attributes, conversation_id, plan.attributes)
+        if plan.summary:
+            step("summary_note", self.bot.send_private_note, conversation_id, plan.summary)
+        if plan.owner and lead:
+            step("lead_owner", repo.set_lead_owner, lead, plan.owner)
+        return errors
 
 
 def chatwoot_effects(conf):

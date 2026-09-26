@@ -5,7 +5,7 @@ import sys
 import time
 from pathlib import Path
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
@@ -69,6 +69,17 @@ class TestAgentBotWebhook(unittest.TestCase):
     def test_invalid_json(self):
         self.assertEqual(self.post(None, raw=b"{not json")["status"], "error")
 
+    def test_human_agent_message_silences_the_bot(self):
+        with patch.object(bot_api_mod, "mark_consultant_replied") as mark:
+            self.assertEqual(self.post(incoming(message_type="outgoing", sender_type="user")),
+                             {"status": "consultant_replied"})
+        mark.assert_called_once_with("5")
+        self.fr.enqueue.assert_not_called()
+
+    def test_resolved_conversation_is_closed(self):
+        with patch.object(bot_api_mod, "close_conversation") as close:
+            self.assertEqual(self.post({"event": "conversation_resolved", "id": 5}), {"status": "closed"})
+        close.assert_called_once_with("5")
 
 if __name__ == "__main__":
     unittest.main()

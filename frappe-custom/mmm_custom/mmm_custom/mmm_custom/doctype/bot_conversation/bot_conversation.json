@@ -19,7 +19,8 @@
   "last_message_id",
   "consultant_replied",
   "is_returning",
-  "is_sandbox"
+  "is_sandbox",
+  "answered_skills"
  ],
  "fields": [
   {
@@ -109,6 +110,11 @@
    "fieldtype": "Check",
    "label": "Is Sandbox",
    "in_standard_filter": 1
+  },
+  {
+   "fieldname": "answered_skills",
+   "fieldtype": "JSON",
+   "label": "Answered Skills"
   }
  ],
  "links": [],

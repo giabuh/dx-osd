@@ -26,6 +26,7 @@ class ConversationState:
     is_sandbox: bool = False
     is_returning: bool = False
     turns: int = 0
+    answered: list = field(default_factory=list)  # skill keys answered so far
 
 
 def value(slots, key):

@@ -232,6 +232,31 @@ class TestChatwootClientAdmin(unittest.TestCase):
         self.assertTrue(mock_requests.post.call_args[0][0].endswith("/inbox_members"))
         self.assertEqual(mock_requests.post.call_args[1]["json"], {"inbox_id": 2, "user_ids": [7]})
 
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_assign_team(self, mock_requests):
+        self._resp(mock_requests, "post", {})
+        self.client.assign_team(5, 4)
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/conversations/5/assignments"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"team_id": 4})
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_set_conversation_attributes(self, mock_requests):
+        self._resp(mock_requests, "post", {})
+        self.client.set_conversation_attributes(5, {"bot_branch": "CN Dĩ An"})
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/conversations/5/custom_attributes"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"custom_attributes": {"bot_branch": "CN Dĩ An"}})
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_custom_attribute_definitions(self, mock_requests):
+        self._resp(mock_requests, "get", [{"attribute_key": "bot_course"}])
+        self.assertEqual(self.client.list_custom_attributes(), [{"attribute_key": "bot_course"}])
+        self.assertEqual(mock_requests.get.call_args[1]["params"], {"attribute_model": "conversation_attribute"})
+        self._resp(mock_requests, "post", {"id": 1})
+        self.client.create_custom_attribute("bot_branch", "Bot · Chi nhánh")
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/custom_attribute_definitions"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {
+            "attribute_display_name": "Bot · Chi nhánh", "attribute_key": "bot_branch",
+            "attribute_model": "conversation_attribute", "attribute_display_type": "text"})
 
 if __name__ == "__main__":
     unittest.main()

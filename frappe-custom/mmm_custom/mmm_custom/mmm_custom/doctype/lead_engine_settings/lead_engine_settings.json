@@ -17,7 +17,11 @@
   "signoff",
   "engine_section",
   "max_skills_per_reply",
-  "log_retention_days"
+  "log_retention_days",
+  "handoff_section",
+  "max_stuck_turns",
+  "handoff_template",
+  "summary_template"
  ],
  "fields": [
   {
@@ -96,6 +100,30 @@
    "label": "Log Retention Days",
    "default": "180",
    "description": "AI Decision Log rows older than this are deleted daily"
+  },
+  {
+   "fieldname": "handoff_section",
+   "fieldtype": "Section Break",
+   "label": "Handoff"
+  },
+  {
+   "fieldname": "max_stuck_turns",
+   "fieldtype": "Int",
+   "label": "Max Stuck Turns",
+   "default": "2",
+   "description": "Hand off after this many turns in a row with nothing understood"
+  },
+  {
+   "fieldname": "handoff_template",
+   "fieldtype": "Small Text",
+   "label": "Handoff Template",
+   "description": "Told to the customer at handoff; gets `consultant` (name, branch)"
+  },
+  {
+   "fieldname": "summary_template",
+   "fieldtype": "Long Text",
+   "label": "Summary Template",
+   "description": "Private note for the consultant; gets answered, next_step, why, reason"
   }
  ],
  "issingle": 1,

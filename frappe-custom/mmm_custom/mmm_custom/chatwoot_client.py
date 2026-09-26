@@ -189,3 +189,31 @@ class ChatwootClient:
                              json={"inbox_id": inbox_id, "user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
+
+    # Handoff (mmm_custom.engine.effects.ChatwootEffects.handoff).
+
+    def assign_team(self, conversation_id: int, team_id: int) -> dict:
+        resp = requests.post(f"{self._base}/conversations/{conversation_id}/assignments", headers=self._headers,
+                             json={"team_id": team_id}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def set_conversation_attributes(self, conversation_id: int, attributes: dict) -> dict:
+        resp = requests.post(f"{self._base}/conversations/{conversation_id}/custom_attributes", headers=self._headers,
+                             json={"custom_attributes": attributes}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_custom_attributes(self, model: str = "conversation_attribute") -> list:
+        resp = requests.get(f"{self._base}/custom_attribute_definitions", headers=self._headers,
+                            params={"attribute_model": model}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def create_custom_attribute(self, key: str, display_name: str, model: str = "conversation_attribute",
+                                display_type: str = "text") -> dict:
+        resp = requests.post(f"{self._base}/custom_attribute_definitions", headers=self._headers, json={
+            "attribute_display_name": display_name, "attribute_key": key, "attribute_model": model,
+            "attribute_display_type": display_type}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()

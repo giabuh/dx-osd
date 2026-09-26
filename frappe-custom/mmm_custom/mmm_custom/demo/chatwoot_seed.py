@@ -11,8 +11,7 @@ except ImportError:  # offline tests
 from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.demo.loader import load_dataset
 
-B2B_TEAM = "Doanh nghiệp (B2B)"
-CENTRAL_TEAM = "Tổng đài"
+from mmm_custom.engine.routing import B2B_TEAM, CENTRAL_TEAM
 
 
 def plan_teams(consultants):

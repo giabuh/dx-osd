@@ -10,6 +10,7 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.engine.decide import decide
+from mmm_custom.engine.handoff import plan_handoff
 from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.log import log_row, signals
 from mmm_custom.engine.reply import compose
@@ -71,6 +72,7 @@ def apply_decision(state, decision, reply, event):
     state.slots = decision.slots
     state.stuck_turns = decision.stuck_turns
     state.pending_skill = decision.pending_skill
+    state.answered = list(dict.fromkeys(state.answered + decision.skills))
     if decision.type != "silent":
         state.pending = {"slot": decision.ask, "options": reply.options()}
     if decision.type == "handoff":
@@ -117,14 +119,32 @@ def run_turn(event, repo, effects, render):
     turn.understanding = understand(event.text, state, catalog)
     turn.decision = decide(state, turn.understanding, catalog)
     turn.reason = turn.decision.reason
-    turn.reply = compose(turn.decision, state, catalog, render, repo, repo.today())
+
+    plan, errors = None, []
+    if turn.decision.type == "handoff":
+        try:
+            plan = plan_handoff(state, turn.decision, catalog, repo, render)
+            turn.reason = f"{turn.reason} · {plan.why}"
+            errors += plan.errors
+        except Exception as e:
+            errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
+    extra = {"consultant": plan.consultant_ctx} if plan else None
+    turn.reply = compose(turn.decision, state, catalog, render, repo, repo.today(), extra)
+    turn.reply.errors[:0] = errors
     if turn.reply.messages:
         try:
             effects.send(state.conversation_id, turn.reply)
         except Exception as e:  # never raise into RQ: a retry would answer twice
             turn.reply.errors.append({"type": "send_failed", "detail": str(e)[:300]})
+
     apply_decision(state, turn.decision, turn.reply, event)
     write_lead(turn, effects, catalog)
+    if plan:
+        state.consultant = plan.consultant_name
+        try:
+            turn.reply.errors += effects.handoff(state.conversation_id, plan, state.lead)
+        except Exception as e:
+            turn.reply.errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
     repo.save_state(state)
     emit_events(effects, state, turn.decision)
     try:
