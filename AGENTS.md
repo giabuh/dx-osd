@@ -34,7 +34,7 @@ DX-OSD stands on the shoulders of two mature, complete open-source products and 
 
 Full design rationale and every architectural decision is in **`docs/superpowers/specs/2026-09-22-facebook-integration-platform.md`** and **`docs/superpowers/plans/2026-09-24-foss-meta-integration.md`**.
 
-The product-level direction — vision, guiding principles, and milestone phases beyond this first pipeline — is in **`ROADMAP.md`**; new work should trace back to a phase there.
+The product-level direction — vision, guiding principles, and milestone phases beyond this first pipeline — is in **`ROADMAP.md`**; new work should trace back to a phase there. Work on the education lead engine (AI chat answers, routing, lead lifecycle) starts at **`docs/superpowers/specs/2026-09-26-edu-lead-engine/README.md`**.
 
 `REPO.md` provides the full component matrix and FOSS technology evaluation summary.
 
