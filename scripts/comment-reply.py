@@ -2,18 +2,19 @@
 """
 EduFlow Comment Auto-Reply: Automatically reply to comments on Facebook Page posts.
 
-This script monitors recent posts for new comments and replies with a CTA
+This script monitors recent posts for new comments and replies with a personalized CTA
 to inbox the page. When the user messages the page, they enter the existing
 Messenger bot qualification flow (course → branch → phone → agent handoff).
 
 Features:
+- AI-powered personalized replies via Gemini / Google AI Studio (fallback to template)
+- Real-time continuous monitoring with --watch flag
 - Scans recent posts for unreplied comments
-- Auto-replies with personalized CTA
-- Tracks replied comments to avoid duplicates
-- Can be run as a cron job
+- Tracks replied comments to avoid duplicates (.replied_comments.json)
 
 Usage:
-    python scripts/comment-reply.py              # Process all unreplied comments
+    python scripts/comment-reply.py              # Process all unreplied comments once
+    python scripts/comment-reply.py --watch      # Run continuously in background (every 10s)
     python scripts/comment-reply.py --dry-run    # Preview without replying
     python scripts/comment-reply.py --post-id ID # Process specific post only
 
@@ -25,6 +26,7 @@ import json
 import os
 import random
 import sys
+import time
 from pathlib import Path
 
 # Fix Windows console encoding for emoji
@@ -44,7 +46,7 @@ except ImportError:
     import requests
 
 
-# ── Reply templates ───────────────────────────────────────────────
+# ── Fallback Reply Templates ──────────────────────────────────────
 
 REPLY_TEMPLATES = [
     "Cảm ơn bạn đã quan tâm! 💬 Inbox em để được tư vấn chi tiết nhé! 🎓",
@@ -121,14 +123,140 @@ def like_comment(comment_id: str, token: str):
     try:
         requests.post(url, data={"access_token": token}, timeout=10)
     except requests.RequestException:
-        pass  # Non-critical, ignore errors
+        pass
+
+
+def generate_ai_comment_reply(commenter_name: str, comment_text: str) -> str | None:
+    """Generate a polite, personalized comment reply using Gemini or 9Router."""
+    # 1. Try Google Gemini API
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+
+    prompt = (
+        f"Bạn là trợ lý tư vấn thân thiện của trung tâm giáo dục EduFlow Academy.\n"
+        f"Học viên/phụ huynh tên '{commenter_name}' vừa bình luận: \"{comment_text}\".\n"
+        f"Hãy viết 1 câu trả lời ngắn gọn (dưới 35 từ), rất thân thiện, lễ phép (dạ, em chào...),\n"
+        f"có emoji phù hợp, và khéo léo mời khách nhắn tin/inbox fanpage để được tư vấn lộ trình và học phí chi tiết.\n"
+        f"Quy tắc quan trọng: KHÔNG dùng markdown (không **, ##), chỉ trả về đúng câu phản hồi."
+    )
+
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={gemini_key}"
+            resp = requests.post(
+                url,
+                json={"contents": [{"parts": [{"text": prompt}]}]},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                text = text.replace("**", "").replace("##", "")
+                return text
+        except Exception:
+            pass
+
+    # 2. Try 9Router fallback
+    nine_router_key = os.getenv("NINE_ROUTER_API_KEY")
+    nine_router_base = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
+    nine_router_model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
+
+    if nine_router_key:
+        try:
+            resp = requests.post(
+                f"{nine_router_base}/chat/completions",
+                json={
+                    "model": nine_router_model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 150,
+                },
+                headers={"Authorization": f"Bearer {nine_router_key}"},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"].strip()
+                text = text.replace("**", "").replace("##", "")
+                return text
+        except Exception:
+            pass
+
+    return None
+
+
+def process_comments(page_id: str, token: str, limit: int = 5, post_id: str | None = None, dry_run: bool = False, verbose: bool = True) -> int:
+    """Scan posts and reply to any unreplied comments. Returns count of new replies."""
+    replied = load_replied_comments()
+    new_replies = 0
+
+    if post_id:
+        posts = [{"id": post_id}]
+    else:
+        posts = get_recent_posts(page_id, token, limit)
+
+    for post in posts:
+        pid = post["id"]
+        post_msg = post.get("message", "")[:40] if "message" in post else "(media)"
+
+        try:
+            comments = get_comments(pid, token)
+        except requests.RequestException as e:
+            if verbose:
+                print(f"⚠️ Error fetching comments for post {pid}: {e}")
+            continue
+
+        for comment in comments:
+            cid = comment["id"]
+            commenter = comment.get("from", {}).get("name", "Bạn")
+            commenter_id = comment.get("from", {}).get("id", "")
+            msg = comment.get("message", "")
+
+            # Skip if already replied
+            if cid in replied:
+                continue
+
+            # Skip comments from the page itself
+            if commenter_id == page_id:
+                continue
+
+            if verbose:
+                print(f"💬 New comment from {commenter}: \"{msg}\"")
+
+            # Try generating AI reply first, fallback to templates
+            reply_text = generate_ai_comment_reply(commenter, msg)
+            if not reply_text:
+                reply_text = random.choice(REPLY_TEMPLATES)
+
+            if dry_run:
+                if verbose:
+                    print(f"   🔍 [DRY RUN] Would reply: {reply_text}")
+                replied.add(cid)
+                new_replies += 1
+            else:
+                try:
+                    reply_to_comment(cid, token, reply_text)
+                    like_comment(cid, token)
+                    if verbose:
+                        print(f"   ✅ Replied: \"{reply_text}\"")
+                    replied.add(cid)
+                    new_replies += 1
+                except requests.RequestException as e:
+                    if verbose:
+                        print(f"   ❌ Reply error: {e}")
+
+    if not dry_run and new_replies > 0:
+        save_replied_comments(replied)
+
+    return new_replies
 
 
 def main():
     parser = argparse.ArgumentParser(description="EduFlow Comment Auto-Reply")
+    parser.add_argument("--watch", action="store_true", help="Run continuously in background loop")
+    parser.add_argument("--interval", type=int, default=10, help="Poll interval in seconds for --watch mode (default: 10)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without replying")
     parser.add_argument("--post-id", help="Process specific post ID only")
-    parser.add_argument("--limit", type=int, default=5, help="Number of recent posts to check")
+    parser.add_argument("--limit", type=int, default=5, help="Number of recent posts to check (default: 5)")
     args = parser.parse_args()
 
     # Load environment
@@ -142,58 +270,27 @@ def main():
         print("❌ Missing FACEBOOK_PAGE_ID or FACEBOOK_PAGE_ACCESS_TOKEN in .env")
         sys.exit(1)
 
-    replied = load_replied_comments()
-    new_replies = 0
+    print(f"🤖 EduFlow Comment Auto-Reply active for Page {page_id}")
+    has_gemini = bool(os.getenv("GEMINI_API_KEY"))
+    has_9router = bool(os.getenv("NINE_ROUTER_API_KEY"))
+    engine = "Gemini AI" if has_gemini else ("9Router AI" if has_9router else "Templates")
+    print(f"🧠 Intelligence Engine: {engine}")
 
-    if args.post_id:
-        posts = [{"id": args.post_id}]
+    if args.watch:
+        print(f"👀 Watching for new comments every {args.interval}s (Ctrl+C to stop)...")
+        while True:
+            try:
+                process_comments(page_id, token, limit=args.limit, post_id=args.post_id, dry_run=args.dry_run, verbose=True)
+                time.sleep(args.interval)
+            except KeyboardInterrupt:
+                print("\n🛑 Stopped comment auto-reply.")
+                break
+            except Exception as e:
+                print(f"⚠️ Polling loop error: {e}")
+                time.sleep(args.interval)
     else:
-        print(f"📋 Fetching last {args.limit} posts...")
-        posts = get_recent_posts(page_id, token, args.limit)
-        print(f"   Found {len(posts)} posts")
-
-    for post in posts:
-        post_id = post["id"]
-        post_msg = post.get("message", "")[:50] if "message" in post else "(no text)"
-        print(f"\n📝 Post: {post_id} — {post_msg}...")
-
-        comments = get_comments(post_id, token)
-        print(f"   💬 {len(comments)} comments")
-
-        for comment in comments:
-            cid = comment["id"]
-            commenter = comment.get("from", {}).get("name", "Unknown")
-            commenter_id = comment.get("from", {}).get("id", "")
-            msg = comment.get("message", "")
-
-            # Skip if already replied
-            if cid in replied:
-                continue
-
-            # Skip comments from the page itself
-            if commenter_id == page_id:
-                continue
-
-            print(f"   → {commenter}: {msg[:60]}...")
-
-            reply_text = random.choice(REPLY_TEMPLATES)
-
-            if args.dry_run:
-                print(f"     🔍 Would reply: {reply_text[:50]}...")
-            else:
-                try:
-                    reply_to_comment(cid, token, reply_text)
-                    like_comment(cid, token)
-                    print(f"     ✅ Replied & liked!")
-                    replied.add(cid)
-                    new_replies += 1
-                except requests.RequestException as e:
-                    print(f"     ❌ Error: {e}")
-
-    if not args.dry_run:
-        save_replied_comments(replied)
-
-    print(f"\n{'🔍 DRY RUN' if args.dry_run else '✅ Done'}: {new_replies} new replies")
+        count = process_comments(page_id, token, limit=args.limit, post_id=args.post_id, dry_run=args.dry_run, verbose=True)
+        print(f"\n{'🔍 DRY RUN' if args.dry_run else '✅ Done'}: {count} new replies")
 
 
 if __name__ == "__main__":

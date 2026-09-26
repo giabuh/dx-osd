@@ -244,14 +244,7 @@ def post_to_facebook(page_id: str, token: str, message: str, image_path: str | N
 
 
 def generate_ai_caption(course_key: str) -> str | None:
-    """Generate a creative caption using 9Router AI. Returns None if unavailable."""
-    api_key = os.getenv("NINE_ROUTER_API_KEY")
-    base_url = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
-    model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
-
-    if not api_key:
-        return None
-
+    """Generate a creative caption using Gemini AI or 9Router. Returns None if unavailable."""
     template = COURSE_TEMPLATES[course_key]
     prompt = (
         f"Viết một bài đăng Facebook quảng cáo khóa học {template['name']} "
@@ -265,6 +258,32 @@ def generate_ai_caption(course_key: str) -> str | None:
         f"- KHÔNG dùng markdown (**, ##, etc.)\n"
         f"Chỉ trả về nội dung bài viết, không thêm giải thích."
     )
+
+    # 1. Try Gemini API directly
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={gemini_key}"
+            resp = requests.post(
+                url,
+                json={"contents": [{"parts": [{"text": prompt}]}]},
+                timeout=20,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                return content.replace("**", "").replace("##", "").replace("# ", "")
+        except Exception as e:
+            print(f"⚠️ Gemini API failed ({e}), trying 9Router...")
+
+    # 2. Try 9Router fallback
+    api_key = os.getenv("NINE_ROUTER_API_KEY")
+    base_url = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
+    model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
+
+    if not api_key:
+        return None
 
     try:
         resp = requests.post(
