@@ -162,10 +162,44 @@ def create_lead_sources():
 	print("Lead sources created")
 
 
+# Lead engine catalog (spec 2026-09-26-edu-lead-engine §7.1): fields on standard CRM DocTypes.
+CATALOG_FIELDS = {
+	"CRM Territory": [
+		{"fieldname": "branch_code", "label": "Branch Code", "fieldtype": "Data", "unique": 1, "insert_after": "territory_name"},
+		{"fieldname": "button_label", "label": "Button Label", "fieldtype": "Data", "length": 20, "insert_after": "branch_code"},
+		{"fieldname": "branch_tier", "label": "Branch Tier", "fieldtype": "Select", "options": "\nfull\nstandard", "insert_after": "button_label"},
+		{"fieldname": "address", "label": "Address", "fieldtype": "Small Text", "insert_after": "branch_tier"},
+		{"fieldname": "hotline", "label": "Hotline", "fieldtype": "Data", "insert_after": "address"},
+		{"fieldname": "map_url", "label": "Map URL", "fieldtype": "Data", "insert_after": "hotline"},
+		{"fieldname": "aliases", "label": "Aliases", "fieldtype": "Small Text", "description": "Comma-separated names customers use, e.g. Dĩ An, Di An", "insert_after": "map_url"},
+	],
+}
+
+
+def ensure_custom_field(dt, field):
+	"""Create the Custom Field, or bring an existing one in line with `field`."""
+	name = f"{dt}-{field['fieldname']}"
+	if frappe.db.exists("Custom Field", name):
+		doc = frappe.get_doc("Custom Field", name)
+		for key, value in field.items():
+			setattr(doc, key, value)
+		doc.save(ignore_permissions=True)
+	else:
+		frappe.get_doc({"doctype": "Custom Field", "dt": dt, **field}).insert(ignore_permissions=True)
+
+
+def create_catalog_fields():
+	for dt, fields in CATALOG_FIELDS.items():
+		for field in fields:
+			ensure_custom_field(dt, field)
+	frappe.db.commit()
+
+
 def setup():
 	create_custom_fields()
 	update_crm_fields_layout()
 	create_lead_sources()
+	create_catalog_fields()
 
 
 def create_custom_field_and_lead_sources():
