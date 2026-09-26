@@ -7,10 +7,17 @@ APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-# setup.py imports frappe unconditionally; mock it only for this import so other modules keep
-# their own ImportError fallbacks (e.g. bot_api's fake whitelist decorator).
-with patch.dict(sys.modules, {"frappe": MagicMock()}):
+# setup.py imports frappe unconditionally; swap in a mock only for this import so other modules keep
+# their own ImportError fallbacks. (patch.dict would also drop every module imported inside it.)
+_real_frappe = sys.modules.get("frappe")
+sys.modules["frappe"] = MagicMock()
+try:
     import mmm_custom.setup as setup_mod
+finally:
+    if _real_frappe is None:
+        del sys.modules["frappe"]
+    else:
+        sys.modules["frappe"] = _real_frappe
 
 
 class TestEnsureCustomField(unittest.TestCase):
@@ -39,6 +46,14 @@ class TestEnsureCustomField(unittest.TestCase):
         self.assertEqual(existing.label, "Mã chi nhánh")
         existing.save.assert_called_once()
 
+    def test_unchanged_field_is_not_saved(self):
+        self.frappe.db.exists.return_value = True
+        existing = MagicMock(fieldname="branch_code", label="Branch Code", fieldtype="Data")
+        self.frappe.get_doc.return_value = existing
+        with patch.object(setup_mod, "frappe", self.frappe):
+            setup_mod.ensure_custom_field("CRM Territory", {"fieldname": "branch_code", "label": "Branch Code", "fieldtype": "Data"})
+        existing.save.assert_not_called()
+
 
 class TestCatalogFields(unittest.TestCase):
     def test_territory_fields(self):
@@ -50,6 +65,11 @@ class TestCatalogFields(unittest.TestCase):
             for f in fields:
                 if f["fieldname"] == "button_label":
                     self.assertEqual(f.get("length"), 20, dt)
+
+    def test_product_fields(self):
+        names = [f["fieldname"] for f in setup_mod.CATALOG_FIELDS["CRM Product"]]
+        self.assertEqual(names, ["course_group", "button_label", "audience", "min_age", "max_age",
+                                 "duration_text", "certificate", "offer", "aliases", "next_courses", "is_demo_data"])
 
 
 if __name__ == "__main__":

@@ -173,6 +173,19 @@ CATALOG_FIELDS = {
 		{"fieldname": "map_url", "label": "Map URL", "fieldtype": "Data", "insert_after": "hotline"},
 		{"fieldname": "aliases", "label": "Aliases", "fieldtype": "Small Text", "description": "Comma-separated names customers use, e.g. Dĩ An, Di An", "insert_after": "map_url"},
 	],
+	"CRM Product": [
+		{"fieldname": "course_group", "label": "Course Group", "fieldtype": "Link", "options": "Course Group", "in_standard_filter": 1, "insert_after": "product_name"},
+		{"fieldname": "button_label", "label": "Button Label", "fieldtype": "Data", "length": 20, "insert_after": "course_group"},
+		{"fieldname": "audience", "label": "Audience", "fieldtype": "Select", "options": "\nTrẻ em\nHọc sinh – Sinh viên\nNgười đi làm\nDoanh nghiệp", "insert_after": "button_label"},
+		{"fieldname": "min_age", "label": "Min Age", "fieldtype": "Int", "insert_after": "audience"},
+		{"fieldname": "max_age", "label": "Max Age", "fieldtype": "Int", "insert_after": "min_age"},
+		{"fieldname": "duration_text", "label": "Duration", "fieldtype": "Data", "insert_after": "max_age"},
+		{"fieldname": "certificate", "label": "Certificate", "fieldtype": "Data", "insert_after": "duration_text"},
+		{"fieldname": "offer", "label": "Offered At", "fieldtype": "Select", "options": "all\nfull", "default": "all", "insert_after": "certificate"},
+		{"fieldname": "aliases", "label": "Aliases", "fieldtype": "Small Text", "insert_after": "offer"},
+		{"fieldname": "next_courses", "label": "Next Courses", "fieldtype": "Table MultiSelect", "options": "Course Link", "insert_after": "aliases"},
+		{"fieldname": "is_demo_data", "label": "Demo Data", "fieldtype": "Check", "insert_after": "next_courses"},
+	],
 }
 
 
@@ -181,9 +194,11 @@ def ensure_custom_field(dt, field):
 	name = f"{dt}-{field['fieldname']}"
 	if frappe.db.exists("Custom Field", name):
 		doc = frappe.get_doc("Custom Field", name)
-		for key, value in field.items():
-			setattr(doc, key, value)
-		doc.save(ignore_permissions=True)
+		changed = {k: v for k, v in field.items() if getattr(doc, k, None) != v}
+		if changed:
+			for key, value in changed.items():
+				setattr(doc, key, value)
+			doc.save(ignore_permissions=True)
 	else:
 		frappe.get_doc({"doctype": "Custom Field", "dt": dt, **field}).insert(ignore_permissions=True)
 
