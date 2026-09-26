@@ -46,34 +46,62 @@ COURSE_META = {
     "Tiếng Anh": {
         "key": "tieng_anh",
         "emoji": "🇬🇧",
-        "color": (41, 128, 185),
-        "accent": (52, 152, 219),
-        "title": "HỌC TIẾNG ANH",
-        "subtitle": "Giao tiếp tự tin • Cam kết đầu ra",
+        "color": (37, 99, 235),  # Royal Blue
+        "accent": (239, 68, 68),  # Red CTA
+        "title": "TIẾNG ANH GIAO TIẾP TOÀN DIỆN",
+        "subtitle": "Tự Tin Giao Tiếp • Bứt Phá Tương Lai",
+        "promo": "TẶNG BUỔI HỌC THỬ MIỄN PHÍ",
+        "benefits": [
+            ("Giáo Viên Bản Ngữ", "100% giáo viên phát âm chuẩn"),
+            ("Lớp Nhỏ 8-12 Bạn", "Tương tác phản xạ liên tục"),
+            ("Phương Pháp Thực Chiến", "Giao tiếp tự nhiên, không học vẹt"),
+            ("Cam Kết Chuẩn Đầu Ra", "Đạt mục tiêu chỉ sau 3 tháng"),
+        ],
     },
     "Bơi lội": {
         "key": "boi_loi",
         "emoji": "🏊",
-        "color": (39, 174, 96),
-        "accent": (46, 204, 113),
-        "title": "HỌC BƠI",
-        "subtitle": "An toàn vui khỏe • HLV chuyên nghiệp",
+        "color": (13, 148, 136),  # Teal
+        "accent": (245, 158, 11),  # Amber CTA
+        "title": "KHÓA HỌC BƠI LỘI TRẺ EM",
+        "subtitle": "An Toàn Dưới Nước • Tự Tin Vui Khỏe",
+        "promo": "ƯU ĐÃI 30% HÔM NAY",
+        "benefits": [
+            ("HLV Kèm Sát 1:1", "HLV tận tâm, chứng chỉ quốc tế"),
+            ("Hồ Nước Ấm 4 Mùa", "Khử trùng an toàn, đạt chuẩn"),
+            ("Cam Kết Biết Bơi", "Bé tự tin bơi sau 8-10 buổi"),
+            ("Lịch Học Linh Hoạt", "Sắp xếp phù hợp lịch của bé"),
+        ],
     },
     "Toán tư duy": {
         "key": "toan_tu_duy",
         "emoji": "🧮",
-        "color": (142, 68, 173),
-        "accent": (155, 89, 182),
-        "title": "TOÁN TƯ DUY",
-        "subtitle": "Phát triển trí não • Rèn luyện logic",
+        "color": (124, 58, 237),  # Purple
+        "accent": (245, 158, 11),  # Amber CTA
+        "title": "TOÁN TƯ DUY & LOGIC SÁNG TẠO",
+        "subtitle": "Khai Mở Tiềm Năng • Phát Triển Não Bộ",
+        "promo": "ƯU ĐÃI 35% HỌC PHÍ",
+        "benefits": [
+            ("Rèn Tư Duy Độc Lập", "Bé chủ động giải quyết vấn đề"),
+            ("Học Qua Trò Chơi", "Phương pháp trực quan, hào hứng"),
+            ("Dành Cho Bé 4-12 Tuổi", "Lộ trình cá nhân hóa từng độ tuổi"),
+            ("Tự Tin Học Toán", "Không còn sợ hãi môn Toán"),
+        ],
     },
     "Chung": {
         "key": "chung",
         "emoji": "🎓",
-        "color": (230, 126, 34),
-        "accent": (243, 156, 18),
+        "color": (230, 81, 0),  # Orange
+        "accent": (13, 148, 136),  # Teal CTA
         "title": "EDUFLOW ACADEMY",
-        "subtitle": "Hệ thống đào tạo kỹ năng hàng đầu",
+        "subtitle": "Hệ Thống Đào Tạo Kỹ Năng Hàng Đầu",
+        "promo": "ƯU ĐÃI KHAI GIẢNG 2026",
+        "benefits": [
+            ("Đội Ngũ Giảng Viên Hàng Đầu", "Chuyên môn cao, giàu nhiệt huyết"),
+            ("Cơ Sở Vật Chất Chuẩn Quốc Tế", "Trang thiết bị hiện đại, tiện nghi"),
+            ("Lộ Trình Cá Nhân Hóa", "Phát triển toàn diện năng lực học viên"),
+            ("Hỗ Trợ Học Viên 24/7", "Đồng hành sát sao suốt khóa học"),
+        ],
     },
 }
 
@@ -142,71 +170,112 @@ class FacebookPost(Document):
 
     @frappe.whitelist()
     def generate_banner(self):
-        """Generate a branded Facebook flyer image (1200x630) using Pillow and attach to document."""
+        """Generate a professional 1080x1080 Facebook Ad creative with hero photo and branding."""
         if not Image:
             frappe.throw(_("Thư viện Pillow chưa được cài đặt trên hệ thống."))
 
         meta = COURSE_META.get(self.course, COURSE_META["Chung"])
-        width, height = 1200, 630
+        W, H = 1080, 1080
+        canvas = Image.new("RGB", (W, H), (248, 250, 252))
+        draw = ImageDraw.Draw(canvas)
 
-        img = Image.new("RGB", (width, height), meta["color"])
-        draw = ImageDraw.Draw(img)
+        theme_color = meta["color"]
+        accent_color = meta["accent"]
 
-        # Gradient
-        for y in range(height):
-            alpha = y / height
-            r = int(meta["color"][0] * (1 - alpha * 0.45))
-            g = int(meta["color"][1] * (1 - alpha * 0.45))
-            b = int(meta["color"][2] * (1 - alpha * 0.45))
-            draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Find fonts
+        from pathlib import Path
+        current_file = Path(__file__).resolve()
+        app_root = current_file.parents[3]
+        font_bold_path = app_root / "public" / "fonts" / "bold.ttf"
+        font_reg_path = app_root / "public" / "fonts" / "regular.ttf"
 
-        # Card container
-        margin = 50
-        draw.rounded_rectangle([margin, margin, width - margin, height - margin], radius=24, fill=(255, 255, 255))
+        def get_font(size, bold=True):
+            target = font_bold_path if bold else font_reg_path
+            if target.exists():
+                return ImageFont.truetype(str(target), size)
+            for fallback in [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "C:\\Windows\\Fonts\\arialbd.ttf" if bold else "C:\\Windows\\Fonts\\arial.ttf",
+            ]:
+                if os.path.exists(fallback):
+                    return ImageFont.truetype(fallback, size)
+            return ImageFont.load_default()
 
-        # Fonts fallback
-        try:
-            title_font = ImageFont.truetype("arial.ttf", 68)
-            sub_font = ImageFont.truetype("arial.ttf", 32)
-            brand_font = ImageFont.truetype("arial.ttf", 26)
-        except Exception:
-            title_font = ImageFont.load_default()
-            sub_font = ImageFont.load_default()
-            brand_font = ImageFont.load_default()
+        f_brand = get_font(36, bold=True)
+        f_badge = get_font(24, bold=True)
+        f_title = get_font(46, bold=True)
+        f_sub = get_font(28, bold=True)
+        f_item_title = get_font(27, bold=True)
+        f_item_sub = get_font(21, bold=False)
+        f_cta = get_font(32, bold=True)
+        f_foot = get_font(25, bold=False)
+        f_foot_b = get_font(25, bold=True)
+        f_promo = get_font(23, bold=True)
 
-        # Title
-        title_text = meta["title"]
-        bbox = draw.textbbox((0, 0), title_text, font=title_font)
-        x_pos = (width - (bbox[2] - bbox[0])) // 2
-        draw.text((x_pos, 160), title_text, fill=meta["color"], font=title_font)
+        # Top Bar
+        draw.rectangle([0, 0, W, 120], fill=theme_color)
+        draw.text((50, 42), "EDUFLOW ACADEMY", fill=(255, 255, 255), font=f_brand)
+        draw.rounded_rectangle([770, 35, 1030, 85], radius=15, fill=(255, 255, 255))
+        draw.text((800, 47), "TUYỂN SINH 2026", fill=theme_color, font=f_badge)
 
-        # Subtitle
-        sub_text = meta["subtitle"]
-        bbox = draw.textbbox((0, 0), sub_text, font=sub_font)
-        x_pos = (width - (bbox[2] - bbox[0])) // 2
-        draw.text((x_pos, 260), sub_text, fill=(90, 90, 90), font=sub_font)
+        # Title & Subtitle
+        title_text = self.title or meta["title"]
+        draw.text((50, 155), title_text[:35], fill=(15, 23, 42), font=f_title)
+        draw.text((50, 220), meta["subtitle"], fill=theme_color, font=f_sub)
 
-        # Centers info
-        centers_text = "📍 Chi nhánh: Quận 1 • Bình Thạnh • Thủ Đức"
-        bbox = draw.textbbox((0, 0), centers_text, font=sub_font)
-        x_pos = (width - (bbox[2] - bbox[0])) // 2
-        draw.text((x_pos, 350), centers_text, fill=(50, 50, 50), font=sub_font)
+        # Hero Photo
+        photo_dir = app_root / "public" / "images" / "courses"
+        photo_path = photo_dir / f"{meta['key']}.jpg"
+        if photo_path.exists():
+            photo = Image.open(str(photo_path)).convert("RGB")
+            photo = photo.resize((500, 500), Image.Resampling.LANCZOS)
 
-        # Brand Footer
-        brand_text = "EDUFLOW ACADEMY — HỆ THỐNG ĐÀO TẠO THÔNG MINH"
-        bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
-        x_pos = (width - (bbox[2] - bbox[0])) // 2
-        draw.text((x_pos, height - 110), brand_text, fill=meta["color"], font=brand_font)
+            mask = Image.new("L", (500, 500), 0)
+            mask_draw = ImageDraw.Draw(mask)
+            mask_draw.rounded_rectangle([0, 0, 500, 500], radius=24, fill=255)
+
+            draw.rounded_rectangle([536, 276, 1040, 780], radius=26, fill=(203, 213, 225))
+            canvas.paste(photo, (540, 280), mask)
+
+            # Promo Badge
+            promo_text = meta.get("promo", "ƯU ĐÃI HÔM NAY")
+            bbox_p = draw.textbbox((0, 0), promo_text, font=f_promo)
+            pw = bbox_p[2] - bbox_p[0]
+            badge_left = max(550, 1020 - pw - 40)
+            draw.rounded_rectangle([badge_left, 300, 1020, 360], radius=18, fill=(220, 38, 38))
+            draw.text((badge_left + 20, 316), promo_text, fill=(255, 255, 255), font=f_promo)
+
+        # Benefits List
+        y_ben = 280
+        for b_title, b_sub in meta.get("benefits", []):
+            draw.rounded_rectangle([50, y_ben, 510, y_ben + 95], radius=16, fill=(255, 255, 255), outline=(226, 232, 240), width=2)
+            # Green checkmark circle
+            draw.ellipse([68, y_ben + 28, 104, y_ben + 64], fill=(16, 185, 129))
+            draw.line([(78, y_ben + 46), (84, y_ben + 54), (96, y_ben + 38)], fill=(255, 255, 255), width=3)
+            draw.text((118, y_ben + 18), b_title, fill=(15, 23, 42), font=f_item_title)
+            draw.text((118, y_ben + 54), b_sub, fill=(100, 116, 139), font=f_item_sub)
+            y_ben += 115
+
+        # Call to Action Button
+        draw.rounded_rectangle([50, 835, 510, 925], radius=24, fill=accent_color)
+        bbox_cta = draw.textbbox((0, 0), "INBOX ĐĂNG KÝ NGAY", font=f_cta)
+        cta_w = bbox_cta[2] - bbox_cta[0]
+        draw.text((50 + (460 - cta_w) // 2, 860), "INBOX ĐĂNG KÝ NGAY", fill=(255, 255, 255), font=f_cta)
+
+        # Footer Bar
+        draw.rectangle([0, 960, W, H], fill=(15, 23, 42))
+        draw.text((50, 985), "Chi nhánh: Quận 1 • Bình Thạnh • Thủ Đức", fill=(255, 255, 255), font=f_foot)
+        draw.text((50, 1025), "Hotline: 0901.888.666  |  Website: eduflow.vn", fill=(148, 163, 184), font=f_foot_b)
 
         # Save to buffer and attach via Frappe
         buf = io.BytesIO()
-        img.save(buf, format="PNG", quality=95)
+        canvas.save(buf, format="JPEG", quality=95)
         buf.seek(0)
 
         if self.is_new():
             self.insert(ignore_permissions=True)
 
-        file_name = f"banner_{meta['key']}_{self.name}.png"
+        file_name = f"banner_{meta['key']}_{self.name}.jpg"
         file_doc = save_file(file_name, buf.getvalue(), self.doctype, self.name, is_private=0)
 
         self.image = file_doc.file_url

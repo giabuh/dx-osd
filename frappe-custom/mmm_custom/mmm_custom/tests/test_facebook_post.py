@@ -32,18 +32,18 @@ class TestFacebookPost(unittest.TestCase):
             self.assertEqual(len(meta["color"]), 3)
 
     def test_banner_generation_logic(self):
-        """Test banner generation produces a 1200x630 RGB image."""
+        """Test banner generation produces a 1080x1080 square image."""
         meta = COURSE_META["Tiếng Anh"]
-        width, height = 1200, 630
+        width, height = 1080, 1080
         img = Image.new("RGB", (width, height), meta["color"])
-        self.assertEqual(img.size, (1200, 630))
+        self.assertEqual(img.size, (1080, 1080))
 
         buf = io.BytesIO()
-        img.save(buf, format="PNG")
+        img.save(buf, format="JPEG")
         buf.seek(0)
         loaded = Image.open(buf)
-        self.assertEqual(loaded.format, "PNG")
-        self.assertEqual(loaded.size, (1200, 630))
+        self.assertEqual(loaded.format, "JPEG")
+        self.assertEqual(loaded.size, (1080, 1080))
 
     @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.requests.post")
     def test_generate_ai_content_with_gemini(self, mock_post):
