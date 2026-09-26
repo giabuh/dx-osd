@@ -11,6 +11,7 @@ except ImportError:  # offline tests
 
 from mmm_custom.engine.decide import decide
 from mmm_custom.engine.lead import lead_updates
+from mmm_custom.engine.log import log_row, signals
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.understand import understand
 
@@ -126,6 +127,12 @@ def run_turn(event, repo, effects, render):
     write_lead(turn, effects, catalog)
     repo.save_state(state)
     emit_events(effects, state, turn.decision)
+    try:
+        repo.write_log(log_row(turn))
+        for row in signals(turn):
+            repo.write_signal(row)
+    except Exception as e:  # the log must never break a customer's turn
+        turn.reply.errors.append({"type": "log_failed", "detail": str(e)[:300]})
     return turn
 
 

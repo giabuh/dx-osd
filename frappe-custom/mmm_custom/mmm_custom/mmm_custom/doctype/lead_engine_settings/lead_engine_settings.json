@@ -16,7 +16,8 @@
   "fallback_template",
   "signoff",
   "engine_section",
-  "max_skills_per_reply"
+  "max_skills_per_reply",
+  "log_retention_days"
  ],
  "fields": [
   {
@@ -88,6 +89,13 @@
    "label": "Max Skills Per Reply",
    "default": "3",
    "description": "Most answers combined into one reply (D-054)"
+  },
+  {
+   "fieldname": "log_retention_days",
+   "fieldtype": "Int",
+   "label": "Log Retention Days",
+   "default": "180",
+   "description": "AI Decision Log rows older than this are deleted daily"
   }
  ],
  "issingle": 1,

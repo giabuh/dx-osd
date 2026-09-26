@@ -93,6 +93,8 @@ doc_events = {
 	dt: {"on_update": "mmm_custom.engine.repo.clear_catalog_cache", "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 	for dt in _LEAD_ENGINE_DATA
 }
+# Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
+doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update"}
 
 # Template filters for bot copy: {{ course.fee | vnd }} → "1.800.000đ", {{ s.date | date_vi }} → "Thứ 7, 04/10".
 jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.date_vi"]}
@@ -105,6 +107,8 @@ scheduler_events = {
 	"cron": {
 		"0 8 * * *": ["mmm_custom.followup.run_daily"],
 	},
+	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
+	"daily": ["mmm_custom.engine.log.purge_old_logs"],
 }
 
 # Uninstallation

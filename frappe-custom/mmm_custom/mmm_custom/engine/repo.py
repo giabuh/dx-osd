@@ -254,3 +254,9 @@ class FrappeRepo:
                  "courses": [c["course"] for c in courses.get(r.name, [])],
                  "course_groups": [g["course_group"] for g in groups.get(r.name, [])],
                  "branches": [b["branch"] for b in branches.get(r.name, [])]} for r in rows]
+
+    def write_log(self, row):
+        frappe.get_doc({"doctype": "AI Decision Log", **row}).insert(ignore_permissions=True)
+
+    def write_signal(self, row):
+        frappe.get_doc({"doctype": "Bot Learning Signal", **row}).insert(ignore_permissions=True)

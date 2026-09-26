@@ -36,6 +36,7 @@ class FakeRepo:
         self.states = {}
         self.prefill = {}
         self.schedules, self.promotions = [], []
+        self.logs, self.signals = [], []
 
     def catalog(self):
         return self._catalog
@@ -59,6 +60,12 @@ class FakeRepo:
 
     def active_promotions(self, today):
         return list(self.promotions)
+
+    def write_log(self, row):
+        self.logs.append(row)
+
+    def write_signal(self, row):
+        self.signals.append(row)
 
 
 def schedule(course, branch, day, shift="Tối 17:00–21:00", weekdays="T3, T5, T7", seats=6):
