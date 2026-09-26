@@ -180,5 +180,58 @@ class TestChatwootClient(unittest.TestCase):
         self.assertEqual(body, {"content": "Gợi ý trả lời", "message_type": "outgoing", "private": True})
 
 
+class TestChatwootClientAdmin(unittest.TestCase):
+    """Inbox/agent/team methods used by the demo Chatwoot seeding (C1.6)."""
+
+    def setUp(self):
+        self.client = ChatwootClient("http://localhost:3000", "tok", 1)
+
+    def _resp(self, mock_requests, verb, payload):
+        resp = MagicMock()
+        resp.json.return_value = payload
+        getattr(mock_requests, verb).return_value = resp
+        return resp
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_list_inboxes(self, mock_requests):
+        self._resp(mock_requests, "get", {"payload": [{"id": 2}]})
+        self.assertEqual(self.client.list_inboxes(), [{"id": 2}])
+        self.assertTrue(mock_requests.get.call_args[0][0].endswith("/api/v1/accounts/1/inboxes"))
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_create_agent(self, mock_requests):
+        self._resp(mock_requests, "post", {"id": 9})
+        self.assertEqual(self.client.create_agent("B", "b@x.invalid"), {"id": 9})
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/agents"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"name": "B", "email": "b@x.invalid", "role": "agent"})
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_list_teams(self, mock_requests):
+        self._resp(mock_requests, "get", [{"id": 1, "name": "cn dĩ an"}])
+        self.assertEqual(self.client.list_teams(), [{"id": 1, "name": "cn dĩ an"}])
+        self.assertTrue(mock_requests.get.call_args[0][0].endswith("/teams"))
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_create_team(self, mock_requests):
+        self._resp(mock_requests, "post", {"id": 3})
+        self.client.create_team("CN Dĩ An")
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/teams"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"name": "CN Dĩ An", "description": ""})
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_add_team_members(self, mock_requests):
+        self._resp(mock_requests, "post", [])
+        self.client.add_team_members(3, [7, 9])
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/teams/3/team_members"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"user_ids": [7, 9]})
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_add_inbox_members(self, mock_requests):
+        self._resp(mock_requests, "post", [])
+        self.client.add_inbox_members(2, [7])
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/inbox_members"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"inbox_id": 2, "user_ids": [7]})
+
+
 if __name__ == "__main__":
     unittest.main()

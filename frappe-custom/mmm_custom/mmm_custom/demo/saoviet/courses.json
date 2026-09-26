@@ -1,0 +1,986 @@
+[
+ {
+  "product_code": "VP-CB",
+  "product_name": "Tin học cơ bản",
+  "button_label": "Tin học cơ bản",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tin hoc co ban, may tinh co ban",
+  "next_courses": [
+   "VP-WORD",
+   "VP-EXCEL"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-WORD",
+  "product_name": "Word từ cơ bản đến nâng cao",
+  "button_label": "Word",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "word, soan thao",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-EXCEL",
+  "product_name": "Excel từ cơ bản đến nâng cao",
+  "button_label": "Excel",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1–1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "excel, bang tinh",
+  "next_courses": [
+   "VP-EXCEL-NC",
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-EXCEL-NC",
+  "product_name": "Excel nâng cao & Dashboard",
+  "button_label": "Excel nâng cao",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "excel nang cao, dashboard, pivot",
+  "next_courses": [
+   "LT-VBA"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-PPT",
+  "product_name": "PowerPoint chuyên nghiệp",
+  "button_label": "PowerPoint",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1300000,
+  "duration_text": "3 tuần",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "powerpoint, ppt, trinh chieu",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-AI",
+  "product_name": "Ứng dụng AI trong văn phòng",
+  "button_label": "AI văn phòng",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ai van phong, chatgpt van phong",
+  "next_courses": [
+   "AI-N8N"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-MOS",
+  "product_name": "Luyện thi MOS quốc tế",
+  "button_label": "Chứng chỉ MOS",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3500000,
+  "duration_text": "1,5–2 tháng",
+  "certificate": "MOS (Microsoft)",
+  "offer": "all",
+  "aliases": "mos, chung chi mos",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-IC3",
+  "product_name": "Luyện thi IC3",
+  "button_label": "Chứng chỉ IC3",
+  "course_group": "Tin học văn phòng",
+  "audience": "Học sinh – Sinh viên",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3200000,
+  "duration_text": "1,5–2 tháng",
+  "certificate": "IC3 (Certiport)",
+  "offer": "all",
+  "aliases": "ic3",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "VP-TRONGOI",
+  "product_name": "Tin học văn phòng trọn gói",
+  "button_label": "VP trọn gói",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3900000,
+  "duration_text": "2–3 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tron goi van phong, word excel powerpoint",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "DH-PTS",
+  "product_name": "Photoshop cơ bản",
+  "button_label": "Photoshop",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "photoshop, ps, chinh anh",
+  "next_courses": [
+   "DH-PTS-NC"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "DH-PTS-NC",
+  "product_name": "Photoshop nâng cao",
+  "button_label": "Photoshop nâng cao",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2300000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "photoshop nang cao",
+  "next_courses": [
+   "DH-AI"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "DH-AI",
+  "product_name": "Illustrator",
+  "button_label": "Illustrator",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2000000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "illustrator, ai design, vector",
+  "next_courses": [
+   "DH-CRD"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "DH-CRD",
+  "product_name": "CorelDraw",
+  "button_label": "CorelDraw",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "corel, coreldraw",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "DH-PR",
+  "product_name": "Premiere dựng video",
+  "button_label": "Premiere",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "premiere, dung video, edit video",
+  "next_courses": [
+   "DH-AE"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "DH-AE",
+  "product_name": "After Effects",
+  "button_label": "After Effects",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "after effects, ae, hieu ung",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "DH-TRONGOI",
+  "product_name": "Đồ họa trọn gói",
+  "button_label": "Đồ họa trọn gói",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 6500000,
+  "duration_text": "3 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tron goi do hoa",
+  "next_courses": [
+   "DH-PR"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-CAD2D",
+  "product_name": "AutoCAD 2D",
+  "button_label": "AutoCAD 2D",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "autocad, cad 2d, autocad 2d",
+  "next_courses": [
+   "VKT-CAD3D"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-CAD3D",
+  "product_name": "AutoCAD 3D",
+  "button_label": "AutoCAD 3D",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "autocad 3d, cad 3d",
+  "next_courses": [
+   "VKT-REVIT"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-SW",
+  "product_name": "SolidWorks",
+  "button_label": "SolidWorks",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3200000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "solidworks, solid",
+  "next_courses": [
+   "VKT-INV"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-SKP",
+  "product_name": "SketchUp",
+  "button_label": "SketchUp",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "sketchup, sketch up",
+  "next_courses": [
+   "VKT-VRAY"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-3DS",
+  "product_name": "3DS Max",
+  "button_label": "3DS Max",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3500000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "3ds max, 3dsmax",
+  "next_courses": [
+   "VKT-VRAY"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-REVIT",
+  "product_name": "Revit kiến trúc",
+  "button_label": "Revit",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3800000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "revit, bim",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-INV",
+  "product_name": "Inventor",
+  "button_label": "Inventor",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3300000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "inventor",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "VKT-VRAY",
+  "product_name": "Vray & Enscape render",
+  "button_label": "Vray & Enscape",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "vray, enscape, render",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "KT-CB",
+  "product_name": "Nguyên lý kế toán cho người mới",
+  "button_label": "Kế toán cơ bản",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ke toan co ban, nguyen ly ke toan",
+  "next_courses": [
+   "KT-TH"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "KT-TH",
+  "product_name": "Kế toán tổng hợp thực hành",
+  "button_label": "Kế toán tổng hợp",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3500000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ke toan tong hop",
+  "next_courses": [
+   "KT-THUE"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "KT-THUE",
+  "product_name": "Khai báo & quyết toán thuế",
+  "button_label": "Kế toán thuế",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2800000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "thue, quyet toan thue, khai bao thue",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "KT-EXCEL",
+  "product_name": "Kế toán trên Excel",
+  "button_label": "Kế toán Excel",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ke toan excel",
+  "next_courses": [
+   "KT-MISA"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "KT-MISA",
+  "product_name": "Kế toán phần mềm MISA",
+  "button_label": "Phần mềm MISA",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2000000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "misa",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "LT-PY",
+  "product_name": "Python cơ bản",
+  "button_label": "Python",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "python",
+  "next_courses": [
+   "LT-WEB"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "LT-VBA",
+  "product_name": "VBA Excel",
+  "button_label": "VBA Excel",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2300000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "vba, macro",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "LT-WEB",
+  "product_name": "Lập trình Web",
+  "button_label": "Lập trình Web",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 4500000,
+  "duration_text": "3 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "web, html, lap trinh web",
+  "next_courses": [
+   "LT-MOBILE"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "LT-MOBILE",
+  "product_name": "Lập trình Mobile",
+  "button_label": "Lập trình Mobile",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 4900000,
+  "duration_text": "3 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "mobile, app, android, ios",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "TE-THUD",
+  "product_name": "Tin học ứng dụng cho trẻ",
+  "button_label": "Tin học cho bé",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 6,
+  "max_age": 12,
+  "standard_rate": 1200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tin hoc cho be, tin hoc tre em",
+  "next_courses": [
+   "TE-SCRATCH"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "TE-SCRATCH",
+  "product_name": "Lập trình Scratch",
+  "button_label": "Scratch",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 7,
+  "max_age": 12,
+  "standard_rate": 1500000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "scratch",
+  "next_courses": [
+   "TE-PY"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "TE-PY",
+  "product_name": "Python cho trẻ",
+  "button_label": "Python cho bé",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 10,
+  "max_age": 15,
+  "standard_rate": 1900000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "python cho be, python tre em",
+  "next_courses": [
+   "LT-PY"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "TE-ROBO",
+  "product_name": "Robotics cơ bản",
+  "button_label": "Robotics",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 7,
+  "max_age": 12,
+  "standard_rate": 2400000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "robotics, robot, lap rap robot",
+  "next_courses": [
+   "TE-ROBO-NC"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "TE-ROBO-NC",
+  "product_name": "Robotics nâng cao",
+  "button_label": "Robotics nâng cao",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 10,
+  "max_age": 15,
+  "standard_rate": 2900000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "robotics nang cao",
+  "next_courses": [],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ]
+ },
+ {
+  "product_code": "MKT-FB",
+  "product_name": "Quảng cáo Facebook Ads",
+  "button_label": "Facebook Ads",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "facebook ads, chay quang cao facebook",
+  "next_courses": [
+   "MKT-TT"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "MKT-GG",
+  "product_name": "Quảng cáo Google Ads",
+  "button_label": "Google Ads",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "google ads",
+  "next_courses": [
+   "MKT-SEO"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "MKT-TT",
+  "product_name": "Quảng cáo TikTok Ads",
+  "button_label": "TikTok Ads",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2300000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tiktok ads, tiktok",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "MKT-SEO",
+  "product_name": "SEO website",
+  "button_label": "SEO",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2800000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "seo, len top google",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "MKT-WEB",
+  "product_name": "Thiết kế website không cần code",
+  "button_label": "Thiết kế website",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2600000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "thiet ke website, lam web",
+  "next_courses": [
+   "MKT-SEO"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "AI-BASIC",
+  "product_name": "AI cho người mới bắt đầu",
+  "button_label": "AI cho người mới",
+  "course_group": "AI & Tự động hóa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1500000,
+  "duration_text": "3 tuần",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ai co ban, hoc ai",
+  "next_courses": [
+   "AI-VIBE"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "AI-VIBE",
+  "product_name": "Vibe Coding",
+  "button_label": "Vibe Coding",
+  "course_group": "AI & Tự động hóa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "vibe coding",
+  "next_courses": [
+   "AI-N8N"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ },
+ {
+  "product_code": "AI-N8N",
+  "product_name": "Tự động hóa với n8n",
+  "button_label": "Tự động hóa n8n",
+  "course_group": "AI & Tự động hóa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2700000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "n8n, automation",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ]
+ }
+]

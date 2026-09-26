@@ -170,7 +170,7 @@ CATALOG_FIELDS = {
 		{"fieldname": "branch_tier", "label": "Branch Tier", "fieldtype": "Select", "options": "\nfull\nstandard", "insert_after": "button_label"},
 		{"fieldname": "address", "label": "Address", "fieldtype": "Small Text", "insert_after": "branch_tier"},
 		{"fieldname": "hotline", "label": "Hotline", "fieldtype": "Data", "insert_after": "address"},
-		{"fieldname": "map_url", "label": "Map URL", "fieldtype": "Data", "insert_after": "hotline"},
+		{"fieldname": "map_url", "label": "Map URL", "fieldtype": "Data", "options": "URL", "length": 500, "insert_after": "hotline"},
 		{"fieldname": "aliases", "label": "Aliases", "fieldtype": "Small Text", "description": "Comma-separated names customers use, e.g. Dĩ An, Di An", "insert_after": "map_url"},
 	],
 	"CRM Product": [

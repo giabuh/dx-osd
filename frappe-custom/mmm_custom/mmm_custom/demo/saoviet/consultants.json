@@ -1,0 +1,551 @@
+[
+ {
+  "full_name": "Nguyễn Thị Mai",
+  "email": "mai.hcm-bt@demo.saoviet.invalid",
+  "branch": "CN Bình Thạnh",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Trần Văn Nam",
+  "email": "nam.hcm-bt@demo.saoviet.invalid",
+  "branch": "CN Bình Thạnh",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Lê Thị Hoa",
+  "email": "hoa.hcm-bt@demo.saoviet.invalid",
+  "branch": "CN Bình Thạnh",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Phạm Minh Tuấn",
+  "email": "tuan.hcm-q7@demo.saoviet.invalid",
+  "branch": "CN Quận 7",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Võ Thị Lan",
+  "email": "lan.hcm-q7@demo.saoviet.invalid",
+  "branch": "CN Quận 7",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Đặng Quốc Huy",
+  "email": "huy.hcm-q7@demo.saoviet.invalid",
+  "branch": "CN Quận 7",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Bùi Thị Ngọc",
+  "email": "ngoc.hcm-q6@demo.saoviet.invalid",
+  "branch": "CN Quận 6",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Hoàng Văn Long",
+  "email": "long.hcm-q6@demo.saoviet.invalid",
+  "branch": "CN Quận 6",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Đỗ Thị Thảo",
+  "email": "thao.hcm-q6@demo.saoviet.invalid",
+  "branch": "CN Quận 6",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Ngô Thị Hạnh",
+  "email": "hanh.hcm-q12@demo.saoviet.invalid",
+  "branch": "CN Quận 12",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Dương Văn Khoa",
+  "email": "khoa.hcm-q12@demo.saoviet.invalid",
+  "branch": "CN Quận 12",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Lý Thị Vy",
+  "email": "vy.hcm-q12@demo.saoviet.invalid",
+  "branch": "CN Quận 12",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Trịnh Văn Phúc",
+  "email": "phuc.hcm-td@demo.saoviet.invalid",
+  "branch": "CN Thủ Đức",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Mai Thị Trang",
+  "email": "trang.hcm-td@demo.saoviet.invalid",
+  "branch": "CN Thủ Đức",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Hồ Văn Đức",
+  "email": "duc.hcm-td@demo.saoviet.invalid",
+  "branch": "CN Thủ Đức",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Phan Thị Yến",
+  "email": "yen.hcm-tb@demo.saoviet.invalid",
+  "branch": "CN Tân Bình",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Lâm Văn Tài",
+  "email": "tai.hcm-tb@demo.saoviet.invalid",
+  "branch": "CN Tân Bình",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Tạ Thị Nhung",
+  "email": "nhung.hcm-tb@demo.saoviet.invalid",
+  "branch": "CN Tân Bình",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Châu Văn Hải",
+  "email": "hai.bd-tdm@demo.saoviet.invalid",
+  "branch": "CN Thủ Dầu Một",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Quách Thị My",
+  "email": "my.bd-tdm@demo.saoviet.invalid",
+  "branch": "CN Thủ Dầu Một",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Vương Văn Sơn",
+  "email": "son.bd-tdm@demo.saoviet.invalid",
+  "branch": "CN Thủ Dầu Một",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Lưu Thị Diễm",
+  "email": "diem.bd-ta@demo.saoviet.invalid",
+  "branch": "CN Thuận An",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Tô Văn Thành",
+  "email": "thanh.bd-ta@demo.saoviet.invalid",
+  "branch": "CN Thuận An",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Kiều Thị Loan",
+  "email": "loan.bd-ta@demo.saoviet.invalid",
+  "branch": "CN Thuận An",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Đinh Văn Hùng",
+  "email": "hung.bd-da@demo.saoviet.invalid",
+  "branch": "CN Dĩ An",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Cao Thị Kim",
+  "email": "kim.bd-da@demo.saoviet.invalid",
+  "branch": "CN Dĩ An",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Lạc Văn Bảo",
+  "email": "bao.bd-da@demo.saoviet.invalid",
+  "branch": "CN Dĩ An",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Mạc Thị Oanh",
+  "email": "oanh.bd-tu@demo.saoviet.invalid",
+  "branch": "CN Tân Uyên",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Thái Văn Lộc",
+  "email": "loc.bd-tu@demo.saoviet.invalid",
+  "branch": "CN Tân Uyên",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Từ Thị Hằng",
+  "email": "hang.bd-tu@demo.saoviet.invalid",
+  "branch": "CN Tân Uyên",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "La Văn Kiệt",
+  "email": "kiet.dn-bh@demo.saoviet.invalid",
+  "branch": "CN Biên Hòa",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Âu Thị Xuân",
+  "email": "xuan.dn-bh@demo.saoviet.invalid",
+  "branch": "CN Biên Hòa",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Hà Văn Tùng",
+  "email": "tung.dn-bh@demo.saoviet.invalid",
+  "branch": "CN Biên Hòa",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Giang Thị Nhi",
+  "email": "nhi.dn-lt@demo.saoviet.invalid",
+  "branch": "CN Long Thành",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Khổng Văn Toàn",
+  "email": "toan.dn-lt@demo.saoviet.invalid",
+  "branch": "CN Long Thành",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Lục Thị Tuyết",
+  "email": "tuyet.dn-lt@demo.saoviet.invalid",
+  "branch": "CN Long Thành",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Tăng Văn Vinh",
+  "email": "vinh.vt-vt@demo.saoviet.invalid",
+  "branch": "CN Vũng Tàu",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Kế toán",
+   "Tin học trẻ em"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Ông Thị Liên",
+  "email": "lien.vt-vt@demo.saoviet.invalid",
+  "branch": "CN Vũng Tàu",
+  "level": "Consultant",
+  "specialties": [
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Digital Marketing"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Sầm Văn Hiếu",
+  "email": "hieu.vt-vt@demo.saoviet.invalid",
+  "branch": "CN Vũng Tàu",
+  "level": "Consultant",
+  "specialties": [
+   "Lập trình",
+   "AI & Tự động hóa",
+   "Tin học văn phòng"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Nguyễn Hoàng Anh",
+  "email": "anh.b2b@demo.saoviet.invalid",
+  "branch": "",
+  "level": "Team Lead",
+  "specialties": [
+   "Tin học văn phòng",
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Kế toán",
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 1
+ },
+ {
+  "full_name": "Trần Thu Hà",
+  "email": "ha.b2b@demo.saoviet.invalid",
+  "branch": "",
+  "level": "Consultant",
+  "specialties": [
+   "Tin học văn phòng",
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Kế toán",
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 1
+ },
+ {
+  "full_name": "Lê Minh Khang",
+  "email": "khang.b2b@demo.saoviet.invalid",
+  "branch": "",
+  "level": "Consultant",
+  "specialties": [
+   "Tin học văn phòng",
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Kế toán",
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 1
+ },
+ {
+  "full_name": "Phạm Thị Thu",
+  "email": "thu.tongdai@demo.saoviet.invalid",
+  "branch": "",
+  "level": "Consultant",
+  "specialties": [
+   "Tin học văn phòng",
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Kế toán",
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 0
+ },
+ {
+  "full_name": "Võ Văn Quang",
+  "email": "quang.tongdai@demo.saoviet.invalid",
+  "branch": "",
+  "level": "Consultant",
+  "specialties": [
+   "Tin học văn phòng",
+   "Thiết kế đồ họa",
+   "Vẽ kỹ thuật",
+   "Kế toán",
+   "Lập trình",
+   "Tin học trẻ em",
+   "Digital Marketing",
+   "AI & Tự động hóa"
+  ],
+  "handles_b2b": 0
+ }
+]

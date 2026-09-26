@@ -1,0 +1,13 @@
+{
+ "brand_name": "Tin Học Sao Việt",
+ "bot_name": "Trợ lý Sao Việt",
+ "address_customer": "anh/chị",
+ "address_self": "em",
+ "hotline": "0931 144 858",
+ "zalo": "0931144858",
+ "website": "https://tinhocsaoviet.com",
+ "email": "trungtamtinhocsaoviet@gmail.com",
+ "greeting_template": "Dạ {{ brand.me }} là {{ brand.bot_name }}, {{ brand.me }} có thể giúp gì cho {{ brand.you }} ạ?",
+ "fallback_template": "Dạ {{ brand.me }} chưa hiểu ý {{ brand.you }}, {{ brand.you }} chọn giúp {{ brand.me }} một mục bên dưới hoặc gọi {{ brand.hotline }} nhé ạ.",
+ "signoff": "Sao Việt"
+}

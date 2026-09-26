@@ -1,0 +1,150 @@
+{
+ "root": "Sao Việt",
+ "areas": [
+  {
+   "territory_name": "TP. Hồ Chí Minh",
+   "button_label": "TP.HCM",
+   "aliases": "tphcm, hcm, sai gon, saigon, ho chi minh",
+   "branches": [
+    {
+     "territory_name": "CN Bình Thạnh",
+     "branch_code": "HCM-BT",
+     "button_label": "Bình Thạnh",
+     "tier": "full",
+     "address": "21/8 Lê Trực, Phường 7, Bình Thạnh, TP.HCM",
+     "hotline": "0931 144 858",
+     "aliases": "binh thanh, bthanh, le truc"
+    },
+    {
+     "territory_name": "CN Quận 7",
+     "branch_code": "HCM-Q7",
+     "button_label": "Quận 7",
+     "tier": "standard",
+     "address": "515 B2/12 Lê Văn Lương, Tân Phong, Quận 7, TP.HCM",
+     "hotline": "0931 144 858",
+     "aliases": "quan 7, q7, q.7, le van luong"
+    },
+    {
+     "territory_name": "CN Quận 6",
+     "branch_code": "HCM-Q6",
+     "button_label": "Quận 6",
+     "tier": "standard",
+     "address": "189 Kinh Dương Vương, Phường 12, Quận 6, TP.HCM",
+     "hotline": "0931 144 858",
+     "aliases": "quan 6, q6, kinh duong vuong"
+    },
+    {
+     "territory_name": "CN Quận 12",
+     "branch_code": "HCM-Q12",
+     "button_label": "Quận 12",
+     "tier": "standard",
+     "address": "A23 Lê Thị Riêng, Thới An, Quận 12, TP.HCM",
+     "hotline": "0931 144 858",
+     "aliases": "quan 12, q12, le thi rieng"
+    },
+    {
+     "territory_name": "CN Thủ Đức",
+     "branch_code": "HCM-TD",
+     "button_label": "Thủ Đức",
+     "tier": "full",
+     "address": "133/2 Đỗ Xuân Hợp, Phước Long, TP. Thủ Đức",
+     "hotline": "0931 144 858",
+     "aliases": "thu duc, tp thu duc, do xuan hop"
+    },
+    {
+     "territory_name": "CN Tân Bình",
+     "branch_code": "HCM-TB",
+     "button_label": "Tân Bình",
+     "tier": "standard",
+     "address": "180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM",
+     "hotline": "0931 144 858",
+     "aliases": "tan binh, pham van bach"
+    }
+   ]
+  },
+  {
+   "territory_name": "Bình Dương",
+   "button_label": "Bình Dương",
+   "aliases": "binh duong, bd",
+   "branches": [
+    {
+     "territory_name": "CN Thủ Dầu Một",
+     "branch_code": "BD-TDM",
+     "button_label": "Thủ Dầu Một",
+     "tier": "full",
+     "address": "107 D5, Phú Hòa 1, Thủ Dầu Một, Bình Dương",
+     "hotline": "0931 144 858",
+     "aliases": "thu dau mot, tdm, phu hoa"
+    },
+    {
+     "territory_name": "CN Thuận An",
+     "branch_code": "BD-TA",
+     "button_label": "Thuận An",
+     "tier": "standard",
+     "address": "Đường NA8, KDC Việt Sing, Thuận An, Bình Dương",
+     "hotline": "0931 144 858",
+     "aliases": "thuan an, viet sing"
+    },
+    {
+     "territory_name": "CN Dĩ An",
+     "branch_code": "BD-DA",
+     "button_label": "Dĩ An",
+     "tier": "standard",
+     "address": "184/19/11 Đặng Văn Mây, Dĩ An, Bình Dương",
+     "hotline": "0931 144 858",
+     "aliases": "di an, dang van may"
+    },
+    {
+     "territory_name": "CN Tân Uyên",
+     "branch_code": "BD-TU",
+     "button_label": "Tân Uyên",
+     "tier": "standard",
+     "address": "30 Tổ 3, Tân Hóa, Tân Uyên, Bình Dương",
+     "hotline": "0931 144 858",
+     "aliases": "tan uyen, tan hoa"
+    }
+   ]
+  },
+  {
+   "territory_name": "Đồng Nai",
+   "button_label": "Đồng Nai",
+   "aliases": "dong nai",
+   "branches": [
+    {
+     "territory_name": "CN Biên Hòa",
+     "branch_code": "DN-BH",
+     "button_label": "Biên Hòa",
+     "tier": "full",
+     "address": "91 Đoàn Văn Cự, Tam Hiệp, Biên Hòa, Đồng Nai",
+     "hotline": "0931 144 858",
+     "aliases": "bien hoa, tam hiep"
+    },
+    {
+     "territory_name": "CN Long Thành",
+     "branch_code": "DN-LT",
+     "button_label": "Long Thành",
+     "tier": "standard",
+     "address": "72 Đinh Bộ Lĩnh, Long Thành, Đồng Nai",
+     "hotline": "0931 144 858",
+     "aliases": "long thanh, dinh bo linh"
+    }
+   ]
+  },
+  {
+   "territory_name": "Bà Rịa - Vũng Tàu",
+   "button_label": "Vũng Tàu",
+   "aliases": "vung tau, ba ria, brvt",
+   "branches": [
+    {
+     "territory_name": "CN Vũng Tàu",
+     "branch_code": "VT-VT",
+     "button_label": "Vũng Tàu",
+     "tier": "standard",
+     "address": "293 Bình Giã, Phường 8, Vũng Tàu",
+     "hotline": "0931 144 858",
+     "aliases": "vung tau, binh gia"
+    }
+   ]
+  }
+ ]
+}

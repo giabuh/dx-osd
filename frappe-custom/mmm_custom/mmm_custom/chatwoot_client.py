@@ -153,3 +153,39 @@ class ChatwootClient:
         )
         resp.raise_for_status()
         return resp.json()
+
+    # Account administration (used by the demo seeding, mmm_custom.demo.chatwoot_seed).
+
+    def list_inboxes(self) -> list[dict]:
+        resp = requests.get(f"{self._base}/inboxes", headers=self._headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()["payload"]
+
+    def create_agent(self, name: str, email: str, role: str = "agent") -> dict:
+        resp = requests.post(f"{self._base}/agents", headers=self._headers,
+                             json={"name": name, "email": email, "role": role}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_teams(self) -> list[dict]:
+        resp = requests.get(f"{self._base}/teams", headers=self._headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def create_team(self, name: str, description: str = "") -> dict:
+        resp = requests.post(f"{self._base}/teams", headers=self._headers,
+                             json={"name": name, "description": description}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def add_team_members(self, team_id: int, user_ids: list[int]) -> list:
+        resp = requests.post(f"{self._base}/teams/{team_id}/team_members", headers=self._headers,
+                             json={"user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def add_inbox_members(self, inbox_id: int, user_ids: list[int]) -> list:
+        resp = requests.post(f"{self._base}/inbox_members", headers=self._headers,
+                             json={"inbox_id": inbox_id, "user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()

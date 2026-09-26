@@ -1,0 +1,729 @@
+[
+ {
+  "skill_key": "fee_quote",
+  "title": "học phí",
+  "jev_description": "The customer asks how much a course costs or about tuition fees",
+  "examples": "khóa excel bao nhiêu tiền\nhọc phí autocad sao ạ\nhp bn vậy",
+  "aliases": "hoc phi, bao nhieu tien, bn tien, gia, chi phi",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "fee_quote",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ khóa {{ course.name }} học phí {{ course.fee | vnd }}{% if promotions %}, đang ưu đãi còn {{ final_fee | vnd }}{% endif %} ạ."
+   }
+  ],
+  "follow_ups": [
+   {
+    "title": "Xem lịch khai giảng",
+    "target_type": "skill",
+    "target": "schedule_lookup"
+   },
+   {
+    "title": "Đăng ký tư vấn",
+    "target_type": "handoff",
+    "target": ""
+   }
+  ],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 10
+ },
+ {
+  "skill_key": "schedule_lookup",
+  "title": "lịch khai giảng",
+  "jev_description": "The customer asks when a class starts or about the class schedule",
+  "examples": "khi nào khai giảng lớp excel\ncó lớp tối không\ntuần sau có lớp mới chưa",
+  "aliases": "lich khai giang, khi nao hoc, bao gio khai giang, lop moi",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "schedule_lookup",
+  "action_config": {
+   "limit": 3
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Lịch khai giảng gần nhất khóa {{ course.name }}:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.weekdays }}, {{ s.shift }}) tại {{ s.branch }}{% endfor %}"
+   },
+   {
+    "variant_key": "none",
+    "when": "not schedules",
+    "template": "Hiện khóa {{ course.name }} chưa có lịch mới, {{ brand.me }} sẽ báo {{ brand.you }} ngay khi mở lớp ạ."
+   }
+  ],
+  "follow_ups": [
+   {
+    "title": "Xem học phí",
+    "target_type": "skill",
+    "target": "fee_quote"
+   },
+   {
+    "title": "Đăng ký giữ chỗ",
+    "target_type": "skill",
+    "target": "register"
+   }
+  ],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 20
+ },
+ {
+  "skill_key": "branch_info",
+  "title": "địa chỉ chi nhánh",
+  "jev_description": "The customer asks where a branch is, for an address or the nearest location",
+  "examples": "trung tâm ở đâu vậy\ngần dĩ an có cơ sở nào không\ncho xin địa chỉ",
+  "aliases": "dia chi, o dau, chi nhanh, co so, gan nhat",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "branch_info",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ branch.name }} ở {{ branch.address }} ạ. Bản đồ: {{ branch.map_url }}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 30
+ },
+ {
+  "skill_key": "duration",
+  "title": "thời lượng khóa học",
+  "jev_description": "The customer asks how long a course takes",
+  "examples": "học excel mất bao lâu\nkhóa này mấy tháng\nhọc bao nhiêu buổi",
+  "aliases": "hoc bao lau, may thang, thoi luong, bao nhieu buoi",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Khóa {{ course.name }} thường học khoảng {{ course.duration }} ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 40
+ },
+ {
+  "skill_key": "unlimited_sessions",
+  "title": "học đến khi thành thạo",
+  "jev_description": "The customer asks whether they can repeat lessons or study until they master the skill",
+  "examples": "học chưa hiểu có được học lại không\ncó giới hạn số buổi không",
+  "aliases": "hoc lai, khong gioi han, hoc den khi thanh thao",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ bên {{ brand.me }} học không giới hạn số buổi đến khi thành thạo, học chưa vững được học lại miễn phí ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 50
+ },
+ {
+  "skill_key": "certificate_info",
+  "title": "chứng chỉ",
+  "jev_description": "The customer asks whether the course gives a certificate",
+  "examples": "học xong có bằng không\ncó chứng chỉ quốc tế không",
+  "aliases": "chung chi, bang cap, chung nhan",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "{% if course.certificate %}Khóa {{ course.name }} có chứng chỉ {{ course.certificate }} ạ.{% else %}Học viên hoàn thành khóa được cấp chứng nhận của trung tâm ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 60
+ },
+ {
+  "skill_key": "certificate_lookup",
+  "title": "tra cứu chứng nhận",
+  "jev_description": "A former student wants to look up or verify a certificate they already received",
+  "examples": "tra cứu chứng chỉ ở đâu\nkiểm tra bằng đã học",
+  "aliases": "tra cuu chung nhan, tra chung chi, kiem tra bang",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.you }} tra cứu chứng nhận tại https://chungnhan.tinhocsaoviet.com/ ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 0,
+  "handoff_after": 0,
+  "sort_order": 70
+ },
+ {
+  "skill_key": "trial_class",
+  "title": "học thử",
+  "jev_description": "The customer asks about a free trial class",
+  "examples": "có học thử không\ncho học thử 1 buổi được không",
+  "aliases": "hoc thu, hoc thu mien phi, du thinh",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi ạ, {{ brand.me }} xếp lịch cho {{ brand.you }} nhé?"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 80
+ },
+ {
+  "skill_key": "promotions",
+  "title": "khuyến mãi",
+  "jev_description": "The customer asks about discounts or promotions",
+  "examples": "đang có khuyến mãi gì không\ncó giảm giá không ạ",
+  "aliases": "khuyen mai, uu dai, giam gia",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "fee_quote",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "{% if promotions %}Ưu đãi đang áp dụng: {% for p in promotions %}{{ p.title }}{% if not loop.last %}; {% endif %}{% endfor %} ạ.{% else %}Hiện chưa có ưu đãi cho khóa này ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 90
+ },
+ {
+  "skill_key": "payment",
+  "title": "cách đóng học phí",
+  "jev_description": "The customer asks how to pay the tuition",
+  "examples": "đóng tiền thế nào\nchuyển khoản được không",
+  "aliases": "dong hoc phi, chuyen khoan, tra gop",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.you }} có thể đóng tiền mặt tại chi nhánh hoặc chuyển khoản ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 100
+ },
+ {
+  "skill_key": "shifts",
+  "title": "ca học",
+  "jev_description": "The customer asks which time slots or shifts are available",
+  "examples": "học ca mấy giờ\ncó học buổi tối không",
+  "aliases": "ca hoc, gio hoc, hoc buoi nao",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Bên {{ brand.me }} có ca sáng 8:30–11:00, chiều 13:30–16:30, tối 17:00–21:00, thứ 2 đến thứ 7 ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 110
+ },
+ {
+  "skill_key": "career",
+  "title": "đầu ra, việc làm",
+  "jev_description": "The customer asks about job prospects after the course",
+  "examples": "học xong có xin việc được không\nđầu ra thế nào",
+  "aliases": "viec lam, dau ra, xin viec, ra truong",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Khóa {{ course.name }} học thực hành trên bài tập thực tế, học xong làm việc được ngay ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 120
+ },
+ {
+  "skill_key": "laptop",
+  "title": "cần mang laptop không",
+  "jev_description": "The customer asks whether they need to bring their own laptop",
+  "examples": "có cần mang laptop không\nkhông có máy tính học được không",
+  "aliases": "mang laptop, may tinh rieng, can laptop",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ trung tâm có sẵn máy thực hành, {{ brand.you }} mang laptop riêng cũng được ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 130
+ },
+ {
+  "skill_key": "kids_courses",
+  "title": "khóa cho trẻ em",
+  "jev_description": "A parent asks which courses suit their child",
+  "examples": "có khóa nào cho bé 8 tuổi không\ncon em học lớp 3 học gì được",
+  "aliases": "cho be, tre em, thieu nhi",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "recommend_courses",
+  "action_config": {
+   "top": 3
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Các khóa phù hợp cho bé:{% for r in recommendations %}\n• {{ r.course }} – {{ r.fee | vnd }}{% endfor %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 140
+ },
+ {
+  "skill_key": "corporate_training",
+  "title": "đào tạo doanh nghiệp",
+  "jev_description": "A company wants training for its staff",
+  "examples": "công ty mình cần đào tạo excel cho 20 nhân viên\ncó đào tạo tại doanh nghiệp không",
+  "aliases": "dao tao doanh nghiep, cho nhan vien, cong ty",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "handoff",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} chuyển {{ brand.you }} sang bộ phận đào tạo doanh nghiệp ngay ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 1,
+  "sort_order": 150
+ },
+ {
+  "skill_key": "complaint",
+  "title": "khiếu nại",
+  "jev_description": "The customer is unhappy or complains",
+  "examples": "giảng viên dạy tệ quá\ntôi muốn khiếu nại",
+  "aliases": "khieu nai, phan nan, khong hai long, te qua",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "handoff",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} rất xin lỗi, {{ brand.me }} chuyển ngay cho quản lý hỗ trợ {{ brand.you }} ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 1,
+  "sort_order": 160
+ },
+ {
+  "skill_key": "talk_to_human",
+  "title": "gặp tư vấn viên",
+  "jev_description": "The customer wants to talk to a person or asks to be called",
+  "examples": "cho mình gặp nhân viên\ngọi lại cho tôi",
+  "aliases": "gap nguoi, tu van vien, goi cho toi, nhan vien",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "handoff",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} chuyển {{ brand.you }} cho tư vấn viên ngay ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 170
+ },
+ {
+  "skill_key": "course_advisor",
+  "title": "tư vấn chọn khóa",
+  "jev_description": "The customer describes a need but does not know which course to take",
+  "examples": "mình đi làm văn phòng nên học gì\nmuốn làm kế toán mà chưa biết gì",
+  "aliases": "nen hoc gi, chua biet hoc gi, tu van khoa",
+  "parameters": [
+   "learner"
+  ],
+  "missing_policy": "ask",
+  "action_type": "recommend_courses",
+  "action_config": {
+   "top": 3
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "{{ brand.me | capitalize }} gợi ý {{ brand.you }}:{% for r in recommendations %}\n• {{ r.course }} – {{ r.fee | vnd }}{% endfor %}"
+   }
+  ],
+  "follow_ups": [
+   {
+    "title": "Gặp tư vấn viên",
+    "target_type": "handoff",
+    "target": ""
+   }
+  ],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 180
+ },
+ {
+  "skill_key": "hotline",
+  "title": "hotline, Zalo",
+  "jev_description": "The customer asks for the phone number or Zalo",
+  "examples": "cho xin số hotline\nzalo bên mình là gì",
+  "aliases": "hotline, so dien thoai, zalo, lien he",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Hotline/Zalo: {{ brand.hotline }} ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 190
+ },
+ {
+  "skill_key": "opening_hours",
+  "title": "giờ làm việc",
+  "jev_description": "The customer asks about opening hours",
+  "examples": "mấy giờ mở cửa\nchủ nhật có làm không",
+  "aliases": "may gio, gio lam viec, mo cua",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Trung tâm làm việc từ 8:00 đến 21:00, thứ 2 đến thứ 7 ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 200
+ },
+ {
+  "skill_key": "online_learning",
+  "title": "học online",
+  "jev_description": "The customer asks whether they can study online",
+  "examples": "có học online không\nở xa học từ xa được không",
+  "aliases": "hoc online, truc tuyen, hoc tu xa",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ hiện khóa {{ course.name }} học trực tiếp tại chi nhánh để được hướng dẫn cầm tay chỉ việc ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 210
+ },
+ {
+  "skill_key": "course_content",
+  "title": "nội dung khóa học",
+  "jev_description": "The customer asks what the course covers or for the syllabus",
+  "examples": "khóa này học những gì\ncho xin lộ trình học",
+  "aliases": "noi dung, hoc nhung gi, giao trinh, lo trinh",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "send_media",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} gửi {{ brand.you }} nội dung khóa {{ course.name }} ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 220
+ },
+ {
+  "skill_key": "next_course",
+  "title": "học tiếp khóa nào",
+  "jev_description": "The customer asks which course to take next",
+  "examples": "học xong excel học gì tiếp\ncó khóa nâng cao không",
+  "aliases": "hoc tiep, khoa tiep theo, nang cao",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "{% if course.next_courses %}Sau {{ course.name }}, {{ brand.you }} có thể học tiếp: {{ course.next_courses | join(\", \") }} ạ.{% else %}Đây là khóa chuyên sâu nhất của nhóm này ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 230
+ },
+ {
+  "skill_key": "class_size",
+  "title": "sĩ số lớp",
+  "jev_description": "The customer asks how many students are in a class",
+  "examples": "lớp bao nhiêu người\nlớp có đông không",
+  "aliases": "si so, lop bao nhieu nguoi, lop dong khong",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Lớp nhỏ 12–20 học viên để giảng viên kèm sát ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 240
+ },
+ {
+  "skill_key": "teachers",
+  "title": "giảng viên",
+  "jev_description": "The customer asks about the teachers",
+  "examples": "ai dạy vậy\ngiáo viên có kinh nghiệm không",
+  "aliases": "giang vien, giao vien, thay co",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Giảng viên là người đi làm thực tế trong ngành, kèm từng học viên ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 250
+ },
+ {
+  "skill_key": "age_fit",
+  "title": "độ tuổi phù hợp",
+  "jev_description": "The customer asks what age a course is for",
+  "examples": "bé 6 tuổi học được không\nkhóa này cho độ tuổi nào",
+  "aliases": "may tuoi, do tuoi, be may tuoi hoc duoc",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Khóa {{ course.name }} phù hợp từ {{ course.min_age }} đến {{ course.max_age }} tuổi ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 260
+ },
+ {
+  "skill_key": "beginner_ok",
+  "title": "người mới học được không",
+  "jev_description": "The customer asks whether a complete beginner can take the course",
+  "examples": "mình chưa biết gì học được không\nmất gốc có theo kịp không",
+  "aliases": "chua biet gi, nguoi moi, mat goc",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ khóa {{ course.name }} học từ căn bản, người mới hoàn toàn học được ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 270
+ },
+ {
+  "skill_key": "register",
+  "title": "đăng ký học",
+  "jev_description": "The customer wants to register or reserve a seat",
+  "examples": "mình muốn đăng ký\ngiữ chỗ lớp tối cho mình",
+  "aliases": "dang ky, ghi danh, giu cho",
+  "parameters": [
+   "course"
+  ],
+  "missing_policy": "ask",
+  "action_type": "handoff",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} ghi nhận đăng ký, tư vấn viên sẽ liên hệ giữ chỗ cho {{ brand.you }} ngay ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 280
+ },
+ {
+  "skill_key": "refund",
+  "title": "bảo lưu, hoàn phí",
+  "jev_description": "An enrolled student asks to pause the course or get a refund",
+  "examples": "mình muốn bảo lưu\nnghỉ học có hoàn tiền không",
+  "aliases": "bao luu, hoan tien, hoan phi, nghi hoc",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "handoff",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} chuyển {{ brand.you }} cho tư vấn viên để hỗ trợ bảo lưu ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 290
+ },
+ {
+  "skill_key": "greeting",
+  "title": "chào hỏi",
+  "jev_description": "The customer only greets without a request",
+  "examples": "xin chào\nhi shop",
+  "aliases": "xin chao, hello, hi, chao shop",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "{{ brand.me | capitalize }} chào {{ brand.you }}! {{ brand.you | capitalize }} đang quan tâm khóa học nào ạ?"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 0,
+  "handoff_after": 0,
+  "sort_order": 300
+ }
+]
