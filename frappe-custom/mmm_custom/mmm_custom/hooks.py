@@ -86,6 +86,16 @@ after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
 # Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
 after_migrate = ["mmm_custom.setup.create_catalog_fields"]
 
+# Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
+# clears the engine's cached catalog snapshot so the next customer message sees it.
+_LEAD_ENGINE_DATA = ("Course Group", "CRM Product", "CRM Territory", "Bot Slot", "Bot Skill", "Lead Engine Settings")
+doc_events = {
+	dt: {"on_update": "mmm_custom.engine.repo.clear_catalog_cache", "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
+	for dt in _LEAD_ENGINE_DATA
+}
+
+# Other apps subscribe to engine events with their own `lead_engine_events` hook (see engine/events.py).
+
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
 # It does nothing unless the site config has typesafe_api_key.
 scheduler_events = {
