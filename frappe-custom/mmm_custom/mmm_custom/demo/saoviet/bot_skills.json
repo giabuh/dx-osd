@@ -52,12 +52,12 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Lịch khai giảng gần nhất khóa {{ course.name }}:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.weekdays }}, {{ s.shift }}) tại {{ s.branch }}{% endfor %}"
+    "template": "Dạ lịch khai giảng gần nhất của khóa {{ course.name }} ạ:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.weekdays }}, {{ s.shift }}) tại {{ s.branch }}{% endfor %}"
    },
    {
     "variant_key": "none",
     "when": "not schedules",
-    "template": "Hiện khóa {{ course.name }} chưa có lịch mới, {{ brand.me }} sẽ báo {{ brand.you }} ngay khi mở lớp ạ."
+    "template": "Dạ hiện khóa {{ course.name }} chưa có lịch mới, {{ brand.me }} sẽ báo {{ brand.you }} ngay khi mở lớp ạ."
    }
   ],
   "follow_ups": [
@@ -116,7 +116,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Khóa {{ course.name }} thường học khoảng {{ course.duration }} ạ."
+    "template": "Dạ khóa {{ course.name }} thường học khoảng {{ course.duration }} ạ."
    }
   ],
   "follow_ups": [],
@@ -162,7 +162,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "{% if course.certificate %}Khóa {{ course.name }} có chứng chỉ {{ course.certificate }} ạ.{% else %}Học viên hoàn thành khóa được cấp chứng nhận của trung tâm ạ.{% endif %}"
+    "template": "{% if course.certificate %}Dạ khóa {{ course.name }} có chứng chỉ {{ course.certificate }} ạ.{% else %}Dạ học viên hoàn thành khóa được cấp chứng nhận của trung tâm ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -212,12 +212,12 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi khóa {{ course.name }} ạ. Các buổi gần nhất:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn buổi phù hợp để {{ brand.me }} giữ chỗ nhé."
+    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi khóa {{ course.name }} ạ. Các buổi gần nhất:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn buổi phù hợp để {{ brand.me }} giữ chỗ nhé ạ."
    },
    {
     "variant_key": "none",
     "when": "not schedules",
-    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi ạ. Khóa {{ course.name }} chưa có lịch mới, {{ brand.me }} chuyển tư vấn viên xếp buổi học thử riêng cho {{ brand.you }} nhé."
+    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi ạ. Khóa {{ course.name }} chưa có lịch mới, {{ brand.me }} nhờ tư vấn viên xếp buổi học thử riêng cho {{ brand.you }} nhé ạ."
    }
   ],
   "follow_ups": [],
@@ -241,7 +241,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "{% if promotions %}Ưu đãi đang áp dụng: {% for p in promotions %}{{ p.title }}{% if not loop.last %}; {% endif %}{% endfor %} ạ.{% else %}Hiện chưa có ưu đãi cho khóa này ạ.{% endif %}"
+    "template": "{% if promotions %}Dạ ưu đãi đang áp dụng ạ: {% for p in promotions %}{{ p.title }}{% if not loop.last %}; {% endif %}{% endfor %}.{% else %}Dạ hiện khóa này chưa có ưu đãi, có chương trình mới {{ brand.me }} báo {{ brand.you }} ngay ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -285,7 +285,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Bên {{ brand.me }} có ca sáng 8:30–11:00, chiều 13:30–16:30, tối 17:00–21:00, thứ 2 đến thứ 7 ạ."
+    "template": "Dạ bên {{ brand.me }} có ca sáng 8:30–11:00, chiều 13:30–16:30, tối 17:00–21:00, từ thứ 2 đến thứ 7 ạ."
    }
   ],
   "follow_ups": [],
@@ -309,7 +309,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Khóa {{ course.name }} học thực hành trên bài tập thực tế, học xong làm việc được ngay ạ."
+    "template": "Dạ khóa {{ course.name }} học thực hành trên bài tập thực tế, học xong {{ brand.you }} làm việc được ngay ạ."
    }
   ],
   "follow_ups": [],
@@ -356,7 +356,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Các khóa phù hợp cho bé:{% for r in recommendations %}\n• {{ r.course }} – {{ r.fee | vnd }}{% endfor %}"
+    "template": "Dạ các khóa phù hợp cho bé ạ:{% for r in recommendations %}\n• {{ r.course }} – {{ r.fee | vnd }}{% endfor %}"
    }
   ],
   "follow_ups": [],
@@ -464,7 +464,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "{{ brand.me | capitalize }} gợi ý {{ brand.you }}:{% for r in recommendations %}\n• {{ r.course }} – {{ r.fee | vnd }}{% endfor %}"
+    "template": "Dạ {{ brand.me }} gợi ý {{ brand.you }} các khóa này ạ:{% for r in recommendations %}\n• {{ r.course }} – {{ r.fee | vnd }}{% endfor %}"
    }
   ],
   "follow_ups": [
@@ -492,7 +492,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Hotline/Zalo: {{ brand.hotline }} ạ."
+    "template": "Dạ hotline/Zalo của trung tâm là {{ brand.hotline }} ạ."
    }
   ],
   "follow_ups": [],
@@ -514,7 +514,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Trung tâm làm việc từ 8:00 đến 21:00, thứ 2 đến thứ 7 ạ."
+    "template": "Dạ trung tâm làm việc từ 8:00 đến 21:00, thứ 2 đến thứ 7 ạ."
    }
   ],
   "follow_ups": [],
@@ -591,7 +591,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "{% if course.next_courses %}Sau {{ course.name }}, {{ brand.you }} có thể học tiếp: {{ course.next_courses | join(\", \") }} ạ.{% else %}Đây là khóa chuyên sâu nhất của nhóm này ạ.{% endif %}"
+    "template": "{% if course.next_courses %}Dạ học xong {{ course.name }}, {{ brand.you }} có thể học tiếp {{ course.next_courses | join(\", \") }} ạ.{% else %}Dạ đây là khóa chuyên sâu nhất của nhóm này rồi ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -613,7 +613,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Lớp nhỏ 12–20 học viên để giảng viên kèm sát ạ."
+    "template": "Dạ lớp nhỏ 12–20 học viên để giảng viên kèm sát từng học viên ạ."
    }
   ],
   "follow_ups": [],
@@ -635,7 +635,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Giảng viên là người đi làm thực tế trong ngành, kèm từng học viên ạ."
+    "template": "Dạ giảng viên là người đi làm thực tế trong ngành và kèm từng học viên ạ."
    }
   ],
   "follow_ups": [],
@@ -659,7 +659,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Khóa {{ course.name }} phù hợp từ {{ course.min_age }} đến {{ course.max_age }} tuổi ạ."
+    "template": "Dạ khóa {{ course.name }} phù hợp cho bé từ {{ course.min_age }} đến {{ course.max_age }} tuổi ạ."
    }
   ],
   "follow_ups": [],
@@ -832,6 +832,19 @@
   "action_config": {
    "slot": "quiz_progress",
    "subject": "Excel",
+   "mode": "test",
+   "max_questions": 5,
+   "stop_after_wrong": 2,
+   "courses": [
+    "VP-EXCEL",
+    "VP-EXCEL-NC",
+    "QT-MOS-EXCEL",
+    "KT-EXCEL",
+    "LT-VBA"
+   ],
+   "groups": [
+    "Tin học văn phòng"
+   ],
    "questions": [
     {
      "q": "Hàm nào tính tổng một vùng ô?",
@@ -841,7 +854,9 @@
       "AVERAGE",
       "MAX"
      ],
-     "answer": 0
+     "answer": 0,
+     "level": "basic",
+     "topic": "Hàm SUM"
     },
     {
      "q": "Muốn cố định ô A1 khi kéo công thức, ta viết thế nào?",
@@ -851,7 +866,9 @@
       "#A1",
       "A:1"
      ],
-     "answer": 1
+     "answer": 1,
+     "level": "basic",
+     "topic": "Địa chỉ tuyệt đối"
     },
     {
      "q": "Hàm VLOOKUP dùng để làm gì?",
@@ -861,17 +878,9 @@
       "Sắp xếp dữ liệu",
       "Đếm số ô"
      ],
-     "answer": 0
-    },
-    {
-     "q": "Tổng hợp doanh thu theo tháng và nhân viên nhanh nhất bằng công cụ nào?",
-     "options": [
-      "Pivot Table",
-      "Lọc thủ công",
-      "Copy – dán",
-      "Format Painter"
-     ],
-     "answer": 0
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "VLOOKUP"
     },
     {
      "q": "Hàm nào đếm số ô thỏa một điều kiện?",
@@ -881,7 +890,68 @@
       "IF",
       "LEN"
      ],
-     "answer": 0
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "COUNTIF"
+    },
+    {
+     "q": "Tổng hợp doanh thu theo tháng và nhân viên nhanh nhất bằng công cụ nào?",
+     "options": [
+      "Pivot Table",
+      "Lọc thủ công",
+      "Copy – dán",
+      "Format Painter"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Pivot Table",
+     "goals": [
+      "office",
+      "career"
+     ]
+    },
+    {
+     "q": "Trong bài thi MOS, muốn chỉ cho nhập ngày trong một cột thì dùng gì?",
+     "options": [
+      "Data Validation",
+      "Conditional Format",
+      "Freeze Panes",
+      "Wrap Text"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Data Validation",
+     "goals": [
+      "certificate"
+     ]
+    },
+    {
+     "q": "Hàm nào thay VLOOKUP, dò được cả bên trái?",
+     "options": [
+      "XLOOKUP",
+      "HLOOKUP",
+      "LOOKUPX",
+      "FIND"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "XLOOKUP"
+    },
+    {
+     "q": "Tự động hóa thao tác lặp lại trong Excel bằng gì?",
+     "options": [
+      "Macro / VBA",
+      "Sort",
+      "AutoFit",
+      "Paste Special"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Macro VBA",
+     "goals": [
+      "career",
+      "office"
+     ]
     }
    ],
    "bands": [
@@ -906,22 +976,654 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Câu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}"
+    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
    },
    {
     "variant_key": "start",
     "when": "not quiz.done and quiz.step == 1",
-    "template": "Dạ mình làm nhanh bài test {{ quiz.subject }} {{ quiz.total }} câu nhé, {{ brand.you }} bấm chọn đáp án ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+    "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
    },
    {
     "variant_key": "result",
     "when": "quiz.done",
-    "template": "Dạ {{ brand.you }} đúng {{ quiz.score }}/{{ quiz.total }} câu, trình độ: {{ quiz.level_label }}. {{ brand.me | capitalize }} gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} lên trình nhanh nhất ạ."
+    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
   "creates_lead": 1,
   "handoff_after": 0,
   "sort_order": 160
+ },
+ {
+  "skill_key": "word_quiz",
+  "title": "test trình độ Word",
+  "jev_description": "The customer wants to test or check their Word level",
+  "examples": "kiểm tra trình độ word\ntest word",
+  "aliases": "test word, kiem tra word, bai test word",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "level_quiz",
+  "action_config": {
+   "slot": "quiz_progress",
+   "subject": "Word",
+   "mode": "test",
+   "max_questions": 4,
+   "stop_after_wrong": 2,
+   "courses": [
+    "VP-WORD",
+    "QT-MOS-WORD"
+   ],
+   "groups": [],
+   "questions": [
+    {
+     "q": "Phím tắt để in đậm chữ là gì?",
+     "options": [
+      "Ctrl + B",
+      "Ctrl + I",
+      "Ctrl + U",
+      "Ctrl + P"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Định dạng chữ"
+    },
+    {
+     "q": "Muốn căn lề đều hai bên đoạn văn, chọn gì?",
+     "options": [
+      "Justify",
+      "Center",
+      "Left",
+      "Right"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Căn lề"
+    },
+    {
+     "q": "Tạo mục lục tự động dựa vào gì?",
+     "options": [
+      "Heading Styles",
+      "Tô màu chữ",
+      "Gạch chân",
+      "Cỡ chữ to"
+     ],
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "Mục lục tự động"
+    },
+    {
+     "q": "Gửi một thư cho nhiều người, mỗi thư một tên, dùng gì?",
+     "options": [
+      "Mail Merge",
+      "Track Changes",
+      "Hyperlink",
+      "Footnote"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Trộn thư"
+    },
+    {
+     "q": "Đánh số trang khác nhau cho từng phần dùng gì?",
+     "options": [
+      "Section Break",
+      "Page Break",
+      "Enter nhiều lần",
+      "Tab"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Section Break"
+    }
+   ],
+   "bands": [
+    {
+     "max": 1,
+     "level": "beginner",
+     "course": "VP-WORD"
+    },
+    {
+     "max": 3,
+     "level": "basic",
+     "course": "VP-WORD"
+    },
+    {
+     "max": 4,
+     "level": "advanced",
+     "course": "QT-MOS-WORD"
+    }
+   ]
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "start",
+    "when": "not quiz.done and quiz.step == 1",
+    "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "result",
+    "when": "quiz.done",
+    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 161
+ },
+ {
+  "skill_key": "ppt_quiz",
+  "title": "test trình độ PowerPoint",
+  "jev_description": "The customer wants to test or check their PowerPoint level",
+  "examples": "kiểm tra trình độ powerpoint\ntest powerpoint",
+  "aliases": "test powerpoint, test ppt, kiem tra powerpoint",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "level_quiz",
+  "action_config": {
+   "slot": "quiz_progress",
+   "subject": "PowerPoint",
+   "mode": "test",
+   "max_questions": 4,
+   "stop_after_wrong": 2,
+   "courses": [
+    "VP-PPT",
+    "QT-MOS-PPT"
+   ],
+   "groups": [],
+   "questions": [
+    {
+     "q": "Phím nào trình chiếu từ slide đầu tiên?",
+     "options": [
+      "F5",
+      "F2",
+      "F12",
+      "Esc"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Trình chiếu"
+    },
+    {
+     "q": "Đổi giao diện đồng bộ cho mọi slide ở đâu?",
+     "options": [
+      "Slide Master",
+      "Font chữ",
+      "Zoom",
+      "Notes"
+     ],
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "Slide Master"
+    },
+    {
+     "q": "Hiệu ứng chuyển giữa hai slide gọi là gì?",
+     "options": [
+      "Transition",
+      "Animation",
+      "Hyperlink",
+      "SmartArt"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Transition"
+    },
+    {
+     "q": "Làm vật thể trượt mượt từ slide này sang slide sau dùng gì?",
+     "options": [
+      "Morph",
+      "Fade",
+      "Wipe",
+      "Split"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Morph"
+    },
+    {
+     "q": "Chèn sơ đồ quy trình đẹp nhanh bằng gì?",
+     "options": [
+      "SmartArt",
+      "WordArt",
+      "Text Box",
+      "Table"
+     ],
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "SmartArt"
+    }
+   ],
+   "bands": [
+    {
+     "max": 1,
+     "level": "beginner",
+     "course": "VP-PPT"
+    },
+    {
+     "max": 3,
+     "level": "basic",
+     "course": "VP-PPT"
+    },
+    {
+     "max": 4,
+     "level": "advanced",
+     "course": "QT-MOS-PPT"
+    }
+   ]
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "start",
+    "when": "not quiz.done and quiz.step == 1",
+    "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "result",
+    "when": "quiz.done",
+    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 162
+ },
+ {
+  "skill_key": "design_quiz",
+  "title": "test trình độ Photoshop",
+  "jev_description": "The customer wants to test or check their Photoshop / graphic design level",
+  "examples": "kiểm tra trình độ photoshop\ntest đồ họa",
+  "aliases": "test photoshop, test do hoa, kiem tra photoshop",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "level_quiz",
+  "action_config": {
+   "slot": "quiz_progress",
+   "subject": "Photoshop",
+   "mode": "test",
+   "max_questions": 5,
+   "stop_after_wrong": 2,
+   "courses": [
+    "DH-PTS",
+    "DH-PTS-NC",
+    "DH-TRONGOI"
+   ],
+   "groups": [
+    "Thiết kế đồ họa"
+   ],
+   "questions": [
+    {
+     "q": "Công cụ nào dùng để cắt khung ảnh?",
+     "options": [
+      "Crop",
+      "Brush",
+      "Eraser",
+      "Zoom"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Crop"
+    },
+    {
+     "q": "Mỗi thành phần nằm riêng trên một lớp gọi là gì?",
+     "options": [
+      "Layer",
+      "Filter",
+      "Channel",
+      "History"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Layer"
+    },
+    {
+     "q": "Xóa phông mà không mất ảnh gốc nên dùng gì?",
+     "options": [
+      "Layer Mask",
+      "Eraser",
+      "Crop",
+      "Blur"
+     ],
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "Layer Mask"
+    },
+    {
+     "q": "Chỉnh sáng tối mà sửa lại được bất cứ lúc nào dùng gì?",
+     "options": [
+      "Adjustment Layer",
+      "Brightness trực tiếp",
+      "Flatten",
+      "Rasterize"
+     ],
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "Adjustment Layer"
+    },
+    {
+     "q": "In ấn nên để hệ màu nào?",
+     "options": [
+      "CMYK",
+      "RGB",
+      "Grayscale",
+      "Indexed"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Hệ màu in ấn",
+     "goals": [
+      "career",
+      "office"
+     ]
+    },
+    {
+     "q": "Ghép ảnh chân thật, khớp ánh sáng thường dùng gì?",
+     "options": [
+      "Blend Mode",
+      "Crop",
+      "Text",
+      "Ruler"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "Blend Mode"
+    }
+   ],
+   "bands": [
+    {
+     "max": 2,
+     "level": "beginner",
+     "course": "DH-PTS"
+    },
+    {
+     "max": 4,
+     "level": "basic",
+     "course": "DH-PTS-NC"
+    },
+    {
+     "max": 5,
+     "level": "advanced",
+     "course": "DH-TRONGOI"
+    }
+   ]
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "start",
+    "when": "not quiz.done and quiz.step == 1",
+    "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "result",
+    "when": "quiz.done",
+    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 163
+ },
+ {
+  "skill_key": "code_quiz",
+  "title": "test lập trình",
+  "jev_description": "The customer wants to test or check their programming level",
+  "examples": "kiểm tra trình độ lập trình\ntest python",
+  "aliases": "test lap trinh, test python, kiem tra lap trinh",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "level_quiz",
+  "action_config": {
+   "slot": "quiz_progress",
+   "subject": "lập trình",
+   "mode": "test",
+   "max_questions": 4,
+   "stop_after_wrong": 2,
+   "courses": [
+    "LT-PY",
+    "LT-WEB",
+    "LT-MOBILE"
+   ],
+   "groups": [
+    "Lập trình"
+   ],
+   "questions": [
+    {
+     "q": "Biến trong lập trình dùng để làm gì?",
+     "options": [
+      "Lưu dữ liệu",
+      "Tắt máy",
+      "Vẽ hình",
+      "Kết nối wifi"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Biến"
+    },
+    {
+     "q": "Vòng lặp for dùng khi nào?",
+     "options": [
+      "Lặp lại nhiều lần",
+      "Chỉ chạy 1 lần",
+      "Xóa dữ liệu",
+      "Đặt tên file"
+     ],
+     "answer": 0,
+     "level": "basic",
+     "topic": "Vòng lặp"
+    },
+    {
+     "q": "Python: len([1, 2, 3]) trả về bao nhiêu?",
+     "options": [
+      "3",
+      "2",
+      "6",
+      "Báo lỗi"
+     ],
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "List"
+    },
+    {
+     "q": "HTML dùng để làm gì trên trang web?",
+     "options": [
+      "Dựng nội dung",
+      "Lưu mật khẩu",
+      "Chạy server",
+      "Nén ảnh"
+     ],
+     "answer": 0,
+     "level": "intermediate",
+     "topic": "HTML"
+    },
+    {
+     "q": "API là gì?",
+     "options": [
+      "Cổng để app trao đổi",
+      "Một loại virus",
+      "Ổ cứng",
+      "Font chữ"
+     ],
+     "answer": 0,
+     "level": "advanced",
+     "topic": "API"
+    }
+   ],
+   "bands": [
+    {
+     "max": 1,
+     "level": "beginner",
+     "course": "LT-PY"
+    },
+    {
+     "max": 3,
+     "level": "basic",
+     "course": "LT-PY"
+    },
+    {
+     "max": 4,
+     "level": "advanced",
+     "course": "LT-WEB"
+    }
+   ]
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "start",
+    "when": "not quiz.done and quiz.step == 1",
+    "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "result",
+    "when": "quiz.done",
+    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 164
+ },
+ {
+  "skill_key": "kids_quiz",
+  "title": "khảo sát trình độ của bé",
+  "jev_description": "A parent wants to know which kids' computer class fits their child's level",
+  "examples": "bé nhà em nên học lớp nào\nkiểm tra trình độ cho bé",
+  "aliases": "kiem tra cho be, be hoc lop nao, test cho be",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "level_quiz",
+  "action_config": {
+   "slot": "quiz_progress",
+   "subject": "Tin học cho bé",
+   "mode": "survey",
+   "max_questions": 4,
+   "courses": [
+    "TE-THUD",
+    "TE-SCRATCH",
+    "TE-PY",
+    "TE-ROBO",
+    "TE-ROBO-NC"
+   ],
+   "groups": [
+    "Tin học trẻ em"
+   ],
+   "questions": [
+    {
+     "q": "Bé đã tự dùng chuột, bàn phím chưa ạ?",
+     "options": [
+      "Chưa",
+      "Cần người giúp",
+      "Tự dùng tốt"
+     ],
+     "points": [
+      0,
+      1,
+      2
+     ],
+     "topic": "Chuột, bàn phím"
+    },
+    {
+     "q": "Bé gõ được chữ tiếng Việt chưa ạ?",
+     "options": [
+      "Chưa",
+      "Chậm",
+      "Gõ thành thạo"
+     ],
+     "points": [
+      0,
+      1,
+      2
+     ],
+     "topic": "Gõ phím"
+    },
+    {
+     "q": "Bé đã chơi Scratch hay lắp robot chưa ạ?",
+     "options": [
+      "Chưa",
+      "Thử vài lần",
+      "Làm được dự án"
+     ],
+     "points": [
+      0,
+      1,
+      2
+     ],
+     "topic": "Scratch / robot"
+    },
+    {
+     "q": "Bé thích nhất điều gì ạ?",
+     "options": [
+      "Vẽ, xem video",
+      "Chơi game",
+      "Tự làm game/robot"
+     ],
+     "points": [
+      0,
+      1,
+      2
+     ],
+     "topic": "Sở thích"
+    }
+   ],
+   "bands": [
+    {
+     "max": 2,
+     "level": "beginner",
+     "course": "TE-THUD"
+    },
+    {
+     "max": 5,
+     "level": "basic",
+     "course": "TE-SCRATCH"
+    },
+    {
+     "max": 8,
+     "level": "advanced",
+     "course": "TE-ROBO"
+    }
+   ]
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "start",
+    "when": "not quiz.done and quiz.step == 1",
+    "template": "Dạ em hỏi {{ brand.you }} {{ quiz.total }} câu nhỏ về bé để xếp lớp vừa sức nhé ạ 😊\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "result",
+    "when": "quiz.done",
+    "template": "Dạ em cảm ơn {{ brand.you }} ạ 🎉 Với những gì bé đã biết, em gợi ý lớp {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để bé học vừa sức và thích thú nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 165
  }
 ]

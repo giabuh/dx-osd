@@ -185,6 +185,17 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
         },
     ]
 
+    try:
+        from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+        notify_crm_users(
+            title=f"Kế hoạch tuần {batch_id} đã sẵn sàng",
+            message=f'AI đã hoàn thành {len(created_posts)} bài viết cho đợt {batch_id} theo chỉ đạo: "{boss_directive or "Đa kênh"}". Vui lòng kiểm duyệt!',
+            notification_type="Marketing",
+            reference_doctype="Facebook Post",
+        )
+    except Exception:
+        pass
+
     return {
         "status": "success",
         "batch_id": batch_id,
@@ -219,6 +230,17 @@ def approve_weekly_batch(batch_id=None):
 
     if hasattr(frappe.db, "commit"):
         frappe.db.commit()
+
+    try:
+        from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+        notify_crm_users(
+            title="Đã duyệt lịch đăng Facebook tuần",
+            message=f"Đã duyệt thành công {count} bài viết sang trạng thái Đã lên lịch phát sóng!",
+            notification_type="Marketing",
+            reference_doctype="Facebook Post",
+        )
+    except Exception:
+        pass
 
     return {"status": "success", "approved_count": count}
 
@@ -337,6 +359,18 @@ def publish_scheduled_posts():
 
     if hasattr(frappe.db, "commit"):
         frappe.db.commit()
+
+    if published_count > 0:
+        try:
+            from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+            notify_crm_users(
+                title="Tự động đăng bài theo lịch",
+                message=f"Hệ thống đã tự động xuất bản {published_count} bài viết lên Facebook Fanpage theo lịch hẹn.",
+                notification_type="Marketing",
+                reference_doctype="Facebook Post",
+            )
+        except Exception:
+            pass
 
     return {
         "status": "success",

@@ -93,6 +93,9 @@ class ScenarioRepo:
     def write_signal(self, row):
         pass
 
+    def save_quiz_attempt(self, state, change):
+        pass
+
     def lead_owner(self, lead):
         return self.owner if lead == RETURNING_LEAD else self.base.lead_owner(lead)
 

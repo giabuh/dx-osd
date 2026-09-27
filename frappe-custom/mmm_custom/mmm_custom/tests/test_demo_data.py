@@ -28,8 +28,8 @@ class TestDemoData(unittest.TestCase):
         self.assertEqual(len(self.courses), 51)
         self.assertEqual(len(self.consultants), 44)
         self.assertEqual(len(self.promotions), 11)
-        self.assertEqual(len(self.slots), 13)
-        self.assertEqual(len(self.skills), 33)
+        self.assertEqual(len(self.slots), 15)
+        self.assertEqual(len(self.skills), 38)
 
     def test_unique_keys(self):
         for rows, key in ((self.branches, "branch_code"), (self.branches, "territory_name"),

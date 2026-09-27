@@ -17,6 +17,7 @@ def get_notifications():
 	for notification in notifications:
 		_notifications.append(
 			{
+				"name": notification.name,
 				"creation": notification.creation,
 				"from_user": {
 					"name": notification.from_user,
@@ -29,9 +30,19 @@ def get_notifications():
 				"notification_text": notification.notification_text,
 				"notification_type_doctype": notification.notification_type_doctype,
 				"notification_type_doc": notification.notification_type_doc,
-				"reference_doctype": ("deal" if notification.reference_doctype == "CRM Deal" else "lead"),
+				"reference_doctype": (
+					"deal" if notification.reference_doctype == "CRM Deal"
+					else "Facebook Post" if notification.reference_doctype == "Facebook Post"
+					else "task" if notification.reference_doctype == "CRM Task"
+					else "lead"
+				),
 				"reference_name": notification.reference_name,
-				"route_name": ("Deal" if notification.reference_doctype == "CRM Deal" else "Lead"),
+				"route_name": (
+					"Deal" if notification.reference_doctype == "CRM Deal"
+					else "FacebookPosts" if notification.reference_doctype == "Facebook Post"
+					else "Tasks" if notification.reference_doctype == "CRM Task"
+					else "Lead"
+				),
 			}
 		)
 
@@ -45,6 +56,7 @@ def mark_as_read(doc: str | None = None):
 	or_filters = []
 	if doc:
 		or_filters = [
+			{"name": doc},
 			{"comment": doc},
 			{"notification_type_doc": doc},
 		]
