@@ -8,3 +8,4 @@ __pycache__/
 cloudflared.exe
 cloudflared.log
 *.exe
+.playwright-mcp/

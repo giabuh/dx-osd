@@ -51,7 +51,7 @@
           title: 'Không có nhân viên phù hợp',
           description: 'Đổi bộ lọc hoặc thêm nhân viên',
         },
-        onRowClick: (row) => edit(row.person),
+        onRowClick: (row) => open(row.person),
       }"
     >
       <template #cell="{ item, column, row }">
@@ -64,30 +64,18 @@
           :label="row.person.active ? 'Đang làm' : 'Đã nghỉ'"
           :theme="row.person.active ? 'green' : 'gray'"
         />
-        <Badge
-          v-else-if="column.key === 'chatwoot' && row.person.chatwoot_agent_id"
-          label="Đã đồng bộ"
-          theme="green"
-        />
-        <Badge
-          v-else-if="column.key === 'chatwoot' && row.person.active"
-          label="Đang đồng bộ…"
-          theme="amber"
-        />
-        <Button
-          v-else-if="column.key === 'switch' && canSwitch && row.person.active"
-          variant="ghost"
-          label="Xem như"
-          iconLeft="log-in"
-          :loading="switching === row.name"
-          @click.stop="viewAs(row.name)"
-        />
-        <div v-else-if="column.key === 'switch'" />
-        <div v-else class="truncate text-base text-ink-gray-7">
+        <div v-else class="truncate text-base text-ink-gray-7" :title="item">
           {{ item || '—' }}
         </div>
       </template>
     </ListView>
+    <StaffDetailDialog
+      v-if="detail"
+      v-model="showDetail"
+      :person="detail"
+      :canSwitch="canSwitch"
+      @edit="editFromDetail"
+    />
     <StaffDialog
       v-if="showDialog"
       v-model="showDialog"
@@ -100,9 +88,10 @@
 </template>
 
 <script setup>
+import StaffDetailDialog from './StaffDetailDialog.vue'
 import StaffDialog from './StaffDialog.vue'
 import { adminCall, LEVEL_LABELS } from './adminApi'
-import { staffSwitch, switchToStaff } from '@/composables/staffSwitch'
+import { staffSwitch } from '@/composables/staffSwitch'
 import { Badge, ErrorMessage, ListView, Select, TextInput } from 'frappe-ui'
 import { computed, onActivated, onDeactivated, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -119,28 +108,18 @@ const branch = ref('')
 const showDialog = ref(false)
 const selected = ref(null)
 let syncPoll = null
-const switching = ref('')
+const detail = ref(null)
+const showDetail = ref(false)
 // Demo: a System Manager opens the CRM as this consultant (mmm_custom.staff_switch).
 const canSwitch = computed(() => Boolean(staffSwitch.data?.can_switch))
 
-async function viewAs(user) {
-  switching.value = user
-  try {
-    await switchToStaff(user)
-  } catch (e) {
-    error.value = e.message
-    switching.value = ''
-  }
-}
-
+// Compact list; everything else (specialties, Chatwoot sync, actions) lives in StaffDetailDialog.
+// minmax(0, …) lets a column shrink below its text, so long names truncate instead of widening the table.
 const columns = [
-  { label: 'Nhân viên', key: 'full_name', width: 2.4 },
-  { label: 'Chi nhánh', key: 'branch', width: 1.6 },
-  { label: 'Cấp bậc', key: 'level', width: 1.1 },
-  { label: 'Chuyên môn', key: 'specialties', width: 2.2 },
-  { label: 'Trạng thái', key: 'status', width: 1 },
-  { label: 'Chatwoot', key: 'chatwoot', width: 1.2 },
-  { label: '', key: 'switch', width: 1 },
+  { label: 'Nhân viên', key: 'full_name', width: 'minmax(0, 2fr)' },
+  { label: 'Chi nhánh', key: 'branch', width: 'minmax(0, 1.2fr)' },
+  { label: 'Cấp bậc', key: 'level', width: 'minmax(0, 1fr)' },
+  { label: 'Trạng thái', key: 'status', width: '7rem' },
 ]
 
 const branchOptions = computed(() => [
@@ -166,7 +145,6 @@ const rows = computed(() => {
       full_name: s.full_name || s.name,
       branch: s.branch || (s.handles_b2b ? 'Doanh nghiệp (B2B)' : 'Tổng đài'),
       level: LEVEL_LABELS[s.level] || s.level,
-      specialties: (s.specialties || []).join(', '),
     }))
 })
 
@@ -193,9 +171,19 @@ async function load() {
   }
 }
 
+function open(person) {
+  detail.value = person
+  showDetail.value = true
+}
+
 function edit(person) {
   selected.value = person
   showDialog.value = true
+}
+
+function editFromDetail(person) {
+  showDetail.value = false
+  edit(person)
 }
 
 async function afterSave() {
