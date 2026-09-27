@@ -14,6 +14,12 @@ DEFAULT_SETTINGS = {
     "hotline": "", "zalo": "", "website": "", "email": "", "signoff": "",
     "greeting_template": "", "fallback_template": "", "handoff_template": "", "summary_template": "",
     "max_skills_per_reply": 3, "max_stuck_turns": 2, "log_retention_days": 180,
+    "jev_live": 0, "jev_timeout": 8, "catalog_act": 0.85, "catalog_confirm": 0.55, "choice_act": 0.80,
+    "choice_confirm": 0.50, "skill_act": 0.85, "skill_confirm": 0.60, "handoff_noul": 0.70, "spam_threshold": 0.80,
+    "jev_calls_per_hour": 20, "jev_daily_token_budget": 0, "playground_daily_token_budget": 0,
+    "advisor_goal_weight": 0.6, "advisor_level_weight": 0.4, "advisor_floor": 0.5, "advisor_shortlist": 8,
+    "confirm_slot_template": "Dạ ý {{ brand.you }} là {{ confirm.label }} phải không ạ?",
+    "confirm_skill_template": "Dạ {{ brand.you }} muốn hỏi về {{ confirm.label }} phải không ạ?",
 }
 
 
@@ -122,6 +128,8 @@ class Skill:
     handoff_after: bool = False
     order: int = 0
     media: str = ""
+    description: str = ""
+    examples: tuple = ()
 
 
 @dataclass
@@ -201,7 +209,9 @@ def build_catalog(data):
         templates=tuple(Template(t["variant_key"], t.get("when") or "", t["template"]) for t in k.get("templates") or ()),
         follow_ups=tuple(FollowUp(f["title"], f["target_type"], f.get("target") or "") for f in k.get("follow_ups") or ()),
         creates_lead=bool(k.get("creates_lead", 1)), handoff_after=bool(k.get("handoff_after")),
-        order=_int(k.get("sort_order")), media=k.get("media") or "")
+        order=_int(k.get("sort_order")), media=k.get("media") or "",
+        description=k.get("jev_description") or "",
+        examples=tuple(line.strip() for line in (k.get("examples") or "").splitlines() if line.strip()))
         for k in data.get("bot_skills") or [] if _active(k)}
     settings = dict(DEFAULT_SETTINGS)
     settings.update({k: v for k, v in (data.get("settings") or {}).items() if v not in (None, "", 0)})

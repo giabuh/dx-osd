@@ -28,6 +28,22 @@ def fill(value, source="keyword"):
     return {"value": value, "source": source, "confidence": 1.0}
 
 
+class FakeJev:
+    """Answers from a dict or a function of the questions."""
+
+    def __init__(self, answers=None, status="ok"):
+        self.answers, self.status, self.calls = answers or {}, status, []
+
+    def ask(self, state, questions):
+        from mmm_custom.engine.jev import JevResult
+
+        self.calls.append((state, questions))
+        if self.status != "ok":
+            return JevResult(self.status, questions=questions, error="fake failure")
+        answers = self.answers(questions) if callable(self.answers) else self.answers
+        return JevResult("ok", {k: v for k, v in answers.items() if k in questions}, questions, "jev-test", 120, 7)
+
+
 class FakeRepo:
     """In-memory stand-in for engine.repo.FrappeRepo."""
 

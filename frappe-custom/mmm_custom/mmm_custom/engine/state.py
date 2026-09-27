@@ -27,6 +27,8 @@ class ConversationState:
     is_returning: bool = False
     turns: int = 0
     answered: list = field(default_factory=list)  # skill keys answered so far
+    history: list = field(default_factory=list)  # last turns for Jev's state
+    jev_calls: list = field(default_factory=list)  # epoch seconds of Jev calls in the last hour
 
 
 def value(slots, key):
