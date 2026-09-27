@@ -7,11 +7,11 @@
     "PLACEHOLDER": "Select an option...",
     "EMPTY_SEARCH_RESULTS": "No items found for the search term `{searchTerm}`",
     "EMPTY_STATE": "Không tìm thấy kết quả.",
-    "SEARCH_PLACEHOLDER": "Search...",
+    "SEARCH_PLACEHOLDER": "Tìm kiếm...",
     "MORE": "+{count} more"
   },
   "DROPDOWN_MENU": {
-    "SEARCH_PLACEHOLDER": "Search...",
+    "SEARCH_PLACEHOLDER": "Tìm kiếm...",
     "EMPTY_STATE": "Không tìm thấy kết quả.",
     "SEARCHING": "Đang tìm kiếm..."
   },

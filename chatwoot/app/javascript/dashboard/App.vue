@@ -22,6 +22,7 @@ import {
 } from './helper/pushHelper';
 import ReconnectService from 'dashboard/helper/ReconnectService';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import { useAlert } from 'dashboard/composables';
 
 export default {
   name: 'App',
@@ -37,6 +38,7 @@ export default {
     PendingEmailVerificationBanner,
     LowBackupCodesBanner,
   },
+  inject: ['accountOverrideLoader'],
   setup() {
     const router = useRouter();
     const store = useStore();
@@ -57,6 +59,7 @@ export default {
     return {
       latestChatwootVersion: null,
       reconnectService: null,
+      localeReady: false,
     };
   },
   computed: {
@@ -75,6 +78,8 @@ export default {
     currentAccountId: {
       immediate: true,
       handler() {
+        this.accountOverrideLoader.clear();
+        this.localeReady = !this.currentAccountId;
         if (this.currentAccountId) {
           this.initializeAccount();
         }
@@ -84,10 +89,11 @@ export default {
   mounted() {
     this.initializeColorTheme();
     this.listenToThemeChanges();
-    // If user locale is set, use it; otherwise use account locale
-    this.setLocale(
-      this.uiSettings?.locale || window.chatwootConfig.selectedLocale
-    );
+    if (!this.currentAccountId) {
+      this.setLocale(
+        this.uiSettings?.locale || window.chatwootConfig.selectedLocale
+      );
+    }
   },
   unmounted() {
     if (this.reconnectService) {
@@ -108,16 +114,26 @@ export default {
       }
     },
     async initializeAccount() {
+      const requestedAccountId = this.currentAccountId;
       await this.$store.dispatch('accounts/get');
+      if (requestedAccountId !== this.currentAccountId) return;
+
       this.$store.dispatch('setActiveAccount', {
-        accountId: this.currentAccountId,
+        accountId: requestedAccountId,
       });
-      const account = this.getAccount(this.currentAccountId);
+      const account = this.getAccount(requestedAccountId);
       const { locale, latest_chatwoot_version: latestChatwootVersion } =
         account;
       const { pubsub_token: pubsubToken } = this.currentUser || {};
+      const result = await this.accountOverrideLoader.load(requestedAccountId);
+      if (requestedAccountId !== this.currentAccountId) return;
+
       // If user locale is set, use it; otherwise use account locale
       this.setLocale(this.uiSettings?.locale || locale);
+      this.localeReady = true;
+      if (!result.ok && !result.stale) {
+        useAlert(this.$t('LOCALE_OVERRIDES.LOAD_ERROR'));
+      }
       this.latestChatwootVersion = latestChatwootVersion;
       vueActionCable.init(this.store, pubsubToken);
       this.reconnectService = new ReconnectService(this.store, this.router);
@@ -137,7 +153,7 @@ export default {
 
 <template>
   <div
-    v-if="!authUIFlags.isFetching"
+    v-if="!authUIFlags.isFetching && localeReady"
     id="app"
     class="flex flex-col w-full h-screen min-h-0 bg-n-background"
     :dir="isRTL ? 'rtl' : 'ltr'"

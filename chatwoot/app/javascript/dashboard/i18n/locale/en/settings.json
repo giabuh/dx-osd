@@ -352,6 +352,7 @@
     "DATA": "Data",
     "PROFILE_SETTINGS": "Profile Settings",
     "ACCOUNT_SETTINGS": "Account Settings",
+    "VIETNAMESE_TRANSLATIONS": "Vietnamese translations",
     "APPLICATIONS": "Applications",
     "LABELS": "Labels",
     "CUSTOM_ATTRIBUTES": "Custom Attributes",
@@ -1122,5 +1123,32 @@
       "CONFIRM_BUTTON_LABEL": "Delete",
       "CANCEL_BUTTON_LABEL": "Cancel"
     }
+  },
+  "LOCALE_OVERRIDES": {
+    "LOAD_ERROR": "Account translations could not be loaded. Showing the built-in translations.",
+    "TITLE": "Vietnamese translations",
+    "DESCRIPTION": "Edit dashboard text for people who choose Vietnamese. Changes appear without rebuilding Chatwoot.",
+    "SEARCH": "Search translations",
+    "FILTER": "Filter translations",
+    "ALL": "All",
+    "MISSING": "Missing",
+    "UNCHANGED": "Still English",
+    "OVERRIDDEN": "Customized",
+    "TRANSLATED": "Translated",
+    "BASE": "Built-in Vietnamese",
+    "EFFECTIVE": "Effective Vietnamese",
+    "EDIT": "Edit",
+    "EDIT_KEY": "Edit {key}",
+    "RESET": "Reset",
+    "RESET_KEY": "Reset {key}",
+    "VALUE": "Vietnamese text",
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "ERROR": "Could not save translation",
+    "REFRESH_ERROR": "Translation saved, but the dashboard could not refresh it. Try saving again or reload the page.",
+    "LOADING": "Loading translations…",
+    "COUNT": "{count} translations found",
+    "NO_RESULTS": "No translations found",
+    "SEARCH_MORE": "Showing the first 50 results. Search to narrow the list."
   }
 }
