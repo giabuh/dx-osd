@@ -102,6 +102,21 @@ templates, slot questions) starts with "Dạ" or addresses the customer through 
 never writes "mình", "bạn", "tôi" or "cậu" (use `brand.me` / `brand.you`), and has at most one emoji.
 `tests/test_tone.py` checks the demo data; the quiz editor checks what a manager types.
 
+## Understanding replies (D-107)
+
+Found in the owner's live test with Jev: a 9-digit phone was dropped and the hotline answered instead, a parent's
+first question fired three skills, typed trial dates and side questions broke the flow, "ok" to the offer was not
+understood. Changes:
+
+- `engine/reply_match.py`: a typed message is matched to the buttons the bot just sent (folded title, "a / câu 2",
+  "ok / thôi" for the offer, date/weekday/shift for trial classes); Jev's `reply_to_bot` choice covers the rest.
+- A quiz waiting for an answer comes back after a side question (at most twice), without praise; an answer that is
+  no button asks to pick one. "ok" to a slot question re-asks it; neither counts as not understood.
+- One focus per reply: one course list, a quiz asked alongside other skills is offered after them, one button set.
+- Names (`person_name`), a phone with a digit missing (`phone_check_template`), the customer's own number never
+  answered with the hotline, the customer called by name, and the result names the syllabus line covering a
+  missed topic.
+
 ## Testing
 
 - Unit: adaptive order, goal filter, early stop, survey, missed topics, `quiz_for`, `validate`; offer
