@@ -7,6 +7,7 @@ Decision: answer skill(s) (and ask the next slot), ask the next missing slot, ha
 import copy
 from dataclasses import dataclass, field
 
+from mmm_custom.engine.offers import quiz_offer, subject
 from mmm_custom.engine.state import filled, value
 
 HANDOFF_REASONS = {
@@ -37,6 +38,10 @@ class Decision:
     ai: dict = field(default_factory=dict)
     close: bool = False
     faq: dict = field(default_factory=dict)     # course FAQ answered first (D-085)
+    offer: str = ""                             # level quiz offered instead of the next slot question (D-106)
+    declined: str = ""                          # level quiz the customer put off this turn
+    quiz_done: str = ""                         # level quiz finished this turn: ask the phone next (pipeline)
+    voucher: dict = field(default_factory=dict)  # level-test reward sent this turn (pipeline, D-106)
 
 
 def faq_question(faq, catalog):
@@ -152,10 +157,11 @@ def decide(state, u, catalog):
     if faq:  # the course's own answer beats a generic template answer to the same question (D-085)
         skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     greet = state.turns == 0 and not skills and not faq
-    progress = bool(new or changed or skills or waiting or faq or u.handoff or u.focus or u.confirm or u.rejected)
+    progress = bool(new or changed or skills or waiting or faq or u.handoff or u.focus or u.confirm or u.rejected
+                    or u.declined)
     stuck = 0 if progress or greet else state.stuck_turns + 1
     common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq,
-                  ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
+                  declined=u.declined, ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
     answered = ", ".join(([f'"{faq_question(faq, catalog)}"'] if faq else []) + [catalog.skills[k].title for k in skills])
 
     if state.status == "handed_off":
@@ -175,10 +181,17 @@ def decide(state, u, catalog):
 
     first = ([u.focus] if u.focus else []) + (list(catalog.skills[waiting].params) if waiting else [])
     ask = next_slot(slots, catalog, first)
+    later = not ask or not catalog.slot(ask).required or catalog.slot(ask).type == "phone"
+    offer = "" if first or u.declined or not later else quiz_offer(state, u, slots, catalog, skills)
+    if offer:  # the level test replaces an optional question or the phone one, which it earns (D-106)
+        why_offer = "chưa rõ trình độ" if not filled(slots, "level") else "khách chưa chắc trình độ"
+        offered = f"Mời làm bài test {subject(offer, catalog)} ({why_offer})"
+        reason = f"Trả lời: {answered}; {offered[0].lower()}{offered[1:]}" if answered else offered
+        return Decision("answer" if answered else "ask_slot", **common, greet=greet, offer=offer, reason=reason)
     if ask:
         slots.setdefault(ask, {})["asked"] = 1
     label = catalog.slot(ask).label.lower() if ask else ""
-    reason = f"Trả lời: {answered}" if answered else ""
+    reason = f"Trả lời: {answered}" if answered else ("Khách để sau bài test" if u.declined else "")
     if ask:
         reason = f"{reason}; hỏi tiếp {label}" if reason else f"Hỏi {label} (còn thiếu)"
     return Decision("answer" if answered else "ask_slot", **common, ask=ask, greet=greet,

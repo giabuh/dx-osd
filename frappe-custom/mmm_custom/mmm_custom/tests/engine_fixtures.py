@@ -60,7 +60,7 @@ class FakeRepo:
         self.states = {}
         self.prefill = {}
         self.schedules, self.promotions = [], []
-        self.logs, self.signals = [], []
+        self.logs, self.signals, self.attempts = [], [], {}
         self.consultant_rows, self.load, self.owners = [], {}, {}
         self.jev = None
         self.clock, self.tokens, self.budget, self.warnings = 1_800_000_000.0, 0, 0, 0
@@ -108,6 +108,10 @@ class FakeRepo:
 
     def write_signal(self, row):
         self.signals.append(row)
+
+    def save_quiz_attempt(self, state, change):
+        row = self.attempts.setdefault((state.conversation_id, change["quiz"]), {})
+        row.update({k: v for k, v in change.items() if k != "quiz"}, lead=state.lead)
 
     def consultants(self):
         return list(self.consultant_rows)

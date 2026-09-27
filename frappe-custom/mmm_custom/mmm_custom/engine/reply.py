@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from mmm_custom.engine.actions import run_action
 from mmm_custom.engine.context import base_context, course_context
+from mmm_custom.engine import offers
 from mmm_custom.engine.jev_questions import COURSE_FAQ
 from mmm_custom.engine.render import RenderError, condition, render_text
 from mmm_custom.engine.slot_types import REGISTRY
@@ -113,6 +114,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
 
     if decision.greet:
         say(settings["greeting_template"], ctx, "greeting")
+    if decision.declined:
+        say(settings["quiz_decline_template"], ctx, "quiz_decline")
     if decision.fallback:
         say(settings["fallback_template"], ctx, "fallback")
 
@@ -148,6 +151,9 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         follow_ups += [{"title": f.title, "action": FOLLOW_UP_ACTIONS[f.target_type](f.target)}
                        for f in skill.follow_ups if f.target_type in FOLLOW_UP_ACTIONS]
 
+    if decision.voucher:  # level-test reward: syllabus of the recommended course, and a voucher code (D-106)
+        say(settings["quiz_voucher_template"], {**ctx, "voucher": decision.voucher}, "quiz_voucher")
+
     if decision.type == "handoff":
         say(settings["handoff_template"], ctx, "handoff")
 
@@ -159,15 +165,22 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         confirm_buttons = [{"title": CONFIRM_YES, "action": {"type": "confirm_yes", **c}},
                            {"title": CONFIRM_NO, "action": {"type": "confirm_no", **c}}]
 
+    offer_buttons = []
+    if decision.offer and not reply.ask and not reply.hold:
+        say(settings["quiz_offer_template"], {**ctx, "quiz": offers.offer_context(decision.offer, decision.slots, catalog)},
+            "quiz_offer")
+        offer_buttons = offers.buttons(decision.offer)
+
     ask_buttons = []
     ask_key = reply.ask or ("" if reply.hold else decision.ask)
     if ask_key:
         slot = catalog.slot(ask_key)
-        say(slot.ask_template, ctx, f"slot:{slot.key}")
+        why_phone = decision.quiz_done and slot.type == "phone" and settings["quiz_phone_template"]
+        say(settings["quiz_phone_template"] if why_phone else slot.ask_template, ctx, f"slot:{slot.key}")
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)
 
-    for group in (confirm_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
+    for group in (confirm_buttons, offer_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
         if group:
             add_buttons(reply, group)
             break

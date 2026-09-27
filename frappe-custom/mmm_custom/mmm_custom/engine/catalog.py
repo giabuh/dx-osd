@@ -21,6 +21,21 @@ DEFAULT_SETTINGS = {
     "advisor_goal_weight": 0.6, "advisor_level_weight": 0.4, "advisor_floor": 0.5, "advisor_shortlist": 8,
     "confirm_slot_template": "Dạ ý {{ brand.you }} là {{ confirm.label }} phải không ạ?",
     "confirm_skill_template": "Dạ {{ brand.you }} muốn hỏi về {{ confirm.label }} phải không ạ?",
+    "quiz_offer_template": "Dạ để {{ brand.me }} tư vấn đúng lớp hơn, {{ brand.you }} làm thử bài test {{ quiz.subject }} "
+                           "nhỏ {{ quiz.total }} câu, chừng 1 phút thôi nhé ạ 😊 Làm xong {{ brand.me }} tặng {{ brand.you }} "
+                           "một buổi học thử miễn phí và mã ưu đãi ạ.",
+    "quiz_decline_template": "Dạ không sao ạ, khi nào tiện {{ brand.you }} cứ nhắn {{ brand.me }} làm bài test nhé ạ.",
+    "quiz_phone_template": "Dạ {{ brand.you }} cho {{ brand.me }} xin số điện thoại để {{ brand.me }} gửi lộ trình học chi tiết "
+                           "và giữ mã ưu đãi cho {{ brand.you }} nhé ạ.",
+    "quiz_voucher_template": "Dạ {{ brand.me }} gửi {{ brand.you }} lộ trình khóa {{ course.name }} ạ:"
+                             "{% for s in course.syllabus[:5] %}\n• {{ s }}{% endfor %}"
+                             "{% if voucher.code %}\n🎁 Mã ưu đãi riêng của {{ brand.you }}: {{ voucher.code }} "
+                             "({{ voucher.title }}, học phí còn {{ voucher.final_fee | vnd }}). {{ brand.you | capitalize }} "
+                             "báo mã này khi đăng ký nhé ạ.{% endif %}",
+    "voucher_prefix": "UD",
+    "quiz_reminder_template": "Dạ {{ brand.you }} ơi, bài test {{ quiz.subject }} chỉ còn {{ quiz.left }} câu nữa là xong rồi ạ, "
+                              "{{ brand.you }} làm tiếp để nhận quà nhé 🎁\nCâu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}",
+    "quiz_remind_after_hours": 2,
 }
 
 

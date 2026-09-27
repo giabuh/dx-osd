@@ -73,6 +73,9 @@ class ReplayRepo(FrappeRepo):
     def write_signal(self, row):
         pass
 
+    def save_quiz_attempt(self, state, change):
+        pass
+
 
 def _renderer():
     from mmm_custom.engine.render import frappe_renderer
@@ -95,6 +98,7 @@ def simulate(session, text, lead=None, jev=0):
 @frappe.whitelist() if frappe else (lambda f: f)
 def reset(session):
     frappe.only_for(ROLES)
+    frappe.db.delete("Quiz Attempt", {"conversation": f"sandbox-{session}", "is_sandbox": 1})
     frappe.db.delete("Bot Conversation", {"conversation_id": f"sandbox-{session}", "is_sandbox": 1})
     frappe.db.commit()
 
