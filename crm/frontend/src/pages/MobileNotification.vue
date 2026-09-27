@@ -24,10 +24,10 @@
     >
       <RouterLink
         v-for="n in notifications.data"
-        :key="n.comment"
+        :key="n.name || n.comment || n.notification_type_doc || n.creation"
         :to="getRoute(n)"
         class="flex cursor-pointer items-start gap-3 px-2.5 py-3 hover:bg-surface-gray-2"
-        @click="mark_doc_as_read(n.comment || n.notification_type_doc)"
+        @click="mark_doc_as_read(n.name || n.comment || n.notification_type_doc)"
       >
         <div class="mt-1 flex items-center gap-2.5">
           <div
@@ -35,16 +35,22 @@
             :class="[n.read ? 'bg-transparent' : 'bg-surface-gray-10']"
           />
           <WhatsAppIcon v-if="n.type == 'WhatsApp'" class="size-7" />
-          <UserAvatar v-else :user="n.from_user.name" size="lg" />
+          <div
+            v-else-if="n.type == 'Marketing' || n.reference_doctype == 'Facebook Post'"
+            class="flex size-7 items-center justify-center rounded-full bg-surface-blue-2 text-ink-blue-3"
+          >
+            <MegaphoneIcon class="size-4" />
+          </div>
+          <UserAvatar v-else :user="n.from_user?.name || 'Administrator'" size="lg" />
         </div>
-        <div>
+        <div class="flex-1 min-w-0">
           <div
             v-if="n.notification_text"
             v-html="sanitizeHTML(n.notification_text)"
           />
           <div v-else class="mb-2 space-x-1 leading-5 text-ink-gray-5">
             <span class="font-medium text-ink-gray-9">
-              {{ n.from_user.full_name }}
+              {{ n.from_user?.full_name || n.from_user?.name || 'Hệ thống' }}
             </span>
             <span>
               {{ __('mentioned you in {0}', [n.reference_doctype]) }}
@@ -72,6 +78,7 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import MarkAsDoneIcon from '@/components/Icons/MarkAsDoneIcon.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
+import MegaphoneIcon from '~icons/lucide/megaphone'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { notifications, notificationsStore } from '@/stores/notifications'
 import { globalStore } from '@/stores/global'
@@ -93,6 +100,15 @@ onMounted(() => {
 })
 
 function getRoute(notification) {
+  if (
+    notification.route_name === 'FacebookPosts' ||
+    notification.reference_doctype === 'Facebook Post'
+  ) {
+    return { name: 'FacebookPosts' }
+  }
+  if (notification.route_name === 'Tasks') {
+    return { name: 'Tasks' }
+  }
   let params = {
     leadId: notification.reference_name,
   }
@@ -102,7 +118,7 @@ function getRoute(notification) {
     }
   }
   return {
-    name: notification.route_name,
+    name: notification.route_name || 'Leads',
     params: params,
     hash: '#' + (notification.comment || notification.notification_type_doc),
   }

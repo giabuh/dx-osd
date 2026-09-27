@@ -5160,6 +5160,9 @@ msgstr "Chưa đặt số di động"
 msgid "No New Notifications"
 msgstr "Không có thông báo mới nào"
 
+msgid "You have no new notifications"
+msgstr "Bạn chưa có thông báo mới nào"
+
 #: frontend/src/pages/Deal.vue:727
 msgid "No Primary Contact Set"
 msgstr "Chưa đặt liên hệ chính"
