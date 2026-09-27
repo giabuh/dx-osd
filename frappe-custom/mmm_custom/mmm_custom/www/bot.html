@@ -71,6 +71,7 @@
     details { margin-top: 16px; }
     summary { cursor: pointer; font-weight: 650; }
     pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; background: #f5f8fc; padding: 10px; border-radius: 8px; }
+    .chat-grid pre { max-height: 180px; overflow: auto; }
     .error { color: #b23434; }
     @media (max-width: 950px) { .cards { grid-template-columns: repeat(3, 1fr); } .chat-grid { grid-template-columns: 1fr; } }
     @media (max-width: 650px) { .shell { padding: 0 14px 30px; } header { align-items: flex-start; flex-direction: column; } .cards { grid-template-columns: repeat(2, 1fr); } .knowledge-grid { grid-template-columns: 1fr; } .section-head { display: block; } .panel { padding: 14px; } }
