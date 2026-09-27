@@ -285,6 +285,60 @@ class TestAutopilotEngine(unittest.TestCase):
         mock_doc.save.assert_not_called()
         self.assertEqual(res, {"status": "success", "name": "POST-11", "status": "Posted"})
 
+    @patch("mmm_custom.autopilot.frappe")
+    def test_publish_scheduled_posts_success(self, mock_frappe):
+        mock_frappe.get_all.return_value = [{"name": "FB-POST-1"}]
+        mock_doc = MagicMock()
+        mock_frappe.get_doc.return_value = mock_doc
+
+        res = autopilot.publish_scheduled_posts()
+
+        mock_frappe.get_all.assert_called_once()
+        mock_frappe.get_doc.assert_called_once_with("Facebook Post", "FB-POST-1")
+        mock_doc.post_now.assert_called_once()
+        mock_frappe.db.commit.assert_called_once()
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["published"], 1)
+        self.assertEqual(res["published_posts"], ["FB-POST-1"])
+
+    @patch("mmm_custom.autopilot.frappe")
+    def test_publish_scheduled_posts_no_due_posts(self, mock_frappe):
+        mock_frappe.get_all.return_value = []
+
+        res = autopilot.publish_scheduled_posts()
+
+        mock_frappe.get_all.assert_called_once()
+        mock_frappe.get_doc.assert_not_called()
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["published"], 0)
+        self.assertEqual(res["published_posts"], [])
+
+    @patch("mmm_custom.autopilot.frappe")
+    def test_publish_scheduled_posts_handles_exception(self, mock_frappe):
+        mock_frappe.get_all.return_value = [{"name": "FB-POST-ERR"}]
+        mock_doc = MagicMock()
+        mock_doc.post_now.side_effect = Exception("Meta API network timeout")
+        mock_frappe.get_doc.return_value = mock_doc
+
+        res = autopilot.publish_scheduled_posts()
+
+        mock_frappe.get_all.assert_called_once()
+        mock_frappe.get_doc.assert_called_once_with("Facebook Post", "FB-POST-ERR")
+        mock_doc.post_now.assert_called_once()
+        mock_frappe.log_error.assert_called_once_with(
+            title="Autopilot Publish Error",
+            message="Meta API network timeout",
+        )
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["published"], 0)
+        self.assertEqual(res["published_posts"], [])
+
+    def test_hooks_register_publish_scheduled_posts(self):
+        hooks_content = (APP_DIR / "mmm_custom" / "hooks.py").read_text(encoding="utf-8")
+        self.assertIn('"mmm_custom.autopilot.publish_scheduled_posts"', hooks_content)
+        self.assertIn('"*/5 * * * *"', hooks_content)
+
 
 if __name__ == "__main__":
     unittest.main()
+

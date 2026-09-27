@@ -86,11 +86,14 @@ after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
 
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
 # It does nothing unless the site config has typesafe_api_key.
+# Autopilot publisher: runs every 5 minutes to publish scheduled Facebook posts.
 scheduler_events = {
 	"cron": {
 		"0 8 * * *": ["mmm_custom.followup.run_daily"],
+		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
 	},
 }
+
 
 # Uninstallation
 # ------------
@@ -160,14 +163,8 @@ scheduler_events = {
 
 # Scheduled Tasks
 # ---------------
+# (See scheduler_events defined above with 08:00 followup and */5 autopilot publisher)
 
-scheduler_events = {
-	"cron": {
-		"*/5 * * * *": [
-			"mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.check_scheduled_posts"
-		]
-	}
-}
 
 # Testing
 # -------

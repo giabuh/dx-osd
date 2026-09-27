@@ -6,6 +6,7 @@ import re
 
 try:
     import frappe
+    import frappe.utils
     from frappe import _
     from frappe.utils import now_datetime
 except ImportError:
@@ -28,6 +29,10 @@ except ImportError:
         from datetime import datetime
 
         return datetime.now()
+
+    frappe.utils = MagicMock()
+    frappe.utils.now_datetime = now_datetime
+
 
 
 # 4 standard weekly post slots (Mon, Wed, Fri, Sun)
@@ -228,3 +233,40 @@ def recall_post(post_name):
         if hasattr(frappe.db, "commit"):
             frappe.db.commit()
     return {"status": "success", "name": post_name, "status": doc.status}
+
+
+@frappe.whitelist()
+def publish_scheduled_posts():
+    """Publish Facebook posts that are scheduled and due."""
+    posts = frappe.get_all(
+        "Facebook Post",
+        filters={"status": "Scheduled", "scheduled_time": ["<=", frappe.utils.now_datetime()]},
+        fields=["name"],
+    )
+    published_count = 0
+    published_posts = []
+
+    for post in posts:
+        post_name = (
+            post.get("name")
+            if isinstance(post, dict)
+            else (getattr(post, "name", None) or post)
+        )
+        try:
+            doc = frappe.get_doc("Facebook Post", post_name)
+            doc.post_now()
+            published_count += 1
+            published_posts.append(post_name)
+        except Exception as e:
+            if hasattr(frappe, "log_error"):
+                frappe.log_error(title="Autopilot Publish Error", message=str(e))
+
+    if hasattr(frappe.db, "commit"):
+        frappe.db.commit()
+
+    return {
+        "status": "success",
+        "published": published_count,
+        "published_posts": published_posts,
+    }
+
