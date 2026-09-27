@@ -1,0 +1,243 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-26 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "bot_conversation",
+  "lead",
+  "message_id",
+  "message_text",
+  "is_sandbox",
+  "understanding_section",
+  "tapped",
+  "keyword_matches",
+  "jev_status",
+  "model_version",
+  "latency_ms",
+  "input_tokens",
+  "jev_questions",
+  "jev_answers",
+  "decision_section",
+  "decision_type",
+  "reason",
+  "asked_slot",
+  "handoff_reason",
+  "skills_answered",
+  "status_before",
+  "turns_before",
+  "stuck_before",
+  "slots_before",
+  "pending_before",
+  "slots_after",
+  "reply_section",
+  "reply_text",
+  "reply_buttons",
+  "reply_variants",
+  "errors",
+  "jev_extra"
+ ],
+ "fields": [
+  {
+   "fieldname": "bot_conversation",
+   "fieldtype": "Link",
+   "label": "Bot Conversation",
+   "options": "Bot Conversation",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "CRM Lead",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "message_id",
+   "fieldtype": "Data",
+   "label": "Message ID"
+  },
+  {
+   "fieldname": "message_text",
+   "fieldtype": "Small Text",
+   "label": "Message Text",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "is_sandbox",
+   "fieldtype": "Check",
+   "label": "Is Sandbox",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "understanding_section",
+   "fieldtype": "Section Break",
+   "label": "Understanding"
+  },
+  {
+   "fieldname": "tapped",
+   "fieldtype": "Check",
+   "label": "Button Tap"
+  },
+  {
+   "fieldname": "keyword_matches",
+   "fieldtype": "JSON",
+   "label": "Keyword Matches"
+  },
+  {
+   "fieldname": "jev_status",
+   "fieldtype": "Select",
+   "label": "Jev Status",
+   "options": "disabled\nok\nunavailable\nskipped_cost_guard",
+   "default": "disabled",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "model_version",
+   "fieldtype": "Data",
+   "label": "Model Version"
+  },
+  {
+   "fieldname": "latency_ms",
+   "fieldtype": "Int",
+   "label": "Latency (ms)"
+  },
+  {
+   "fieldname": "input_tokens",
+   "fieldtype": "Int",
+   "label": "Input Tokens"
+  },
+  {
+   "fieldname": "jev_questions",
+   "fieldtype": "JSON",
+   "label": "Jev Questions"
+  },
+  {
+   "fieldname": "jev_answers",
+   "fieldtype": "JSON",
+   "label": "Jev Answers"
+  },
+  {
+   "fieldname": "decision_section",
+   "fieldtype": "Section Break",
+   "label": "Decision"
+  },
+  {
+   "fieldname": "decision_type",
+   "fieldtype": "Select",
+   "label": "Decision Type",
+   "options": "answer\nconfirm\nask_slot\nhandoff\nsilent",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "asked_slot",
+   "fieldtype": "Data",
+   "label": "Asked Slot"
+  },
+  {
+   "fieldname": "handoff_reason",
+   "fieldtype": "Data",
+   "label": "Handoff Reason"
+  },
+  {
+   "fieldname": "skills_answered",
+   "fieldtype": "Data",
+   "label": "Skills Answered"
+  },
+  {
+   "fieldname": "status_before",
+   "fieldtype": "Data",
+   "label": "Status Before"
+  },
+  {
+   "fieldname": "turns_before",
+   "fieldtype": "Int",
+   "label": "Turns Before"
+  },
+  {
+   "fieldname": "stuck_before",
+   "fieldtype": "Int",
+   "label": "Stuck Before"
+  },
+  {
+   "fieldname": "slots_before",
+   "fieldtype": "JSON",
+   "label": "Slots Before"
+  },
+  {
+   "fieldname": "pending_before",
+   "fieldtype": "JSON",
+   "label": "Pending Before"
+  },
+  {
+   "fieldname": "slots_after",
+   "fieldtype": "JSON",
+   "label": "Slots After"
+  },
+  {
+   "fieldname": "reply_section",
+   "fieldtype": "Section Break",
+   "label": "Reply"
+  },
+  {
+   "fieldname": "reply_text",
+   "fieldtype": "Long Text",
+   "label": "Reply Text"
+  },
+  {
+   "fieldname": "reply_buttons",
+   "fieldtype": "JSON",
+   "label": "Reply Buttons"
+  },
+  {
+   "fieldname": "reply_variants",
+   "fieldtype": "JSON",
+   "label": "Reply Variants"
+  },
+  {
+   "fieldname": "errors",
+   "fieldtype": "JSON",
+   "label": "Errors"
+  },
+  {
+   "fieldname": "jev_extra",
+   "fieldtype": "JSON",
+   "label": "Extra Jev calls (course advisor)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "AI Decision Log",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

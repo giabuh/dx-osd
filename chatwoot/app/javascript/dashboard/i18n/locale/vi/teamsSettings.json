@@ -19,17 +19,17 @@
         "DESC": "Thêm tiêu đề và mô tả cho nhóm mới."
       },
       "AGENTS": {
-        "BUTTON_TEXT": "Thêm đại lý vào nhóm",
-        "TITLE": "Thêm đại lý vào nhóm - {teamName}",
-        "DESC": "Thêm Đại lý vào nhóm mới tạo của bạn. Điều này cho phép bạn cộng tác như một nhóm trong các cuộc trò chuyện, nhận thông báo về các sự kiện mới trong cùng một cuộc trò chuyện."
+        "BUTTON_TEXT": "Thêm nhân viên vào nhóm",
+        "TITLE": "Thêm nhân viên vào nhóm - {teamName}",
+        "DESC": "Thêm Nhân viên vào nhóm mới tạo của bạn. Điều này cho phép bạn cộng tác như một nhóm trong các cuộc trò chuyện, nhận thông báo về các sự kiện mới trong cùng một cuộc trò chuyện."
       },
       "WIZARD_CREATE": {
         "TITLE": "Tạo",
-        "BODY": "Tạo ra một nhóm đại lý mới."
+        "BODY": "Tạo ra một nhóm nhân viên mới."
       },
       "WIZARD_ADD_AGENTS": {
-        "TITLE": "Thêm đại lý",
-        "BODY": "Thêm đại lý vào nhóm."
+        "TITLE": "Thêm nhân viên",
+        "BODY": "Thêm nhân viên vào nhóm."
       },
       "WIZARD_FINISH": {
         "TITLE": "Hoàn tất",
@@ -43,9 +43,9 @@
         "BUTTON_TEXT": "Cập nhật nhóm"
       },
       "AGENTS": {
-        "BUTTON_TEXT": "Cập nhật đại lý trong nhóm",
-        "TITLE": "Thêm đại lý vào nhóm - {teamName}",
-        "DESC": "Thêm Đại lý vào nhóm mới tạo của bạn. Tất cả các đại lý được thêm vào sẽ nhận được thông báo khi có cuộc trò chuyện được phân công cho nhóm này."
+        "BUTTON_TEXT": "Cập nhật nhân viên trong nhóm",
+        "TITLE": "Thêm nhân viên vào nhóm - {teamName}",
+        "DESC": "Thêm Nhân viên vào nhóm mới tạo của bạn. Tất cả các nhân viên được thêm vào sẽ nhận được thông báo khi có cuộc trò chuyện được phân công cho nhóm này."
       },
       "EDIT_WIZARD_DETAILS": {
         "TITLE": "Chi tiết nhóm",
@@ -53,9 +53,9 @@
         "BODY": "Đổi tên, mô tả và các chi tiết khác."
       },
       "EDIT_WIZARD_AGENTS": {
-        "TITLE": "Sửa đại lý",
+        "TITLE": "Sửa nhân viên",
         "ROUTE": "settings_teams_edit_members",
-        "BODY": "Sửa đại lý trong nhóm của bạn."
+        "BODY": "Sửa nhân viên trong nhóm của bạn."
       },
       "EDIT_WIZARD_FINISH": {
         "TITLE": "Hoàn tất",
@@ -67,21 +67,21 @@
       "ERROR_MESSAGE": "Không thể lưu chi tiết nhóm. Thử lại."
     },
     "AGENTS": {
-      "AGENT": "Nhà cung cấp",
+      "AGENT": "Nhân viên",
       "EMAIL": "Email",
-      "BUTTON_TEXT": "Thêm các nhà cung cấp",
-      "ADD_AGENTS": "Thêm đại lý vào nhóm của bạn...",
+      "BUTTON_TEXT": "Thêm các nhân viên",
+      "ADD_AGENTS": "Thêm nhân viên vào nhóm của bạn...",
       "SELECT": "chọn",
-      "SELECT_ALL": "chọn tất cả đại lý",
-      "SELECTED_COUNT": "{selected} trên {total} đại lý được chọn."
+      "SELECT_ALL": "chọn tất cả nhân viên",
+      "SELECTED_COUNT": "{selected} trên {total} nhân viên được chọn."
     },
     "ADD": {
-      "TITLE": "Thêm đại lý vào nhóm - {teamName}",
-      "DESC": "Thêm Đại lý vào nhóm mới tạo của bạn. Điều này cho phép bạn cộng tác như một nhóm trong các cuộc trò chuyện, nhận thông báo về các sự kiện mới trong cùng một cuộc trò chuyện.",
+      "TITLE": "Thêm nhân viên vào nhóm - {teamName}",
+      "DESC": "Thêm Nhân viên vào nhóm mới tạo của bạn. Điều này cho phép bạn cộng tác như một nhóm trong các cuộc trò chuyện, nhận thông báo về các sự kiện mới trong cùng một cuộc trò chuyện.",
       "SELECT": "chọn",
-      "SELECT_ALL": "chọn tất cả đại lý",
-      "SELECTED_COUNT": "{selected} trên {total} đại lý được chọn.",
-      "BUTTON_TEXT": "Thêm các nhà cung cấp",
+      "SELECT_ALL": "chọn tất cả nhân viên",
+      "SELECTED_COUNT": "{selected} trên {total} nhân viên được chọn.",
+      "BUTTON_TEXT": "Thêm các nhân viên",
       "AGENT_VALIDATION_ERROR": "Chọn ít nhật một tổng đài viên."
     },
     "FINISH": {

@@ -1,0 +1,148 @@
+[
+ {
+  "slot_key": "course",
+  "label": "Khóa học",
+  "slot_type": "catalog",
+  "catalog_source": "course",
+  "required": 1,
+  "sort_order": 10,
+  "ask_template": "{{ brand.you | capitalize }} quan tâm khóa học nào ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "products"
+ },
+ {
+  "slot_key": "branch",
+  "label": "Chi nhánh",
+  "slot_type": "catalog",
+  "catalog_source": "branch",
+  "required": 1,
+  "sort_order": 20,
+  "ask_template": "{{ brand.you | capitalize }} muốn học ở chi nhánh nào ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "territory"
+ },
+ {
+  "slot_key": "learner",
+  "label": "Người học",
+  "slot_type": "choice",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 30,
+  "ask_template": "Khóa học này dành cho ai ạ?",
+  "options": [
+   {
+    "value": "self",
+    "label": "Bản thân",
+    "button_label": "Cho tôi",
+    "aliases": "minh, ban than, toi hoc"
+   },
+   {
+    "value": "child",
+    "label": "Con em",
+    "button_label": "Cho con em",
+    "aliases": "con, be, con em, cho con"
+   },
+   {
+    "value": "staff",
+    "label": "Nhân viên công ty",
+    "button_label": "Cho công ty",
+    "aliases": "cong ty, nhan vien, doanh nghiep"
+   }
+  ],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "learner_type"
+ },
+ {
+  "slot_key": "learner_age",
+  "label": "Tuổi người học",
+  "slot_type": "number",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 40,
+  "ask_template": "Bé nhà mình năm nay mấy tuổi ạ?",
+  "options": [],
+  "depends_on_slot": "learner",
+  "depends_on_value": "child",
+  "lead_field": "learner_age"
+ },
+ {
+  "slot_key": "preferred_shift",
+  "label": "Ca học",
+  "slot_type": "choice",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 50,
+  "ask_template": "{{ brand.you | capitalize }} tiện học ca nào ạ?",
+  "options": [
+   {
+    "value": "morning",
+    "label": "Sáng",
+    "button_label": "Ca sáng",
+    "aliases": "sang, buoi sang"
+   },
+   {
+    "value": "afternoon",
+    "label": "Chiều",
+    "button_label": "Ca chiều",
+    "aliases": "chieu, buoi chieu"
+   },
+   {
+    "value": "evening",
+    "label": "Tối",
+    "button_label": "Ca tối",
+    "aliases": "toi, buoi toi, ca toi"
+   }
+  ],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "preferred_shift"
+ },
+ {
+  "slot_key": "customer_name",
+  "label": "Tên khách",
+  "slot_type": "text",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 60,
+  "ask_template": "Cho {{ brand.me }} xin tên {{ brand.you }} để tiện xưng hô ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "first_name"
+ },
+ {
+  "slot_key": "phone",
+  "label": "Số điện thoại",
+  "slot_type": "phone",
+  "catalog_source": "",
+  "required": 1,
+  "sort_order": 70,
+  "ask_template": "Để tư vấn viên liên hệ nhanh, {{ brand.you }} cho {{ brand.me }} xin số điện thoại nhé ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "mobile_no"
+ }
+,
+{"slot_key": "goal", "label": "Mục tiêu học", "slot_type": "choice", "catalog_source": "", "required": 0, "sort_order": 32,
+ "ask_on_demand": 1, "ask_template": "{{ brand.you | capitalize }} học để phục vụ mục tiêu gì ạ?",
+ "options": [
+  {"value": "office", "label": "Công việc văn phòng", "button_label": "Công việc văn phòng", "aliases": "van phong, di lam van phong"},
+  {"value": "certificate", "label": "Lấy chứng chỉ", "button_label": "Lấy chứng chỉ", "aliases": "lay chung chi, thi chung chi"},
+  {"value": "kids_start", "label": "Cho bé làm quen máy tính", "button_label": "Cho bé làm quen", "aliases": "be lam quen, lam quen may tinh"},
+  {"value": "career", "label": "Chuyển nghề / tìm việc", "button_label": "Chuyển nghề", "aliases": "chuyen nghe, tim viec, xin viec"},
+  {"value": "hobby", "label": "Sở thích cá nhân", "button_label": "Sở thích", "aliases": "so thich, hoc cho vui"}],
+ "depends_on_slot": "", "depends_on_value": "", "lead_field": ""},
+{"slot_key": "level", "label": "Trình độ hiện tại", "slot_type": "choice", "catalog_source": "", "required": 0, "sort_order": 34,
+ "ask_on_demand": 1, "ask_template": "{{ brand.you | capitalize }} đã biết về lĩnh vực này tới đâu rồi ạ?",
+ "options": [
+  {"value": "beginner", "label": "Chưa biết gì", "button_label": "Chưa biết gì", "aliases": "chua biet gi, mat goc, moi bat dau"},
+  {"value": "basic", "label": "Biết cơ bản", "button_label": "Biết cơ bản", "aliases": "biet co ban, biet chut chut"},
+  {"value": "advanced", "label": "Muốn nâng cao", "button_label": "Muốn nâng cao", "aliases": "muon nang cao, da biet kha"}],
+ "depends_on_slot": "", "depends_on_value": "", "lead_field": ""}
+]

@@ -1,0 +1,22 @@
+{
+ "content": null,
+ "creation": "2026-09-26 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-09-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "bot-playground",
+ "owner": "Administrator",
+ "page_name": "bot-playground",
+ "roles": [
+  {"role": "System Manager"},
+  {"role": "Sales Manager"}
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Bot Playground"
+}

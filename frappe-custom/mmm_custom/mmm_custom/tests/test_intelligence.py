@@ -103,6 +103,16 @@ class TestEnqueue(unittest.TestCase):
     def setUp(self):
         self.frappe = MagicMock()
         self.frappe.conf = {"typesafe_api_key": "k"}
+        self.frappe.db.exists.return_value = None
+
+    def test_skips_conversations_the_bot_is_handling(self):
+        self.frappe.db.exists.return_value = "7"
+        with patch.object(intel, "frappe", self.frappe):
+            result = intel.enqueue_analysis({"message_type": "incoming", "conversation": {"id": 7}})
+        self.assertEqual(result, {"status": "ignored", "reason": "bot_active"})
+        self.frappe.enqueue.assert_not_called()
+        self.frappe.db.exists.assert_called_with("Bot Conversation",
+                                                 {"conversation_id": "7", "status": "active", "is_sandbox": 0})
 
     def test_queues_incoming_messages(self):
         with patch.object(intel, "frappe", self.frappe):

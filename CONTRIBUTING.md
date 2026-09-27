@@ -10,7 +10,7 @@ Use [GitHub Issues](https://github.com/giabuh/dx-osd/issues) with the **Bug repo
 
 1. Fork, then branch from `main` (`feat/<topic>` or `fix/<topic>`).
 2. Build and run the stacks from source as described in [`README.md`](README.md).
-3. Make the change. New work should trace to a phase in [`ROADMAP.md`](ROADMAP.md).
+3. Make the change. Larger work starts with a spec or plan under [`docs/superpowers/`](docs/superpowers/).
 4. Run the checks for the area you touched:
 
    | Area | Check |

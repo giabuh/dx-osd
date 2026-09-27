@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-26 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "signal_type",
+  "status",
+  "term",
+  "bot_conversation",
+  "lead",
+  "message_text",
+  "details",
+  "is_sandbox"
+ ],
+ "fields": [
+  {
+   "fieldname": "signal_type",
+   "fieldtype": "Select",
+   "label": "Signal Type",
+   "options": "confirm_rejected\nconsultant_corrected\nunmatched_term\nstuck\nrender_error",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "new\naccepted_as_example\nalias_proposed\ndismissed",
+   "default": "new",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "term",
+   "fieldtype": "Data",
+   "label": "Term",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "bot_conversation",
+   "fieldtype": "Link",
+   "label": "Bot Conversation",
+   "options": "Bot Conversation"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "CRM Lead"
+  },
+  {
+   "fieldname": "message_text",
+   "fieldtype": "Small Text",
+   "label": "Message Text"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "JSON",
+   "label": "Details"
+  },
+  {
+   "fieldname": "is_sandbox",
+   "fieldtype": "Check",
+   "label": "Is Sandbox"
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Bot Learning Signal",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

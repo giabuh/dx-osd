@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "creation": "2026-09-27 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "question",
+  "examples",
+  "answer"
+ ],
+ "fields": [
+  {
+   "fieldname": "question",
+   "fieldtype": "Data",
+   "label": "Question",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "What customers ask, in Vietnamese"
+  },
+  {
+   "fieldname": "examples",
+   "fieldtype": "Small Text",
+   "label": "Other Ways Customers Ask",
+   "description": "One per line"
+  },
+  {
+   "fieldname": "answer",
+   "fieldtype": "Small Text",
+   "label": "Answer",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "Sent as is; Jinja with the template context (course, brand, …) is allowed"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Course FAQ",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

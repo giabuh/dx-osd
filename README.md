@@ -10,12 +10,12 @@ Two stacks: Chatwoot Community Edition and Frappe CRM, with our Frappe app `mmm_
 
 | Space | Component | Role |
 |---|---|---|
-| **[H] Human** | Chatwoot CE (`chatwoot/`) | One inbox for staff; conversations routed to the right branch's agents (`scripts/seed-branch-agents.py`) |
+| **[H] Human** | Chatwoot CE (`chatwoot/`) | Inbox only: every Facebook page gets the bot, each conversation is handed to the consultant the CRM rule picks. Agents and branch teams are mirrored from CRM `Consultant` (`mmm_custom/staff_sync.py`) — manage staff in CRM, not here |
 | **[P] Process** | `mmm_custom` webhooks (`api.py`, `bot_api.py`, `bot_engine.py`) | Event-driven: HMAC-verified Chatwoot webhooks → 3-tier dedup → create/update CRM Lead; an agent bot qualifies the lead (course, branch) with Quick Replies and hands off to a human |
 | **[D] Data** | Frappe CRM (`crm/`) + `mmm_custom` fields | Single source of truth for Lead/Contact/Deal; native Facebook Lead Ads sync; data-quality indicator per Lead |
 | **[I] Intelligence** | `mmm_custom` AI agents on [TypeSafe Jev](https://docs.typesafe.ai) (optional) | Read each conversation and act on their own when confident: intent and hotness, the customer's phone/email picked out of the chat (possible duplicates flagged), conversation labels, a suggested reply; every morning, follow-up Tasks for quiet Leads |
 
-Design rationale: [`docs/superpowers/specs/`](docs/superpowers/specs/) and [`docs/superpowers/plans/`](docs/superpowers/plans/); direction: [`ROADMAP.md`](ROADMAP.md).
+Design rationale: [`docs/superpowers/specs/`](docs/superpowers/specs/) and [`docs/superpowers/plans/`](docs/superpowers/plans/).
 
 ## Repository layout
 
@@ -47,10 +47,11 @@ docker compose up -d
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000   # 200/302
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000   # 200 once the bench is ready
 
-# 3. Wire Chatwoot to the CRM (account, inbox, webhook + its secret into the CRM site config), agent bot, branch agents
+# 3. Wire Chatwoot to the CRM (account, inbox, webhook + its secret into the CRM site config), agent bot, staff
 python scripts/configure-chatwoot.py
 python scripts/setup-agent-bot.py
-python scripts/seed-branch-agents.py
+# Staff: add Consultants in CRM; they sync to Chatwoot on save and every 10 min, or right away with:
+docker exec crm-frappe-1 bash -lc "cd /home/frappe/frappe-bench && bench --site crm.localhost execute mmm_custom.staff_sync.sync_now"
 
 # 4. Tests
 python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests

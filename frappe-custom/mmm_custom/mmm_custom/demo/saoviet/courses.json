@@ -1,0 +1,1640 @@
+[
+ {
+  "product_code": "VP-CB",
+  "product_name": "Tin học cơ bản",
+  "button_label": "Tin học cơ bản",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tin hoc co ban, may tinh co ban",
+  "next_courses": [
+   "VP-WORD",
+   "VP-EXCEL"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Khóa nhập môn cho người chưa quen máy tính: làm chủ Windows, gõ phím, quản lý thư mục, Internet, email và soạn thảo văn bản đơn giản. Học thực hành trên máy tại lớp, mỗi buổi đều có bài tập.</p>",
+  "syllabus": "Làm quen máy tính và Windows\nGõ phím 10 ngón, tiếng Việt Unikey\nQuản lý thư mục, tệp tin, USB\nInternet, Google, email, Zalo trên máy tính\nWord cơ bản: soạn và in văn bản",
+  "faqs": [
+   {
+    "question": "Người lớn tuổi, chưa từng dùng máy tính có học được không?",
+    "examples": "lớn tuổi rồi học nổi không\nchưa biết cầm chuột có học được không\nmẹ tôi 50 tuổi học được không",
+    "answer": "Dạ học được ạ. Khóa {{ course.name }} bắt đầu từ cách cầm chuột, bật tắt máy; giáo viên kèm từng bước, lớp nhỏ nên {{ brand.you }} yên tâm theo kịp ạ."
+   },
+   {
+    "question": "Học xong có làm được việc văn phòng không?",
+    "examples": "học xong đi làm được chưa\nhọc xong có soạn thảo văn bản được không",
+    "answer": "Dạ học xong {{ brand.you }} tự dùng máy tính, email và soạn văn bản cơ bản được ạ. Để làm văn phòng chuyên nghiệp, {{ brand.me }} gợi ý học tiếp {{ course.next_courses | join(', ') }} ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-WORD",
+  "product_name": "Word từ cơ bản đến nâng cao",
+  "button_label": "Word",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "word, soan thao",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Soạn thảo văn bản chuyên nghiệp bằng Word: định dạng chuẩn hành chính, bảng biểu, mục lục tự động, trộn thư và in ấn. Phù hợp nhân viên văn phòng, sinh viên làm luận văn.</p>",
+  "syllabus": "Định dạng văn bản, đoạn, style\nVăn bản hành chính theo Nghị định 30\nBảng biểu, hình ảnh, SmartArt\nMục lục, đánh số trang, chú thích tự động\nTrộn thư (Mail Merge), in ấn",
+  "faqs": [
+   {
+    "question": "Có học làm mục lục tự động cho luận văn không?",
+    "examples": "làm mục lục tự động\ntrình bày luận văn\nđánh số trang",
+    "answer": "Dạ có ạ. Khóa có riêng buổi mục lục, đánh số trang và chú thích tự động, {{ brand.you }} áp dụng ngay cho luận văn, báo cáo ạ."
+   },
+   {
+    "question": "Có học soạn văn bản hành chính đúng chuẩn không?",
+    "examples": "văn bản hành chính\nnghị định 30\nsoạn công văn",
+    "answer": "Dạ có ạ. {{ brand.me }} hướng dẫn trình bày công văn, quyết định theo Nghị định 30 để {{ brand.you }} dùng được ngay ở cơ quan ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-EXCEL",
+  "product_name": "Excel từ cơ bản đến nâng cao",
+  "button_label": "Excel",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1–1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "excel, bang tinh",
+  "next_courses": [
+   "VP-EXCEL-NC",
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Excel từ con số 0 đến thành thạo công việc: nhập liệu chuẩn, hàm tính toán, lọc – sắp xếp, biểu đồ và Pivot Table. Bài tập lấy từ tình huống thật ở phòng kế toán, nhân sự, bán hàng.</p>",
+  "syllabus": "Làm quen Excel, định dạng bảng tính\nHàm cơ bản: SUM, IF, COUNTIF, SUMIF\nHàm tra cứu: VLOOKUP, XLOOKUP, INDEX–MATCH\nLọc, sắp xếp, Data Validation\nBiểu đồ và Pivot Table\nIn ấn và bảo vệ file",
+  "faqs": [
+   {
+    "question": "Chưa biết gì về Excel có học được không?",
+    "examples": "mất gốc excel học được không\nchưa biết gì excel\nchưa dùng excel bao giờ",
+    "answer": "Dạ được ạ. Khóa {{ course.name }} học từ đầu, buổi đầu làm quen giao diện rồi mới lên hàm; {{ brand.you }} chỉ cần biết dùng máy tính cơ bản ạ."
+   },
+   {
+    "question": "Khóa này có học VLOOKUP và Pivot Table không?",
+    "examples": "có học vlookup không\ncó dạy pivot không\ncó học hàm dò tìm không",
+    "answer": "Dạ có ạ. Khóa có riêng buổi hàm tra cứu (VLOOKUP, XLOOKUP, INDEX–MATCH) và buổi Pivot Table, biểu đồ để làm báo cáo ạ."
+   },
+   {
+    "question": "Học Excel để làm kế toán, nhân sự có hợp không?",
+    "examples": "làm kế toán học excel này được không\ndân nhân sự học có hợp không\nhọc để làm báo cáo bán hàng",
+    "answer": "Dạ rất hợp ạ. Bài tập lấy từ bảng lương, công nợ, báo cáo bán hàng nên học xong {{ brand.you }} áp dụng ngay vào công việc ạ."
+   },
+   {
+    "question": "Có dùng Excel trên Macbook được không?",
+    "examples": "dùng macbook học được không\nmáy mac có học excel được không",
+    "answer": "Dạ được ạ. Giáo viên hướng dẫn cả phím tắt trên Mac; {{ brand.you }} mang Macbook đến lớp hoặc dùng máy của trung tâm đều được ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-EXCEL-NC",
+  "product_name": "Excel nâng cao & Dashboard",
+  "button_label": "Excel nâng cao",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "excel nang cao, dashboard, power query",
+  "next_courses": [
+   "LT-VBA"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Dành cho người đã dùng Excel hằng ngày muốn làm báo cáo nhanh và đẹp: hàm mảng động, Power Query gom dữ liệu, Pivot nâng cao và Dashboard tự cập nhật.</p>",
+  "syllabus": "Hàm nâng cao: FILTER, UNIQUE, SORT, LET\nPower Query gom và làm sạch dữ liệu\nPivot Table nâng cao, Slicer\nThiết kế Dashboard tự cập nhật\nDự án cuối khóa với dữ liệu công ty",
+  "faqs": [
+   {
+    "question": "Cần biết gì trước khi học Excel nâng cao?",
+    "examples": "cần biết gì trước\nđầu vào khóa nâng cao\nchưa vững excel học nâng cao được không",
+    "answer": "Dạ {{ brand.you }} cần dùng quen các hàm cơ bản như IF, VLOOKUP ạ. Nếu chưa vững, {{ brand.me }} gợi ý học khóa Excel từ cơ bản đến nâng cao trước ạ."
+   },
+   {
+    "question": "Có học Power Query và Dashboard không?",
+    "examples": "có học power query không\ncó làm dashboard không\nlàm báo cáo tự động",
+    "answer": "Dạ có ạ. Khóa có phần Power Query gom dữ liệu nhiều file và cuối khóa mỗi học viên tự làm một Dashboard tự cập nhật ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-PPT",
+  "product_name": "PowerPoint chuyên nghiệp",
+  "button_label": "PowerPoint",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1300000,
+  "duration_text": "3 tuần",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "powerpoint, ppt, trinh chieu",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Thiết kế slide đẹp và thuyết trình tự tin: bố cục, màu sắc, hiệu ứng, biểu đồ và mẫu slide dùng lại được cho công việc.</p>",
+  "syllabus": "Nguyên tắc thiết kế slide\nMaster slide và mẫu dùng lại\nHình ảnh, icon, biểu đồ\nHiệu ứng và chuyển cảnh\nKỹ năng thuyết trình",
+  "faqs": [
+   {
+    "question": "Có dạy làm slide đẹp không cần năng khiếu thiết kế không?",
+    "examples": "không biết thiết kế\nlàm slide đẹp\nslide xấu",
+    "answer": "Dạ có ạ. Khóa dạy nguyên tắc bố cục, màu và mẫu slide có sẵn nên {{ brand.you }} không cần năng khiếu vẫn làm slide đẹp được ạ."
+   },
+   {
+    "question": "Có học kỹ năng thuyết trình không?",
+    "examples": "kỹ năng thuyết trình\nnói trước đám đông\ntrình bày",
+    "answer": "Dạ có ạ. Buổi cuối mỗi học viên thuyết trình bài của mình và được giáo viên góp ý trực tiếp ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-AI",
+  "product_name": "Ứng dụng AI trong văn phòng",
+  "button_label": "AI văn phòng",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ai van phong, chatgpt van phong",
+  "next_courses": [
+   "AI-N8N"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Dùng ChatGPT, Gemini, Copilot để làm việc văn phòng nhanh hơn: soạn email, tóm tắt tài liệu, làm báo cáo, xử lý Excel và làm slide bằng AI.</p>",
+  "syllabus": "Viết câu lệnh (prompt) hiệu quả\nSoạn email, văn bản, tóm tắt tài liệu\nAI hỗ trợ Excel và phân tích số liệu\nLàm slide, hình ảnh bằng AI\nBảo mật dữ liệu khi dùng AI",
+  "faqs": [
+   {
+    "question": "Không rành công nghệ có học AI văn phòng được không?",
+    "examples": "không rành công nghệ\nlớn tuổi học ai được không\nchưa dùng chatgpt",
+    "answer": "Dạ được ạ. Khóa bắt đầu từ cách đăng ký và hỏi AI, {{ brand.you }} chỉ cần biết dùng máy tính cơ bản ạ."
+   },
+   {
+    "question": "Có phải trả phí dùng ChatGPT không?",
+    "examples": "có tốn tiền chatgpt không\nbản miễn phí\nphải mua tài khoản không",
+    "answer": "Dạ không bắt buộc ạ. {{ brand.me }} dạy trên bản miễn phí, bản trả phí chỉ giới thiệu để {{ brand.you }} tự cân nhắc ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-MOS",
+  "product_name": "Luyện thi MOS quốc tế",
+  "button_label": "Chứng chỉ MOS",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3500000,
+  "duration_text": "1,5–2 tháng",
+  "certificate": "MOS (Microsoft)",
+  "offer": "all",
+  "aliases": "mos, chung chi mos",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Ôn luyện thi chứng chỉ MOS của Microsoft (Word, Excel, PowerPoint) theo đề thi thật, luyện trên phần mềm mô phỏng bài thi.</p>",
+  "syllabus": "Cấu trúc bài thi MOS\nLuyện đề Word\nLuyện đề Excel\nLuyện đề PowerPoint\nThi thử và chữa đề",
+  "faqs": [
+   {
+    "question": "Chứng chỉ MOS có giá trị quốc tế không?",
+    "examples": "mos có quốc tế không\nchứng chỉ microsoft\nmos dùng để làm gì",
+    "answer": "Dạ có ạ. MOS do Microsoft cấp, được công nhận quốc tế và nhiều trường, doanh nghiệp dùng làm chuẩn tin học ạ."
+   },
+   {
+    "question": "Lệ phí thi MOS đã gồm trong học phí chưa?",
+    "examples": "lệ phí thi\nphí thi mos\nhọc phí gồm thi chưa",
+    "answer": "Dạ lệ phí thi được tính riêng theo quy định của đơn vị tổ chức thi ạ, tư vấn viên sẽ báo {{ brand.you }} mức phí và lịch thi gần nhất ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-IC3",
+  "product_name": "Luyện thi IC3",
+  "button_label": "Chứng chỉ IC3",
+  "course_group": "Tin học văn phòng",
+  "audience": "Học sinh – Sinh viên",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3200000,
+  "duration_text": "1,5–2 tháng",
+  "certificate": "IC3 (Certiport)",
+  "offer": "all",
+  "aliases": "ic3",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Luyện thi chứng chỉ IC3 (Certiport) về máy tính căn bản, ứng dụng văn phòng và Internet, phù hợp học sinh, sinh viên cần chuẩn đầu ra tin học.</p>",
+  "syllabus": "Kiến thức máy tính căn bản\nỨng dụng văn phòng\nInternet và an toàn thông tin\nLuyện đề theo cấu trúc IC3\nThi thử",
+  "faqs": [
+   {
+    "question": "IC3 có dùng làm chuẩn đầu ra đại học được không?",
+    "examples": "chuẩn đầu ra\nra trường cần ic3\ntrường yêu cầu ic3",
+    "answer": "Dạ nhiều trường chấp nhận IC3 làm chuẩn đầu ra tin học ạ; {{ brand.you }} nên kiểm tra yêu cầu của trường mình, tư vấn viên sẽ hỗ trợ thêm ạ."
+   },
+   {
+    "question": "Học sinh cấp 3 có học IC3 được không?",
+    "examples": "học sinh cấp 3\nlớp 10 học được không\ncon đang học phổ thông",
+    "answer": "Dạ được ạ. Khóa dành cho học sinh từ {{ course.min_age }} tuổi trở lên ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VP-TRONGOI",
+  "product_name": "Tin học văn phòng trọn gói",
+  "button_label": "VP trọn gói",
+  "course_group": "Tin học văn phòng",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3900000,
+  "duration_text": "2–3 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tron goi van phong, word excel powerpoint",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Trọn bộ Word, Excel và PowerPoint cho người đi làm, học một lần đủ kỹ năng văn phòng. Tiết kiệm hơn học lẻ từng khóa.</p>",
+  "syllabus": "Word: soạn thảo, mục lục, trộn thư\nExcel: hàm, lọc, Pivot Table, biểu đồ\nPowerPoint: thiết kế slide, hiệu ứng, thuyết trình\nỨng dụng tổng hợp trong công việc",
+  "faqs": [
+   {
+    "question": "Học trọn gói có rẻ hơn học lẻ từng khóa không?",
+    "examples": "trọn gói có lợi hơn không\nhọc lẻ hay trọn gói\nso với học riêng từng khóa",
+    "answer": "Dạ có ạ. Gói {{ course.name }} gồm Word, Excel và PowerPoint, học phí thấp hơn tổng học lẻ ba khóa ạ."
+   },
+   {
+    "question": "Khóa trọn gói gồm những môn nào?",
+    "examples": "trọn gói gồm gì\ncó những môn nào\nhọc những phần mềm nào",
+    "answer": "Dạ gói gồm Word, Excel và PowerPoint, học lần lượt trong {{ course.duration }} ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-PTS",
+  "product_name": "Photoshop cơ bản",
+  "button_label": "Photoshop",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "photoshop, ps, chinh anh",
+  "next_courses": [
+   "DH-PTS-NC"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Photoshop cho người mới: chỉnh sửa, cắt ghép ảnh, làm ảnh sản phẩm bán hàng online và thiết kế banner, poster quảng cáo.</p>",
+  "syllabus": "Giao diện và công cụ cơ bản\nLayer, Mask, cắt ghép ảnh\nChỉnh màu, retouch da\nThiết kế banner, poster bán hàng\nXuất file cho in ấn và mạng xã hội",
+  "faqs": [
+   {
+    "question": "Không có năng khiếu vẽ có học Photoshop được không?",
+    "examples": "không biết vẽ học được không\nkhông có năng khiếu\nvẽ xấu có học được không",
+    "answer": "Dạ được ạ. Photoshop là chỉnh sửa và ghép ảnh, không cần vẽ tay; giáo viên có mẫu sẵn để {{ brand.you }} làm theo ạ."
+   },
+   {
+    "question": "Học xong có tự thiết kế ảnh bán hàng online được không?",
+    "examples": "làm ảnh sản phẩm bán hàng\nthiết kế banner shopee\nlàm poster quảng cáo",
+    "answer": "Dạ được ạ. Khóa có riêng phần làm ảnh sản phẩm và banner bán hàng cho Facebook, Shopee ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-PTS-NC",
+  "product_name": "Photoshop nâng cao",
+  "button_label": "Photoshop nâng cao",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2300000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "photoshop nang cao",
+  "next_courses": [
+   "DH-AI"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Photoshop nâng cao cho người đã biết cơ bản: retouch chân dung chuyên nghiệp, blend màu, ghép ảnh quảng cáo và thiết kế ấn phẩm hoàn chỉnh.</p>",
+  "syllabus": "Retouch chân dung chuyên sâu\nBlend màu, chỉnh màu điện ảnh\nGhép ảnh quảng cáo\nThiết kế ấn phẩm hoàn chỉnh\nDự án cuối khóa",
+  "faqs": [
+   {
+    "question": "Cần biết gì trước khi học Photoshop nâng cao?",
+    "examples": "cần biết gì trước\nchưa biết photoshop học nâng cao được không",
+    "answer": "Dạ {{ brand.you }} cần dùng quen layer, mask và công cụ cơ bản ạ; nếu chưa, {{ brand.me }} gợi ý học Photoshop cơ bản trước ạ."
+   },
+   {
+    "question": "Học xong có nhận làm freelance được không?",
+    "examples": "làm freelance\nnhận job\nkiếm tiền từ photoshop",
+    "answer": "Dạ khóa có phần làm dự án thật và xây portfolio để học viên tự tin nhận việc freelance ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-AI",
+  "product_name": "Illustrator",
+  "button_label": "Illustrator",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2000000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "illustrator, ai design, vector",
+  "next_courses": [
+   "DH-CRD"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Illustrator để thiết kế logo, nhận diện thương hiệu, icon và ấn phẩm in ấn dạng vector sắc nét ở mọi kích thước.</p>",
+  "syllabus": "Công cụ vector cơ bản\nVẽ logo và icon\nTypography\nBộ nhận diện thương hiệu\nXuất file in ấn",
+  "faqs": [
+   {
+    "question": "Illustrator khác Photoshop thế nào?",
+    "examples": "khác photoshop\nnên học ai hay ps\nillustrator dùng làm gì",
+    "answer": "Dạ Photoshop mạnh về chỉnh ảnh, còn Illustrator vẽ vector để làm logo, icon, ấn phẩm in sắc nét ở mọi kích thước ạ."
+   },
+   {
+    "question": "Có học thiết kế logo không?",
+    "examples": "thiết kế logo\nlàm logo\nnhận diện thương hiệu",
+    "answer": "Dạ có ạ. Khóa có riêng phần thiết kế logo và bộ nhận diện thương hiệu ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-CRD",
+  "product_name": "CorelDraw",
+  "button_label": "CorelDraw",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "corel, coreldraw",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>CorelDraw cho thiết kế in ấn, quảng cáo: bảng hiệu, tờ rơi, danh thiếp, bao bì — phần mềm phổ biến ở các tiệm in và công ty quảng cáo.</p>",
+  "syllabus": "Giao diện và công cụ vẽ\nThiết kế danh thiếp, tờ rơi\nBảng hiệu, băng rôn\nBao bì, nhãn mác\nChuẩn bị file in",
+  "faqs": [
+   {
+    "question": "Học CorelDraw có dễ xin việc ở tiệm in không?",
+    "examples": "làm tiệm in\nxin việc in ấn\ncorel dùng ở đâu",
+    "answer": "Dạ CorelDraw rất phổ biến ở tiệm in và công ty quảng cáo, học xong có thể làm thiết kế in ấn ngay ạ."
+   },
+   {
+    "question": "Chưa biết thiết kế có học CorelDraw được không?",
+    "examples": "chưa biết thiết kế\nngười mới học corel",
+    "answer": "Dạ được ạ, khóa học từ công cụ cơ bản, {{ brand.you }} chỉ cần biết dùng máy tính ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-PR",
+  "product_name": "Premiere dựng video",
+  "button_label": "Premiere",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "premiere, dung video, edit video",
+  "next_courses": [
+   "DH-AE"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Dựng video bằng Premiere: cắt ghép, chỉnh màu, âm thanh, phụ đề, làm video TikTok, YouTube và video quảng cáo bán hàng.</p>",
+  "syllabus": "Giao diện và quy trình dựng\nCắt ghép, chuyển cảnh\nChỉnh màu, âm thanh\nPhụ đề, chữ chạy\nXuất video cho TikTok, YouTube",
+  "faqs": [
+   {
+    "question": "Có dạy làm video TikTok bán hàng không?",
+    "examples": "video tiktok\nvideo bán hàng\nlàm reels",
+    "answer": "Dạ có ạ. Khóa có phần dựng video dọc cho TikTok, Reels và video quảng cáo sản phẩm ạ."
+   },
+   {
+    "question": "Máy tính cấu hình yếu có học được không?",
+    "examples": "máy yếu\nlaptop cấu hình thấp\ncần máy mạnh không",
+    "answer": "Dạ tại lớp {{ brand.you }} dùng máy của trung tâm đã cài sẵn phần mềm ạ; tư vấn viên sẽ gợi ý cấu hình nếu {{ brand.you }} muốn tự tập ở nhà ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-AE",
+  "product_name": "After Effects",
+  "button_label": "After Effects",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "after effects, ae, hieu ung",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>After Effects làm hiệu ứng chuyển động (motion graphics), chữ động, intro, logo động cho video quảng cáo và mạng xã hội.</p>",
+  "syllabus": "Keyframe và chuyển động\nChữ động, intro\nLogo animation\nHiệu ứng đặc biệt\nKết hợp với Premiere",
+  "faqs": [
+   {
+    "question": "Cần biết Premiere trước khi học After Effects không?",
+    "examples": "cần học premiere trước\nchưa biết dựng video",
+    "answer": "Dạ nên biết Premiere cơ bản trước ạ, vì After Effects thường dùng kèm để làm hiệu ứng cho video ạ."
+   },
+   {
+    "question": "After Effects dùng để làm gì?",
+    "examples": "after effects là gì\nhọc ae để làm gì",
+    "answer": "Dạ After Effects dùng làm hiệu ứng chuyển động: chữ động, logo động, intro và hiệu ứng cho video quảng cáo ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-TRONGOI",
+  "product_name": "Đồ họa trọn gói",
+  "button_label": "Đồ họa trọn gói",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 6500000,
+  "duration_text": "3 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tron goi do hoa",
+  "next_courses": [
+   "DH-PR"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Trọn bộ thiết kế đồ họa Photoshop, Illustrator và CorelDraw, đi từ cơ bản đến làm sản phẩm thật, tiết kiệm hơn học lẻ.</p>",
+  "syllabus": "Photoshop: chỉnh sửa, ghép ảnh\nIllustrator: logo, vector\nCorelDraw: ấn phẩm in\nDự án thương hiệu hoàn chỉnh\nXây portfolio",
+  "faqs": [
+   {
+    "question": "Đồ họa trọn gói gồm những phần mềm nào?",
+    "examples": "trọn gói gồm gì\nhọc những phần mềm nào",
+    "answer": "Dạ gói gồm Photoshop, Illustrator và CorelDraw, học lần lượt trong {{ course.duration }} ạ."
+   },
+   {
+    "question": "Học trọn gói có rẻ hơn học lẻ không?",
+    "examples": "trọn gói có lợi hơn không\nhọc lẻ hay trọn gói",
+    "answer": "Dạ có ạ, học phí gói thấp hơn tổng học lẻ ba khóa ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-CAD2D",
+  "product_name": "AutoCAD 2D",
+  "button_label": "AutoCAD 2D",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "autocad, cad 2d, autocad 2d",
+  "next_courses": [
+   "VKT-CAD3D"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>AutoCAD 2D vẽ bản vẽ kỹ thuật cơ khí, xây dựng, điện theo tiêu chuẩn: lệnh vẽ, ghi kích thước, layer, in bản vẽ đúng tỷ lệ.</p>",
+  "syllabus": "Lệnh vẽ và hiệu chỉnh\nLayer, đường nét, tiêu chuẩn\nGhi kích thước, text\nBlock và thư viện\nIn bản vẽ theo tỷ lệ",
+  "faqs": [
+   {
+    "question": "Học AutoCAD cho ngành xây dựng hay cơ khí?",
+    "examples": "ngành xây dựng\nngành cơ khí\nautocad cho ngành nào",
+    "answer": "Dạ khóa dạy nền tảng dùng chung, bài tập có cả bản vẽ xây dựng và cơ khí để học viên chọn hướng phù hợp ạ."
+   },
+   {
+    "question": "Chưa biết đọc bản vẽ có học được không?",
+    "examples": "chưa biết đọc bản vẽ\ntrái ngành học autocad",
+    "answer": "Dạ được ạ, giáo viên hướng dẫn cách đọc bản vẽ song song với thao tác trên AutoCAD ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-CAD3D",
+  "product_name": "AutoCAD 3D",
+  "button_label": "AutoCAD 3D",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "autocad 3d, cad 3d",
+  "next_courses": [
+   "VKT-REVIT"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>AutoCAD 3D dựng mô hình ba chiều từ bản vẽ 2D, xuất hình chiếu và phối cảnh cho cơ khí, nội thất.</p>",
+  "syllabus": "Không gian 3D, hệ tọa độ\nDựng khối solid\nHiệu chỉnh mô hình\nXuất hình chiếu 2D\nPhối cảnh và render đơn giản",
+  "faqs": [
+   {
+    "question": "Cần học AutoCAD 2D trước không?",
+    "examples": "cần học 2d trước\nchưa biết autocad",
+    "answer": "Dạ {{ brand.you }} cần biết AutoCAD 2D trước ạ; nếu chưa, {{ brand.me }} gợi ý học khóa AutoCAD 2D ạ."
+   },
+   {
+    "question": "Học xong 3D nên học tiếp gì?",
+    "examples": "học tiếp gì\nsau autocad 3d",
+    "answer": "Dạ {{ brand.me }} gợi ý học tiếp {{ course.next_courses | join(', ') }} để làm hồ sơ kiến trúc chuyên nghiệp ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-SW",
+  "product_name": "SolidWorks",
+  "button_label": "SolidWorks",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3200000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "solidworks, solid",
+  "next_courses": [
+   "VKT-INV"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>SolidWorks thiết kế cơ khí 3D: chi tiết, lắp ráp, bản vẽ kỹ thuật và mô phỏng chuyển động, dùng nhiều ở nhà máy, xưởng cơ khí.</p>",
+  "syllabus": "Phác thảo 2D (Sketch)\nDựng chi tiết 3D\nLắp ráp (Assembly)\nXuất bản vẽ kỹ thuật\nMô phỏng chuyển động",
+  "faqs": [
+   {
+    "question": "SolidWorks có hợp sinh viên cơ khí không?",
+    "examples": "sinh viên cơ khí\nđồ án cơ khí\nngành cơ khí",
+    "answer": "Dạ rất hợp ạ, bài tập bám theo đồ án và công việc thiết kế ở xưởng cơ khí ạ."
+   },
+   {
+    "question": "SolidWorks khác Inventor thế nào?",
+    "examples": "khác inventor\nnên học solidworks hay inventor",
+    "answer": "Dạ hai phần mềm cùng làm thiết kế cơ khí 3D; SolidWorks phổ biến hơn ở doanh nghiệp Việt Nam, Inventor mạnh khi dùng cùng hệ sinh thái Autodesk ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-SKP",
+  "product_name": "SketchUp",
+  "button_label": "SketchUp",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "sketchup, sketch up",
+  "next_courses": [
+   "VKT-VRAY"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>SketchUp dựng phối cảnh kiến trúc, nội thất nhanh và trực quan, phù hợp kiến trúc sư, thiết kế nội thất, chủ xưởng gỗ.</p>",
+  "syllabus": "Công cụ dựng hình cơ bản\nComponent và thư viện\nDựng nhà, nội thất\nVật liệu và ánh sáng\nXuất ảnh phối cảnh",
+  "faqs": [
+   {
+    "question": "SketchUp có dùng cho thiết kế nội thất không?",
+    "examples": "thiết kế nội thất\nlàm tủ bếp\nxưởng gỗ",
+    "answer": "Dạ có ạ, SketchUp rất phổ biến trong nội thất và xưởng gỗ vì dựng nhanh, dễ trao đổi với khách ạ."
+   },
+   {
+    "question": "Học xong có render ảnh đẹp không?",
+    "examples": "render đẹp\nảnh phối cảnh thật",
+    "answer": "Dạ khóa xuất ảnh phối cảnh cơ bản; để ảnh chân thực {{ brand.me }} gợi ý học tiếp {{ course.next_courses | join(', ') }} ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-3DS",
+  "product_name": "3DS Max",
+  "button_label": "3DS Max",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3500000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "3ds max, 3dsmax",
+  "next_courses": [
+   "VKT-VRAY"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>3DS Max dựng hình và diễn họa kiến trúc, nội thất chuyên nghiệp, tạo ảnh phối cảnh và video giới thiệu công trình.</p>",
+  "syllabus": "Dựng hình cơ bản và nâng cao\nModifier và mô hình nội thất\nVật liệu, ánh sáng\nCamera và bố cục\nXuất ảnh, video",
+  "faqs": [
+   {
+    "question": "3DS Max khác SketchUp thế nào?",
+    "examples": "khác sketchup\nnên học 3ds max hay sketchup",
+    "answer": "Dạ SketchUp dựng nhanh để trao đổi ý tưởng, còn 3DS Max mạnh về diễn họa chi tiết, ảnh đẹp chuyên nghiệp ạ."
+   },
+   {
+    "question": "Cần máy tính mạnh để học 3DS Max không?",
+    "examples": "cần máy mạnh\ncấu hình máy",
+    "answer": "Dạ tại lớp {{ brand.you }} dùng máy trung tâm; nếu tự tập ở nhà tư vấn viên sẽ gợi ý cấu hình phù hợp ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-REVIT",
+  "product_name": "Revit kiến trúc",
+  "button_label": "Revit",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3800000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "revit, bim",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Revit Architecture thiết kế kiến trúc theo BIM: dựng mô hình công trình, xuất bản vẽ, thống kê khối lượng tự động.</p>",
+  "syllabus": "Khái niệm BIM\nDựng tường, sàn, mái, cửa\nMặt bằng, mặt đứng, mặt cắt\nThống kê khối lượng\nHồ sơ bản vẽ hoàn chỉnh",
+  "faqs": [
+   {
+    "question": "BIM là gì, có cần thiết không?",
+    "examples": "bim là gì\nrevit có cần không",
+    "answer": "Dạ BIM là thiết kế trên mô hình thông tin công trình: sửa một chỗ, mọi bản vẽ và bảng khối lượng tự cập nhật; nhiều dự án đã yêu cầu BIM ạ."
+   },
+   {
+    "question": "Cần biết AutoCAD trước khi học Revit không?",
+    "examples": "cần autocad trước\nchưa biết autocad học revit",
+    "answer": "Dạ nên biết AutoCAD và đọc được bản vẽ kiến trúc trước để học Revit nhanh hơn ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-INV",
+  "product_name": "Inventor",
+  "button_label": "Inventor",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3300000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "inventor",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Autodesk Inventor thiết kế cơ khí 3D, lắp ráp và xuất bản vẽ, kết nối tốt với AutoCAD trong hệ sinh thái Autodesk.</p>",
+  "syllabus": "Sketch và chi tiết 3D\nLắp ráp\nBản vẽ kỹ thuật\nChi tiết tấm (Sheet Metal)\nMô phỏng",
+  "faqs": [
+   {
+    "question": "Inventor phù hợp với ai?",
+    "examples": "ai nên học inventor\ninventor dùng để làm gì",
+    "answer": "Dạ Inventor phù hợp kỹ sư, sinh viên cơ khí làm thiết kế chi tiết máy, đặc biệt nơi đang dùng AutoCAD ạ."
+   },
+   {
+    "question": "Có học chi tiết tấm không?",
+    "examples": "sheet metal\nchi tiết tấm\ngia công tấm",
+    "answer": "Dạ có ạ, khóa có phần thiết kế chi tiết tấm (Sheet Metal) ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-VRAY",
+  "product_name": "Vray & Enscape render",
+  "button_label": "Vray & Enscape",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "vray, enscape, render",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Render ảnh phối cảnh chân thực bằng Vray và Enscape cho SketchUp, 3DS Max: vật liệu, ánh sáng, hậu kỳ.</p>",
+  "syllabus": "Nguyên lý ánh sáng và vật liệu\nVray cho SketchUp/3DS Max\nEnscape render nhanh\nRender ngoại thất, nội thất\nHậu kỳ ảnh",
+  "faqs": [
+   {
+    "question": "Cần biết SketchUp hay 3DS Max trước không?",
+    "examples": "cần biết sketchup\ncần biết 3ds max",
+    "answer": "Dạ {{ brand.you }} cần biết dựng hình bằng SketchUp hoặc 3DS Max trước ạ."
+   },
+   {
+    "question": "Enscape khác Vray thế nào?",
+    "examples": "khác vray\nnên dùng enscape hay vray",
+    "answer": "Dạ Enscape render nhanh, xem trực tiếp; Vray cho ảnh chi tiết và chân thực hơn nhưng lâu hơn ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "KT-CB",
+  "product_name": "Nguyên lý kế toán cho người mới",
+  "button_label": "Kế toán cơ bản",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1800000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ke toan co ban, nguyen ly ke toan",
+  "next_courses": [
+   "KT-TH"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Nguyên lý kế toán cho người mới: tài khoản, định khoản, chứng từ, sổ sách cơ bản — nền tảng trước khi làm kế toán thực tế.</p>",
+  "syllabus": "Bản chất kế toán, tài sản và nguồn vốn\nHệ thống tài khoản\nĐịnh khoản nghiệp vụ\nChứng từ và sổ sách\nBài tập tổng hợp",
+  "faqs": [
+   {
+    "question": "Trái ngành có học được không?",
+    "examples": "trái ngành\nchưa học kế toán\nchuyển nghề kế toán",
+    "answer": "Dạ được ạ, khóa dành cho người mới hoàn toàn, học từ khái niệm cơ bản ạ."
+   },
+   {
+    "question": "Học xong có đi làm kế toán được chưa?",
+    "examples": "đi làm được chưa\nhọc xong làm được gì",
+    "answer": "Dạ khóa này là nền tảng; để đi làm {{ brand.me }} gợi ý học tiếp {{ course.next_courses | join(', ') }} ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "KT-TH",
+  "product_name": "Kế toán tổng hợp thực hành",
+  "button_label": "Kế toán tổng hợp",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 3500000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ke toan tong hop",
+  "next_courses": [
+   "KT-THUE"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Làm kế toán tổng hợp trên chứng từ thật của doanh nghiệp: hạch toán, lập sổ sách, báo cáo tài chính và quyết toán cuối năm. Giảng viên là kế toán trưởng đang làm việc.</p>",
+  "syllabus": "Hệ thống tài khoản và chứng từ\nHạch toán mua bán, kho, tiền lương\nKhấu hao tài sản cố định\nLập sổ sách và báo cáo tài chính\nQuyết toán cuối năm",
+  "faqs": [
+   {
+    "question": "Trái ngành có học kế toán tổng hợp được không?",
+    "examples": "trái ngành học được không\nkhông học kế toán ở trường\nchuyển nghề sang kế toán",
+    "answer": "Dạ được ạ, nhưng {{ brand.me }} khuyên học Nguyên lý kế toán cho người mới trước để nắm nền tảng rồi học khóa này sẽ nhanh hơn ạ."
+   },
+   {
+    "question": "Học trên chứng từ thật hay lý thuyết?",
+    "examples": "có thực hành không\nhọc lý thuyết hay thực tế\nlàm trên chứng từ thật không",
+    "answer": "Dạ học trên bộ chứng từ thật của doanh nghiệp, thực hành từ hạch toán đến lập báo cáo tài chính ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "KT-THUE",
+  "product_name": "Khai báo & quyết toán thuế",
+  "button_label": "Kế toán thuế",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2800000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "thue, quyet toan thue, khai bao thue",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Khai báo và quyết toán thuế GTGT, TNCN, TNDN trên phần mềm HTKK và thuế điện tử, cập nhật quy định mới.</p>",
+  "syllabus": "Thuế GTGT: kê khai tháng, quý\nThuế TNCN\nThuế TNDN\nHTKK và nộp thuế điện tử\nQuyết toán cuối năm",
+  "faqs": [
+   {
+    "question": "Có cập nhật quy định thuế mới không?",
+    "examples": "quy định mới\nluật thuế mới\ncập nhật thông tư",
+    "answer": "Dạ có ạ, giảng viên cập nhật các thông tư, quy định thuế mới nhất trong từng khóa ạ."
+   },
+   {
+    "question": "Có thực hành trên phần mềm HTKK không?",
+    "examples": "htkk\nthuế điện tử\nthực hành khai thuế",
+    "answer": "Dạ có ạ, học viên thực hành kê khai trên HTKK và nộp thuế điện tử ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "KT-EXCEL",
+  "product_name": "Kế toán trên Excel",
+  "button_label": "Kế toán Excel",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ke toan excel",
+  "next_courses": [
+   "KT-MISA"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Làm kế toán hoàn toàn trên Excel: lập sổ sách, bảng lương, công nợ, kho và báo cáo tài chính bằng hàm Excel.</p>",
+  "syllabus": "Thiết kế hệ thống sổ trên Excel\nNhập chứng từ, sổ nhật ký chung\nBảng lương, công nợ\nQuản lý kho\nBáo cáo tài chính",
+  "faqs": [
+   {
+    "question": "Cần giỏi Excel trước không?",
+    "examples": "cần giỏi excel\nexcel kém có học được không",
+    "answer": "Dạ chỉ cần biết Excel cơ bản ạ, các hàm kế toán cần dùng sẽ được hướng dẫn trong khóa ạ."
+   },
+   {
+    "question": "Kế toán Excel hay phần mềm thì tốt hơn?",
+    "examples": "excel hay misa\nnên học excel hay phần mềm",
+    "answer": "Dạ Excel giúp hiểu bản chất và dùng được ở doanh nghiệp nhỏ; phần mềm như MISA nhanh hơn ở doanh nghiệp lớn. Nhiều học viên học cả hai ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "KT-MISA",
+  "product_name": "Kế toán phần mềm MISA",
+  "button_label": "Phần mềm MISA",
+  "course_group": "Kế toán",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2000000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "misa",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Kế toán trên phần mềm MISA SME: khai báo, nhập chứng từ, kho, lương, tài sản và lập báo cáo tài chính.</p>",
+  "syllabus": "Khai báo dữ liệu ban đầu\nMua hàng, bán hàng, kho\nTiền lương, tài sản cố định\nThuế trên MISA\nBáo cáo tài chính",
+  "faqs": [
+   {
+    "question": "Có được cài MISA để thực hành không?",
+    "examples": "cài misa\nphần mềm misa có sẵn không",
+    "answer": "Dạ tại lớp có sẵn MISA bản học tập để thực hành ạ."
+   },
+   {
+    "question": "Cần biết nguyên lý kế toán trước không?",
+    "examples": "cần biết kế toán trước\nchưa học kế toán dùng misa được không",
+    "answer": "Dạ nên nắm nguyên lý kế toán trước để hiểu các bút toán phần mềm tự sinh ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "LT-PY",
+  "product_name": "Python cơ bản",
+  "button_label": "Python",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "python",
+  "next_courses": [
+   "LT-WEB"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Python cơ bản cho người mới: tư duy lập trình, cú pháp, xử lý dữ liệu, tự động hóa công việc và làm dự án nhỏ.</p>",
+  "syllabus": "Biến, kiểu dữ liệu, điều kiện, vòng lặp\nHàm và module\nXử lý file, Excel\nTự động hóa công việc\nDự án cuối khóa",
+  "faqs": [
+   {
+    "question": "Chưa biết lập trình có học Python được không?",
+    "examples": "chưa biết lập trình\ntrái ngành học python\nngười mới",
+    "answer": "Dạ được ạ, Python dễ học nhất cho người mới, khóa bắt đầu từ tư duy lập trình cơ bản ạ."
+   },
+   {
+    "question": "Học Python để làm gì?",
+    "examples": "python dùng làm gì\nhọc python có ích gì",
+    "answer": "Dạ Python dùng để tự động hóa công việc, xử lý dữ liệu, làm web và AI; sau khóa {{ brand.you }} có thể học tiếp {{ course.next_courses | join(', ') }} ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "LT-VBA",
+  "product_name": "VBA Excel",
+  "button_label": "VBA Excel",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2300000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "vba, macro",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Lập trình VBA tự động hóa Excel: macro, xử lý dữ liệu hàng loạt, tạo form nhập liệu và báo cáo tự động.</p>",
+  "syllabus": "Ghi và sửa macro\nBiến, vòng lặp, điều kiện trong VBA\nXử lý nhiều sheet, nhiều file\nUserForm nhập liệu\nBáo cáo tự động",
+  "faqs": [
+   {
+    "question": "Cần biết Excel nâng cao trước không?",
+    "examples": "cần excel nâng cao\nexcel cơ bản học vba được không",
+    "answer": "Dạ cần dùng thành thạo Excel ạ; biết thêm Excel nâng cao sẽ học VBA nhanh hơn ạ."
+   },
+   {
+    "question": "VBA giúp gì cho công việc?",
+    "examples": "vba dùng làm gì\ntự động hóa excel",
+    "answer": "Dạ VBA giúp tự động những việc lặp lại như gộp file, làm báo cáo, gửi dữ liệu, tiết kiệm hàng giờ mỗi tuần ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "LT-WEB",
+  "product_name": "Lập trình Web",
+  "button_label": "Lập trình Web",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 4500000,
+  "duration_text": "3 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "web, html, lap trinh web",
+  "next_courses": [
+   "LT-MOBILE"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Lập trình web từ HTML, CSS, JavaScript đến làm website hoàn chỉnh có backend và cơ sở dữ liệu, đưa lên Internet.</p>",
+  "syllabus": "HTML, CSS, responsive\nJavaScript\nBackend và cơ sở dữ liệu\nLàm website hoàn chỉnh\nTriển khai lên Internet",
+  "faqs": [
+   {
+    "question": "Học xong có đi làm lập trình viên được không?",
+    "examples": "đi làm lập trình\nxin việc developer\nhọc xong làm gì",
+    "answer": "Dạ khóa hướng tới làm được website hoàn chỉnh và có dự án để đưa vào hồ sơ xin việc ạ."
+   },
+   {
+    "question": "Cần giỏi toán để học lập trình web không?",
+    "examples": "cần giỏi toán\ntoán kém học được không",
+    "answer": "Dạ không cần giỏi toán ạ, lập trình web chủ yếu cần tư duy logic và luyện tập ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "LT-MOBILE",
+  "product_name": "Lập trình Mobile",
+  "button_label": "Lập trình Mobile",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 4900000,
+  "duration_text": "3 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "mobile, app, android, ios",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Lập trình ứng dụng di động chạy trên Android và iOS: giao diện, dữ liệu, kết nối API và đưa ứng dụng lên kho.</p>",
+  "syllabus": "Nền tảng lập trình di động\nThiết kế giao diện ứng dụng\nLưu trữ dữ liệu\nKết nối API\nĐóng gói và phát hành",
+  "faqs": [
+   {
+    "question": "Cần biết lập trình trước không?",
+    "examples": "cần biết lập trình\nngười mới học mobile",
+    "answer": "Dạ nên biết lập trình cơ bản hoặc đã học Lập trình Web trước ạ."
+   },
+   {
+    "question": "Có làm app cho cả iPhone và Android không?",
+    "examples": "iphone và android\nios android",
+    "answer": "Dạ có ạ, khóa dạy làm một ứng dụng chạy được trên cả Android và iOS ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "TE-THUD",
+  "product_name": "Tin học ứng dụng cho trẻ",
+  "button_label": "Tin học cho bé",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 6,
+  "max_age": 12,
+  "standard_rate": 1200000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tin hoc cho be, tin hoc tre em",
+  "next_courses": [
+   "TE-SCRATCH"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ],
+  "description": "<p>Tin học ứng dụng cho trẻ: làm quen máy tính, gõ phím, vẽ, soạn thảo và dùng Internet an toàn, học qua trò chơi.</p>",
+  "syllabus": "Làm quen máy tính\nGõ phím 10 ngón\nVẽ và soạn thảo đơn giản\nInternet an toàn\nSản phẩm cuối khóa",
+  "faqs": [
+   {
+    "question": "Bé mấy tuổi thì học được?",
+    "examples": "mấy tuổi học được\nbé nhỏ học được không",
+    "answer": "Dạ khóa dành cho bé từ {{ course.min_age }} đến {{ course.max_age }} tuổi ạ."
+   },
+   {
+    "question": "Học có giúp bé dùng máy tính an toàn không?",
+    "examples": "an toàn internet\nsợ con nghiện game",
+    "answer": "Dạ có ạ, khóa có phần Internet an toàn và thói quen dùng máy tính lành mạnh cho bé ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "TE-SCRATCH",
+  "product_name": "Lập trình Scratch",
+  "button_label": "Scratch",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 7,
+  "max_age": 12,
+  "standard_rate": 1500000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "scratch",
+  "next_courses": [
+   "TE-PY"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ],
+  "description": "<p>Bé học tư duy lập trình bằng cách kéo thả khối lệnh để làm game và phim hoạt hình. Mỗi buổi bé hoàn thành một sản phẩm nhỏ mang về khoe bố mẹ.</p>",
+  "syllabus": "Làm quen Scratch và nhân vật\nChuyển động, âm thanh, hiệu ứng\nBiến, điều kiện, vòng lặp\nLàm game đơn giản\nDự án cuối khóa: game của riêng bé",
+  "faqs": [
+   {
+    "question": "Bé chưa biết đọc thạo có học được không?",
+    "examples": "bé chưa đọc giỏi\ncon chưa biết chữ nhiều\nbé lớp 1 học được không",
+    "answer": "Dạ Scratch dùng khối lệnh có hình và màu nên bé {{ course.min_age }} tuổi trở lên đọc chưa thạo vẫn học được ạ; giáo viên hướng dẫn từng bước ạ."
+   },
+   {
+    "question": "Học Scratch có ích gì cho bé?",
+    "examples": "học cái này để làm gì\ncó ích gì không\nhọc có giúp con học toán không",
+    "answer": "Dạ bé rèn tư duy logic, giải quyết vấn đề và sáng tạo qua việc tự làm game ạ; đây cũng là bước đệm để học tiếp {{ course.next_courses | join(', ') }} ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "TE-PY",
+  "product_name": "Python cho trẻ",
+  "button_label": "Python cho bé",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 10,
+  "max_age": 15,
+  "standard_rate": 1900000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "python cho be, python tre em",
+  "next_courses": [
+   "LT-PY"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ],
+  "description": "<p>Python cho trẻ: bé học lập trình thật bằng dòng lệnh qua làm game, vẽ hình và giải đố, rèn tư duy logic.</p>",
+  "syllabus": "Làm quen Python\nVẽ hình với Turtle\nBiến, điều kiện, vòng lặp\nLàm game đơn giản\nDự án cuối khóa",
+  "faqs": [
+   {
+    "question": "Bé cần học Scratch trước không?",
+    "examples": "cần học scratch trước\nchưa học scratch",
+    "answer": "Dạ không bắt buộc ạ, nhưng bé đã học Scratch sẽ theo nhanh hơn ạ."
+   },
+   {
+    "question": "Bé mấy tuổi học Python được?",
+    "examples": "mấy tuổi học python\nlớp mấy học được",
+    "answer": "Dạ khóa dành cho bé từ {{ course.min_age }} đến {{ course.max_age }} tuổi ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "TE-ROBO",
+  "product_name": "Robotics cơ bản",
+  "button_label": "Robotics",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 7,
+  "max_age": 12,
+  "standard_rate": 2400000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "robotics, robot, lap rap robot",
+  "next_courses": [
+   "TE-ROBO-NC"
+  ],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ],
+  "description": "<p>Bé lắp ráp robot và lập trình cho robot di chuyển, né vật cản, phát sáng. Học qua chơi, phát triển tư duy STEM và kỹ năng làm việc nhóm.</p>",
+  "syllabus": "Làm quen bộ kit và cảm biến\nLắp ráp robot di chuyển\nLập trình kéo thả điều khiển robot\nRobot né vật cản, dò line\nThi đấu robot cuối khóa",
+  "faqs": [
+   {
+    "question": "Có phải mua bộ robot riêng không?",
+    "examples": "có phải mua robot không\nphí bộ kit\nmang robot về nhà được không",
+    "answer": "Dạ không cần ạ. Trung tâm có sẵn bộ kit cho bé học tại lớp, học phí đã gồm dụng cụ ạ."
+   },
+   {
+    "question": "Bé chưa học lập trình bao giờ có học Robotics được không?",
+    "examples": "con chưa học lập trình\nchưa học scratch có học robot được không",
+    "answer": "Dạ được ạ. Robotics cơ bản dạy lập trình kéo thả từ đầu, bé từ {{ course.min_age }} đến {{ course.max_age }} tuổi đều theo được ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "TE-ROBO-NC",
+  "product_name": "Robotics nâng cao",
+  "button_label": "Robotics nâng cao",
+  "course_group": "Tin học trẻ em",
+  "audience": "Trẻ em",
+  "min_age": 10,
+  "max_age": 15,
+  "standard_rate": 2900000,
+  "duration_text": "2 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "robotics nang cao",
+  "next_courses": [],
+  "weekdays": "T7, CN",
+  "shifts": [
+   "morning",
+   "afternoon"
+  ],
+  "description": "<p>Robotics nâng cao: bé lập trình robot với cảm biến phức tạp, giải nhiệm vụ và luyện thi đấu robot.</p>",
+  "syllabus": "Cảm biến nâng cao\nLập trình điều khiển phức tạp\nRobot giải nhiệm vụ\nLàm việc nhóm\nLuyện thi đấu",
+  "faqs": [
+   {
+    "question": "Bé cần học Robotics cơ bản trước không?",
+    "examples": "cần học cơ bản trước\nchưa học robot",
+    "answer": "Dạ nên học Robotics cơ bản trước để quen bộ kit và lập trình kéo thả ạ."
+   },
+   {
+    "question": "Có luyện thi đấu robot không?",
+    "examples": "thi đấu robot\ncuộc thi robotics",
+    "answer": "Dạ có ạ, khóa có phần luyện nhiệm vụ theo thể lệ các cuộc thi robot cho học sinh ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "MKT-FB",
+  "product_name": "Quảng cáo Facebook Ads",
+  "button_label": "Facebook Ads",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "facebook ads, chay quang cao facebook",
+  "next_courses": [
+   "MKT-TT"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Chạy quảng cáo Facebook Ads hiệu quả: tạo chiến dịch, nhắm đối tượng, viết nội dung, tối ưu chi phí và đo lường đơn hàng.</p>",
+  "syllabus": "Trình quản lý quảng cáo\nNhắm đối tượng\nNội dung và hình ảnh quảng cáo\nTối ưu ngân sách\nĐo lường, Pixel",
+  "faqs": [
+   {
+    "question": "Người bán hàng online có học được không?",
+    "examples": "bán hàng online\nshop nhỏ\nchủ shop",
+    "answer": "Dạ rất phù hợp ạ, bài tập làm trên chính sản phẩm của học viên ạ."
+   },
+   {
+    "question": "Học có phải tự bỏ tiền chạy quảng cáo không?",
+    "examples": "tốn tiền quảng cáo\nngân sách thực hành",
+    "answer": "Dạ phần thực hành có thể chạy ngân sách nhỏ, giáo viên hướng dẫn cách thử để không tốn nhiều ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "MKT-GG",
+  "product_name": "Quảng cáo Google Ads",
+  "button_label": "Google Ads",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2500000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "google ads",
+  "next_courses": [
+   "MKT-SEO"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Quảng cáo Google Ads: tìm kiếm, hiển thị, YouTube, chọn từ khóa, tối ưu chi phí mỗi khách hàng.</p>",
+  "syllabus": "Cấu trúc tài khoản Google Ads\nNghiên cứu từ khóa\nQuảng cáo tìm kiếm\nHiển thị và YouTube\nTối ưu chuyển đổi",
+  "faqs": [
+   {
+    "question": "Google Ads khác Facebook Ads thế nào?",
+    "examples": "khác facebook ads\nnên chạy google hay facebook",
+    "answer": "Dạ Google Ads tiếp cận người đang tìm kiếm sản phẩm, còn Facebook Ads chủ động tìm người có thể quan tâm; nhiều doanh nghiệp chạy cả hai ạ."
+   },
+   {
+    "question": "Có học chọn từ khóa không?",
+    "examples": "chọn từ khóa\nnghiên cứu từ khóa",
+    "answer": "Dạ có ạ, khóa có riêng buổi nghiên cứu và chọn từ khóa ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "MKT-TT",
+  "product_name": "Quảng cáo TikTok Ads",
+  "button_label": "TikTok Ads",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2300000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "tiktok ads, tiktok",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Quảng cáo TikTok Ads và bán hàng trên TikTok Shop: nội dung video, nhắm đối tượng, livestream và tối ưu chi phí.</p>",
+  "syllabus": "TikTok Ads Manager\nNội dung video quảng cáo\nNhắm đối tượng\nTikTok Shop, livestream\nĐo lường, tối ưu",
+  "faqs": [
+   {
+    "question": "Có học bán hàng trên TikTok Shop không?",
+    "examples": "tiktok shop\nbán hàng tiktok",
+    "answer": "Dạ có ạ, khóa có phần TikTok Shop và livestream bán hàng ạ."
+   },
+   {
+    "question": "Không biết quay video có học được không?",
+    "examples": "không biết quay video\nchưa làm video",
+    "answer": "Dạ được ạ, khóa hướng dẫn quay và dựng video bằng điện thoại ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "MKT-SEO",
+  "product_name": "SEO website",
+  "button_label": "SEO",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2800000,
+  "duration_text": "1,5 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "seo, len top google",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>SEO website lên top Google: nghiên cứu từ khóa, tối ưu nội dung, kỹ thuật website và xây dựng liên kết.</p>",
+  "syllabus": "Cách Google xếp hạng\nNghiên cứu từ khóa\nTối ưu nội dung\nSEO kỹ thuật\nXây dựng liên kết, đo lường",
+  "faqs": [
+   {
+    "question": "SEO bao lâu thì lên top?",
+    "examples": "bao lâu lên top\nseo mất bao lâu",
+    "answer": "Dạ tùy mức cạnh tranh của từ khóa, thường vài tháng; khóa dạy cách theo dõi và cải thiện thứ hạng từng bước ạ."
+   },
+   {
+    "question": "Cần biết lập trình để học SEO không?",
+    "examples": "cần biết code\nkhông biết lập trình học seo",
+    "answer": "Dạ không cần ạ, SEO chủ yếu là nội dung và cấu hình website ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "MKT-WEB",
+  "product_name": "Thiết kế website không cần code",
+  "button_label": "Thiết kế website",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2600000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "thiet ke website, lam web",
+  "next_courses": [
+   "MKT-SEO"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Tự làm website bán hàng, giới thiệu công ty bằng WordPress và công cụ kéo thả, không cần viết code.</p>",
+  "syllabus": "Tên miền và hosting\nWordPress cơ bản\nThiết kế giao diện kéo thả\nWebsite bán hàng\nBảo mật, sao lưu",
+  "faqs": [
+   {
+    "question": "Không biết code có làm website được không?",
+    "examples": "không biết code\nchưa biết lập trình",
+    "answer": "Dạ được ạ, khóa dùng công cụ kéo thả nên không cần viết code ạ."
+   },
+   {
+    "question": "Học xong có tự làm web bán hàng được không?",
+    "examples": "web bán hàng\nlàm website shop",
+    "answer": "Dạ được ạ, dự án cuối khóa là một website bán hàng hoàn chỉnh của chính học viên ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "AI-BASIC",
+  "product_name": "AI cho người mới bắt đầu",
+  "button_label": "AI cho người mới",
+  "course_group": "AI & Tự động hóa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1500000,
+  "duration_text": "3 tuần",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "ai co ban, hoc ai",
+  "next_courses": [
+   "AI-VIBE"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>AI cho người mới bắt đầu: hiểu AI là gì, dùng ChatGPT, Gemini, tạo ảnh bằng AI và áp dụng vào học tập, công việc hằng ngày.</p>",
+  "syllabus": "AI là gì, dùng được gì\nChatGPT, Gemini cơ bản\nViết câu lệnh hiệu quả\nTạo ảnh, video bằng AI\nDùng AI an toàn",
+  "faqs": [
+   {
+    "question": "Người lớn tuổi có học AI được không?",
+    "examples": "lớn tuổi học ai\nkhông rành công nghệ",
+    "answer": "Dạ được ạ, khóa dạy từ con số 0, {{ brand.you }} chỉ cần biết dùng máy tính hoặc điện thoại ạ."
+   },
+   {
+    "question": "Học AI có cần biết lập trình không?",
+    "examples": "cần biết lập trình\nkhông biết code học ai",
+    "answer": "Dạ không cần ạ, khóa dạy dùng các công cụ AI có sẵn ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "AI-VIBE",
+  "product_name": "Vibe Coding",
+  "button_label": "Vibe Coding",
+  "course_group": "AI & Tự động hóa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "vibe coding",
+  "next_courses": [
+   "AI-N8N"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Vibe Coding: dùng AI viết code để tự làm công cụ, trang web, ứng dụng nhỏ mà không cần là lập trình viên.</p>",
+  "syllabus": "Vibe Coding là gì\nCông cụ AI viết code\nMô tả yêu cầu cho AI\nLàm trang web, công cụ nhỏ\nKiểm tra và sửa lỗi cùng AI",
+  "faqs": [
+   {
+    "question": "Vibe Coding là gì?",
+    "examples": "vibe coding là gì\nhọc cái này làm gì",
+    "answer": "Dạ Vibe Coding là mô tả điều mình muốn bằng lời để AI viết code, giúp người không chuyên tự làm công cụ, trang web ạ."
+   },
+   {
+    "question": "Không biết lập trình có học được không?",
+    "examples": "không biết lập trình\nchưa biết code",
+    "answer": "Dạ được ạ, khóa dành cho cả người chưa biết lập trình ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "AI-N8N",
+  "product_name": "Tự động hóa với n8n",
+  "button_label": "Tự động hóa n8n",
+  "course_group": "AI & Tự động hóa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 2700000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "n8n, automation",
+  "next_courses": [],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Tự động hóa công việc với n8n: kết nối Gmail, Google Sheets, Zalo, Facebook và AI để quy trình tự chạy không cần làm tay.</p>",
+  "syllabus": "n8n là gì, cài đặt\nWorkflow và trigger\nKết nối Google Sheets, Gmail\nTích hợp AI vào quy trình\nDự án tự động hóa thật",
+  "faqs": [
+   {
+    "question": "n8n dùng để làm gì?",
+    "examples": "n8n là gì\ntự động hóa là gì",
+    "answer": "Dạ n8n nối các ứng dụng như Gmail, Sheets, Zalo với AI để công việc lặp lại tự chạy, không cần làm tay ạ."
+   },
+   {
+    "question": "Cần biết lập trình để học n8n không?",
+    "examples": "cần biết code\nkhông biết lập trình",
+    "answer": "Dạ không cần ạ, n8n kéo thả là chính, biết thêm chút logic sẽ làm được quy trình phức tạp hơn ạ."
+   }
+  ]
+ }
+]

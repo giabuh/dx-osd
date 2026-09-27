@@ -1,0 +1,66 @@
+[
+ {
+  "group_name": "Tin học văn phòng",
+  "button_label": "Tin học văn phòng",
+  "emoji": "💼",
+  "sort_order": 10,
+  "aliases": "tin hoc van phong, thvp, office, word, excel",
+  "description": "Word, Excel, PowerPoint, AI văn phòng và chứng chỉ MOS/IC3"
+ },
+ {
+  "group_name": "Thiết kế đồ họa",
+  "button_label": "Đồ họa",
+  "emoji": "🎨",
+  "sort_order": 20,
+  "aliases": "do hoa, thiet ke, design, graphic",
+  "description": "Photoshop, Illustrator, CorelDraw, dựng video"
+ },
+ {
+  "group_name": "Vẽ kỹ thuật",
+  "button_label": "Vẽ kỹ thuật",
+  "emoji": "📐",
+  "sort_order": 30,
+  "aliases": "ve ky thuat, cad, 3d, kien truc",
+  "description": "AutoCAD, SolidWorks, SketchUp, 3DS Max, Revit"
+ },
+ {
+  "group_name": "Kế toán",
+  "button_label": "Kế toán",
+  "emoji": "📊",
+  "sort_order": 40,
+  "aliases": "ke toan, accounting, thue, misa",
+  "description": "Kế toán tổng hợp, thuế, Excel, MISA"
+ },
+ {
+  "group_name": "Lập trình",
+  "button_label": "Lập trình",
+  "emoji": "💻",
+  "sort_order": 50,
+  "aliases": "lap trinh, code, coding, developer",
+  "description": "Python, VBA, Web, Mobile"
+ },
+ {
+  "group_name": "Tin học trẻ em",
+  "button_label": "Trẻ em & Robotics",
+  "emoji": "🤖",
+  "sort_order": 60,
+  "aliases": "tre em, cho be, thieu nhi, robotics, robot",
+  "description": "Tin học, Scratch, Python và Robotics cho trẻ"
+ },
+ {
+  "group_name": "Digital Marketing",
+  "button_label": "Marketing online",
+  "emoji": "📣",
+  "sort_order": 70,
+  "aliases": "marketing, quang cao, ads, seo",
+  "description": "Facebook/Google/TikTok Ads, SEO, website"
+ },
+ {
+  "group_name": "AI & Tự động hóa",
+  "button_label": "AI & Tự động hóa",
+  "emoji": "✨",
+  "sort_order": 80,
+  "aliases": "ai, tri tue nhan tao, automation, tu dong hoa",
+  "description": "AI cho người mới, Vibe Coding, n8n"
+ }
+]

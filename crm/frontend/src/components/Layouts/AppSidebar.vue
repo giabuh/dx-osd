@@ -47,6 +47,16 @@
               />
             </template>
           </SidebarItem>
+          <!-- Bot administration (branches, staff, courses) lives on the mmm_custom /bot page. -->
+          <SidebarItem
+            v-if="isManager()"
+            :label="__('Admin')"
+            @click="openBotAdmin"
+          >
+            <template #prefix>
+              <BotIcon class="size-4 text-ink-gray-7" />
+            </template>
+          </SidebarItem>
 
           <CollapsibleSection
             v-for="section in allViews"
@@ -173,6 +183,7 @@
 
 <script setup>
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
+import BotIcon from '~icons/lucide/bot'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
@@ -419,6 +430,10 @@ function toggleHelpModal() {
 // onboarding
 const { user } = sessionStore()
 const { users, isManager } = usersStore()
+
+function openBotAdmin() {
+  window.location.href = '/bot'
+}
 const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 
 async function getFirstLead() {

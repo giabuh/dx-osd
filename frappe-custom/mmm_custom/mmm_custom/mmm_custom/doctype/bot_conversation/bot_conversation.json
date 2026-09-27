@@ -1,0 +1,177 @@
+{
+ "actions": [],
+ "autoname": "field:conversation_id",
+ "creation": "2026-09-26 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "conversation_id",
+  "contact_id",
+  "inbox_id",
+  "lead",
+  "status",
+  "consultant",
+  "slots",
+  "pending",
+  "pending_skill",
+  "stuck_turns",
+  "turns",
+  "last_message_id",
+  "consultant_replied",
+  "is_returning",
+  "is_sandbox",
+  "answered_skills",
+  "history",
+  "ai_signals",
+  "jev_calls"
+ ],
+ "fields": [
+  {
+   "fieldname": "conversation_id",
+   "fieldtype": "Data",
+   "label": "Chatwoot Conversation",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "contact_id",
+   "fieldtype": "Data",
+   "label": "Chatwoot Contact"
+  },
+  {
+   "fieldname": "inbox_id",
+   "fieldtype": "Data",
+   "label": "Chatwoot Inbox"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "CRM Lead",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "active\nhanded_off\nclosed",
+   "default": "active",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "consultant",
+   "fieldtype": "Link",
+   "label": "Consultant",
+   "options": "Consultant",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "slots",
+   "fieldtype": "JSON",
+   "label": "Slots"
+  },
+  {
+   "fieldname": "pending",
+   "fieldtype": "JSON",
+   "label": "Pending"
+  },
+  {
+   "fieldname": "pending_skill",
+   "fieldtype": "Link",
+   "label": "Pending Skill",
+   "options": "Bot Skill"
+  },
+  {
+   "fieldname": "stuck_turns",
+   "fieldtype": "Int",
+   "label": "Stuck Turns"
+  },
+  {
+   "fieldname": "turns",
+   "fieldtype": "Int",
+   "label": "Turns"
+  },
+  {
+   "fieldname": "last_message_id",
+   "fieldtype": "Int",
+   "label": "Last Message ID"
+  },
+  {
+   "fieldname": "consultant_replied",
+   "fieldtype": "Check",
+   "label": "Consultant Replied"
+  },
+  {
+   "fieldname": "is_returning",
+   "fieldtype": "Check",
+   "label": "Is Returning"
+  },
+  {
+   "fieldname": "is_sandbox",
+   "fieldtype": "Check",
+   "label": "Is Sandbox",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "answered_skills",
+   "fieldtype": "JSON",
+   "label": "Answered Skills"
+  },
+  {
+   "fieldname": "history",
+   "fieldtype": "JSON",
+   "label": "Recent turns (Jev state)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ai_signals",
+   "fieldtype": "JSON",
+   "label": "Intent / hotness written to the Lead",
+   "read_only": 1
+  },
+  {
+   "fieldname": "jev_calls",
+   "fieldtype": "JSON",
+   "label": "Jev calls in the last hour",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Bot Conversation",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

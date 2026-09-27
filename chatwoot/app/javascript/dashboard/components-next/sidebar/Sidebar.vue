@@ -225,15 +225,6 @@ const getLabelUnreadCount = useMapGetter(
 const getTeamUnreadCount = useMapGetter(
   'conversationUnreadCounts/getTeamUnreadCount'
 );
-const mentionsUnreadCount = useMapGetter(
-  'conversationUnreadCounts/getMentionsUnreadCount'
-);
-const participatingUnreadCount = useMapGetter(
-  'conversationUnreadCounts/getParticipatingUnreadCount'
-);
-const unattendedUnreadCount = useMapGetter(
-  'conversationUnreadCounts/getUnattendedUnreadCount'
-);
 const getFolderUnreadCount = useMapGetter(
   'conversationUnreadCounts/getFolderUnreadCount'
 );
@@ -360,18 +351,37 @@ const newReportRoutes = () => [
 
 const reportRoutes = computed(() => newReportRoutes());
 
+// DX-OSD: entries hidden to keep the consultant UI simple; their routes still work.
+const HIDDEN_ITEMS = new Set([
+  'Folders',
+  'Teams',
+  'Active',
+  'Segments',
+  'Tagged With',
+  'Companies',
+  'Reports Label',
+  'Reports Inbox',
+  'Reports Team',
+  'Reports CSAT',
+  'Reports SLA',
+  'Settings Templates',
+  'Settings Labels',
+  'Settings Custom Attributes',
+  'Conversation Workflow',
+]);
+
+const withoutHidden = items =>
+  items
+    .filter(item => !HIDDEN_ITEMS.has(item.name))
+    .map(item =>
+      Array.isArray(item.children)
+        ? { ...item, children: withoutHidden(item.children) }
+        : item
+    );
+
 const menuItems = computed(() => {
-  return [
-    {
-      name: 'Inbox',
-      label: t('SIDEBAR.INBOX'),
-      icon: 'i-lucide-inbox',
-      to: accountScopedRoute('inbox_view'),
-      activeOn: ['inbox_view', 'inbox_view_conversation'],
-      getterKeys: {
-        count: 'notifications/getUnreadCount',
-      },
-    },
+  return withoutHidden([
+    // DX-OSD: My Inbox, Mentions, Participating and Unattended are hidden to keep the demo UI simple
     {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
@@ -384,36 +394,6 @@ const menuItems = computed(() => {
           badgeCount: allUnreadCount.value,
           activeOn: ['inbox_conversation'],
           to: accountScopedRoute('home'),
-        },
-        {
-          name: 'Mentions',
-          label: t('SIDEBAR.MENTIONED_CONVERSATIONS'),
-          icon: 'i-lucide-at-sign',
-          badgeCount: hasFilteredUnreadCounts.value
-            ? mentionsUnreadCount.value
-            : 0,
-          activeOn: ['conversation_through_mentions'],
-          to: accountScopedRoute('conversation_mentions'),
-        },
-        {
-          name: 'Participating',
-          label: t('SIDEBAR.PARTICIPATING_CONVERSATIONS'),
-          icon: 'i-lucide-user-round-check',
-          badgeCount: hasFilteredUnreadCounts.value
-            ? participatingUnreadCount.value
-            : 0,
-          activeOn: ['conversation_through_participating'],
-          to: accountScopedRoute('conversation_participating'),
-        },
-        {
-          name: 'Unattended',
-          activeOn: ['conversation_through_unattended'],
-          label: t('SIDEBAR.UNATTENDED_CONVERSATIONS'),
-          icon: 'i-lucide-clock-alert',
-          badgeCount: hasFilteredUnreadCounts.value
-            ? unattendedUnreadCount.value
-            : 0,
-          to: accountScopedRoute('conversation_unattended'),
         },
         {
           name: 'Folders',
@@ -947,7 +927,7 @@ const menuItems = computed(() => {
         },
       ],
     },
-  ];
+  ]);
 });
 </script>
 

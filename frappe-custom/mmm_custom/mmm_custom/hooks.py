@@ -11,15 +11,13 @@ app_license = "mit"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "mmm_custom",
-# 		"logo": "/assets/mmm_custom/logo.png",
-# 		"title": "MMM Custom",
-# 		"route": "/mmm_custom",
-# 		"has_permission": "mmm_custom.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [{
+    "name": "mmm_custom",
+    "logo": "/assets/mmm_custom/images/bot.svg",
+    "title": "Bot Sao Việt",
+    "route": "/bot",
+    "has_permission": "mmm_custom.desk.can_open_bot",
+}]
 
 # Includes in <head>
 # ------------------
@@ -44,6 +42,7 @@ app_license = "mit"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"CRM Product": "public/js/crm_product.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -83,14 +82,42 @@ app_license = "mit"
 # ------------
 
 after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
+# Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
+after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.desk.hide_unused_workspaces",
+                 "mmm_custom.desk.remove_old_bot_workspace", "mmm_custom.desk.ensure_bot_workspace_icon"]
+
+# Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
+# clears the engine's cached catalog snapshot so the next customer message sees it.
+_LEAD_ENGINE_DATA = ("Course Group", "CRM Product", "CRM Territory", "Bot Slot", "Bot Skill", "Lead Engine Settings")
+doc_events = {
+	dt: {"on_update": "mmm_custom.engine.repo.clear_catalog_cache", "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
+	for dt in _LEAD_ENGINE_DATA
+}
+# Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
+doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update"}
+# Staff live in CRM; Chatwoot agents/teams follow (mmm_custom.staff_sync).
+doc_events["Consultant"] = {"on_update": "mmm_custom.staff_sync.enqueue_sync",
+                            "on_trash": "mmm_custom.staff_sync.enqueue_sync"}
+
+# Template filters for bot copy: {{ course.fee | vnd }} → "1.800.000đ", {{ s.date | date_vi }} → "Thứ 7, 04/10".
+jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.date_vi"]}
+
+# Other apps subscribe to engine events with their own `lead_engine_events` hook (see engine/events.py).
 
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
 # It does nothing unless the site config has typesafe_api_key.
+# Autopilot publisher: runs every 5 minutes to publish scheduled Facebook posts.
 scheduler_events = {
 	"cron": {
 		"0 8 * * *": ["mmm_custom.followup.run_daily"],
+		# Heals failed staff syncs and gives newly connected Facebook pages the bot.
+		"*/10 * * * *": ["mmm_custom.staff_sync.sync_all"],
+		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
 	},
+	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
+	"daily": ["mmm_custom.engine.log.purge_old_logs"],
 }
+
 
 # Uninstallation
 # ------------
@@ -160,24 +187,8 @@ scheduler_events = {
 
 # Scheduled Tasks
 # ---------------
+# (See scheduler_events defined above with 08:00 followup and */5 autopilot publisher)
 
-# scheduler_events = {
-# 	"all": [
-# 		"mmm_custom.tasks.all"
-# 	],
-# 	"daily": [
-# 		"mmm_custom.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"mmm_custom.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"mmm_custom.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"mmm_custom.tasks.monthly"
-# 	],
-# }
 
 # Testing
 # -------
@@ -259,4 +270,3 @@ scheduler_events = {
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

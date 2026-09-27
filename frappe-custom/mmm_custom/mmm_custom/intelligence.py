@@ -188,6 +188,12 @@ def _find_lead(contact: dict) -> str | None:
     return None
 
 
+def bot_active(conversation_id) -> bool:
+    """An active bot conversation supplies its own Jev intent and hotness signals."""
+    return bool(frappe.db.exists("Bot Conversation",
+                                 {"conversation_id": str(conversation_id), "status": "active", "is_sandbox": 0}))
+
+
 def enqueue_analysis(payload: dict) -> dict:
     """Called by the Chatwoot webhook for message_created: queue analysis of incoming messages."""
     if not _conf().get("typesafe_api_key"):
@@ -197,6 +203,8 @@ def enqueue_analysis(payload: dict) -> dict:
     conversation = payload.get("conversation") or {}
     if not conversation.get("id"):
         return {"status": "error", "message": "Missing conversation id"}
+    if bot_active(conversation["id"]):
+        return {"status": "ignored", "reason": "bot_active"}
     frappe.enqueue(
         "mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=conversation["id"],
         # Pending = the agent bot is still qualifying the lead; a suggestion per Quick Reply click is noise.

@@ -1,6 +1,6 @@
 # Vendored upstreams
 
-`chatwoot/`, `crm/`, and `messenger-platform-samples/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote — this file is the record of where each copy came from, what we changed inside it, and how to re-sync.
+`chatwoot/`, `crm/`, and `messenger-platform-samples/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote. Since 2026-09-27 (D-093) `chatwoot/` and `crm/` are our own fork, developed independently with no re-sync planned: this file is kept as history (baselines, older edit log) and for the build/run notes; new edits no longer need a row.
 
 ## Baselines
 
@@ -19,7 +19,7 @@ Update this table on every re-sync.
 Both stacks run the vendored source, so an edit in `chatwoot/` or `crm/` takes effect on the next build/start:
 
 - **Chatwoot** — image `dx-osd/chatwoot:local`, built from `chatwoot/docker/Dockerfile` (`docker/chatwoot/docker-compose.override.yaml`). Rebuild after changes: `up -d --build` (see AGENTS.md).
-- **Frappe CRM** — `crm/` is bind-mounted into the container at `/home/frappe/crm` and symlinked into the bench as `apps/crm` (`crm/docker/init.sh`). Python changes load on restart; frontend changes need `bench build --app crm`.
+- **Frappe CRM** — `crm/` is bind-mounted into the container at `/home/frappe/crm` and symlinked into the bench as `apps/crm` (`crm/docker/init.sh`). Python changes load on restart; frontend changes need `bench build --app crm`. A bench created before that symlink existed keeps a plain clone in `apps/crm`; check with `readlink -f apps/crm` and, if it is not `/home/frappe/crm`, move it aside, `ln -s /home/frappe/crm apps/crm`, `pip install -e apps/crm`, `bench build --app crm`, migrate and restart (done on the dev bench 2026-09-27; the old clone is at `/home/frappe/crm-upstream-bak`).
 
 ## Local edits inside vendored directories
 
@@ -40,6 +40,11 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/crm/fcrm/doctype/crm_lead/crm_lead.py` | Add `data_quality` column and row to `default_list_data()` | Shows Data Quality badge in the default Lead list view |
 | `crm/frontend/src/pages/Leads.vue` | Add `data_quality` case in `parseRows()` with green/orange/red color mapping | Colors the Data Quality badge based on value |
 | `crm/frontend/src/components/ListViews/LeadsListView.vue` | Add `<Badge>` rendering block for `data_quality` column | Renders a colored badge (like SLA Status) instead of plain text |
+| `chatwoot/app/models/channel/facebook_page.rb` | Add `validates :page_access_token, :user_access_token, length: { maximum: 4096 }` | Meta's current tokens exceed the 255-char string guard in `ApplicationRecord`, so saving a Facebook Page channel failed with "Page access token is too long" |
+| `chatwoot/app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | Remove the My Inbox, Mentions, Participating and Unattended sidebar entries; `HIDDEN_ITEMS` filters Folders, Teams, contact Active/Segments/Tagged With/Companies, Label/Inbox/Team/CSAT/SLA reports and the Templates, Labels, Custom Attributes, Conversation Workflow settings (routes stay) | Simpler inbox UI for consultants; Campaigns/Help Center etc. are hidden by account feature flags plus `INSTALLATION_NAME` ≠ "Chatwoot" (data, not code) |
+| `crm/crm/api/dashboard.py` | Append 6 EduFlow widget functions: `get_messenger_bot_leads`, `get_facebook_ads_leads`, `get_leads_with_phone`, `get_leads_by_course_interest`, `get_leads_by_branch`, `get_lead_trend_by_source` | Education-center dashboard metrics: source breakdown, course interest, branch distribution |
+| `crm/crm/fcrm/doctype/crm_dashboard/crm_dashboard.py` | Replace `default_manager_dashboard_layout()` JSON with EduFlow layout (10 widgets) | Default dashboard shows education-relevant KPIs instead of generic B2B sales pipeline |
+| `crm/frontend/src/components/Dashboard/AddChartModal.vue` | Add 6 new widgets to number/axis/donut chart lists | Makes EduFlow widgets available in the Add Chart modal |
 
 ## Re-sync procedure
 

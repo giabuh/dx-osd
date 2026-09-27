@@ -1,7 +1,6 @@
 import hashlib
 import hmac
 import json
-import re
 import time
 
 try:
@@ -37,23 +36,24 @@ except ImportError:
 
 from mmm_custom.dedupe import find_matching_lead, normalize_phone
 from mmm_custom.data_quality import compute_data_quality
+from mmm_custom.engine.repo import add_products, load_catalog
+from mmm_custom.engine.understand import match_courses
 from mmm_custom.intelligence import enqueue_analysis
 
 
-COURSE_KEYWORD_PATTERNS = [
-    (re.compile(r"\b(tiếng anh|tieng anh|english)\b", re.IGNORECASE), "Tiếng Anh"),
-    (re.compile(r"\b(bơi lội|boi loi|bơi|swimming)\b", re.IGNORECASE), "Bơi lội"),
-    (re.compile(r"\b(toán tư duy|toan tu duy|toán|math)\b", re.IGNORECASE), "Toán tư duy"),
-]
-
-
-def detect_course_interest(text: str | None) -> str | None:
+def detect_courses(text, catalog=None):
+    """Courses named in the text, matched against the CRM catalog aliases (C2.4 replaces 3 hardcoded courses)."""
     if not text or not isinstance(text, str):
-        return None
-    for pattern, course_name in COURSE_KEYWORD_PATTERNS:
-        if pattern.search(text):
-            return course_name
-    return None
+        return []
+    try:
+        catalog = catalog or load_catalog()
+    except Exception:
+        return []
+    return match_courses(text, catalog)
+
+
+def detect_course_interest(text, catalog=None):
+    return ", ".join(c.name for c in detect_courses(text, catalog)) or None
 
 
 def extract_message_text(conversation: dict, payload: dict) -> str:
@@ -156,7 +156,8 @@ def chatwoot_sync():
     crm_lead_id = custom_attrs.get("crm_lead_id")
 
     msg_text = extract_message_text(conversation, payload)
-    course_interest = detect_course_interest(msg_text)
+    courses = detect_courses(msg_text)
+    course_interest = ", ".join(c.name for c in courses) or None
 
     # 2. Dedup & Lead Convergence — 3-tier: crm_lead_id → chatwoot_contact_id → email/phone
     if crm_lead_id and frappe.db.exists("CRM Lead", crm_lead_id):
@@ -220,6 +221,13 @@ def chatwoot_sync():
                 lead_data["course_interest"] = course_interest
             lead = frappe.get_doc(lead_data).insert(ignore_permissions=True)
             lead_name = lead.name
+
+    if courses:
+        try:
+            add_products(lead_name, courses)
+        except Exception as e:
+            if hasattr(frappe, "log_error"):
+                frappe.log_error(title="Failed to add course products to Lead", message=str(e))
 
     # 3. Log conversation to FCRM Note
     try:

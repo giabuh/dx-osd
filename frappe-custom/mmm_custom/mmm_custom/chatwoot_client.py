@@ -59,13 +59,16 @@ class ChatwootClient:
             content_attributes={"items": items},
         )
 
-    def update_contact(self, contact_id: int,
-                       custom_attributes: dict) -> dict:
-        """Update a contact's custom_attributes."""
+    def update_contact(self, contact_id: int, custom_attributes: dict,
+                       phone_number: str | None = None) -> dict:
+        """Merge custom_attributes into a contact (Chatwoot merges them) and optionally set its phone."""
+        body = {"custom_attributes": custom_attributes}
+        if phone_number:
+            body["phone_number"] = phone_number
         resp = requests.patch(
             f"{self._base}/contacts/{contact_id}",
             headers=self._headers,
-            json={"custom_attributes": custom_attributes},
+            json=body,
             timeout=REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
@@ -151,5 +154,86 @@ class ChatwootClient:
             json={"content": content, "message_type": "outgoing", "private": True},
             timeout=REQUEST_TIMEOUT,
         )
+        resp.raise_for_status()
+        return resp.json()
+
+    # Account administration (used by the CRM → Chatwoot staff sync, mmm_custom.staff_sync).
+
+    def list_inboxes(self) -> list[dict]:
+        resp = requests.get(f"{self._base}/inboxes", headers=self._headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()["payload"]
+
+    def create_agent(self, name: str, email: str, role: str = "agent") -> dict:
+        resp = requests.post(f"{self._base}/agents", headers=self._headers,
+                             json={"name": name, "email": email, "role": role}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_teams(self) -> list[dict]:
+        resp = requests.get(f"{self._base}/teams", headers=self._headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def create_team(self, name: str, description: str = "") -> dict:
+        resp = requests.post(f"{self._base}/teams", headers=self._headers,
+                             json={"name": name, "description": description}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def add_team_members(self, team_id: int, user_ids: list[int]) -> list:
+        resp = requests.post(f"{self._base}/teams/{team_id}/team_members", headers=self._headers,
+                             json={"user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def update_team_members(self, team_id: int, user_ids: list[int]) -> list:
+        """Replace the team's members with exactly `user_ids`."""
+        resp = requests.patch(f"{self._base}/teams/{team_id}/team_members", headers=self._headers,
+                              json={"user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_agent_bots(self) -> list[dict]:
+        resp = requests.get(f"{self._base}/agent_bots", headers=self._headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def set_agent_bot(self, inbox_id: int, bot_id: int) -> None:
+        resp = requests.post(f"{self._base}/inboxes/{inbox_id}/set_agent_bot", headers=self._headers,
+                             json={"agent_bot": bot_id}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+
+    def add_inbox_members(self, inbox_id: int, user_ids: list[int]) -> list:
+        resp = requests.post(f"{self._base}/inbox_members", headers=self._headers,
+                             json={"inbox_id": inbox_id, "user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    # Handoff (mmm_custom.engine.effects.ChatwootEffects.handoff).
+
+    def assign_team(self, conversation_id: int, team_id: int) -> dict:
+        resp = requests.post(f"{self._base}/conversations/{conversation_id}/assignments", headers=self._headers,
+                             json={"team_id": team_id}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def set_conversation_attributes(self, conversation_id: int, attributes: dict) -> dict:
+        resp = requests.post(f"{self._base}/conversations/{conversation_id}/custom_attributes", headers=self._headers,
+                             json={"custom_attributes": attributes}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_custom_attributes(self, model: str = "conversation_attribute") -> list:
+        resp = requests.get(f"{self._base}/custom_attribute_definitions", headers=self._headers,
+                            params={"attribute_model": model}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def create_custom_attribute(self, key: str, display_name: str, model: str = "conversation_attribute",
+                                display_type: str = "text") -> dict:
+        resp = requests.post(f"{self._base}/custom_attribute_definitions", headers=self._headers, json={
+            "attribute_display_name": display_name, "attribute_key": key, "attribute_model": model,
+            "attribute_display_type": display_type}, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()

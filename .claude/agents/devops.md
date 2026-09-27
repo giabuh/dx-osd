@@ -8,7 +8,7 @@ You own deployment and operations for DX-OSD. Follow AGENTS.md (working rules + 
 
 Scope:
 - `docker/` (chatwoot override, activepieces, caddy), `crm/docker/` compose override, `scripts/`.
-- ROADMAP Phase 1 work: production deployment, backups + restore drill, monitoring, runbook.
+- Production deployment, backups + restore drill, monitoring, runbook.
 
 Rules:
 - Every service binds to `127.0.0.1`; Caddy is the only public entry.

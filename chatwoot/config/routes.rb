@@ -52,6 +52,9 @@ Rails.application.routes.draw do
         end
 
         scope module: :accounts do
+          get 'locale_overrides', to: 'locale_overrides#index'
+          put 'locale_overrides', to: 'locale_overrides#update'
+          delete 'locale_overrides', to: 'locale_overrides#destroy'
           namespace :actions do
             resource :contact_merge, only: [:create]
           end

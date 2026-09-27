@@ -1,0 +1,111 @@
+[
+ {
+  "title": "Ưu đãi khai giảng tháng này",
+  "discount_type": "Percent",
+  "discount_value": 10,
+  "days": 60,
+  "courses": [],
+  "course_groups": [],
+  "branches": []
+ },
+ {
+  "title": "Giảm 500.000đ Kế toán tổng hợp",
+  "discount_type": "Amount",
+  "discount_value": 500000,
+  "days": 60,
+  "courses": [
+   "KT-TH"
+  ],
+  "course_groups": [],
+  "branches": []
+ },
+ {
+  "title": "Tin học cho bé giảm 20%",
+  "discount_type": "Percent",
+  "discount_value": 20,
+  "days": 60,
+  "courses": [],
+  "course_groups": [
+   "Tin học trẻ em"
+  ],
+  "branches": []
+ },
+ {
+  "title": "Đồ họa trọn gói giảm 1.000.000đ",
+  "discount_type": "Amount",
+  "discount_value": 1000000,
+  "days": 60,
+  "courses": [
+   "DH-TRONGOI"
+  ],
+  "course_groups": [],
+  "branches": []
+ },
+ {
+  "title": "Chi nhánh Long Thành giảm 15%",
+  "discount_type": "Percent",
+  "discount_value": 15,
+  "days": 60,
+  "courses": [],
+  "course_groups": [],
+  "branches": [
+   "CN Long Thành"
+  ]
+ },
+ {
+  "title": "Tặng phí thi thử MOS/IC3",
+  "discount_type": "Amount",
+  "discount_value": 300000,
+  "days": 60,
+  "courses": [
+   "VP-MOS",
+   "VP-IC3"
+  ],
+  "course_groups": [],
+  "branches": []
+ },
+ {
+  "title": "Excel nâng cao giảm 10%",
+  "discount_type": "Percent",
+  "discount_value": 10,
+  "days": 60,
+  "courses": [
+   "VP-EXCEL-NC"
+  ],
+  "course_groups": [],
+  "branches": []
+ },
+ {
+  "title": "AI & Tự động hóa giảm 12%",
+  "discount_type": "Percent",
+  "discount_value": 12,
+  "days": 60,
+  "courses": [],
+  "course_groups": [
+   "AI & Tự động hóa"
+  ],
+  "branches": []
+ },
+ {
+  "title": "AutoCAD 2D giảm 300.000đ",
+  "discount_type": "Amount",
+  "discount_value": 300000,
+  "days": 60,
+  "courses": [
+   "VKT-CAD2D"
+  ],
+  "course_groups": [],
+  "branches": []
+ },
+ {
+  "title": "Lập trình Web giảm 8%",
+  "discount_type": "Percent",
+  "discount_value": 8,
+  "days": 60,
+  "courses": [
+   "LT-WEB"
+  ],
+  "course_groups": [],
+  "branches": []
+ }
+]

@@ -4,9 +4,8 @@ Shared guidance for every AI coding agent working in this repository — Claude 
 
 ## Working rules (all agents)
 
-- **Trace work to the roadmap.** New work belongs to a phase in `ROADMAP.md`; respect its guiding principles.
 - **Know which area you are in** (see the map below) and run that area's check before calling a change done. Quote the actual output — "should work" is not "works".
-- **Vendored edits get recorded.** Any change inside `chatwoot/` or `crm/` needs a row in `docs/vendored-upstreams.md`.
+- **`chatwoot/` and `crm/` are our own code.** Edit them directly wherever a change belongs; there is no upstream to stay compatible with.
 - **Never destroy shared state.** Do not run `docker compose down -v`, `docker volume rm`, or `docker system prune` on the `chatwoot` or `crm` projects — they hold the working dev data. To test from scratch, use a separate compose project (`docker compose -p <name>-verify ...`) and remove only that.
 - **Secrets stay out.** Never commit or print `.env` files or `scripts/seed-shared-accounts/credentials.local.json`.
 - **Language:** code, identifiers, comments, commit messages, and docs in English.
@@ -17,12 +16,12 @@ Shared guidance for every AI coding agent working in this repository — Claude 
 | Area | Paths | Check before done |
 |---|---|---|
 | CRM customization | `frappe-custom/mmm_custom/`, `crm/docker/` | Fresh bench via a `-p crmverify` project: `bench --site crm.localhost list-apps` shows `mmm_custom`; CRM answers 200 on `:8000` |
-| Chatwoot | `docker/chatwoot/`, `chatwoot/` (vendored) | Chatwoot answers 200/302 on `:3000` |
+| Chatwoot | `docker/chatwoot/`, `chatwoot/` | Chatwoot answers 200/302 on `:3000` |
 | CRM Integration & Webhooks | `frappe-custom/mmm_custom/mmm_custom/`, `scripts/test-chatwoot-crm-sync.py` | `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests` passes; `python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"` passes (5/5) against running stacks |
-| [I] AI agents (optional) | `frappe-custom/mmm_custom/mmm_custom/intelligence.py`, `followup.py` | Unit tests pass; with `typesafe_api_key` set, an incoming message on a Lead's conversation updates `ai_intent`/`ai_hotness` and labels the conversation |
+| [I] AI agents (optional) | `frappe-custom/mmm_custom/mmm_custom/intelligence.py`, `followup.py`, `engine/jev.py`, `engine/combine.py`, `engine/evaluate.py` | Unit tests pass; `bench execute mmm_custom.engine.evaluate.run` reports the gate; with `typesafe_api_key` set, the Playground with **Use Jev** shows Jev answers, and after handoff an incoming message on a Lead's conversation updates `ai_intent`/`ai_hotness` and labels the conversation |
 | Activepieces alternative (not deployed by default) | `activepieces/logic/`, `activepieces/flows/`, `docker/activepieces/` | `node --test activepieces/logic/*.test.mjs` passes. It duplicates the in-bench `mmm_custom` pipeline: never run both against the same Chatwoot/CRM (duplicate Leads) |
 | Deployment / ops | `docker/`, `docker/caddy/`, `scripts/` | Affected stack comes up with the documented commands; ports still bind `127.0.0.1` only |
-| Docs & planning | `ROADMAP.md`, `REPO.md`, `docs/` | Claims match the code and `git log` |
+| Docs & planning | `REPO.md`, `docs/` | Claims match the code and `git log` |
 
 ## What this repository is
 
@@ -34,18 +33,18 @@ DX-OSD stands on the shoulders of two mature, complete open-source products and 
 
 Full design rationale and every architectural decision is in **`docs/superpowers/specs/2026-09-22-facebook-integration-platform.md`** and **`docs/superpowers/plans/2026-09-24-foss-meta-integration.md`**.
 
-The product-level direction — vision, guiding principles, and milestone phases beyond this first pipeline — is in **`ROADMAP.md`**; new work should trace back to a phase there.
+There is no fixed product roadmap (removed 2026-09-27, D-094): new work is scoped by its own spec or plan under `docs/superpowers/`. Work on the education lead engine (AI chat answers, routing, lead lifecycle) starts at **`docs/superpowers/specs/2026-09-26-edu-lead-engine/README.md`**.
 
 `REPO.md` provides the full component matrix and FOSS technology evaluation summary.
 
-## Vendored source: `chatwoot/`, `crm/`
+## Forked source: `chatwoot/`, `crm/`
 
-These two directories are **first-class, tracked source in this repo now** — vendored in (their own `.git` histories removed) rather than kept as separate clones, so the whole product ships from one repo and one `git clone`. They are ordinary files here: edit them directly when a change belongs in Chatwoot or Frappe CRM itself, and commit at the top level like any other change in this repo.
+These two directories started as copies of Chatwoot and Frappe CRM and are now **our own fork, developed independently** — there is no plan to pull upstream updates again. They are ordinary files here: edit them directly (backend or UI) when that is where a change belongs, and commit at the top level like any other change in this repo. Choosing between `crm/` and the `mmm_custom` app is a design call, not a rule: put code where it is simplest to build and maintain.
 
 - Each still carries its upstream `LICENSE` file — keep those; the copyright/license terms of the giants we're building on stay intact.
 - Each has its own `AGENTS.md`/`CLAUDE.md` (`chatwoot/CLAUDE.md`, `chatwoot/AGENTS.md`, `crm/AGENTS.md`) with useful internal dev commands (build/test/lint) — this file does not duplicate those.
-- There is no upstream remote wired up anymore. Pulling future upstream updates means fetching the new version manually and re-applying any local customizations — this repo has traded easy upstream syncing for a single self-contained codebase. **`docs/vendored-upstreams.md`** holds the baselines, the re-sync procedure, and the log of every edit made inside a vendored directory — add a row there whenever you edit one.
-- **Both stacks run this vendored source:** Chatwoot is built locally from `chatwoot/` (image `dx-osd/chatwoot:local`), and `crm/` is bind-mounted into the CRM bench on a pinned Frappe (`v15.121.1`). Rebuild/restart to see an edit — details in `docs/vendored-upstreams.md`.
+- There is no upstream remote and no re-sync. `docs/vendored-upstreams.md` keeps the historical baselines and the older edit log; adding rows there is no longer required (git history is the record).
+- **Both stacks run this source:** Chatwoot is built locally from `chatwoot/` (image `dx-osd/chatwoot:local`), and `crm/` is bind-mounted into the CRM bench on a pinned Frappe (`v15.121.1`). Rebuild/restart to see an edit — build/run details in `docs/vendored-upstreams.md` ("What actually runs").
 
 ## Commands
 
@@ -101,6 +100,6 @@ python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests -v
 
 - **Service boundary:** Frappe CRM is the only source of truth for Lead/Contact/Deal data. Chatwoot is inbox-only — its contact records are not canonical. `mmm_custom` holds no separate persistent database state; it executes as an in-bench extension directly operating on the CRM database.
 - **Dedup:** a contact can arrive via Facebook Lead Ads (handled natively inside Frappe CRM) and later message on Messenger (handled by Chatwoot → `mmm_custom.api.chatwoot_sync`). The two are linked by a two-way custom field: `crm_lead_id` in Chatwoot's `contact.custom_attributes`, and `chatwoot_contact_id` as a Custom Field on the CRM Lead doctype (added via a dedicated Frappe app, `frappe-custom/mmm_custom/`).
-- **Course Interest Detection:** incoming messages are analyzed in `mmm_custom.api.detect_course_interest` to automatically categorize prospective students into course interests (`Tiếng Anh`, `Bơi lội`, `Toán tư duy`) directly visible on the CRM Lead.
+- **Course Interest Detection:** incoming messages are matched against the CRM course catalog aliases (`mmm_custom.api.detect_courses`, using the lead engine's keyword matcher) and the courses are added to the Lead's standard `products` table, with `course_interest` kept as a readable summary. The Messenger bot itself is the lead engine in `mmm_custom/engine/` (start at `docs/superpowers/specs/2026-09-26-edu-lead-engine/README.md`).
 - **Security:** Every web port binds to `127.0.0.1` only on every stack; Caddy reverse proxy (`docker/caddy/`) is the only public entry point once a real domain is configured. Webhook endpoints enforce HMAC-SHA256 signature verification and a 300-second anti-replay timestamp window.
 - The default deployment is the unified root `docker-compose.yml` (project `dx-osd`), which reuses the named volumes `chatwoot_*` and `crm_*`. The per-stack compose files under "Individual Stacks" use the same container names and volumes, so never run them at the same time as the unified stack.

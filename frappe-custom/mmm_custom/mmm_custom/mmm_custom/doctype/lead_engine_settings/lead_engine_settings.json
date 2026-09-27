@@ -1,0 +1,198 @@
+{
+ "actions": [],
+ "creation": "2026-09-26 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "brand_name",
+  "bot_name",
+  "address_customer",
+  "address_self",
+  "hotline",
+  "zalo",
+  "website",
+  "email",
+  "greeting_template",
+  "fallback_template",
+  "signoff",
+  "engine_section",
+  "max_skills_per_reply",
+  "log_retention_days",
+  "handoff_section",
+  "max_stuck_turns",
+  "handoff_template",
+  "summary_template",
+  "jev_section",
+  "jev_live",
+  "jev_timeout",
+  "catalog_act",
+  "catalog_confirm",
+  "choice_act",
+  "choice_confirm",
+  "skill_act",
+  "skill_confirm",
+  "handoff_noul",
+  "spam_threshold",
+  "confirm_slot_template",
+  "confirm_skill_template",
+  "cost_section",
+  "jev_calls_per_hour",
+  "jev_daily_token_budget",
+  "playground_daily_token_budget",
+  "advisor_section",
+  "advisor_goal_weight",
+  "advisor_level_weight",
+  "advisor_floor",
+  "advisor_shortlist"
+ ],
+ "fields": [
+  {
+   "fieldname": "brand_name",
+   "fieldtype": "Data",
+   "label": "Brand Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bot_name",
+   "fieldtype": "Data",
+   "label": "Bot Name"
+  },
+  {
+   "fieldname": "address_customer",
+   "fieldtype": "Data",
+   "label": "Address Customer",
+   "default": "anh/chị"
+  },
+  {
+   "fieldname": "address_self",
+   "fieldtype": "Data",
+   "label": "Address Self",
+   "default": "em"
+  },
+  {
+   "fieldname": "hotline",
+   "fieldtype": "Data",
+   "label": "Hotline"
+  },
+  {
+   "fieldname": "zalo",
+   "fieldtype": "Data",
+   "label": "Zalo"
+  },
+  {
+   "fieldname": "website",
+   "fieldtype": "Data",
+   "label": "Website"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "greeting_template",
+   "fieldtype": "Small Text",
+   "label": "Greeting Template"
+  },
+  {
+   "fieldname": "fallback_template",
+   "fieldtype": "Small Text",
+   "label": "Fallback Template"
+  },
+  {
+   "fieldname": "signoff",
+   "fieldtype": "Data",
+   "label": "Signoff"
+  },
+  {
+   "fieldname": "engine_section",
+   "fieldtype": "Section Break",
+   "label": "Conversation engine"
+  },
+  {
+   "fieldname": "max_skills_per_reply",
+   "fieldtype": "Int",
+   "label": "Max Skills Per Reply",
+   "default": "3",
+   "description": "Most answers combined into one reply (D-054)"
+  },
+  {
+   "fieldname": "log_retention_days",
+   "fieldtype": "Int",
+   "label": "Log Retention Days",
+   "default": "180",
+   "description": "AI Decision Log rows older than this are deleted daily"
+  },
+  {
+   "fieldname": "handoff_section",
+   "fieldtype": "Section Break",
+   "label": "Handoff"
+  },
+  {
+   "fieldname": "max_stuck_turns",
+   "fieldtype": "Int",
+   "label": "Max Stuck Turns",
+   "default": "2",
+   "description": "Hand off after this many turns in a row with nothing understood"
+  },
+  {
+   "fieldname": "handoff_template",
+   "fieldtype": "Small Text",
+   "label": "Handoff Template",
+   "description": "Told to the customer at handoff; gets `consultant` (name, branch)"
+  },
+  {
+   "fieldname": "summary_template",
+   "fieldtype": "Long Text",
+   "label": "Summary Template",
+   "description": "Private note for the consultant; gets answered, next_step, why, reason"
+  },
+  {"fieldname": "jev_section", "fieldtype": "Section Break", "label": "Jev understanding"},
+  {"fieldname": "jev_live", "fieldtype": "Check", "label": "Jev answers real customers", "description": "Turn on only after the evaluation gate passes."},
+  {"fieldname": "jev_timeout", "fieldtype": "Int", "label": "Jev timeout (seconds)", "description": "Default 8"},
+  {"fieldname": "catalog_act", "fieldtype": "Float", "label": "Catalog slot: act at", "description": "Default 0.85"},
+  {"fieldname": "catalog_confirm", "fieldtype": "Float", "label": "Catalog slot: confirm at", "description": "Default 0.55"},
+  {"fieldname": "choice_act", "fieldtype": "Float", "label": "Choice slot: act at", "description": "Default 0.80"},
+  {"fieldname": "choice_confirm", "fieldtype": "Float", "label": "Choice slot: confirm at", "description": "Default 0.50"},
+  {"fieldname": "skill_act", "fieldtype": "Float", "label": "Skill: answer at", "description": "Default 0.85"},
+  {"fieldname": "skill_confirm", "fieldtype": "Float", "label": "Skill: confirm at", "description": "Default 0.60"},
+  {"fieldname": "handoff_noul", "fieldtype": "Float", "label": "Early handoff (wants human / hot) at", "description": "Default 0.70"},
+  {"fieldname": "spam_threshold", "fieldtype": "Float", "label": "Spam: stop at", "description": "Default 0.80"},
+  {"fieldname": "confirm_slot_template", "fieldtype": "Small Text", "label": "Confirm slot template"},
+  {"fieldname": "confirm_skill_template", "fieldtype": "Small Text", "label": "Confirm skill template"},
+  {"fieldname": "cost_section", "fieldtype": "Section Break", "label": "Jev cost guard"},
+  {"fieldname": "jev_calls_per_hour", "fieldtype": "Int", "label": "Jev calls per conversation per hour", "description": "Default 20"},
+  {"fieldname": "jev_daily_token_budget", "fieldtype": "Int", "label": "Daily input-token budget (customers)", "description": "0 = unlimited"},
+  {"fieldname": "playground_daily_token_budget", "fieldtype": "Int", "label": "Daily input-token budget (Playground)", "description": "0 = unlimited"},
+  {"fieldname": "advisor_section", "fieldtype": "Section Break", "label": "Course advisor"},
+  {"fieldname": "advisor_goal_weight", "fieldtype": "Float", "label": "Goal fit weight", "description": "Default 0.6"},
+  {"fieldname": "advisor_level_weight", "fieldtype": "Float", "label": "Level fit weight", "description": "Default 0.4"},
+  {"fieldname": "advisor_floor", "fieldtype": "Float", "label": "Ask goal/level below", "description": "Default 0.5"},
+  {"fieldname": "advisor_shortlist", "fieldtype": "Int", "label": "Courses scored per call", "description": "Default 8"}
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-09-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Lead Engine Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
