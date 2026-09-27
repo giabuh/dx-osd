@@ -15,11 +15,12 @@ HANDOFF_REASONS = {
     "required_filled": "Đã đủ thông tin bắt buộc",
     "stuck": "Bot chưa hiểu khách nhiều lượt liên tiếp",
 }
+IMMEDIATE = ("button", "skill")
 
 
 @dataclass
 class Decision:
-    type: str                                   # answer | ask_slot | handoff | silent
+    type: str                                   # answer | confirm | ask_slot | handoff | silent
     slots: dict = field(default_factory=dict)   # slots after this turn
     new_slots: list = field(default_factory=list)
     skills: list = field(default_factory=list)  # skill keys to answer, in reply order
@@ -30,6 +31,7 @@ class Decision:
     pending_skill: str = ""
     stuck_turns: int = 0
     reason: str = ""
+    confirm: dict = field(default_factory=dict)
 
 
 def slot_active(slot, slots):
@@ -95,7 +97,7 @@ def next_slot(slots, catalog, first=()):
         entry = slots.get(slot.key) or {}
         if filled(slots, slot.key) or not slot_active(slot, slots):
             continue
-        if not slot.required and (entry.get("asked") or entry.get("skipped")):
+        if slot.key not in first and not slot.required and (entry.get("asked") or entry.get("skipped")):
             continue
         return slot.key
     return ""
@@ -123,7 +125,7 @@ def decide(state, u, catalog):
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
     greet = state.turns == 0 and not skills
-    progress = bool(new or changed or skills or waiting or u.handoff or u.focus)
+    progress = bool(new or changed or skills or waiting or u.handoff or u.focus or u.confirm or u.rejected)
     stuck = 0 if progress or greet else state.stuck_turns + 1
     common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck)
     answered = ", ".join(catalog.skills[k].title for k in skills)
@@ -134,8 +136,11 @@ def decide(state, u, catalog):
         return Decision("silent", **common, reason="Đã chuyển tư vấn viên, chờ tư vấn viên nhắn")
 
     why = handoff_reason(u, skills, slots, stuck, catalog)
-    if why:
+    if why and (why in IMMEDIATE or not u.confirm):
         return Decision("handoff", **common, handoff_reason=why, reason=HANDOFF_REASONS[why])
+    if u.confirm:
+        reason = f"Xác nhận: {u.confirm['label']}" + (f"; trả lời: {answered}" if skills else "")
+        return Decision("confirm", **common, confirm=u.confirm, greet=greet, reason=reason)
 
     first = ([u.focus] if u.focus else []) + (list(catalog.skills[waiting].params) if waiting else [])
     ask = next_slot(slots, catalog, first)

@@ -21,7 +21,20 @@
   "handoff_section",
   "max_stuck_turns",
   "handoff_template",
-  "summary_template"
+  "summary_template",
+  "jev_section",
+  "jev_live",
+  "jev_timeout",
+  "catalog_act",
+  "catalog_confirm",
+  "choice_act",
+  "choice_confirm",
+  "skill_act",
+  "skill_confirm",
+  "handoff_noul",
+  "spam_threshold",
+  "confirm_slot_template",
+  "confirm_skill_template"
  ],
  "fields": [
   {
@@ -124,7 +137,20 @@
    "fieldtype": "Long Text",
    "label": "Summary Template",
    "description": "Private note for the consultant; gets answered, next_step, why, reason"
-  }
+  },
+  {"fieldname": "jev_section", "fieldtype": "Section Break", "label": "Jev understanding"},
+  {"fieldname": "jev_live", "fieldtype": "Check", "label": "Jev answers real customers", "description": "Turn on only after the evaluation gate passes."},
+  {"fieldname": "jev_timeout", "fieldtype": "Int", "label": "Jev timeout (seconds)", "description": "Default 8"},
+  {"fieldname": "catalog_act", "fieldtype": "Float", "label": "Catalog slot: act at", "description": "Default 0.85"},
+  {"fieldname": "catalog_confirm", "fieldtype": "Float", "label": "Catalog slot: confirm at", "description": "Default 0.55"},
+  {"fieldname": "choice_act", "fieldtype": "Float", "label": "Choice slot: act at", "description": "Default 0.80"},
+  {"fieldname": "choice_confirm", "fieldtype": "Float", "label": "Choice slot: confirm at", "description": "Default 0.50"},
+  {"fieldname": "skill_act", "fieldtype": "Float", "label": "Skill: answer at", "description": "Default 0.85"},
+  {"fieldname": "skill_confirm", "fieldtype": "Float", "label": "Skill: confirm at", "description": "Default 0.60"},
+  {"fieldname": "handoff_noul", "fieldtype": "Float", "label": "Early handoff (wants human / hot) at", "description": "Default 0.70"},
+  {"fieldname": "spam_threshold", "fieldtype": "Float", "label": "Spam: stop at", "description": "Default 0.80"},
+  {"fieldname": "confirm_slot_template", "fieldtype": "Small Text", "label": "Confirm slot template"},
+  {"fieldname": "confirm_skill_template", "fieldtype": "Small Text", "label": "Confirm skill template"}
  ],
  "issingle": 1,
  "links": [],

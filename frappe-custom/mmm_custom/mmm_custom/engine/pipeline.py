@@ -9,8 +9,11 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
+from mmm_custom.engine.combine import combine
 from mmm_custom.engine.decide import decide
 from mmm_custom.engine.handoff import plan_handoff
+from mmm_custom.engine.jev import JevResult
+from mmm_custom.engine.jev_questions import MAX_HISTORY, build_questions, jev_state
 from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.log import log_row, signals
 from mmm_custom.engine.reply import compose
@@ -42,6 +45,7 @@ class Turn:
     turns_before: int = 0
     stuck_before: int = 0
     reason: str = ""
+    jev: object = None
 
 
 def _dict(value):
@@ -68,6 +72,20 @@ def parse_event(payload):
     return Event("ignore", cid)
 
 
+def understand_turn(text, state, catalog, jev):
+    """Always run keywords; use Jev when available and keep the keyword result on failure."""
+    u = understand(text, state, catalog)
+    if jev is None:
+        return u, JevResult("disabled")
+    if u.tapped:
+        return u, JevResult("skipped_cost_guard", error="button")
+    questions = build_questions(state, u, catalog)
+    result = jev.ask(jev_state(text, state, catalog), questions)
+    if result.status != "ok":
+        return u, result
+    return combine(u, result.answers, questions, state, catalog), result
+
+
 def apply_decision(state, decision, reply, event):
     state.slots = decision.slots
     state.stuck_turns = decision.stuck_turns
@@ -75,6 +93,12 @@ def apply_decision(state, decision, reply, event):
     state.answered = list(dict.fromkeys(state.answered + decision.skills))
     if decision.type != "silent":
         state.pending = {"slot": decision.ask, "options": reply.options()}
+        if decision.confirm:
+            state.pending["confirm"] = decision.confirm
+    lines = [{"from": "customer", "text": event.text[:300]}]
+    if reply.messages:
+        lines.append({"from": "bot", "text": " ".join(reply.messages)[:300]})
+    state.history = (state.history + lines)[-MAX_HISTORY:]
     if decision.type == "handoff":
         state.status = "handed_off"
     state.last_message_id = max(state.last_message_id, event.message_id)
@@ -116,7 +140,7 @@ def run_turn(event, repo, effects, render):
         return None  # redelivered webhook: this message was already answered
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),
                 state.status, state.turns, state.stuck_turns)
-    turn.understanding = understand(event.text, state, catalog)
+    turn.understanding, turn.jev = understand_turn(event.text, state, catalog, repo.jev_client())
     turn.decision = decide(state, turn.understanding, catalog)
     turn.reason = turn.decision.reason
 
@@ -148,7 +172,7 @@ def run_turn(event, repo, effects, render):
     repo.save_state(state)
     emit_events(effects, state, turn.decision)
     try:
-        repo.write_log(log_row(turn))
+        repo.write_log(log_row(turn, turn.jev.log()))
         for row in signals(turn):
             repo.write_signal(row)
     except Exception as e:  # the log must never break a customer's turn

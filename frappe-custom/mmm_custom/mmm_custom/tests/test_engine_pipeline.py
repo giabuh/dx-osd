@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeRepo, demo_catalog, demo_consultants, fill, render
+from engine_fixtures import FakeJev, FakeRepo, demo_catalog, demo_consultants, fill, render
 
 from mmm_custom.engine import events
 from mmm_custom.engine.effects import RecordingEffects
@@ -122,6 +122,60 @@ class TestRunTurn(unittest.TestCase):
         self.assertIn(f"tư vấn viên {consultant['full_name']} (CN Dĩ An)", self.fx.of("send")[0]["messages"][0])
         self.assertIn("CN Dĩ An · ít khách nhất", t.reason)
         self.assertEqual([e["consultant"] for e in self.fx.of("emit") if e["event"] == "handed_off"], [consultant["name"]])
+
+class TestJevTurn(unittest.TestCase):
+    def setUp(self):
+        self.repo, self.fx = FakeRepo(CAT), RecordingEffects()
+
+    def turn(self, text, message_id=5):
+        return run_turn(parse_event(incoming(text, message_id)), self.repo, self.fx, render)
+
+    def test_without_a_client_jev_is_disabled(self):
+        t = self.turn("alo")
+        self.assertEqual((t.jev.status, self.repo.logs[0]["jev_status"]), ("disabled", "disabled"))
+
+    def test_jev_answer_fills_a_slot_and_is_logged(self):
+        self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.93}})
+        t = self.turn("mình muốn học vẽ nhà")
+        self.assertEqual(self.repo.states["7"].slots["course"]["source"], "jev")
+        self.assertEqual(t.decision.ask, "branch")
+        log = self.repo.logs[0]
+        self.assertEqual((log["jev_status"], log["input_tokens"], log["model_version"]), ("ok", 120, "jev-test"))
+        self.assertIn("slot:course", log["jev_questions"])
+
+    def test_jev_unavailable_falls_back_to_keywords(self):
+        self.repo.jev = FakeJev(status="unavailable")
+        t = self.turn("excel bạn ơi")  # a leftover word keeps the Task 5 cost guard from skipping Jev
+        self.assertEqual((t.jev.status, self.repo.states["7"].slots["course"]["value"]), ("unavailable", "VP-EXCEL"))
+        self.assertEqual(self.repo.logs[0]["jev_status"], "unavailable")
+
+    def test_confirm_no_asks_with_buttons_and_records_signal(self):
+        self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.7}})
+        t1 = self.turn("mình muốn học vẽ nhà")
+        self.assertEqual(t1.decision.type, "confirm")
+        self.assertEqual([b["title"] for b in t1.reply.buttons], ["Đúng ạ", "Không phải"])
+        self.assertEqual(self.repo.states["7"].pending["confirm"]["value"], "VKT-REVIT")
+        t2 = self.turn("Không phải", message_id=6)
+        self.assertEqual((t2.decision.type, t2.decision.ask), ("ask_slot", "course"))
+        self.assertTrue(t2.reply.buttons)
+        self.assertNotIn("value", self.repo.states["7"].slots.get("course", {}))
+        self.assertEqual(len(self.repo.jev.calls), 1)  # the tap needed no Jev call
+        self.assertEqual([s["signal_type"] for s in self.repo.signals], ["confirm_rejected"])
+
+    def test_confirm_yes_fills(self):
+        self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.7}})
+        self.turn("mình muốn học vẽ nhà")
+        self.turn("Đúng ạ", message_id=6)
+        self.assertEqual(self.repo.states["7"].slots["course"]["value"], "VKT-REVIT")
+
+    def test_history_is_kept_and_capped(self):
+        self.turn("alo")
+        self.assertEqual([h["from"] for h in self.repo.states["7"].history], ["customer", "bot"])
+        for i in range(1, 30):  # after the stuck handoff the bot is silent: customer lines only
+            self.turn(f"alo {i}", message_id=5 + i)
+        history = self.repo.states["7"].history
+        self.assertEqual(len(history), 20)
+        self.assertEqual(history[-1], {"from": "customer", "text": "alo 29"})
 
 class TestEvents(unittest.TestCase):
     def test_handlers_receive_payload_and_failures_are_logged(self):

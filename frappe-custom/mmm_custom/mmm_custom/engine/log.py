@@ -40,6 +40,9 @@ def signals(turn):
     if d.type == "handoff" and d.handoff_reason == "stuck":
         out.append({**base, "signal_type": "stuck"})
         out += [{**base, "signal_type": "unmatched_term", "term": word} for word in u.unmatched]
+    if u.rejected:
+        out.append({**base, "signal_type": "confirm_rejected", "term": u.rejected.get("label", ""),
+                    "details": _j(u.rejected)})
     out += [{**base, "signal_type": "render_error", "details": _j(e)} for e in r.errors if e.get("type") == "render_error"]
     return out
 

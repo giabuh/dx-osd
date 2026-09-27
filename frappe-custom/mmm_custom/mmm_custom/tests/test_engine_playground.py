@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeRepo, demo_catalog, render
+from engine_fixtures import FakeJev, FakeRepo, demo_catalog, render
 
 from mmm_custom.engine.effects import RecordingEffects
 from mmm_custom.engine.pipeline import Event, run_turn
@@ -15,6 +15,13 @@ PAGE = Path(__file__).resolve().parent.parent / "mmm_custom" / "page" / "bot_pla
 
 
 class TestInspect(unittest.TestCase):
+    def test_inspect_shows_the_jev_result(self):
+        repo, fx = FakeRepo(CAT), RecordingEffects()
+        repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.7}})
+        out = inspect(run_turn(Event("customer_message", "7", 5, "học vẽ nhà", {"id": 9}), repo, fx, render), fx)
+        self.assertEqual((out["jev"]["status"], out["jev"]["input_tokens"]), ("ok", 120))
+        self.assertEqual(out["understanding"]["confirm"]["value"], "VKT-REVIT")
+
     def test_turn_is_shown_step_by_step(self):
         fx = RecordingEffects()
         turn = run_turn(Event("customer_message", "sandbox-x", 1, "học phí excel ở bình thạnh", {"id": "sandbox-x"}),
@@ -22,7 +29,7 @@ class TestInspect(unittest.TestCase):
         out = inspect(turn, fx)
         self.assertEqual(set(out), {"understanding", "jev", "decision", "reply", "events", "effects", "state"})
         self.assertEqual(out["understanding"]["fills"]["course"]["value"], "VP-EXCEL")
-        self.assertEqual(out["jev"], {"status": "disabled"})
+        self.assertEqual(out["jev"]["status"], "disabled")
         self.assertEqual((out["decision"]["type"], out["decision"]["skills"]), ("answer", ["fee_quote"]))
         self.assertEqual(out["reply"]["buttons"], ["Cho tôi", "Cho con em", "Cho công ty"])
         self.assertIn("slot_filled", [e["event"] for e in out["events"]])

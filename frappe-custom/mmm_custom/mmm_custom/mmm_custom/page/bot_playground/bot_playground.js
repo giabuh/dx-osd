@@ -13,6 +13,10 @@ class BotPlayground {
 			fieldname: "lead", label: __("Returning customer (Lead)"), fieldtype: "Link", options: "CRM Lead",
 			change: () => this.reset(),
 		});
+		this.jev = page.add_field({
+			fieldname: "jev", label: __("Use Jev"), fieldtype: "Check",
+			description: __("Ask TypeSafe Jev in this sandbox even when it is not live for customers"),
+		});
 		page.set_primary_action(__("New conversation"), () => this.reset(), "refresh");
 		page.add_inner_button(__("Replay a logged decision"), () => this.ask_replay());
 		this.$root = $(`
@@ -72,7 +76,7 @@ class BotPlayground {
 		this.bubble(text, "customer");
 		const r = await frappe.call({
 			method: "mmm_custom.engine.playground.simulate",
-			args: { session: this.session, text, lead: this.lead.get_value() || null },
+			args: { session: this.session, text, lead: this.lead.get_value() || null, jev: this.jev.get_value() ? 1 : 0 },
 		});
 		const out = r.message;
 		if (out.duplicate) return;
@@ -108,7 +112,7 @@ class BotPlayground {
 		frappe.prompt(
 			{ fieldname: "log", fieldtype: "Link", options: "AI Decision Log", label: __("AI Decision Log"), reqd: 1 },
 			async (values) => {
-				const r = await frappe.call({ method: "mmm_custom.engine.playground.replay", args: { log_name: values.log } });
+				const r = await frappe.call({ method: "mmm_custom.engine.playground.replay", args: { log_name: values.log, jev: this.jev.get_value() ? 1 : 0 } });
 				this.$inspector.html(
 					this.section(__("Then (as logged)"), r.message.then) +
 					this.section(__("Now (current data, templates and settings)"), r.message.now)

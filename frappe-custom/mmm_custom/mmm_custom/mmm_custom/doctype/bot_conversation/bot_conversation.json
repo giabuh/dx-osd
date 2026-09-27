@@ -20,7 +20,8 @@
   "consultant_replied",
   "is_returning",
   "is_sandbox",
-  "answered_skills"
+  "answered_skills",
+  "history"
  ],
  "fields": [
   {
@@ -115,6 +116,12 @@
    "fieldname": "answered_skills",
    "fieldtype": "JSON",
    "label": "Answered Skills"
+  },
+  {
+   "fieldname": "history",
+   "fieldtype": "JSON",
+   "label": "Recent turns (Jev state)",
+   "read_only": 1
   }
  ],
  "links": [],

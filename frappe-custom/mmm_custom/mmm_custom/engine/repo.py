@@ -194,8 +194,8 @@ def close_conversation(conversation_id):
 
 
 class FrappeRepo:
-    def __init__(self, sandbox=False, sandbox_lead=None):
-        self.sandbox, self.sandbox_lead = sandbox, sandbox_lead
+    def __init__(self, sandbox=False, sandbox_lead=None, force_jev=None):
+        self.sandbox, self.sandbox_lead, self.force_jev = sandbox, sandbox_lead, force_jev
         self._catalog = None
 
     def catalog(self):
@@ -205,6 +205,11 @@ class FrappeRepo:
 
     def today(self):
         return frappe.utils.getdate()
+
+    def jev_client(self):
+        from mmm_custom.engine.jev import jev_client
+
+        return jev_client(frappe.conf, self.catalog().settings, self.force_jev)
 
     def load_state(self, event):
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": event.conversation_id})
@@ -217,7 +222,8 @@ class FrappeRepo:
             pending_skill=d.pending_skill or "", stuck_turns=d.stuck_turns or 0,
             last_message_id=int(d.last_message_id or 0), consultant_replied=bool(d.consultant_replied),
             consultant=d.consultant or "", is_sandbox=bool(d.is_sandbox), is_returning=bool(d.is_returning),
-            turns=d.turns or 0, answered=json.loads(d.answered_skills) if d.answered_skills else [])
+            turns=d.turns or 0, answered=json.loads(d.answered_skills) if d.answered_skills else [],
+            history=d.history if isinstance(d.history, list) else (json.loads(d.history) if d.history else []))
 
     def new_state(self, event):
         """A new conversation starts from what CRM already knows about the contact (D-022, D-070)."""
@@ -248,6 +254,7 @@ class FrappeRepo:
             "consultant_replied": int(state.consultant_replied), "consultant": state.consultant or None,
             "is_sandbox": int(state.is_sandbox), "is_returning": int(state.is_returning), "turns": state.turns,
             "answered_skills": json.dumps(state.answered),
+            "history": json.dumps(state.history, ensure_ascii=False),
         }
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": state.conversation_id})
         if name:

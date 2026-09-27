@@ -13,6 +13,7 @@ MAX_MESSAGE = 2000  # Messenger text limit
 MAX_BUTTONS = 13    # Messenger quick replies per message
 MAX_TITLE = 20      # Messenger quick-reply title
 MAX_FOLLOW_UPS = 3  # D-054
+CONFIRM_YES, CONFIRM_NO = "Đúng ạ", "Không phải"
 
 FOLLOW_UP_ACTIONS = {
     "skill": lambda target: {"type": "skill", "skill": target},
@@ -131,6 +132,14 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None)
     if decision.type == "handoff":
         say(settings["handoff_template"], ctx, "handoff")
 
+    confirm_buttons = []
+    if decision.type == "confirm":
+        c = decision.confirm
+        template = settings["confirm_slot_template"] if c.get("kind") == "slot" else settings["confirm_skill_template"]
+        say(template, {**ctx, "confirm": c}, "confirm")
+        confirm_buttons = [{"title": CONFIRM_YES, "action": {"type": "confirm_yes", **c}},
+                           {"title": CONFIRM_NO, "action": {"type": "confirm_no", **c}}]
+
     ask_buttons = []
     if decision.ask:
         slot = catalog.slot(decision.ask)
@@ -138,7 +147,7 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None)
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)
 
-    for group in (action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):  # D-072: one source of buttons
+    for group in (confirm_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
         if group:
             add_buttons(reply, group)
             break

@@ -54,6 +54,10 @@ class FakeRepo:
         self.schedules, self.promotions = [], []
         self.logs, self.signals = [], []
         self.consultant_rows, self.load, self.owners = [], {}, {}
+        self.jev = None
+
+    def jev_client(self):
+        return self.jev
 
     def catalog(self):
         return self._catalog

@@ -31,8 +31,10 @@ def inspect(turn, effects):
     u, d, r, s = turn.understanding, turn.decision, turn.reply, turn.state
     return {
         "understanding": {"tapped": u.tapped, "fills": u.fills, "parents": u.parents, "ambiguous": u.ambiguous,
-                          "skills": u.skills, "matches": u.matches, "unmatched": u.unmatched},
-        "jev": {"status": "disabled"},
+                          "skills": u.skills, "matches": u.matches, "unmatched": u.unmatched,
+                          "confirm": u.confirm, "rejected": u.rejected, "intent": u.intent,
+                          "hotness": u.hotness, "wants_human": u.wants_human, "spam": u.spam},
+        "jev": turn.jev.log() if turn.jev else {"status": "disabled"},
         "decision": {"type": d.type, "reason": turn.reason, "ask": d.ask, "skills": d.skills,
                      "pending_skill": d.pending_skill, "handoff_reason": d.handoff_reason, "stuck_turns": d.stuck_turns},
         "reply": {"messages": r.messages, "buttons": [b["title"] for b in r.buttons], "variants": r.variants,
@@ -55,8 +57,8 @@ def replay_state(log, conv):
 class ReplayRepo(FrappeRepo):
     """Current catalog and data, the logged state, and no writes at all."""
 
-    def __init__(self, state):
-        super().__init__(sandbox=True)
+    def __init__(self, state, force_jev=False):
+        super().__init__(sandbox=True, force_jev=force_jev)
         self.state = state
 
     def load_state(self, event):
@@ -79,13 +81,13 @@ def _renderer():
 
 
 @frappe.whitelist() if frappe else (lambda f: f)
-def simulate(session, text, lead=None):
+def simulate(session, text, lead=None, jev=0):
     frappe.only_for(ROLES)
     cid = f"sandbox-{session}"
     last = frappe.db.get_value("Bot Conversation", {"conversation_id": cid}, "last_message_id") or 0
     event = Event("customer_message", cid, int(last) + 1, (text or "")[:1000], {"id": cid})
     effects = RecordingEffects()
-    turn = run_turn(event, FrappeRepo(sandbox=True, sandbox_lead=lead or None), effects, _renderer())
+    turn = run_turn(event, FrappeRepo(sandbox=True, sandbox_lead=lead or None, force_jev=bool(int(jev or 0))), effects, _renderer())
     frappe.db.commit()
     return json.loads(json.dumps(inspect(turn, effects), default=str))
 
@@ -98,7 +100,7 @@ def reset(session):
 
 
 @frappe.whitelist() if frappe else (lambda f: f)
-def replay(log_name):
+def replay(log_name, jev=0):
     """Run a logged message again with today's data, templates and settings; show then vs now."""
     frappe.only_for(ROLES)
     log = frappe.get_doc("AI Decision Log", log_name).as_dict()
@@ -107,6 +109,6 @@ def replay(log_name):
     state = replay_state(log, conv)
     effects = RecordingEffects()
     turn = run_turn(Event("customer_message", state.conversation_id, 0, log.get("message_text") or "",
-                          {"id": state.contact_id}), ReplayRepo(state), effects, _renderer())
+                          {"id": state.contact_id}), ReplayRepo(state, bool(int(jev or 0))), effects, _renderer())
     then = {k: log.get(k) for k in ("creation", "decision_type", "reason", "skills_answered", "reply_text", "reply_buttons")}
     return json.loads(json.dumps({"then": then, "now": inspect(turn, effects)}, default=str))

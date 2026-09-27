@@ -5,6 +5,10 @@ from dataclasses import dataclass, field
 from mmm_custom.engine.slot_types import REGISTRY, course_phrases
 from mmm_custom.engine.text import content_words, find_phrases, fold
 
+YES = frozenset({"dung", "dung roi", "dung a", "dung roi a", "phai", "phai a", "vang", "da", "da dung", "da phai",
+                 "ok", "oke", "uh", "u", "chuan", "chinh xac"})
+NO = frozenset({"khong", "khong phai", "khong a", "khong phai a", "ko", "k", "sai", "sai roi", "khong dung"})
+
 
 @dataclass
 class Understanding:
@@ -19,6 +23,12 @@ class Understanding:
     matches: list = field(default_factory=list)    # what matched, for the decision log
     spans: list = field(default_factory=list)      # (start, end) of matched phrases in the folded text
     unmatched: list = field(default_factory=list)  # content words that matched nothing
+    confirm: dict = field(default_factory=dict)
+    rejected: dict = field(default_factory=dict)
+    intent: dict = field(default_factory=dict)
+    hotness: dict = field(default_factory=dict)
+    wants_human: float = 0.0
+    spam: float = 0.0
 
 
 def apply_action(u, action):
@@ -34,6 +44,15 @@ def apply_action(u, action):
         u.skills.append(action["skill"])
     elif kind == "ask":
         u.focus = action["slot"]
+    elif kind == "confirm_yes":
+        if action.get("slot"):
+            u.fills[action["slot"]] = {"value": action["value"], "source": "confirmed", "confidence": 1.0}
+        elif action.get("skill"):
+            u.skills.append(action["skill"])
+    elif kind == "confirm_no":
+        u.rejected = {k: v for k, v in action.items() if k != "type"}
+        if action.get("slot"):
+            u.focus = action["slot"]
     elif kind == "handoff":
         u.handoff = True
 
@@ -53,6 +72,11 @@ def understand(text, state, catalog):
     if action:
         u.tapped = True
         apply_action(u, action)
+        return u
+    confirm = state.pending.get("confirm")
+    if confirm and fold(text) in YES | NO:
+        u.tapped = True
+        apply_action(u, {"type": "confirm_yes" if fold(text) in YES else "confirm_no", **confirm})
         return u
     folded = fold(text)
     pending = state.pending.get("slot") or ""
