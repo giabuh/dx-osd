@@ -2,6 +2,7 @@
   <div class="flex h-screen w-screen">
     <MobileSidebar />
     <div class="flex h-full flex-1 flex-col overflow-auto bg-surface-base">
+      <StaffSwitchBanner />
       <MobileAppHeader />
       <slot />
     </div>
@@ -12,4 +13,5 @@
 import MobileSidebar from '@/components/Mobile/MobileSidebar.vue'
 import MobileAppHeader from '@/components/Mobile/MobileAppHeader.vue'
 import GlobalModals from '@/components/Modals/GlobalModals.vue'
+import StaffSwitchBanner from '@/components/StaffSwitchBanner.vue'
 </script>

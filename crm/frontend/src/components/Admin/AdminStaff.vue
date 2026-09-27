@@ -74,6 +74,15 @@
           label="Đang đồng bộ…"
           theme="amber"
         />
+        <Button
+          v-else-if="column.key === 'switch' && canSwitch && row.person.active"
+          variant="ghost"
+          label="Xem như"
+          iconLeft="log-in"
+          :loading="switching === row.name"
+          @click.stop="viewAs(row.name)"
+        />
+        <div v-else-if="column.key === 'switch'" />
         <div v-else class="truncate text-base text-ink-gray-7">
           {{ item || '—' }}
         </div>
@@ -93,6 +102,7 @@
 <script setup>
 import StaffDialog from './StaffDialog.vue'
 import { adminCall, LEVEL_LABELS } from './adminApi'
+import { staffSwitch, switchToStaff } from '@/composables/staffSwitch'
 import { Badge, ErrorMessage, ListView, Select, TextInput } from 'frappe-ui'
 import { computed, onActivated, onDeactivated, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -109,6 +119,19 @@ const branch = ref('')
 const showDialog = ref(false)
 const selected = ref(null)
 let syncPoll = null
+const switching = ref('')
+// Demo: a System Manager opens the CRM as this consultant (mmm_custom.staff_switch).
+const canSwitch = computed(() => Boolean(staffSwitch.data?.can_switch))
+
+async function viewAs(user) {
+  switching.value = user
+  try {
+    await switchToStaff(user)
+  } catch (e) {
+    error.value = e.message
+    switching.value = ''
+  }
+}
 
 const columns = [
   { label: 'Nhân viên', key: 'full_name', width: 2.4 },
@@ -117,6 +140,7 @@ const columns = [
   { label: 'Chuyên môn', key: 'specialties', width: 2.2 },
   { label: 'Trạng thái', key: 'status', width: 1 },
   { label: 'Chatwoot', key: 'chatwoot', width: 1.2 },
+  { label: '', key: 'switch', width: 1 },
 ]
 
 const branchOptions = computed(() => [
