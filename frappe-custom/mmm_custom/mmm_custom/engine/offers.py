@@ -13,6 +13,33 @@ OFFERED, DECLINED, STARTED, DONE, REMINDED, REWARDED = "offered", "declined", "s
 LEVEL_UNSURE = "level_unsure"  # Jev noul, asked only when an offer is possible
 UNSURE_FLOOR = 0.6
 START_TITLE, LATER_TITLE = "Làm bài test", "Để sau"
+BUTTON_ACTIONS = ("trial_offer", "book_trial", "recommend_courses", "level_quiz")  # answers that bring their own buttons
+MAX_RESUMES = 2  # a customer who keeps asking other things is let go; the reminder job may bring them back
+
+
+def paused_quiz(pending):
+    """The quiz whose answer buttons the bot is waiting on, or ""."""
+    actions = list(((pending or {}).get("options") or {}).values())
+    if actions and all(a.get("type") == "slot" and a.get("slot") == "quiz_progress" for a in actions):
+        return actions[0].get("skill") or ""
+    return ""
+
+
+def focus(skills, catalog):
+    """One focus per reply (D-107): one course list, and no quiz squeezed between other answers.
+    Returns (skills, quiz dropped)."""
+    out, seen, dropped = [], set(), ""
+    for key in skills:
+        action = catalog.skills[key].action
+        if action == "recommend_courses" and action in seen:
+            continue
+        seen.add(action)
+        out.append(key)
+    quizzes = [k for k in out if catalog.skills[k].action == "level_quiz"]
+    if quizzes and len(out) > len(quizzes):
+        dropped = quizzes[0]
+        out = [k for k in out if k not in quizzes]
+    return out, dropped
 
 
 def wanted_course(slots, catalog):
@@ -37,8 +64,8 @@ def available(state, slots, catalog):
 def quiz_offer(state, u, slots, catalog, skills=()):
     """The quiz to offer this turn, or "". Not on the first turn, not while a quiz is being answered, and
     when the level is already known only if Jev reads the customer as unsure of it."""
-    if state.turns < 1 or any(catalog.skills[k].action == "level_quiz" for k in skills if k in catalog.skills):
-        return ""
+    if state.turns < 1 or any(catalog.skills[k].action in BUTTON_ACTIONS for k in skills if k in catalog.skills):
+        return ""  # not while a quiz runs, and never over another answer's buttons (a trial date, a course)
     key = available(state, slots, catalog)
     if not key:
         return ""

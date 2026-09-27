@@ -25,7 +25,7 @@ DEFAULT_SETTINGS = {
                            "nhỏ {{ quiz.total }} câu, chừng 1 phút thôi nhé ạ 😊 Làm xong {{ brand.me }} tặng {{ brand.you }} "
                            "một buổi học thử miễn phí và mã ưu đãi ạ.",
     "quiz_decline_template": "Dạ không sao ạ, khi nào tiện {{ brand.you }} cứ nhắn {{ brand.me }} làm bài test nhé ạ.",
-    "quiz_phone_template": "Dạ {{ brand.you }} cho {{ brand.me }} xin số điện thoại để {{ brand.me }} gửi lộ trình học chi tiết "
+    "quiz_phone_template": "Dạ {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} cho {{ brand.me }} xin số điện thoại để {{ brand.me }} gửi lộ trình học chi tiết "
                            "và giữ mã ưu đãi cho {{ brand.you }} nhé ạ.",
     "quiz_voucher_template": "Dạ {{ brand.me }} gửi {{ brand.you }} lộ trình khóa {{ course.name }} ạ:"
                              "{% for s in course.syllabus[:5] %}\n• {{ s }}{% endfor %}"
@@ -36,6 +36,8 @@ DEFAULT_SETTINGS = {
     "quiz_reminder_template": "Dạ {{ brand.you }} ơi, bài test {{ quiz.subject }} chỉ còn {{ quiz.left }} câu nữa là xong rồi ạ, "
                               "{{ brand.you }} làm tiếp để nhận quà nhé 🎁\nCâu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}",
     "quiz_remind_after_hours": 2,
+    "phone_check_template": "Dạ số {{ phone_suspect }} hình như chưa đủ 10 số, {{ brand.you }} kiểm tra lại giúp "
+                            "{{ brand.me }} nhé ạ.",
 }
 
 

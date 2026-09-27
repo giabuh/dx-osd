@@ -51,7 +51,8 @@
   "quiz_voucher_template",
   "voucher_prefix",
   "quiz_reminder_template",
-  "quiz_remind_after_hours"
+  "quiz_remind_after_hours",
+  "phone_check_template"
  ],
  "fields": [
   {
@@ -184,11 +185,12 @@
   {"fieldname": "quiz_voucher_template", "fieldtype": "Small Text", "label": "Test reward template", "description": "Sent once the phone is known; gets course (name, syllabus) and voucher (code, title, final_fee; code empty when no promotion applies)"},
   {"fieldname": "voucher_prefix", "fieldtype": "Data", "label": "Voucher code prefix", "description": "e.g. SV → SV-EXCEL-7K3Q. Default UD"},
   {"fieldname": "quiz_reminder_template", "fieldtype": "Small Text", "label": "Unfinished test reminder template", "description": "Sent once to a customer who stopped half-way; gets quiz (subject, left, step, total, question) and the question's buttons"},
-  {"fieldname": "quiz_remind_after_hours", "fieldtype": "Int", "label": "Remind after (hours of silence)", "description": "Default 2; never later than 20 hours (Messenger's 24-hour window)"}
+  {"fieldname": "quiz_remind_after_hours", "fieldtype": "Int", "label": "Remind after (hours of silence)", "description": "Default 2; never later than 20 hours (Messenger's 24-hour window)"},
+  {"fieldname": "phone_check_template", "fieldtype": "Small Text", "label": "Phone looks wrong template", "description": "When the customer sends a number with a digit missing or extra; gets phone_suspect"}
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-09-27 12:00:00.000000",
+ "modified": "2026-09-27 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Lead Engine Settings",

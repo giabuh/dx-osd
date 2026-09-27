@@ -481,13 +481,15 @@
  {
   "skill_key": "hotline",
   "title": "hotline, Zalo",
-  "jev_description": "The customer asks for the phone number or Zalo",
+  "jev_description": "The customer asks for the centre's hotline, phone number or Zalo (not when the customer is giving their own number)",
   "examples": "cho xin số hotline\nzalo bên mình là gì",
   "aliases": "hotline, so dien thoai, zalo, lien he",
   "parameters": [],
   "missing_policy": "ask",
   "action_type": "answer_template",
-  "action_config": {},
+  "action_config": {
+   "not_when_customer_gives_phone": true
+  },
   "templates": [
    {
     "variant_key": "default",
@@ -976,17 +978,17 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+    "template": "Dạ {% if quiz.unclear %}{{ brand.you }} chọn giúp em một đáp án bên dưới nhé ạ. {% elif quiz.resumed %}em ghi nhận rồi ạ, {{ brand.you }} làm tiếp bài test giúp em nhé. {% elif quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
    },
    {
     "variant_key": "start",
-    "when": "not quiz.done and quiz.step == 1",
+    "when": "not quiz.done and quiz.step == 1 and not quiz.resumed",
     "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
    },
    {
     "variant_key": "result",
     "when": "quiz.done",
-    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+    "template": "Dạ {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ.{% endif %} Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.focus %} Phần {{ quiz.focus.topic }} {{ brand.you }} còn chưa chắc, khóa này có dạy kỹ ở mục “{{ quiz.focus.lesson }}” ạ.{% endif %}{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -1098,17 +1100,17 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+    "template": "Dạ {% if quiz.unclear %}{{ brand.you }} chọn giúp em một đáp án bên dưới nhé ạ. {% elif quiz.resumed %}em ghi nhận rồi ạ, {{ brand.you }} làm tiếp bài test giúp em nhé. {% elif quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
    },
    {
     "variant_key": "start",
-    "when": "not quiz.done and quiz.step == 1",
+    "when": "not quiz.done and quiz.step == 1 and not quiz.resumed",
     "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
    },
    {
     "variant_key": "result",
     "when": "quiz.done",
-    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+    "template": "Dạ {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ.{% endif %} Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.focus %} Phần {{ quiz.focus.topic }} {{ brand.you }} còn chưa chắc, khóa này có dạy kỹ ở mục “{{ quiz.focus.lesson }}” ạ.{% endif %}{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -1220,17 +1222,17 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+    "template": "Dạ {% if quiz.unclear %}{{ brand.you }} chọn giúp em một đáp án bên dưới nhé ạ. {% elif quiz.resumed %}em ghi nhận rồi ạ, {{ brand.you }} làm tiếp bài test giúp em nhé. {% elif quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
    },
    {
     "variant_key": "start",
-    "when": "not quiz.done and quiz.step == 1",
+    "when": "not quiz.done and quiz.step == 1 and not quiz.resumed",
     "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
    },
    {
     "variant_key": "result",
     "when": "quiz.done",
-    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+    "template": "Dạ {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ.{% endif %} Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.focus %} Phần {{ quiz.focus.topic }} {{ brand.you }} còn chưa chắc, khóa này có dạy kỹ ở mục “{{ quiz.focus.lesson }}” ạ.{% endif %}{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -1361,17 +1363,17 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+    "template": "Dạ {% if quiz.unclear %}{{ brand.you }} chọn giúp em một đáp án bên dưới nhé ạ. {% elif quiz.resumed %}em ghi nhận rồi ạ, {{ brand.you }} làm tiếp bài test giúp em nhé. {% elif quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
    },
    {
     "variant_key": "start",
-    "when": "not quiz.done and quiz.step == 1",
+    "when": "not quiz.done and quiz.step == 1 and not quiz.resumed",
     "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
    },
    {
     "variant_key": "result",
     "when": "quiz.done",
-    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+    "template": "Dạ {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ.{% endif %} Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.focus %} Phần {{ quiz.focus.topic }} {{ brand.you }} còn chưa chắc, khóa này có dạy kỹ ở mục “{{ quiz.focus.lesson }}” ạ.{% endif %}{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -1486,17 +1488,17 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+    "template": "Dạ {% if quiz.unclear %}{{ brand.you }} chọn giúp em một đáp án bên dưới nhé ạ. {% elif quiz.resumed %}em ghi nhận rồi ạ, {{ brand.you }} làm tiếp bài test giúp em nhé. {% elif quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
    },
    {
     "variant_key": "start",
-    "when": "not quiz.done and quiz.step == 1",
+    "when": "not quiz.done and quiz.step == 1 and not quiz.resumed",
     "template": "Dạ em gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 {{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
    },
    {
     "variant_key": "result",
     "when": "quiz.done",
-    "template": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ{% endif %}. Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
+    "template": "Dạ {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} làm đúng {{ quiz.score }}/{{ quiz.total }} câu{% if quiz.score * 2 >= quiz.total %}, giỏi quá ạ 🎉{% else %} rồi ạ, em đã biết nên bắt đầu từ đâu cho {{ brand.you }} rồi ạ.{% endif %} Trình độ hiện tại của {{ brand.you }} là {{ quiz.level_label }}, em gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} tiến bộ nhanh nhất ạ.{% if quiz.focus %} Phần {{ quiz.focus.topic }} {{ brand.you }} còn chưa chắc, khóa này có dạy kỹ ở mục “{{ quiz.focus.lesson }}” ạ.{% endif %}{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn ngày bên dưới nhé ạ.{% endif %}"
    }
   ],
   "follow_ups": [],
@@ -1608,11 +1610,11 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
+    "template": "Dạ {% if quiz.unclear %}{{ brand.you }} chọn giúp em một ý bên dưới nhé ạ. {% elif quiz.resumed %}em ghi nhận rồi ạ, {{ brand.you }} trả lời tiếp giúp em nhé. {% endif %}{{ 'Câu' if quiz.resumed else 'câu' }} {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}"
    },
    {
     "variant_key": "start",
-    "when": "not quiz.done and quiz.step == 1",
+    "when": "not quiz.done and quiz.step == 1 and not quiz.resumed",
     "template": "Dạ em hỏi {{ brand.you }} {{ quiz.total }} câu nhỏ về bé để xếp lớp vừa sức nhé ạ 😊\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
    },
    {

@@ -8,7 +8,7 @@ At most one confirmation per turn, in slot order."""
 import copy
 
 from mmm_custom.engine.context import display
-from mmm_custom.engine.jev_questions import COURSE_FAQ, NONE, faq_course
+from mmm_custom.engine.jev_questions import COURSE_FAQ, NONE, REPLY_TO_BOT, faq_course
 from mmm_custom.engine.offers import LEVEL_UNSURE
 from mmm_custom.intelligence import HOTNESS
 
@@ -145,6 +145,18 @@ def _course_faq(u, answers, questions, course, catalog):
         u.matches.append({"faq": course.code, "index": int(choice), "kind": "jev", "confidence": round(p, 3)})
 
 
+def _reply_to_bot(u, answers, questions, state, catalog):
+    """Jev tied a typed message to one of the offered buttons: act as if it was tapped."""
+    from mmm_custom.engine.understand import apply_action
+
+    choice, p = _choice(answers, questions, REPLY_TO_BOT)
+    actions = list((state.pending.get("options") or {}).values())
+    if choice is None or p < float(catalog.settings["choice_act"]) or int(choice) >= len(actions):
+        return
+    apply_action(u, actions[int(choice)])
+    u.matches.append({"button": int(choice), "kind": "jev", "confidence": round(p, 3)})
+
+
 def combine(u, answers, questions, state, catalog):
     if u.tapped:
         return u  # buttons (and typed answers to a confirmation) are never overridden
@@ -155,5 +167,6 @@ def combine(u, answers, questions, state, catalog):
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)
     _course_faq(out, answers, questions, course, catalog)
+    _reply_to_bot(out, answers, questions, state, catalog)
     _signals(out, answers, questions, catalog)
     return out

@@ -39,7 +39,7 @@
    "fieldname": "slot_type",
    "fieldtype": "Select",
    "label": "Slot Type",
-   "options": "catalog\nchoice\nphone\nnumber\ntext\nreferral_code",
+   "options": "catalog\nchoice\nphone\nnumber\ntext\nreferral_code\nperson_name",
    "reqd": 1,
    "in_list_view": 1
   },
@@ -105,7 +105,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-26 00:00:00.000000",
+ "modified": "2026-09-27 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Bot Slot",

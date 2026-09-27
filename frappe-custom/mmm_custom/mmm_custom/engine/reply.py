@@ -130,7 +130,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
     for key in decision.skills:
         skill = catalog.skills[key]
         try:
-            out = run_action(skill, ctx, decision.slots, catalog, data, today, jev, jev_state)
+            action_ctx = {**ctx, "resumed": key == decision.resume, "unclear": key == decision.resume and decision.unclear}
+            out = run_action(skill, action_ctx, decision.slots, catalog, data, today, jev, jev_state)
         except Exception as e:
             reply.errors.append({"type": "action_error", "source": key, "detail": str(e)[:300]})
             out = {}
@@ -147,7 +148,7 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
             reply.variants.append({"skill": key, "variant": template.key})
         reply.hold = reply.hold or bool(out.get("_hold"))
         reply.attachments += out.get("_attachments", [])
-        action_buttons += out.get("_buttons", [])
+        action_buttons = out.get("_buttons") or action_buttons  # one set of buttons: the last answer that has some
         follow_ups += [{"title": f.title, "action": FOLLOW_UP_ACTIONS[f.target_type](f.target)}
                        for f in skill.follow_ups if f.target_type in FOLLOW_UP_ACTIONS]
 
@@ -175,8 +176,13 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
     ask_key = reply.ask or ("" if reply.hold else decision.ask)
     if ask_key:
         slot = catalog.slot(ask_key)
-        why_phone = decision.quiz_done and slot.type == "phone" and settings["quiz_phone_template"]
-        say(settings["quiz_phone_template"] if why_phone else slot.ask_template, ctx, f"slot:{slot.key}")
+        template = slot.ask_template
+        if slot.type == "phone" and decision.phone_check and settings["phone_check_template"]:
+            template = settings["phone_check_template"]
+        elif slot.type == "phone" and settings["quiz_phone_template"] and (
+                decision.quiz_done or (decision.slots.get("placement") or {}).get("source") == "quiz"):  # earns the reward
+            template = settings["quiz_phone_template"]
+        say(template, {**ctx, "phone_suspect": decision.phone_check}, f"slot:{slot.key}")
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)
 

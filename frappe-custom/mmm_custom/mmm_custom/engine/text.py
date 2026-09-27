@@ -77,6 +77,57 @@ def find_phone(text):
     return None
 
 
+PHONE_LIKE_RE = re.compile(r"(?<![\d.,])(?:\+?84|0)(?:[\s.\-]?\d){7,11}(?![\d.,]*\d)")
+
+
+def find_phone_candidate(text):
+    """Digits that look like a Vietnamese phone number but are not one (a digit missing or extra), as the
+    customer wrote them without separators; None when there is a valid number or nothing phone-like."""
+    if find_phone(text):
+        return None
+    for m in PHONE_LIKE_RE.finditer(text or ""):
+        digits = re.sub(r"[\s.\-]", "", m.group(0))
+        if 9 <= len(digits.lstrip("+")) <= 12:
+            return digits
+    return None
+
+
+NAME_AFTER_TEN_RE = re.compile(r"(?:^|\s)t[eê]n\s+(?:(?:c[uủ]a\s+)?(?:em|m[iì]nh|t[oô]i|anh|ch[iị]|con|ch[aá]u)\s+)?"
+                               r"(?:l[aà]\s+)?(.+)", re.IGNORECASE)
+NAME_LEAD_RE = re.compile(r"^(?:d[aạ]\s+|v[aâ]ng\s+)?(?:(?:em|m[iì]nh|t[oô]i|anh|ch[iị])\s+)?(?:l[aà]\s+|t[eê]n\s+)?"
+                          r"(?:(?:anh|ch[iị]|c[oô]|ch[uú])\s+)?", re.IGNORECASE)
+NAME_STOP_RE = re.compile(r"[,.;:!?\n]|\s(?:s[dđ]t|s[oố]\b|đi[eệ]n tho[aạ]i|h[oọ]c\b|mu[oố]n\b|nh[eé]\b|nha\b|"
+                          r"[aạ]\b|nh[aá]\b|ơi\b)", re.IGNORECASE)
+MAX_NAME_WORDS = 4
+NOT_NAMES = frozenset("ok oke okie okay vang da dung khong ko co roi duoc chua uh um a nhe nha em anh chi minh toi "
+                      "ban thoi hi hello alo chao xin cam on hoc lop khoa gi nao sao the".split())
+CHILD_NAME_RE = re.compile(r"\b(?:con|chau|be)\s+(?:(?:em|minh|toi|nha em)\s+)?ten\b|\bten\s+(?:cua\s+)?(?:con|chau|be)\b")
+
+
+def clean_name(raw):
+    """"hùng ạ" → "Hùng"; None when it does not look like a person's name."""
+    text = NAME_STOP_RE.split(" " + (raw or "").strip(), maxsplit=1)[0].strip()
+    words = text.split()
+    if not words or len(words) > MAX_NAME_WORDS or not all(w.isalpha() for w in words):
+        return None
+    if any(fold(w) in NOT_NAMES for w in words):
+        return None
+    return " ".join(w[:1].upper() + w[1:].lower() for w in words)
+
+
+def extract_name(text, asked=False):
+    """The customer's name from "mình tên Hùng", "tên em là nguyễn văn an ạ", or, when the bot has just
+    asked for it, a bare answer such as "Hùng" / "em là Lan". None otherwise."""
+    if CHILD_NAME_RE.search(fold(text)):
+        return None  # "con tên là Bin": the child's name, not the customer's
+    m = NAME_AFTER_TEN_RE.search(text or "")
+    if m:
+        return clean_name(m.group(1))
+    if asked:
+        return clean_name(NAME_LEAD_RE.sub("", (text or "").strip(), count=1))
+    return None
+
+
 def slug(text):
     return fold(text).replace(" ", "-")
 

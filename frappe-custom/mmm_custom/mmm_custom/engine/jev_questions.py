@@ -4,6 +4,7 @@ English carrying the Vietnamese names and aliases customers use. Keys:
     skill:<key>    one noul per Bot Skill        intent · hotness · wants_human (D-032)
     course_faq     which FAQ of the known course the message asks (D-085)
     level_unsure   unsure of their level, asked only while a level test can be offered (D-106)
+    reply_to_bot   which of the buttons the bot just offered a typed message means (D-107)
 """
 
 from mmm_custom.engine.context import shown_slots
@@ -16,6 +17,7 @@ NONE = "none"
 NONE_TEXT = "None of these, or not said in the chat"
 MAX_HISTORY = 20  # 10 turns of customer + bot lines (D-061, D-074)
 COURSE_FAQ = "course_faq"
+REPLY_TO_BOT = "reply_to_bot"
 
 
 def _named(name, aliases=()):
@@ -99,6 +101,12 @@ def build_questions(state, u, catalog, skills=True):
         if course:
             q[COURSE_FAQ] = _choice(f"Which of these questions about the course '{course.name}' does the customer's latest message ask?",
                                     {str(i): _named(f.question, f.examples) for i, f in enumerate(course.faqs)})
+    options = list((state.pending.get("options") or {}))
+    if options and not u.tapped:  # a typed answer the keyword tier could not tie to a button (D-107)
+        q[REPLY_TO_BOT] = _choice("The bot's last message offered these buttons. Which one does the customer's latest "
+                                  "message choose, in their own words (agreeing, refusing, a date, an answer)? "
+                                  "Choose none when they ask or say something else.",
+                                  {str(i): title for i, title in enumerate(options)})
     q["intent"] = {"type": "choice", "instructions": "What does the customer want in this Vietnamese chat with a training centre?",
                    "criteria": INTENTS}
     q["hotness"] = {"type": "score", "instructions": "How close is the customer to enrolling, based on the whole chat?",

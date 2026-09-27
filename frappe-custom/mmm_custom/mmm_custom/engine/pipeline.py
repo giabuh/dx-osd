@@ -102,7 +102,10 @@ def apply_decision(state, decision, reply, event, catalog):
     state.pending_skill = reply.pending_skill or decision.pending_skill
     state.answered = list(dict.fromkeys(state.answered + [k for k in decision.skills if k != reply.pending_skill]))
     if decision.type != "silent":
+        resumes = int(state.pending.get("resumes") or 0) + 1 if decision.resume else 0
         state.pending = {"slot": reply.ask or ("" if reply.hold else decision.ask), "options": reply.options()}
+        if resumes:
+            state.pending["resumes"] = resumes
         if decision.confirm:
             state.pending["confirm"] = decision.confirm
     if reply.ask:
