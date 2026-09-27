@@ -95,14 +95,45 @@ def sync_all():
         logger.info("staff sync skipped: chatwoot_api_token is not configured")
         return None
     rows = frappe.get_all("Consultant", fields=["name", "full_name", "branch", "handles_b2b", "active",
-                                                "chatwoot_agent_id"])
+                                                "chatwoot_agent_id", "chatwoot_access_token"])
     consultants = [{**r, "email": r.name} for r in rows]
     ids, counts = sync(client, consultants, frappe.get_all("CRM Territory", pluck="name"))
     for r in rows:
         if r.name in ids and r.chatwoot_agent_id != ids[r.name]:
             frappe.db.set_value("Consultant", r.name, "chatwoot_agent_id", ids[r.name], update_modified=False)
+    counts["tokens"] = store_tokens(frappe.conf, [r for r in rows if r.name in ids])
     frappe.db.commit()
     return counts
+
+
+def needs_token(row):
+    """An active consultant with a Chatwoot agent but no stored own token. Pure."""
+    return bool(row.get("active") and not row.get("chatwoot_access_token"))
+
+
+def store_tokens(conf, rows):
+    """Each consultant's own Chatwoot token, so answers from a Lead's Messages tab go out under their name
+    (mmm_custom.lead_chat). Needs the Platform App token that scripts/configure-chatwoot.py writes."""
+    platform_token = conf.get("chatwoot_platform_token")
+    if not platform_token:
+        return 0
+    from frappe.utils.password import set_encrypted_password
+
+    from mmm_custom.chatwoot_client import platform_user_token
+
+    base, stored = conf.get("chatwoot_api_url") or "http://chatwoot-rails:3000", 0
+    for row in filter(needs_token, rows):
+        try:
+            token = platform_user_token(base, platform_token, row.get("full_name") or row["name"], row["name"])
+        except Exception:
+            logger.exception("chatwoot token fetch failed for %s", row["name"])
+            continue
+        if token:
+            # db-level writes: saving the Consultant would enqueue this sync again (doc_events on_update)
+            set_encrypted_password("Consultant", row["name"], token, "chatwoot_access_token")
+            frappe.db.set_value("Consultant", row["name"], "chatwoot_access_token", "*" * 8, update_modified=False)
+            stored += 1
+    return stored
 
 
 def enqueue_sync(doc=None, method=None):
