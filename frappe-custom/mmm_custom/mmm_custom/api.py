@@ -229,6 +229,21 @@ def chatwoot_sync():
             lead = frappe.get_doc(lead_data).insert(ignore_permissions=True)
             lead_name = lead.name
 
+            try:
+                from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+                lead_title = "Khách hàng tiềm năng mới"
+                lead_src = lead_data.get("source") or "Messenger"
+                course_text = f" quan tâm khóa học {course_interest}" if course_interest else ""
+                notify_crm_users(
+                    title=lead_title,
+                    message=f"Học viên {first_name} vừa liên hệ qua {lead_src}{course_text}.",
+                    notification_type="Assignment",
+                    reference_doctype="CRM Lead",
+                    reference_name=lead_name,
+                )
+            except Exception:
+                pass
+
     if courses:
         try:
             add_products(lead_name, courses)
