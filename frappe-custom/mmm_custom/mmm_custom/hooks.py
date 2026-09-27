@@ -129,6 +129,8 @@ scheduler_events = {
 		# Heals failed staff syncs and gives newly connected Facebook pages the bot.
 		"*/10 * * * *": ["mmm_custom.staff_sync.sync_all"],
 		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
+		# Level tests left half-way get one reminder (D-106).
+		"*/15 * * * *": ["mmm_custom.quiz_reminders.run"],
 	},
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
 	"daily": ["mmm_custom.engine.log.purge_old_logs"],

@@ -363,6 +363,20 @@ class FrappeRepo:
     def write_signal(self, row):
         frappe.get_doc({"doctype": "Bot Learning Signal", **row}).insert(ignore_permissions=True)
 
+    def save_quiz_attempt(self, state, change):
+        """One Quiz Attempt per (conversation, quiz), updated as the level test moves on (D-106)."""
+        now = frappe.utils.now_datetime()
+        values = {k: (now if k.endswith("_at") and v is True else v) for k, v in change.items() if k != "quiz"}
+        values.update(lead=state.lead or None, is_sandbox=int(state.is_sandbox))
+        name = frappe.db.get_value("Quiz Attempt", {"conversation": state.conversation_id, "quiz": change["quiz"]})
+        if name:
+            doc = frappe.get_doc("Quiz Attempt", name)
+            doc.update(values)
+            doc.save(ignore_permissions=True)
+        else:
+            frappe.get_doc({"doctype": "Quiz Attempt", "conversation": state.conversation_id, "quiz": change["quiz"],
+                            **values}).insert(ignore_permissions=True)
+
     def consultants(self):
         specialties = _children("Course Group Link", "Consultant", "specialties", ["course_group"])
         return [{**r, "specialties": [s["course_group"] for s in specialties.get(r.name, [])]}

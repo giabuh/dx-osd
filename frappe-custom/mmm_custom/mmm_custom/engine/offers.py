@@ -81,3 +81,33 @@ def track(offers, decision, catalog, declined=""):
     if decision.voucher.get("quiz"):
         out[decision.voucher["quiz"]] = REWARDED
     return out
+
+
+def attempt_changes(before, after, decision, catalog):
+    """What changed for the Quiz Attempt rows this turn: [{quiz, status?, <field>: value, <x>_at: True}].
+    `<x>_at: True` means "now" (the repo stamps it)."""
+    out = []
+    for key, now in after.items():
+        was = (before or {}).get(key)
+        if now == was:
+            continue
+        row = {"quiz": key}
+        if now == OFFERED:
+            row.update(status=OFFERED, offered_at=True)
+        elif now == DECLINED:
+            row.update(status=DECLINED)
+        elif now == STARTED and was != REMINDED:
+            row.update(status=STARTED, started_at=True)
+        if now in (DONE, REWARDED) and was not in (DONE, REWARDED):
+            skill = catalog.skills[key]
+            answers = quiz.progress(value(decision.slots, skill.config.get("slot", "quiz_progress")), key)
+            res = quiz.result(skill.config, answers, value(decision.slots, "goal") or "") or {}
+            row.update(status=DONE, finished_at=True, score=res.get("score", 0), total=res.get("total", 0),
+                       level=res.get("level", ""), missed=", ".join(res.get("missed", [])))
+            if was is None:
+                row["started_at"] = True
+        if now == REWARDED:
+            row.update(phone_after=1, voucher_code=decision.voucher.get("code", ""))
+        if len(row) > 1:
+            out.append(row)
+    return out

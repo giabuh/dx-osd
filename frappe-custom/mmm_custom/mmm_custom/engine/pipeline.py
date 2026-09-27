@@ -18,7 +18,7 @@ from mmm_custom.engine.jev import JevResult
 from mmm_custom.engine.jev_questions import MAX_HISTORY, build_questions, jev_state
 from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.log import log_row, signals
-from mmm_custom.engine.offers import track
+from mmm_custom.engine.offers import attempt_changes, track
 from mmm_custom.engine.qualify import LABELS, NEW, lead_status
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.state import filled, value
@@ -306,6 +306,7 @@ def run_turn(event, repo, effects, render):
         except Exception as e:  # never raise into RQ: a retry would answer twice
             turn.reply.errors.append({"type": "send_failed", "detail": str(e)[:300]})
 
+    offers_before = dict(state.offers)
     apply_decision(state, turn.decision, turn.reply, event, catalog)
     if turn.decision.close:
         try:
@@ -321,6 +322,11 @@ def run_turn(event, repo, effects, render):
             turn.reply.errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
     book_trials(turn, effects, catalog, plan)
     repo.save_state(state)
+    for change in attempt_changes(offers_before, state.offers, turn.decision, catalog):
+        try:
+            repo.save_quiz_attempt(state, change)
+        except Exception as e:  # statistics must never break a customer's turn
+            turn.reply.errors.append({"type": "quiz_attempt_failed", "detail": str(e)[:300]})
     emit_events(effects, state, turn.decision)
     try:
         repo.write_log(log_row(turn, turn.jev.log()))
