@@ -108,10 +108,13 @@ COURSE_META = {
 
 class FacebookPost(Document):
     @frappe.whitelist()
-    def generate_ai_content(self):
+    def generate_ai_content(self, user_feedback=None):
         """Generate high quality Facebook post caption using Gemini AI or 9Router."""
         course_name = self.course or "Tiếng Anh"
         title_context = self.title or f"Khóa học {course_name}"
+        feedback = user_feedback or getattr(self, "ai_feedback", None) or ""
+        if user_feedback:
+            self.ai_feedback = user_feedback
 
         prompt = (
             f"Bạn là chuyên viên marketing nội dung của trung tâm EduFlow Academy.\n"
@@ -120,11 +123,18 @@ class FacebookPost(Document):
             f"- Ngắn gọn dưới 150 từ, tiếng Việt, đầy cảm hứng\n"
             f"- Có emoji sinh động\n"
             f"- Nêu bật 3 lợi ích chính dạng gạch đầu dòng\n"
-            f"- Đề cập 3 cơ sở: Quận 1, Bình Thạnh, Thủ Đức\n"
+            f"- Đề cập rõ 3 cơ sở: CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức (kèm hotline 0901.888.666)\n"
             f"- Kêu gọi hành động: nhắn tin/inbox fanpage để nhận tư vấn và ưu đãi\n"
             f"- Kèm hashtag: #EduFlow #EduFlowAcademy #{course_name.replace(' ', '')}\n"
             f"- Tuyệt đối KHÔNG dùng markdown (không dùng **, ##), trả về chữ thuần."
         )
+
+        if feedback.strip():
+            prompt += (
+                f"\n\nLƯU Ý ĐẶC BIỆT / GỢI Ý ĐIỀU CHỈNH TỪ NGƯỜI DÙNG:\n"
+                f"\"{feedback.strip()}\"\n"
+                f"Hãy tinh chỉnh nội dung bài viết, giọng văn hoặc ưu đãi theo đúng mong muốn trên!"
+            )
 
         content = None
         gemini_key = os.getenv("GEMINI_API_KEY") or frappe.conf.get("gemini_api_key")
@@ -169,10 +179,14 @@ class FacebookPost(Document):
             frappe.throw(_("Không thể tạo nội dung qua AI. Vui lòng kiểm tra API Key."))
 
     @frappe.whitelist()
-    def generate_banner(self):
+    def generate_banner(self, user_feedback=None):
         """Generate a professional 1080x1080 Facebook Ad creative with hero photo and branding."""
         if not Image:
             frappe.throw(_("Thư viện Pillow chưa được cài đặt trên hệ thống."))
+
+        feedback = user_feedback or getattr(self, "ai_feedback", None) or ""
+        if user_feedback:
+            self.ai_feedback = user_feedback
 
         meta = COURSE_META.get(self.course, COURSE_META["Chung"])
         W, H = 1080, 1080
@@ -208,8 +222,9 @@ class FacebookPost(Document):
         f_item_title = get_font(27, bold=True)
         f_item_sub = get_font(21, bold=False)
         f_cta = get_font(32, bold=True)
-        f_foot = get_font(25, bold=False)
-        f_foot_b = get_font(25, bold=True)
+        f_foot_b = get_font(23, bold=True)
+        f_foot_addr = get_font(20, bold=False)
+        f_foot_hotline = get_font(20, bold=False)
         f_promo = get_font(23, bold=True)
 
         # Top Bar
@@ -239,6 +254,18 @@ class FacebookPost(Document):
 
             # Promo Badge
             promo_text = meta.get("promo", "ƯU ĐÃI HÔM NAY")
+            if feedback.strip():
+                fb_clean = feedback.strip()
+                if len(fb_clean) <= 26:
+                    promo_text = fb_clean.upper()
+                else:
+                    import re
+                    m = re.search(r"((?:giảm|tặng|học bổng|ưu đãi|sale|free|miễn phí)[^,\.\n]{2,25})", fb_clean, re.IGNORECASE)
+                    if m:
+                        promo_text = m.group(1).strip().upper()
+                    else:
+                        promo_text = fb_clean[:25].upper()
+
             bbox_p = draw.textbbox((0, 0), promo_text, font=f_promo)
             pw = bbox_p[2] - bbox_p[0]
             badge_left = max(550, 1020 - pw - 40)
@@ -257,15 +284,16 @@ class FacebookPost(Document):
             y_ben += 115
 
         # Call to Action Button
-        draw.rounded_rectangle([50, 835, 510, 925], radius=24, fill=accent_color)
+        draw.rounded_rectangle([50, 835, 510, 915], radius=24, fill=accent_color)
         bbox_cta = draw.textbbox((0, 0), "INBOX ĐĂNG KÝ NGAY", font=f_cta)
         cta_w = bbox_cta[2] - bbox_cta[0]
-        draw.text((50 + (460 - cta_w) // 2, 860), "INBOX ĐĂNG KÝ NGAY", fill=(255, 255, 255), font=f_cta)
+        draw.text((50 + (460 - cta_w) // 2, 855), "INBOX ĐĂNG KÝ NGAY", fill=(255, 255, 255), font=f_cta)
 
         # Footer Bar
-        draw.rectangle([0, 960, W, H], fill=(15, 23, 42))
-        draw.text((50, 985), "Chi nhánh: Quận 1 • Bình Thạnh • Thủ Đức", fill=(255, 255, 255), font=f_foot)
-        draw.text((50, 1025), "Hotline: 0901.888.666  |  Website: eduflow.vn", fill=(148, 163, 184), font=f_foot_b)
+        draw.rectangle([0, 935, W, H], fill=(15, 23, 42))
+        draw.text((50, 952), "Hệ thống cơ sở:  CS1: Bình Thạnh   •   CS2: Quận 1   •   CS3: Thủ Đức", fill=(255, 255, 255), font=f_foot_b)
+        draw.text((50, 988), "Địa chỉ: 475A Điện Biên Phủ (Bình Thạnh)  •  45 Lê Duẩn (Q.1)  •  10 Võ Văn Ngân (Thủ Đức)", fill=(203, 213, 225), font=f_foot_addr)
+        draw.text((50, 1028), "Hotline: 0901.888.666   |   Website: eduflow.vn   |   Inbox Fanpage nhận tư vấn ngay", fill=(148, 163, 184), font=f_foot_hotline)
 
         # Save to buffer and attach via Frappe
         buf = io.BytesIO()
@@ -276,7 +304,8 @@ class FacebookPost(Document):
             self.insert(ignore_permissions=True)
 
         file_name = f"banner_{meta['key']}_{self.name}.jpg"
-        file_doc = save_file(file_name, buf.getvalue(), self.doctype, self.name, is_private=0)
+        doctype_name = getattr(self, "doctype", "Facebook Post")
+        file_doc = save_file(file_name, buf.getvalue(), doctype_name, self.name, is_private=0)
 
         self.image = file_doc.file_url
         self.save()
@@ -306,11 +335,12 @@ class FacebookPost(Document):
 
                 if image_abs_path:
                     url = f"https://graph.facebook.com/v21.0/{page_id}/photos"
+                    mime = "image/jpeg" if image_abs_path.lower().endswith((".jpg", ".jpeg")) else "image/png"
                     with open(image_abs_path, "rb") as f:
                         resp = requests.post(
                             url,
                             data={"caption": self.content, "access_token": token},
-                            files={"source": (os.path.basename(image_abs_path), f, "image/png")},
+                            files={"source": (os.path.basename(image_abs_path), f, mime)},
                             timeout=35,
                         )
                 else:
@@ -329,7 +359,21 @@ class FacebookPost(Document):
                     timeout=35,
                 )
 
-            resp.raise_for_status()
+            if not resp.ok:
+                err_detail = resp.text
+                try:
+                    err_json = resp.json()
+                    if "error" in err_json:
+                        err_msg = err_json["error"].get("message", "")
+                        err_code = err_json["error"].get("code", "")
+                        if err_code == 190 or "expired" in err_msg.lower():
+                            err_detail = f"Facebook Page Access Token đã hết hạn (Session expired). Vui lòng cấp lại Token mới. Chi tiết: {err_msg}"
+                        else:
+                            err_detail = f"{err_msg} (Mã lỗi FB: {err_code})"
+                except Exception:
+                    pass
+                raise Exception(err_detail)
+
             data = resp.json()
             post_id = data.get("id") or data.get("post_id")
 
@@ -339,6 +383,7 @@ class FacebookPost(Document):
             self.posted_at = now_datetime()
             self.error_message = ""
             self.save()
+            frappe.db.commit()
 
             frappe.msgprint(_("Đã đăng thành công lên Facebook! ID: {0}").format(post_id), alert=True)
             return {"status": "success", "post_id": post_id, "url": self.fb_post_url}
@@ -348,6 +393,7 @@ class FacebookPost(Document):
             self.status = "Failed"
             self.error_message = error_msg
             self.save()
+            frappe.db.commit()
             frappe.throw(_("Đăng bài thất bại: {0}").format(error_msg))
 
 

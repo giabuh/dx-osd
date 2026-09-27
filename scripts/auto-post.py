@@ -65,7 +65,7 @@ COURSE_TEMPLATES = {
             "✅ Lớp học nhỏ 8-12 học viên\n"
             "✅ Phương pháp giao tiếp thực tế\n"
             "✅ Cam kết đầu ra\n\n"
-            "📍 EduFlow Academy - Bình Thạnh | Quận 1 | Thủ Đức\n"
+            "📍 Cơ sở: CS1 Bình Thạnh | CS2 Quận 1 | CS3 Thủ Đức\n"
             "📞 Inbox ngay để được tư vấn MIỄN PHÍ!\n\n"
             "#EduFlow #TiengAnh #HocTiengAnh #English",
 
@@ -92,7 +92,7 @@ COURSE_TEMPLATES = {
             "✅ Hồ bơi sạch, tiêu chuẩn\n"
             "✅ Lớp 4-6 bé, kèm sát\n"
             "✅ Bé biết bơi sau 8-10 buổi\n\n"
-            "📍 EduFlow Academy - Bình Thạnh | Quận 1 | Thủ Đức\n"
+            "📍 Cơ sở: CS1 Bình Thạnh | CS2 Quận 1 | CS3 Thủ Đức\n"
             "📞 Inbox ngay để đăng ký!\n\n"
             "#EduFlow #HocBoi #BoiLoi #Swimming",
 
@@ -117,7 +117,7 @@ COURSE_TEMPLATES = {
             "✅ Giải toán sáng tạo\n"
             "✅ Phương pháp học qua trò chơi\n"
             "✅ Phù hợp bé 5-12 tuổi\n\n"
-            "📍 EduFlow Academy - Bình Thạnh | Quận 1 | Thủ Đức\n"
+            "📍 Cơ sở: CS1 Bình Thạnh | CS2 Quận 1 | CS3 Thủ Đức\n"
             "📞 Inbox để đăng ký lớp học thử MIỄN PHÍ!\n\n"
             "#EduFlow #ToanTuDuy #Math #TuDuyLogic",
 
@@ -168,9 +168,9 @@ def create_post_image(course_key: str, output_path: str) -> str:
     f_sub = get_font(28, bold=True)
     f_item_title = get_font(27, bold=True)
     f_item_sub = get_font(21, bold=False)
-    f_cta = get_font(32, bold=True)
-    f_foot = get_font(25, bold=False)
-    f_foot_b = get_font(25, bold=True)
+    f_foot_b = get_font(23, bold=True)
+    f_foot_addr = get_font(20, bold=False)
+    f_foot_hotline = get_font(20, bold=False)
     f_promo = get_font(23, bold=True)
 
     # Top Bar
@@ -238,15 +238,16 @@ def create_post_image(course_key: str, output_path: str) -> str:
         y_ben += 115
 
     # Call to Action Button
-    draw.rounded_rectangle([50, 835, 510, 925], radius=24, fill=accent_color)
+    draw.rounded_rectangle([50, 835, 510, 915], radius=24, fill=accent_color)
     bbox_cta = draw.textbbox((0, 0), "INBOX ĐĂNG KÝ NGAY", font=f_cta)
     cta_w = bbox_cta[2] - bbox_cta[0]
-    draw.text((50 + (460 - cta_w) // 2, 860), "INBOX ĐĂNG KÝ NGAY", fill=(255, 255, 255), font=f_cta)
+    draw.text((50 + (460 - cta_w) // 2, 855), "INBOX ĐĂNG KÝ NGAY", fill=(255, 255, 255), font=f_cta)
 
     # Footer Bar
-    draw.rectangle([0, 960, W, H], fill=(15, 23, 42))
-    draw.text((50, 985), "Chi nhánh: Quận 1 • Bình Thạnh • Thủ Đức", fill=(255, 255, 255), font=f_foot)
-    draw.text((50, 1025), "Hotline: 0901.888.666  |  Website: eduflow.vn", fill=(148, 163, 184), font=f_foot_b)
+    draw.rectangle([0, 935, W, H], fill=(15, 23, 42))
+    draw.text((50, 952), "Hệ thống cơ sở:  CS1: Bình Thạnh   •   CS2: Quận 1   •   CS3: Thủ Đức", fill=(255, 255, 255), font=f_foot_b)
+    draw.text((50, 988), "Địa chỉ: 475A Điện Biên Phủ (Bình Thạnh)  •  45 Lê Duẩn (Q.1)  •  10 Võ Văn Ngân (Thủ Đức)", fill=(203, 213, 225), font=f_foot_addr)
+    draw.text((50, 1028), "Hotline: 0901.888.666   |   Website: eduflow.vn   |   Inbox Fanpage nhận tư vấn ngay", fill=(148, 163, 184), font=f_foot_hotline)
 
     canvas.save(output_path, "JPEG", quality=95)
     return output_path
@@ -287,7 +288,7 @@ def generate_ai_caption(course_key: str) -> str | None:
         f"- Có emoji phù hợp\n"
         f"- Có hashtag (#EduFlow, #EduFlowAcademy, và hashtag liên quan)\n"
         f"- Kêu gọi inbox trang để tư vấn\n"
-        f"- Đề cập chi nhánh: Bình Thạnh, Quận 1, Thủ Đức\n"
+        f"- Đề cập rõ 3 cơ sở: CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức (kèm Hotline: 0901.888.666)\n"
         f"- Giọng văn thân thiện, chuyên nghiệp\n"
         f"- KHÔNG dùng markdown (**, ##, etc.)\n"
         f"Chỉ trả về nội dung bài viết, không thêm giải thích."

@@ -1,0 +1,98 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"hdr_fb\", \"type\": \"header\", \"data\": {\"text\": \"<b>FACEBOOK MARKETING</b>\", \"col\": 12}}, {\"id\": \"sc_fb_post\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Facebook Posts\", \"col\": 4}}, {\"id\": \"sc_fb_leads\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Leads\", \"col\": 4}}, {\"id\": \"sc_fb_sources\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Lead Sources\", \"col\": 4}}, {\"id\": \"spc_fb\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"card_posts\", \"type\": \"card\", \"data\": {\"card_name\": \"Qu\\u1ea3n l\\u00fd B\\u00e0i \\u0111\\u0103ng & Fanpage\", \"col\": 6}}, {\"id\": \"card_leads\", \"type\": \"card\", \"data\": {\"card_name\": \"Kh\\u00e1ch h\\u00e0ng & Chi\\u1ebfn d\\u1ecbch\", \"col\": 6}}]",
+ "creation": "2026-09-26 13:37:38.123635",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "share-2",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Facebook Marketing",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Qu\u1ea3n l\u00fd B\u00e0i \u0111\u0103ng & Fanpage",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Danh s\u00e1ch b\u00e0i \u0111\u0103ng Facebook",
+   "link_count": 0,
+   "link_to": "Facebook Post",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Kh\u00e1ch h\u00e0ng & Chi\u1ebfn d\u1ecbch",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Kh\u00e1ch h\u00e0ng ti\u1ec1m n\u0103ng (Leads)",
+   "link_count": 0,
+   "link_to": "CRM Lead",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ngu\u1ed3n chi\u1ebfn d\u1ecbch Facebook/Messenger",
+   "link_count": 0,
+   "link_to": "CRM Lead Source",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-09-26 13:37:38.123635",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Facebook Marketing",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 2.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Facebook Posts",
+   "link_to": "Facebook Post",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Leads",
+   "link_to": "CRM Lead",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Lead Sources",
+   "link_to": "CRM Lead Source",
+   "type": "DocType"
+  }
+ ],
+ "title": "Facebook Marketing"
+}

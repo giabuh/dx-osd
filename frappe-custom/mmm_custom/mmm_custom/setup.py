@@ -162,10 +162,97 @@ def create_lead_sources():
 	print("Lead sources created")
 
 
+def setup_workspaces():
+	import json
+
+	# 1. Add shortcut in Frappe CRM workspace
+	if frappe.db.exists("Workspace", "Frappe CRM"):
+		try:
+			crm_ws = frappe.get_doc("Workspace", "Frappe CRM")
+			has_fb = any(s.label == "Facebook Posts" or s.link_to == "Facebook Post" for s in crm_ws.shortcuts)
+			if not has_fb:
+				crm_ws.append("shortcuts", {
+					"type": "DocType",
+					"link_to": "Facebook Post",
+					"label": "Facebook Posts",
+					"doc_view": "List",
+					"color": "Blue",
+					"idx": 3,
+				})
+				if crm_ws.content:
+					content = json.loads(crm_ws.content)
+					content.insert(5, {
+						"id": "fb_post_sc_crm",
+						"type": "shortcut",
+						"data": {"shortcut_name": "Facebook Posts", "col": 3},
+					})
+					crm_ws.content = json.dumps(content)
+				crm_ws.save(ignore_permissions=True)
+				print("Facebook Posts shortcut added to Frappe CRM workspace")
+		except Exception as e:
+			print("Failed to add shortcut to Frappe CRM workspace:", e)
+
+	# 2. Create or ensure Facebook Marketing workspace
+	ws_name = "Facebook Marketing"
+	content_fb = [
+		{"id": "hdr_fb", "type": "header", "data": {"text": "<b>FACEBOOK MARKETING</b>", "col": 12}},
+		{"id": "sc_fb_post", "type": "shortcut", "data": {"shortcut_name": "Facebook Posts", "col": 4}},
+		{"id": "sc_fb_leads", "type": "shortcut", "data": {"shortcut_name": "Leads", "col": 4}},
+		{"id": "sc_fb_sources", "type": "shortcut", "data": {"shortcut_name": "Lead Sources", "col": 4}},
+		{"id": "spc_fb", "type": "spacer", "data": {"col": 12}},
+		{"id": "card_posts", "type": "card", "data": {"card_name": "Quản lý Bài đăng & Fanpage", "col": 6}},
+		{"id": "card_leads", "type": "card", "data": {"card_name": "Khách hàng & Chiến dịch", "col": 6}},
+	]
+
+	if not frappe.db.exists("Workspace", ws_name):
+		try:
+			ws = frappe.get_doc({
+				"doctype": "Workspace",
+				"name": ws_name,
+				"label": ws_name,
+				"title": "Facebook Marketing",
+				"icon": "share-2",
+				"module": "MMM Custom",
+				"sequence_id": 2.0,
+				"public": 1,
+				"is_hidden": 0,
+				"content": json.dumps(content_fb),
+				"shortcuts": [
+					{"type": "DocType", "link_to": "Facebook Post", "label": "Facebook Posts", "doc_view": "List", "color": "Blue"},
+					{"type": "DocType", "link_to": "CRM Lead", "label": "Leads", "doc_view": "List", "color": "Green"},
+					{"type": "DocType", "link_to": "CRM Lead Source", "label": "Lead Sources", "doc_view": "List", "color": "Orange"},
+				],
+				"links": [
+					{"type": "Card Break", "label": "Quản lý Bài đăng & Fanpage"},
+					{"type": "Link", "label": "Danh sách bài đăng Facebook", "link_type": "DocType", "link_to": "Facebook Post"},
+					{"type": "Card Break", "label": "Khách hàng & Chiến dịch"},
+					{"type": "Link", "label": "Khách hàng tiềm năng (Leads)", "link_type": "DocType", "link_to": "CRM Lead"},
+					{"type": "Link", "label": "Nguồn chiến dịch Facebook/Messenger", "link_type": "DocType", "link_to": "CRM Lead Source"},
+				],
+			})
+			ws.insert(ignore_permissions=True)
+			print("Created Facebook Marketing workspace")
+		except Exception as e:
+			print("Failed to create Facebook Marketing workspace:", e)
+	else:
+		try:
+			ws = frappe.get_doc("Workspace", ws_name)
+			ws.is_hidden = 0
+			ws.public = 1
+			ws.sequence_id = 2.0
+			ws.save(ignore_permissions=True)
+			print("Facebook Marketing workspace updated")
+		except Exception as e:
+			print("Failed to update Facebook Marketing workspace:", e)
+
+	frappe.db.commit()
+
+
 def setup():
 	create_custom_fields()
 	update_crm_fields_layout()
 	create_lead_sources()
+	setup_workspaces()
 
 
 def create_custom_field_and_lead_sources():
