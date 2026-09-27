@@ -4,8 +4,11 @@ Start here if you are an AI agent (or a new human) picking up this work. It tell
 in what order, and how to turn the spec into a correct plan without loading everything.
 
 **The spec:** [`../2026-09-26-edu-lead-engine-design.md`](../2026-09-26-edu-lead-engine-design.md).
-This folder holds its companions. **Current position:** C1 and C2 done (plans `docs/superpowers/plans/2026-09-26-edu-lead-engine-c01-data-foundation.md`,
-`…-c02-conversation-engine.md`, verified on a fresh bench); C3 designed (spec §7.2), next is the C3 implementation plan. C4+ not designed.
+This folder holds its companions. **Current position:** C1, C2 and C3 done (plans
+`docs/superpowers/plans/2026-09-26-edu-lead-engine-c01-data-foundation.md`,
+`…-c02-conversation-engine.md`, `…-c03-jev-understanding.md`); Jev evaluation gate **failed**
+on 2026-09-27 with 1 critical act-band error in 104 items. `jev_live` stays off until the user
+chooses to enable it after a passing gate. C4+ not designed.
 Layer IDs are `Cn.m` (D-047); old numbers 1–39 in early decisions map via spec §6.3.
 
 ## Read order (stop as soon as you have what you need)

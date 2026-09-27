@@ -156,12 +156,12 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C2.7 | Playground: simulate a message, replay a logged decision (D-038) | M | ✅ |
 
 **C3 — Jev understanding [I]** · milestone: free-text messages are understood, answered and advised correctly · design §7.2
-| C3.1 | Labelled Vietnamese utterance set (~100) + evaluation tool — the gate for going live (D-033) | M | 📝 |
-| C3.2 | Jev slot understanding: questions generated from data, cross-checks, three bands, confirmation turn (D-028–D-031) | M | 📝 |
-| C3.3 | Jev skill selection incl. multi-topic fan-out and combined reply (D-039) | M | 📝 |
-| C3.4 | Intent/hotness/wants-human → early handoff; coordination with `intelligence.py` (D-032) | S | 📝 |
-| C3.5 | Cost guard + spam stop (D-044) | S | 📝 |
-| C3.6 | Course advisor: goal/level slots, data filter, composite scoring, top 3 (D-040) | M | 📝 |
+| C3.1 | Labelled Vietnamese utterance set (~100) + evaluation tool — the gate for going live (D-033) | M | ✅ |
+| C3.2 | Jev slot understanding: questions generated from data, cross-checks, three bands, confirmation turn (D-028–D-031) | M | ✅ |
+| C3.3 | Jev skill selection incl. multi-topic fan-out and combined reply (D-039) | M | ✅ |
+| C3.4 | Intent/hotness/wants-human → early handoff; coordination with `intelligence.py` (D-032) | S | ✅ |
+| C3.5 | Cost guard + spam stop (D-044) | S | ✅ |
+| C3.6 | Course advisor: goal/level slots, data filter, composite scoring, top 3 (D-040) | M | ✅ |
 
 **C4 — Route to the right person** · milestone: every lead reaches the right consultant, with a reason
 | C4.1 | Routing rule D, configurable in CRM (D-006) | M | ⬜ |
