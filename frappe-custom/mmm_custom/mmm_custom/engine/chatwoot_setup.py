@@ -12,6 +12,14 @@ except ImportError:  # offline tests
 from mmm_custom.chatwoot_client import ChatwootClient
 
 
+CONTACT_ATTRIBUTES = [("crm_lead_id", "Mã Lead CRM"), ("khoa_hoc_quan_tam", "Khóa học quan tâm"),
+                      ("chi_nhanh", "Chi nhánh"), ("trang_thai_lead", "Trạng thái khách")]
+
+
+def plan_contact_attributes(existing_keys):
+    return [(key, name) for key, name in CONTACT_ATTRIBUTES if key not in existing_keys]
+
+
 def plan_attributes(slots, existing_keys):
     return [(f"bot_{s.key}", f"Bot · {s.label}") for s in slots if f"bot_{s.key}" not in existing_keys]
 
@@ -26,5 +34,9 @@ def ensure_conversation_attributes():
     created = []
     for key, name in plan_attributes(load_catalog().slots, existing):
         client.create_custom_attribute(key, name)
+        created.append(key)
+    existing = {a.get("attribute_key") for a in client.list_custom_attributes("contact_attribute")}
+    for key, name in plan_contact_attributes(existing):  # what the bot writes on the contact
+        client.create_custom_attribute(key, name, model="contact_attribute")
         created.append(key)
     return {"created": created}

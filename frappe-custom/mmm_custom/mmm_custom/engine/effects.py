@@ -6,6 +6,7 @@ import logging
 from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.engine import events
+from mmm_custom.engine.lead import contact_update
 
 logger = logging.getLogger(__name__)
 
@@ -66,16 +67,28 @@ class ChatwootEffects:
         from mmm_custom.engine import repo
 
         name = repo.save_lead(state, fields, courses, contact)
-        if state.contact_id and (contact.get("custom_attributes") or {}).get("crm_lead_id") != name:
-            try:
-                self.user.update_contact(state.contact_id, {"crm_lead_id": name})
-            except Exception:
-                logger.exception("crm_lead_id write-back to Chatwoot failed")
+        if state.contact_id:
+            self._update_contact(int(state.contact_id), contact_update(fields, courses, name))
         try:
             compute_data_quality(name)
         except Exception:
             logger.exception("data quality update failed")
         return name
+
+    def _update_contact(self, contact_id, update):
+        """Write the Lead link and what the bot learned onto the Chatwoot contact. Chatwoot refuses a phone
+        another contact already has (422): the attributes are then written without it."""
+        try:
+            self.user.update_contact(contact_id, update["custom_attributes"], phone_number=update.get("phone_number"))
+            return
+        except Exception:
+            if not update.get("phone_number"):
+                logger.exception("contact write-back to Chatwoot failed")
+                return
+        try:
+            self.user.update_contact(contact_id, update["custom_attributes"])
+        except Exception:
+            logger.exception("contact write-back to Chatwoot failed")
 
     def handoff(self, conversation_id, plan, lead):
         """D-058 steps 2–3; each step is independent so one failing call never blocks the rest."""

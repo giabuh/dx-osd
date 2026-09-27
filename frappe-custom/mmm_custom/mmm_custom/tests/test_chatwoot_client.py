@@ -68,6 +68,13 @@ class TestChatwootClient(unittest.TestCase):
         self.assertEqual(body["custom_attributes"]["bot_state"], "await_course")
 
     @patch("mmm_custom.chatwoot_client.requests")
+    def test_update_contact_with_phone(self, mock_requests):
+        mock_requests.patch.return_value = MagicMock()
+        self.client.update_contact(10, {"crm_lead_id": "L1"}, phone_number="+84912345678")
+        body = mock_requests.patch.call_args[1]["json"]
+        self.assertEqual(body, {"custom_attributes": {"crm_lead_id": "L1"}, "phone_number": "+84912345678"})
+
+    @patch("mmm_custom.chatwoot_client.requests")
     def test_toggle_status(self, mock_requests):
         mock_resp = MagicMock()
         mock_resp.json.return_value = {"status": "open"}

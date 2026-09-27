@@ -4,6 +4,7 @@ Each Bot Slot names its Lead field in `lead_field`: `products` appends the cours
 standard products table, `territory` stores the branch, anything else is set as is (choice slots
 store the option label, which is what a person reads in the CRM)."""
 
+from mmm_custom.engine.qualify import LABELS
 from mmm_custom.engine.state import filled, value
 
 PLACEHOLDER_NAMES = ("Khách Messenger", "EduFlow Student", "")
@@ -62,3 +63,14 @@ def contact_prefill(contact, catalog):
     if not slot or name in PLACEHOLDER_NAMES:
         return {}
     return {slot.key: _entry(name, "contact")}
+
+
+def contact_update(fields, courses, lead):
+    """What the bot learned, for the Chatwoot contact: consultants read it in the inbox without the CRM.
+    Only values known in this write; Chatwoot merges custom_attributes, so earlier values stay."""
+    attrs = {"crm_lead_id": lead, "khoa_hoc_quan_tam": ", ".join(c.name for c in courses),
+             "chi_nhanh": fields.get("territory") or "", "trang_thai_lead": LABELS.get(fields.get("status"), "")}
+    out = {"custom_attributes": {k: v for k, v in attrs.items() if v}}
+    if fields.get("mobile_no"):
+        out["phone_number"] = fields["mobile_no"]
+    return out

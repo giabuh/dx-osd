@@ -59,13 +59,16 @@ class ChatwootClient:
             content_attributes={"items": items},
         )
 
-    def update_contact(self, contact_id: int,
-                       custom_attributes: dict) -> dict:
-        """Update a contact's custom_attributes."""
+    def update_contact(self, contact_id: int, custom_attributes: dict,
+                       phone_number: str | None = None) -> dict:
+        """Merge custom_attributes into a contact (Chatwoot merges them) and optionally set its phone."""
+        body = {"custom_attributes": custom_attributes}
+        if phone_number:
+            body["phone_number"] = phone_number
         resp = requests.patch(
             f"{self._base}/contacts/{contact_id}",
             headers=self._headers,
-            json={"custom_attributes": custom_attributes},
+            json=body,
             timeout=REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
