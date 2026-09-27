@@ -75,7 +75,7 @@
           </div>
         </Tooltip>
         <div class="flex flex-col gap-2.5 truncate text-ink-gray-9">
-          <Tooltip :text="organization?.name || __('Set an Organization')">
+          <Tooltip :text="organization?.name || doc.lead_name || doc.first_name || __('Set an Organization')">
             <div class="truncate text-3xl-medium">
               {{ title }}
             </div>
@@ -325,7 +325,7 @@
     v-model="showDeleteLinkedDocModal"
     :doctype="'CRM Deal'"
     :docname="dealId"
-    :title="doc.organization"
+    :title="doc.organization || doc.lead_name || doc.first_name || dealId"
     name="Deals"
   />
   <LostReasonModal
@@ -548,7 +548,7 @@ const breadcrumbs = computed(() => {
 
 const title = computed(() => {
   let t = doctypeMeta.value?.title_field || 'name'
-  return doc.value?.[t] || props.dealId
+  return doc.value?.[t] || doc.value?.lead_name || doc.value?.first_name || props.dealId
 })
 
 const statuses = computed(() => {

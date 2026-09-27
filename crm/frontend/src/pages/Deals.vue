@@ -415,9 +415,12 @@ function parseRows(rows, columns = []) {
       }
 
       if (row == 'organization') {
+        let displayName = deal.organization || deal.lead_name || deal.first_name || ''
         _rows[row] = {
-          label: deal.organization,
-          logo: getOrganization(deal.organization)?.organization_logo,
+          label: displayName,
+          logo: deal.organization
+            ? getOrganization(deal.organization)?.organization_logo
+            : null,
         }
       } else if (row === 'website') {
         _rows[row] = website(deal.website)
