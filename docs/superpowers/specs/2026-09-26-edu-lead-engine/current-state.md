@@ -6,9 +6,10 @@ What exists today, where it lives, and which layer changes it. Line numbers drif
 ## Running configuration (local unified stack)
 
 Site config keys present on the dev `crm.localhost` site include `chatwoot_api_token`, `chatwoot_api_url`,
-`chatwoot_webhook_secret`, and `typesafe_api_key` (the value is never documented). `jev_live` remains **off**:
-the Playground can force Jev in a sandbox, but serving real customers requires a separate user decision.
-The Agent Bot switch is separate (`scripts/setup-agent-bot.py`). Chatwoot has the 9 `bot_*`
+`chatwoot_webhook_secret`, `typesafe_api_key`, `chatwoot_bot_webhook_secret` and `chatwoot_bot_api_token` (values
+are never documented). On 2026-09-27 the user switched the bot on for real customers: `scripts/setup-agent-bot.py`
+linked the Agent Bot "EduFlow Qualification Bot" to the Messenger inbox (id 2), and `jev_live` is **on** although
+the gate left one critical error (u057, see README); the customer daily token budget is 0 (unlimited). Chatwoot has the 9 `bot_*`
 conversation attributes (`engine.chatwoot_setup`, including `bot_goal` and `bot_level`).
 The last full Jev gate (2026-09-27) **failed**: 104 items, 0 call errors, 1 wrong course/branch/skill
 answer in the act band, 648,219 input tokens, model `jev-1.13.0`. The remaining case is a B2B
