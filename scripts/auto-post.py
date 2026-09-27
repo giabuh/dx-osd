@@ -315,7 +315,8 @@ def generate_ai_caption(course_key: str) -> str | None:
 
     # 2. Try 9Router fallback
     api_key = os.getenv("NINE_ROUTER_API_KEY")
-    base_url = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
+    default_base_url = "http://host.docker.internal:20128/v1" if (os.path.exists("/.dockerenv") or os.environ.get("container")) else "http://localhost:20128/v1"
+    base_url = os.getenv("NINE_ROUTER_BASE_URL") or default_base_url
     model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
 
     if not api_key:

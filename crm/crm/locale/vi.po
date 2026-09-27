@@ -536,7 +536,7 @@ msgstr "Địa Chỉ"
 #: frontend/src/components/Settings/Users.vue:221
 #: frontend/src/components/Settings/Users.vue:224
 msgid "Admin"
-msgstr ""
+msgstr "Quản trị"
 
 #: crm/integrations/twilio/twilio_handler.py:144
 msgid "Agent is unavailable to take the call, please call after some time."
@@ -2321,7 +2321,7 @@ msgstr ""
 #: frontend/src/pages/Notes.vue:44 frontend/src/pages/Organization.vue:90
 #: frontend/src/pages/Tasks.vue:363 frontend/src/utils/index.js:802
 msgid "Delete"
-msgstr "Đã cập nhật giá trị mặc định"
+msgstr "Xóa"
 
 #: crm/fcrm/doctype/fcrm_settings/fcrm_settings.js:34
 msgid "Delete & Restore"
@@ -8947,3 +8947,18 @@ msgstr "Đã nhập học"
 
 msgid "Lost"
 msgstr "Không tham gia"
+
+msgid "All Views"
+msgstr "Danh mục làm việc"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+msgid "Switch to English"
+msgstr "Chuyển sang Tiếng Anh"
+
+msgid "Switch to Vietnamese"
+msgstr "Chuyển sang Tiếng Việt"
+
+msgid "Chatwoot Inbox"
+msgstr "Hộp thư Chatwoot"

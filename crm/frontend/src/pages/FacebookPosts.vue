@@ -5,61 +5,39 @@
       <template #left-header>
         <div class="flex items-center gap-2">
           <div class="p-1.5 rounded-lg bg-surface-gray-2 text-ink-gray-9">
-            <MegaphoneIcon class="size-4.5" />
+            <MegaphoneIcon class="size-4 text-ink-gray-7" />
           </div>
-          <div>
-            <h1 class="text-lg-semibold text-ink-gray-9 leading-none">
-              {{ __('Facebook Marketing') }}
-            </h1>
-            <p class="text-xs text-ink-gray-5 mt-0.5">
-              {{ __('Tự động hóa đăng bài & Quản lý Fanpage bằng Đa Agent Gemini AI') }}
-            </p>
-          </div>
+          <h1 class="text-base sm:text-lg font-semibold text-ink-gray-9 leading-none whitespace-nowrap">
+            {{ __('Facebook Marketing') }}
+          </h1>
         </div>
       </template>
       <template #right-header>
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex items-center gap-2 flex-nowrap shrink-0">
           <Button
             variant="ghost"
             :iconLeft="LucideRefreshCcw"
             :loading="loading"
+            :title="__('Làm mới')"
             @click="fetchPosts"
           >
-            {{ __('Làm mới') }}
+            <span class="hidden sm:inline">{{ __('Làm mới') }}</span>
           </Button>
 
-          <Button
-            variant="subtle"
-            :iconLeft="LucideSend"
-            :loading="publishingScheduled"
-            @click="publishDuePosts"
-          >
-            {{ __('Đăng bài đến hạn') }}
-          </Button>
-
-          <Button
-            variant="subtle"
-            :iconLeft="LucideUndo2"
-            @click="showRollbackModal = true"
-          >
-            {{ __('Làm lại cả tuần') }}
-          </Button>
-
-          <Button
-            variant="subtle"
-            :iconLeft="LucideCheckCheck"
-            :loading="approvingBatch"
-            @click="approveCurrentBatch"
-          >
-            {{ __('Duyệt tất cả tuần này') }}
-          </Button>
+          <Dropdown :options="batchActions">
+            <Button
+              variant="subtle"
+              :label="__('Thao tác tuần')"
+              iconRight="chevron-down"
+            />
+          </Dropdown>
 
           <Button
             variant="solid"
-            :iconLeft="LucideSparkles"
+            :iconLeft="LucideCalendarPlus"
             @click="showGenerateModal = true"
           >
-            {{ __('Lên kế hoạch tuần (Autopilot)') }}
+            {{ __('Lên kế hoạch tuần') }}
           </Button>
 
           <Button
@@ -82,9 +60,9 @@
       >
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <span class="text-base">🤖</span>
+            <LucideCheckCheck class="size-4 text-emerald-600" />
             <h3 class="text-sm font-semibold text-ink-gray-9">
-              {{ __('Quy trình Đa Agent tự động hóa vừa thực hiện') }}
+              {{ __('Quy trình tạo bài tự động vừa thực hiện') }}
             </h3>
             <Badge
               v-if="currentBatchId"
@@ -125,15 +103,50 @@
 
       <!-- Weekly Matrix Schedule (4 Khung giờ chuẩn của tuần) -->
       <div class="rounded-xl border border-outline-gray-1 bg-surface-base p-4 sm:p-5 shadow-xs">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div class="flex items-center gap-2">
-            <LucideCalendar class="size-4 text-ink-gray-7" />
-            <h2 class="text-base font-semibold text-ink-gray-9">
-              {{ __('Lịch phát sóng tuần chuẩn (EduFlow Autopilot Matrix)') }}
-            </h2>
+            <div class="p-1.5 rounded-lg bg-surface-gray-2 text-ink-gray-9">
+              <LucideCalendar class="size-4.5 text-ink-gray-7" />
+            </div>
+            <div>
+              <h2 class="text-sm sm:text-base font-semibold text-ink-gray-9 leading-tight">
+                {{ __('Lịch phát sóng tuần chuẩn (EduFlow Autopilot Matrix)') }}
+              </h2>
+              <div class="text-xs text-ink-gray-5 mt-0.5">
+                {{ __('4 bài viết vàng / tuần: Thứ 2, Thứ 4, Thứ 6 & Chủ Nhật') }}
+              </div>
+            </div>
           </div>
-          <div class="text-xs text-ink-gray-5">
-            {{ __('4 bài viết vàng / tuần: Thứ 2, Thứ 4, Thứ 6 & Chủ Nhật') }}
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="subtle"
+              size="sm"
+              :iconLeft="LucideSend"
+              :loading="publishingScheduled"
+              @click="publishDuePosts"
+            >
+              {{ __('Đăng bài đến hạn') }}
+            </Button>
+
+            <Button
+              variant="subtle"
+              size="sm"
+              :iconLeft="LucideUndo2"
+              @click="showRollbackModal = true"
+            >
+              {{ __('Làm lại cả tuần') }}
+            </Button>
+
+            <Button
+              variant="subtle"
+              size="sm"
+              :iconLeft="LucideCheckCheck"
+              :loading="approvingBatch"
+              @click="approveCurrentBatch"
+            >
+              {{ __('Duyệt tất cả tuần này') }}
+            </Button>
           </div>
         </div>
 
@@ -233,14 +246,14 @@
           {{ activeFilter === 'all' ? __('Chưa có bài đăng Facebook nào') : __('Không có bài viết trong bộ lọc này') }}
         </h3>
         <p class="text-xs text-ink-gray-5 max-w-sm mx-auto mt-1 mb-4">
-          {{ __('Bấm nút Lên kế hoạch tuần để AI Gemini tự động tạo 4 bài viết theo ma trận tuyển sinh chuẩn.') }}
+          {{ __('Bấm nút Lên kế hoạch tuần để tự động tạo 4 bài viết theo ma trận tuyển sinh chuẩn.') }}
         </p>
         <Button
           variant="solid"
-          :iconLeft="LucideSparkles"
+          :iconLeft="LucideCalendarPlus"
           @click="showGenerateModal = true"
         >
-          {{ __('Lên kế hoạch tuần bằng AI ngay') }}
+          {{ __('Lên kế hoạch tuần ngay') }}
         </Button>
       </div>
 
@@ -296,7 +309,7 @@
               v-if="post.boss_directive"
               class="mb-2.5 p-2 rounded-lg bg-surface-gray-2 text-[11px] text-ink-gray-7 italic line-clamp-2"
             >
-              🎯 <strong>Chỉ đạo:</strong> "{{ post.boss_directive }}"
+              <strong>Định hướng:</strong> "{{ post.boss_directive }}"
             </div>
 
             <!-- Content preview -->
@@ -396,15 +409,15 @@
         <div class="bg-surface-elevation-1 px-5 py-5 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-              <div class="p-2 rounded-lg bg-blue-100 text-blue-700">
-                <LucideSparkles class="size-5" />
+              <div class="p-2 rounded-lg bg-surface-gray-2 text-ink-gray-9">
+                <LucideCalendar class="size-5" />
               </div>
               <div>
                 <h3 class="text-base font-semibold text-ink-gray-9">
-                  {{ __('Lên Kế Hoạch Tuần Bằng AI Multi-Agent') }}
+                  {{ __('Lên Kế Hoạch Bài Đăng Tuần') }}
                 </h3>
                 <p class="text-xs text-ink-gray-5">
-                  {{ __('Đa Agent Gemini AI tự động tạo 4 bài viết theo ma trận tuyển sinh chuẩn') }}
+                  {{ __('Tự động tạo 4 bài viết theo ma trận tuyển sinh chuẩn') }}
                 </p>
               </div>
             </div>
@@ -414,7 +427,7 @@
           <div class="space-y-4 text-xs">
             <div>
               <label class="block font-medium text-ink-gray-8 mb-1.5">
-                {{ __('Chỉ đạo của Sếp (Boss Directive - Tùy chọn)') }}
+                {{ __('Định hướng tuần này (Tùy chọn)') }}
               </label>
               <textarea
                 v-model="generateForm.boss_directive"
@@ -423,7 +436,7 @@
                 :placeholder="__('Ví dụ: Chiến dịch tuyển sinh tháng 10 - Giảm 30% học phí khóa bơi cho bé, tặng 1 buổi học thử Tiếng Anh cho phụ huynh đăng ký sớm...')"
               />
               <p class="text-[11px] text-ink-gray-5 mt-1">
-                {{ __('Nếu để trống, AI sẽ sử dụng chiến lược mặc định: Tuyển sinh đa kênh các khóa học mũi nhọn.') }}
+                {{ __('Nếu để trống, hệ thống sẽ sử dụng chiến lược mặc định: Tuyển sinh đa kênh các khóa học mũi nhọn.') }}
               </p>
             </div>
 
@@ -446,8 +459,8 @@
             />
             <Button
               variant="solid"
-              :label="__('Khởi chạy Đa Agent')"
-              :iconLeft="LucideSparkles"
+              :label="__('Bắt đầu lên lịch tuần')"
+              :iconLeft="LucideCalendarPlus"
               :loading="generatingBatch"
               @click="handleGenerateWeeklyBatch"
             />
@@ -609,11 +622,11 @@
                 </div>
               </div>
 
-              <!-- AI Rewrite Panel -->
-              <div class="p-3 rounded-lg border border-blue-100 bg-blue-50/50 space-y-2">
-                <div class="flex items-center gap-1.5 font-semibold text-blue-900">
-                  <LucideSparkles class="size-3.5 text-blue-600" />
-                  <span>{{ __('Gợi ý cho AI điều chỉnh lại') }}</span>
+              <!-- Content Adjustment Panel -->
+              <div class="p-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 space-y-2">
+                <div class="flex items-center gap-1.5 font-medium text-xs text-ink-gray-7">
+                  <LucideEdit class="size-3.5 text-ink-gray-6" />
+                  <span>{{ __('Gợi ý điều chỉnh') }}</span>
                 </div>
                 <input
                   v-model="editingPost.ai_feedback"
@@ -625,18 +638,20 @@
                   <Button
                     variant="subtle"
                     size="sm"
+                    :iconLeft="LucideRefreshCcw"
                     :loading="rewritingContent"
                     @click="handleAiRewriteContent"
                   >
-                    ✍️ AI Viết lại Caption
+                    {{ __('Viết lại nội dung') }}
                   </Button>
                   <Button
                     variant="subtle"
                     size="sm"
+                    :iconLeft="LucideImage"
                     :loading="generatingBanner"
                     @click="handleAiGenerateBanner"
                   >
-                    🎨 AI Tạo lại Banner
+                    {{ __('Tạo lại banner') }}
                   </Button>
                 </div>
               </div>
@@ -697,15 +712,15 @@
         <div class="bg-surface-elevation-1 px-5 py-5 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-              <div class="p-2 rounded-lg bg-green-100 text-green-700">
+              <div class="p-2 rounded-lg bg-surface-gray-2 text-ink-gray-9">
                 <LucidePlus class="size-5" />
               </div>
               <div>
                 <h3 class="text-base font-semibold text-ink-gray-9">
-                  {{ __('Tạo Bài Viết Facebook Mới') }}
+                  {{ __('Tạo Bài Viết Mới') }}
                 </h3>
                 <p class="text-xs text-ink-gray-5">
-                  {{ __('Soạn bài hoặc để AI gợi ý nội dung') }}
+                  {{ __('Soạn thảo hoặc tạo tự động theo khóa học') }}
                 </p>
               </div>
             </div>
@@ -807,12 +822,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { call, Button, Badge, Dialog, toast } from 'frappe-ui'
+import { call, Button, Badge, Dialog, toast, Dropdown } from 'frappe-ui'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 
 // Lucide Icons
 import MegaphoneIcon from '~icons/lucide/megaphone'
-import LucideSparkles from '~icons/lucide/sparkles'
+import LucideCalendarPlus from '~icons/lucide/calendar-plus'
+import LucideImage from '~icons/lucide/image'
 import LucideRefreshCcw from '~icons/lucide/refresh-ccw'
 import LucideCalendar from '~icons/lucide/calendar'
 import LucideClock from '~icons/lucide/clock'
@@ -858,6 +874,26 @@ const savingPost = ref(false)
 const creatingPost = ref(false)
 const rewritingContent = ref(false)
 const generatingBanner = ref(false)
+
+const batchActions = computed(() => [
+  {
+    label: __('Đăng bài đến hạn'),
+    icon: 'send',
+    onClick: publishDuePosts,
+  },
+  {
+    label: __('Duyệt tất cả tuần này'),
+    icon: 'check-check',
+    onClick: approveCurrentBatch,
+  },
+  {
+    label: __('Làm lại cả tuần'),
+    icon: 'rotate-ccw',
+    onClick: () => {
+      showRollbackModal.value = true
+    },
+  },
+])
 
 // Modals
 const showGenerateModal = ref(false)
@@ -1189,23 +1225,31 @@ async function handleAiRewriteContent() {
   if (!editingPost.value) return
   rewritingContent.value = true
   try {
-    await call('run_doc_method', {
+    const res = await call('run_doc_method', {
       dt: 'Facebook Post',
       dn: editingPost.value.name,
       method: 'generate_ai_content',
       args: { user_feedback: editingPost.value.ai_feedback || null },
     })
-    // Reload doc
+    if (res?.content) {
+      editingPost.value.content = res.content
+    }
+    // Reload doc to ensure all fields are synchronized
     const updated = await call('frappe.client.get', {
       doctype: 'Facebook Post',
       name: editingPost.value.name,
     })
-    if (updated) {
+    if (updated?.content) {
       editingPost.value.content = updated.content
-      toast.success ? toast.success('AI Gemini đã viết lại nội dung thành công!') : toast.info('Đã viết lại nội dung!')
     }
+    const p = posts.value.find(x => x.name === editingPost.value.name)
+    if (p && editingPost.value.content) {
+      p.content = editingPost.value.content
+    }
+    toast.success ? toast.success('AI đã viết lại nội dung thành công!') : toast.info('Đã viết lại nội dung!')
   } catch (error) {
     console.error('Lỗi AI viết lại:', error)
+    toast.error ? toast.error('Lỗi khi AI viết lại: ' + (error.message || error)) : null
   } finally {
     rewritingContent.value = false
   }
@@ -1215,22 +1259,30 @@ async function handleAiGenerateBanner() {
   if (!editingPost.value) return
   generatingBanner.value = true
   try {
-    await call('run_doc_method', {
+    const res = await call('run_doc_method', {
       dt: 'Facebook Post',
       dn: editingPost.value.name,
       method: 'generate_banner',
       args: { user_feedback: editingPost.value.ai_feedback || null },
     })
+    if (res?.image) {
+      editingPost.value.image = res.image
+    }
     const updated = await call('frappe.client.get', {
       doctype: 'Facebook Post',
       name: editingPost.value.name,
     })
-    if (updated) {
+    if (updated?.image) {
       editingPost.value.image = updated.image
-      toast.success ? toast.success('AI đã tạo mới Banner chuẩn 1080x1080!') : toast.info('Đã tạo mới Banner!')
     }
+    const p = posts.value.find(x => x.name === editingPost.value.name)
+    if (p && editingPost.value.image) {
+      p.image = editingPost.value.image
+    }
+    toast.success ? toast.success('AI đã tạo mới Banner chuẩn 1080x1080!') : toast.info('Đã tạo mới Banner!')
   } catch (error) {
     console.error('Lỗi AI tạo banner:', error)
+    toast.error ? toast.error('Lỗi khi AI tạo banner: ' + (error.message || error)) : null
   } finally {
     generatingBanner.value = false
   }

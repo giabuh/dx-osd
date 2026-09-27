@@ -54,9 +54,9 @@ import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
 import { showSettings, isMobileView } from '@/composables/settings'
 import { showAboutModal } from '@/composables/modals'
-import { confirmLoginToFrappeCloud } from '@/composables/frappecloud'
-import { createResource, Dropdown } from 'frappe-ui'
-import { computed, h, markRaw } from 'vue'
+import GlobeIcon from '~icons/lucide/globe'
+import { createResource, Dropdown, call } from 'frappe-ui'
+import { computed, h, markRaw, ref } from 'vue'
 
 defineProps({
   isCollapsed: { type: Boolean, default: false },
@@ -103,8 +103,34 @@ const dropdownItems = computed(() => {
     }
   })
 
+  // Language switcher item
+  _dropdownItems[_dropdownItems.length - 1].items.push({
+    icon: markRaw(GlobeIcon),
+    label: currentLang.value === 'vi' ? 'English (Tiếng Anh)' : 'Tiếng Việt (Vietnamese)',
+    onClick: toggleLanguage,
+  })
+
   return _dropdownItems
 })
+
+const currentLang = computed(() => {
+  return (
+    document.cookie.split('; ').find(row => row.startsWith('user_lang='))?.split('=')[1] ||
+    user.value?.language ||
+    'vi'
+  )
+})
+
+async function toggleLanguage() {
+  const target = currentLang.value === 'vi' ? 'en' : 'vi'
+  try {
+    await call('mmm_custom.api.switch_language', { lang: target })
+  } catch (err) {
+    console.error('Failed to switch language:', err)
+  }
+  document.cookie = `user_lang=${target}; path=/; max-age=31536000`
+  window.location.reload()
+}
 
 function dropdownItemObj(item) {
   let _item = JSON.parse(JSON.stringify(item))

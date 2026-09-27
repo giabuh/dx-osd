@@ -108,6 +108,11 @@ const routes = [
     component: () => import('@/pages/FacebookPosts.vue'),
   },
   {
+    path: '/chatwoot',
+    name: 'ChatwootInbox',
+    component: () => import('@/pages/ChatwootInbox.vue'),
+  },
+  {
     // Manager screens (branches, staff, course knowledge, bot playground) over mmm_custom APIs.
     path: '/admin/:tab?',
     name: 'Admin',
