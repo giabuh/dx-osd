@@ -172,7 +172,7 @@ def write_lead(turn, effects, catalog):
 
 
 def apply_quiz_results(decision, catalog):
-    """A finished level quiz (D-104) fills `level`, the `placement` summary for the Lead and, when the
+    """A finished level quiz (D-104, adaptive D-106) fills `level`, the `placement` summary for the Lead and, when the
     customer has not chosen one yet, the recommended course."""
     from mmm_custom.engine import quiz
 
@@ -180,7 +180,8 @@ def apply_quiz_results(decision, catalog):
         skill = catalog.skills.get(key)
         if not skill or skill.action != "level_quiz":
             continue
-        res = quiz.result(skill.config, quiz.progress(value(decision.slots, skill.config.get("slot", "quiz_progress")), key))
+        answers = quiz.progress(value(decision.slots, skill.config.get("slot", "quiz_progress")), key)
+        res = quiz.result(skill.config, answers, value(decision.slots, "goal") or "")
         if res is None:
             continue
         level = catalog.slot("level")

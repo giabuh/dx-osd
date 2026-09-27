@@ -15,7 +15,7 @@ class TestBuildCatalog(unittest.TestCase):
     def test_counts_match_demo_dataset(self):
         self.assertEqual((len(self.cat.groups), len(self.cat.courses), len(self.cat.areas), len(self.cat.branches)),
                          (9, 51, 4, 13))
-        self.assertEqual(len(self.cat.skills), 33)
+        self.assertEqual(len(self.cat.skills), 38)
 
     def test_slots_sorted_with_dependency(self):
         self.assertEqual([s.key for s in self.cat.slots],

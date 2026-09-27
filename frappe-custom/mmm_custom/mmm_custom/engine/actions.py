@@ -102,26 +102,31 @@ def book_trial(a):
 
 @action("level_quiz")
 def level_quiz(a):
-    """Level quiz (D-104): the next question with one button per option, or the result (the pipeline
-    then fills level, placement and the recommended course, and the normal flow resumes)."""
+    """Level quiz (D-104, adaptive D-106): the next question with one button per option, or the result
+    (the pipeline then fills level, placement and the recommended course, and the normal flow resumes).
+    Questions come easy → hard for the customer's goal; two basic ones wrong end it early."""
     from mmm_custom.engine import quiz
 
     cfg, key = a.skill.config, a.skill.key
     slot = cfg.get("slot", "quiz_progress")
+    goal = value(a.slots, "goal") or ""
     answers = quiz.progress(value(a.slots, slot), key)
-    questions = cfg.get("questions") or []
-    res = quiz.result(cfg, answers)
+    base = {"subject": cfg.get("subject", ""), "last_correct": quiz.last_correct(cfg, answers, goal)}
+    res = quiz.result(cfg, answers, goal)
     if res is None:
-        q = questions[len(answers)]
-        buttons = [{"title": str(option)[:20],
+        _, q = quiz.next_question(cfg, answers, goal)
+        planned = quiz.limit(cfg, goal)
+        buttons = [{"title": str(option)[:quiz.MAX_BUTTON],
                     "action": {"type": "slot", "slot": slot, "value": quiz.encode(key, answers + [i]), "skill": key}}
                    for i, option in enumerate(q.get("options") or [])]
-        return {"quiz": {"done": False, "step": len(answers) + 1, "total": len(questions), "question": q.get("q", ""),
-                         "subject": cfg.get("subject", "")}, "_buttons": buttons, "_hold": True}
+        return {"quiz": {**base, "done": False, "step": len(answers) + 1, "total": planned,
+                         "left": planned - len(answers), "question": q.get("q", "")},
+                "_buttons": buttons, "_hold": True}
     course = a.catalog.courses.get(res["course"])
     level_slot = a.catalog.slot("level")
     option = level_slot.option(res["level"]) if level_slot else None
-    return {"quiz": {"done": True, **res, "subject": cfg.get("subject", ""), "level_label": option.label if option else "",
+    return {"quiz": {**base, "done": True, **res, "missed_text": ", ".join(res["missed"]),
+                     "level_label": option.label if option else "",
                      "course_name": course.name if course else "", "course_fee": course.fee if course else 0}}
 
 
