@@ -66,7 +66,6 @@ const isMobile = computed(() => windowWidth.value < 768);
 
 const accountId = useMapGetter('getCurrentAccountId');
 const currentUserId = useMapGetter('getCurrentUserID');
-const currentRole = useMapGetter('getCurrentRole');
 const isFeatureEnabledonAccount = useMapGetter(
   'accounts/isFeatureEnabledonAccount'
 );
@@ -771,16 +770,6 @@ const menuItems = computed(() => {
           icon: 'i-lucide-briefcase',
           to: accountScopedRoute('general_settings_index'),
         },
-        ...(currentRole.value === 'administrator'
-          ? [
-              {
-                name: 'Vietnamese Translations',
-                label: t('SIDEBAR.VIETNAMESE_TRANSLATIONS'),
-                icon: 'i-lucide-languages',
-                to: accountScopedRoute('settings_vietnamese_translations'),
-              },
-            ]
-          : []),
         // {
         //   name: 'Settings Captain',
         //   label: t('SIDEBAR.CAPTAIN_AI'),
