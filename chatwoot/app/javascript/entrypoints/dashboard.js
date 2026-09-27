@@ -11,6 +11,8 @@ import FloatingVue from 'floating-vue';
 import WootUiKit from 'dashboard/components';
 import App from 'dashboard/App.vue';
 import i18nMessages from 'dashboard/i18n';
+import LocaleOverridesAPI from 'dashboard/api/localeOverrides';
+import { createAccountOverrideLoader } from 'dashboard/i18n/accountOverrides';
 import createAxios from 'dashboard/helper/APIHelper';
 
 import commonHelpers, { isJSONValid } from 'dashboard/helper/commons';
@@ -46,6 +48,15 @@ const pinia = createPinia();
 
 const app = createApp(App);
 app.use(i18n);
+app.provide(
+  'accountOverrideLoader',
+  createAccountOverrideLoader({
+    composer: i18n.global,
+    fetchOverrides: (accountId, locale) =>
+      LocaleOverridesAPI.list(accountId, locale),
+    baseMessages: i18nMessages.vi,
+  })
+);
 app.use(store);
 app.use(pinia);
 app.use(router);

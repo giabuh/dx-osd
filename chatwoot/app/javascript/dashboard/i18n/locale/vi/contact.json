@@ -295,21 +295,21 @@
     "HEADER": {
       "TITLE": "Liên hệ",
       "SEARCH_TITLE": "Tìm kiếm liên hệ",
-      "ACTIVE_TITLE": "Active contacts",
+      "ACTIVE_TITLE": "Liên hệ đang hoạt động",
       "SEARCH_PLACEHOLDER": "Tìm kiếm...",
       "MESSAGE_BUTTON": "Tin nhắn",
       "SEND_MESSAGE": "Gửi tin nhắn",
-      "BLOCK_CONTACT": "Block contact",
-      "UNBLOCK_CONTACT": "Unblock contact",
+      "BLOCK_CONTACT": "Chặn liên hệ",
+      "UNBLOCK_CONTACT": "Bỏ chặn liên hệ",
       "BREADCRUMB": {
         "CONTACTS": "Liên hệ"
       },
       "ACTIONS": {
         "CONTACT_CREATION": {
-          "ADD_CONTACT": "Add contact",
-          "EXPORT_CONTACT": "Export contacts",
-          "IMPORT_CONTACT": "Import contacts",
-          "SAVE_CONTACT": "Save contact",
+          "ADD_CONTACT": "Thêm liên hệ",
+          "EXPORT_CONTACT": "Xuất liên hệ",
+          "IMPORT_CONTACT": "Nhập liên hệ",
+          "SAVE_CONTACT": "Lưu liên hệ",
           "EMAIL_ADDRESS_DUPLICATE": "Địa chỉ email này đang được sử dụng cho một liên hệ khác.",
           "PHONE_NUMBER_DUPLICATE": "Số điện thoại này đang được dùng cho một liên hệ khác.",
           "SUCCESS_MESSAGE": "Liên hệ được lưu thành công",
@@ -579,12 +579,12 @@
       }
     },
     "EMPTY_STATE": {
-      "TITLE": "No contacts found in this account",
-      "SUBTITLE": "Start adding new contacts by clicking on the button below",
-      "BUTTON_LABEL": "Add contact",
+      "TITLE": "Không có liên hệ nào trong tài khoản này",
+      "SUBTITLE": "Bắt đầu thêm liên hệ bằng nút bên dưới",
+      "BUTTON_LABEL": "Thêm liên hệ",
       "SEARCH_EMPTY_STATE_TITLE": "Không có liên hệ nào khớp với tìm kiếm của bạn 🔍",
-      "LIST_EMPTY_STATE_TITLE": "No contacts available in this view 📋",
-      "ACTIVE_EMPTY_STATE_TITLE": "No contacts are active at the moment 🌙"
+      "LIST_EMPTY_STATE_TITLE": "Không có liên hệ nào trong chế độ xem này 📋",
+      "ACTIVE_EMPTY_STATE_TITLE": "Hiện không có liên hệ nào đang hoạt động 🌙"
     },
     "LOAD_MORE": "Load more"
   },
