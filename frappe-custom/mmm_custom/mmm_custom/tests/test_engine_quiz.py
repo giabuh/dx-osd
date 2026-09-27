@@ -103,7 +103,8 @@ class TestQuiz(unittest.TestCase):
         apply_quiz_results(d, CAT)
         self.assertEqual((d.slots["level"]["value"], d.slots["placement"]["value"], d.slots["course"]["value"]),
                          ("basic", "Excel: 4/5 · Biết cơ bản", "VP-EXCEL-NC"))
-        self.assertEqual(sorted(d.new_slots), ["course", "level", "placement"])
+        self.assertEqual(sorted(d.new_slots), ["course", "level", "placement", "quiz_detail"])
+        self.assertEqual((d.slots["quiz_detail"]["value"], d.quiz_done), ("Pivot Table", "excel_quiz"))
 
     def test_a_course_of_another_group_is_kept(self):
         d = Decision("answer", skills=["excel_quiz"],

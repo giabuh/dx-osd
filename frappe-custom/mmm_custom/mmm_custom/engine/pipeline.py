@@ -21,7 +21,7 @@ from mmm_custom.engine.log import log_row, signals
 from mmm_custom.engine.offers import track
 from mmm_custom.engine.qualify import LABELS, NEW, lead_status
 from mmm_custom.engine.reply import compose
-from mmm_custom.engine.state import value
+from mmm_custom.engine.state import filled, value
 from mmm_custom.engine.understand import understand
 from mmm_custom.sources import campaign_of, channel_key, source_name
 
@@ -148,6 +148,8 @@ def write_lead(turn, effects, catalog):
     lead_slots = [k for k in decision.new_slots if catalog.slot(k) and catalog.slot(k).lead_field]
     wanted = not state.lead and any(catalog.skills[k].creates_lead for k in decision.skills)
     ai = {k: v for k, v in ai_fields(turn.understanding, catalog.settings).items() if state.ai.get(k) != v}
+    if decision.quiz_done and ai.get("ai_hotness", state.ai.get("ai_hotness")) in (None, "", "cold"):
+        ai["ai_hotness"] = "warm"  # finished the level test: at least warm (D-106)
     previous = state.ai.get("status", "")
     status = lead_status(state.slots, {**state.ai, **ai}, catalog, previous)
     if status != (previous or NEW):
@@ -173,9 +175,14 @@ def write_lead(turn, effects, catalog):
                                   "courses": [c.code for c in courses]})
 
 
+def phone_slot(catalog):
+    return next((s.key for s in catalog.slots if s.type == "phone"), "")
+
+
 def apply_quiz_results(decision, catalog):
-    """A finished level quiz (D-104, adaptive D-106) fills `level`, the `placement` summary for the Lead and, when the
-    customer has not chosen one yet, the recommended course."""
+    """A finished level quiz (D-104, adaptive D-106) fills `level`, the `placement` summary and the missed
+    topics for the Lead and, when the customer has not chosen one yet, the recommended course. The phone
+    is asked next: it earns the syllabus and the voucher (issue_reward)."""
     from mmm_custom.engine import quiz
 
     for key in decision.skills:
@@ -189,7 +196,8 @@ def apply_quiz_results(decision, catalog):
         level = catalog.slot("level")
         option = level.option(res["level"]) if level else None
         fills = {"level": res["level"] if option else None,
-                 "placement": quiz.summary(skill.config, res, option.label if option else "")}
+                 "placement": quiz.summary(skill.config, res, option.label if option else ""),
+                 "quiz_detail": ", ".join(res["missed"])}
         course_slot = catalog.slot_for("course")
         chosen = catalog.courses.get(value(decision.slots, course_slot.key)) if course_slot else None
         best = catalog.courses.get(res["course"])
@@ -201,6 +209,44 @@ def apply_quiz_results(decision, catalog):
                                             "confidence": 1.0}
                 if slot_key not in decision.new_slots:
                     decision.new_slots.append(slot_key)
+        decision.quiz_done = key
+        phone = phone_slot(catalog)
+        if decision.type in ("answer", "ask_slot") and phone and not filled(decision.slots, phone):
+            if decision.ask and decision.ask != phone:
+                decision.slots.get(decision.ask, {}).pop("asked", None)
+            decision.ask = phone
+            decision.slots.setdefault(phone, {})["asked"] = 1
+            decision.reason = f"{decision.reason}; xin SĐT để gửi lộ trình và mã ưu đãi"
+        return
+
+
+def issue_reward(decision, state, catalog, data, today):
+    """Level test done and phone known (D-106): the recommended course's syllabus and, when a promotion
+    applies, a voucher code on the Lead. Sent once per quiz (state.offers → rewarded)."""
+    from mmm_custom.engine import actions, offers, voucher
+    from mmm_custom.engine.context import course_context
+
+    phone = phone_slot(catalog)
+    done = [k for k, v in state.offers.items() if v == offers.DONE] + ([decision.quiz_done] if decision.quiz_done else [])
+    if not done or not phone or not filled(decision.slots, phone) or decision.type == "silent":
+        return
+    course_slot, branch_slot = catalog.slot_for("course"), catalog.slot_for("branch")
+    course = catalog.courses.get(value(decision.slots, course_slot.key)) if course_slot else None
+    reward = {"quiz": done[-1], "code": ""}
+    if course:
+        ctx = course_context(course, catalog)
+        branch = value(decision.slots, branch_slot.key) if branch_slot else ""
+        promo, off = voucher.best_promotion(data.active_promotions(today), ctx, branch, actions.applicable,
+                                            actions.discount)
+        if promo:
+            reward.update(code=voucher.code(catalog.settings["voucher_prefix"], offers.subject(done[-1], catalog),
+                                            state.conversation_id),
+                          title=promo["title"], final_fee=max(course.fee - off, 0))
+    if reward["code"] and catalog.slot("voucher_code") and not filled(decision.slots, "voucher_code"):
+        decision.slots["voucher_code"] = {"value": reward["code"], "source": "quiz", "confidence": 1.0}
+        decision.new_slots.append("voucher_code")
+    decision.voucher = reward
+    decision.reason = f"{decision.reason}; gửi lộ trình" + (f" và mã {reward['code']}" if reward["code"] else "")
 
 
 def book_trials(turn, effects, catalog, plan=None):
@@ -234,6 +280,7 @@ def run_turn(event, repo, effects, render):
         repo.warn_budget()
     turn.decision = decide(state, turn.understanding, catalog)
     apply_quiz_results(turn.decision, catalog)
+    issue_reward(turn.decision, state, catalog, repo, repo.today())
     turn.reason = turn.decision.reason
 
     plan, errors = None, []

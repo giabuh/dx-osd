@@ -3,9 +3,11 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeJev, FakeRepo, demo_catalog, fill, render
+from datetime import date
 
-from mmm_custom.engine import offers
+from engine_fixtures import FakeRepo, demo_catalog, demo_consultants, fill, promo, render, schedule
+
+from mmm_custom.engine import offers, voucher
 from mmm_custom.engine.combine import combine
 from mmm_custom.engine.decide import Decision, decide
 from mmm_custom.engine.effects import RecordingEffects
@@ -126,33 +128,89 @@ def incoming(text, message_id):
 
 
 class TestConversation(unittest.TestCase):
-    """Customer asks about Excel, is offered the test, takes it and gets placed."""
+    """Customer asks about Excel, is offered the test, takes it, is placed, leaves a phone, gets the reward."""
 
-    def test_offer_then_quiz_then_result(self):
-        repo, fx = FakeRepo(CAT), RecordingEffects()
-        n = iter(range(10, 100))
+    def setUp(self):
+        self.repo, self.fx = FakeRepo(CAT), RecordingEffects()
+        self.repo.consultant_rows = demo_consultants()
+        self.repo.promotions = [promo("Ưu đãi khai giảng", amount=10), promo("Kế toán -500k", "Amount", 500000, ["KT-TH"])]
+        self.repo.schedules = [schedule("VP-EXCEL-NC", "CN Dĩ An", date(2026, 10, 6)),
+                               schedule("VP-EXCEL-NC", "CN Dĩ An", date(2026, 10, 8), shift="Sáng 8:00–11:00")]
+        self.ids = iter(range(10, 100))
 
-        def say(text):
-            run_turn(parse_event(incoming(text, next(n))), repo, fx, render)
-            return fx.of("send")[-1]
+    def say(self, text):
+        run_turn(parse_event(incoming(text, next(self.ids))), self.repo, self.fx, render)
+        return self.fx.of("send")[-1]
 
-        say("học excel ở dĩ an")
-        sent = say("em tự học")
+    def take_the_test(self):
+        self.say("học excel ở dĩ an")
+        sent = self.say("em tự học")
         self.assertIn("bài test Excel nhỏ 5 câu", sent["messages"][-1])
         self.assertEqual(sent["buttons"], ["Làm bài test", "Để sau"])
-        self.assertEqual(repo.states["7"].offers, {"excel_quiz": "offered"})
-
-        sent = say("Làm bài test")
+        self.assertEqual(self.repo.states["7"].offers, {"excel_quiz": "offered"})
+        sent = self.say("Làm bài test")
         self.assertIn("Câu 1/5", sent["messages"][-1])
-        self.assertEqual(repo.states["7"].offers, {"excel_quiz": "started"})
+        self.assertEqual(self.repo.states["7"].offers, {"excel_quiz": "started"})
         for pick in ("SUM", "$A$1", "Dò tìm theo mã", "COUNTIF"):
-            sent = say(pick)
+            sent = self.say(pick)
         self.assertEqual(sent["buttons"], ["Pivot Table", "Lọc thủ công", "Copy – dán", "Format Painter"])
-        sent = say("Lọc thủ công")
-        self.assertIn("đúng 4/5 câu", sent["messages"][0])
-        saved = repo.states["7"]
+        return self.say("Lọc thủ công")
+
+    def test_result_then_phone_then_reward(self):
+        sent = self.take_the_test()
+        text = "\n\n".join(sent["messages"])
+        self.assertIn("đúng 4/5 câu, giỏi quá ạ 🎉", text)
+        self.assertIn("giữ sẵn một buổi học thử miễn phí", text)
+        self.assertTrue(text.endswith("Dạ anh/chị cho em xin số điện thoại để em gửi lộ trình học chi tiết và giữ mã "
+                                      "ưu đãi cho anh/chị nhé ạ."), text)
+        self.assertEqual(sent["buttons"], ["T3 06/10 Tối", "T5 08/10 Sáng"])
+        saved = self.repo.states["7"]
         self.assertEqual(saved.offers, {"excel_quiz": "done"})
-        self.assertEqual((saved.slots["level"]["value"], saved.slots["course"]["value"]), ("basic", "VP-EXCEL-NC"))
+        self.assertEqual((saved.slots["level"]["value"], saved.slots["course"]["value"], saved.pending["slot"]),
+                         ("basic", "VP-EXCEL-NC", "phone"))
+        lead = self.fx.of("save_lead")[-1]["fields"]
+        self.assertEqual((lead["placement_result"], lead["quiz_detail"], lead["ai_hotness"]),
+                         ("Excel: 4/5 · Biết cơ bản", "Pivot Table", "warm"))
+
+        sent = self.say("0901234567")
+        code = voucher.code("SV", "Excel", "7")
+        self.assertRegex(code, r"^SV-EXCEL-[2-9A-Z]{4}$")
+        text = "\n\n".join(sent["messages"])
+        self.assertIn("Dạ em gửi anh/chị lộ trình khóa Excel nâng cao & Dashboard ạ:\n• ", text)
+        self.assertIn(f"🎁 Mã ưu đãi riêng của anh/chị: {code} (Ưu đãi khai giảng, học phí còn 1.980.000đ)", text)
+        saved = self.repo.states["7"]
+        self.assertEqual((saved.offers, saved.slots["voucher_code"]["value"]), ({"excel_quiz": "rewarded"}, code))
+        self.assertEqual(self.fx.of("save_lead")[-1]["fields"]["voucher_code"], code)
+        handoff = self.fx.of("handoff")[-1]["summary"]
+        self.assertIn(f"📝 Bài test Excel: 4/5 · Biết cơ bản · cần củng cố: Pivot Table · mã ưu đãi {code}", handoff)
+
+        before = len(self.fx.of("send"))
+        self.say("cảm ơn em")  # handed off: the bot stays quiet, and never sends the reward twice
+        self.assertEqual(len(self.fx.of("send")), before)
+
+    def test_no_promotion_still_sends_the_syllabus(self):
+        self.repo.promotions = []
+        self.take_the_test()
+        text = "\n\n".join(self.say("0901234567")["messages"])
+        self.assertIn("lộ trình khóa Excel nâng cao & Dashboard", text)
+        self.assertNotIn("Mã ưu đãi", text)
+        self.assertNotIn("voucher_code", self.repo.states["7"].slots)
+
+
+class TestVoucher(unittest.TestCase):
+    def test_code_is_stable_and_readable(self):
+        self.assertEqual(voucher.code("sv", "Excel", "42"), voucher.code("SV", "Excel", "42"))
+        self.assertNotEqual(voucher.code("SV", "Excel", "42"), voucher.code("SV", "Excel", "43"))
+        self.assertTrue(voucher.code("SV", "Tin học cho bé", "1").startswith("SV-TINHOCCH-"))
+        self.assertTrue(voucher.code("", "lập trình", "1").startswith("LAPTRINH-"))
+
+    def test_best_promotion(self):
+        from mmm_custom.engine.actions import applicable, discount
+
+        course = {"code": "KT-TH", "group": "Kế toán", "fee": 3500000}
+        promos = [promo("-10%"), promo("-500k", "Amount", 500000, ["KT-TH"]), promo("CN Q7", branches=["CN Quận 7"])]
+        self.assertEqual(voucher.best_promotion(promos, course, "CN Dĩ An", applicable, discount)[0]["title"], "-500k")
+        self.assertEqual(voucher.best_promotion([], course, "", applicable, discount), (None, 0))
 
 
 if __name__ == "__main__":

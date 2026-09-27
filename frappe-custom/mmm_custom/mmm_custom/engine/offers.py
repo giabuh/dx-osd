@@ -3,13 +3,13 @@
 Once the bot knows which course (or course group) the customer wants but not their level, it offers the
 level quiz of that course instead of asking the next slot: "làm thử bài test Excel 5 câu…" with the buttons
 [Làm bài test] [Để sau]. Each quiz is offered at most once per conversation; `state.offers` remembers
-{skill: offered | declined | started | done | reminded}.
+{skill: offered | declined | started | reminded | done | rewarded}.
 """
 
 from mmm_custom.engine import quiz
 from mmm_custom.engine.state import filled, value
 
-OFFERED, DECLINED, STARTED, DONE, REMINDED = "offered", "declined", "started", "done", "reminded"
+OFFERED, DECLINED, STARTED, DONE, REMINDED, REWARDED = "offered", "declined", "started", "done", "reminded", "rewarded"
 LEVEL_UNSURE = "level_unsure"  # Jev noul, asked only when an offer is possible
 UNSURE_FLOOR = 0.6
 START_TITLE, LATER_TITLE = "Làm bài test", "Để sau"
@@ -76,5 +76,8 @@ def track(offers, decision, catalog, declined=""):
             continue
         answers = quiz.progress(value(decision.slots, skill.config.get("slot", "quiz_progress")), key)
         done = quiz.result(skill.config, answers, value(decision.slots, "goal") or "") is not None
-        out[key] = DONE if done else (out.get(key) if out.get(key) == REMINDED else STARTED)
+        if out.get(key) != REWARDED:
+            out[key] = DONE if done else (out.get(key) if out.get(key) == REMINDED else STARTED)
+    if decision.voucher.get("quiz"):
+        out[decision.voucher["quiz"]] = REWARDED
     return out

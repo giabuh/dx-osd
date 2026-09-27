@@ -151,6 +151,9 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         follow_ups += [{"title": f.title, "action": FOLLOW_UP_ACTIONS[f.target_type](f.target)}
                        for f in skill.follow_ups if f.target_type in FOLLOW_UP_ACTIONS]
 
+    if decision.voucher:  # level-test reward: syllabus of the recommended course, and a voucher code (D-106)
+        say(settings["quiz_voucher_template"], {**ctx, "voucher": decision.voucher}, "quiz_voucher")
+
     if decision.type == "handoff":
         say(settings["handoff_template"], ctx, "handoff")
 
@@ -172,7 +175,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
     ask_key = reply.ask or ("" if reply.hold else decision.ask)
     if ask_key:
         slot = catalog.slot(ask_key)
-        say(slot.ask_template, ctx, f"slot:{slot.key}")
+        why_phone = decision.quiz_done and slot.type == "phone" and settings["quiz_phone_template"]
+        say(settings["quiz_phone_template"] if why_phone else slot.ask_template, ctx, f"slot:{slot.key}")
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)
 

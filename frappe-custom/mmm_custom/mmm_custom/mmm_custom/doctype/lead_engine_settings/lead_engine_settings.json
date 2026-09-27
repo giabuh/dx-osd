@@ -46,7 +46,10 @@
   "advisor_shortlist",
   "quiz_section",
   "quiz_offer_template",
-  "quiz_decline_template"
+  "quiz_decline_template",
+  "quiz_phone_template",
+  "quiz_voucher_template",
+  "voucher_prefix"
  ],
  "fields": [
   {
@@ -174,7 +177,10 @@
   {"fieldname": "advisor_shortlist", "fieldtype": "Int", "label": "Courses scored per call", "description": "Default 8"},
   {"fieldname": "quiz_section", "fieldtype": "Section Break", "label": "Level test offer"},
   {"fieldname": "quiz_offer_template", "fieldtype": "Small Text", "label": "Quiz offer template", "description": "Offers the level test once the course is known; gets quiz (subject, total). Buttons: Làm bài test · Để sau"},
-  {"fieldname": "quiz_decline_template", "fieldtype": "Small Text", "label": "Quiz declined template", "description": "Answer to the Để sau button"}
+  {"fieldname": "quiz_decline_template", "fieldtype": "Small Text", "label": "Quiz declined template", "description": "Answer to the Để sau button"},
+  {"fieldname": "quiz_phone_template", "fieldtype": "Small Text", "label": "Phone after the test template", "description": "Asks the phone right after the test result (it earns the syllabus and voucher)"},
+  {"fieldname": "quiz_voucher_template", "fieldtype": "Small Text", "label": "Test reward template", "description": "Sent once the phone is known; gets course (name, syllabus) and voucher (code, title, final_fee; code empty when no promotion applies)"},
+  {"fieldname": "voucher_prefix", "fieldtype": "Data", "label": "Voucher code prefix", "description": "e.g. SV → SV-EXCEL-7K3Q. Default UD"}
  ],
  "issingle": 1,
  "links": [],

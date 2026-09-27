@@ -411,7 +411,7 @@
  },
  {
   "id": "S19",
-  "title": "Bot chủ động mời làm bài test Excel",
+  "title": "Bot chủ động mời làm bài test Excel, tặng lộ trình khi để SĐT",
   "why": "Biết khóa mà chưa rõ trình độ thì bot mời làm bài test thay câu hỏi phụ; làm xong xếp đúng lớp",
   "messages": [
    "học excel ở dĩ an bao nhiêu tiền",
@@ -433,20 +433,23 @@
    },
    {
     "tap": 1
-   }
+   },
+   "0901234567"
   ],
   "expect": {
-   "handoff": false,
+   "handoff": true,
    "reply_has": [
     "bài test Excel nhỏ 5 câu",
-    "đúng 4/5 câu"
+    "đúng 4/5 câu",
+    "lộ trình khóa Excel nâng cao & Dashboard"
    ],
    "slots": {
     "level": "basic",
     "course": "VP-EXCEL-NC"
    },
    "lead": {
-    "placement_result": "Excel: 4/5 · Biết cơ bản"
+    "placement_result": "Excel: 4/5 · Biết cơ bản",
+    "quiz_detail": "Pivot Table"
    }
   }
  }

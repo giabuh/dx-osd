@@ -261,5 +261,33 @@
   "depends_on_slot": "",
   "depends_on_value": "",
   "lead_field": "placement_result"
+ },
+ {
+  "slot_key": "quiz_detail",
+  "label": "Cần củng cố (bài test)",
+  "slot_type": "text",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 112,
+  "ask_on_demand": 1,
+  "ask_template": "Dạ phần nào {{ brand.you }} thấy còn khó ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "quiz_detail"
+ },
+ {
+  "slot_key": "voucher_code",
+  "label": "Mã ưu đãi",
+  "slot_type": "text",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 114,
+  "ask_on_demand": 1,
+  "ask_template": "Dạ {{ brand.you }} đọc giúp {{ brand.me }} mã ưu đãi nhé ạ.",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "voucher_code"
  }
 ]

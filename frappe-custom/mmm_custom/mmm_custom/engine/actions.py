@@ -7,7 +7,7 @@ An action returns extra template context; keys starting with "_" are instruction
 
 from dataclasses import dataclass
 
-from mmm_custom.engine.context import CUSTOMER_SLOTS, branch_context
+from mmm_custom.engine.context import CUSTOMER_SLOTS, branch_context, course_context
 from mmm_custom.engine.advisor import advisor_questions, score_courses
 from mmm_custom.engine.render import date_vi, vnd
 from mmm_custom.engine.state import filled, value
@@ -125,9 +125,20 @@ def level_quiz(a):
     course = a.catalog.courses.get(res["course"])
     level_slot = a.catalog.slot("level")
     option = level_slot.option(res["level"]) if level_slot else None
+    trials = _trial_buttons(a, course)
     return {"quiz": {**base, "done": True, **res, "missed_text": ", ".join(res["missed"]),
-                     "level_label": option.label if option else "",
-                     "course_name": course.name if course else "", "course_fee": course.fee if course else 0}}
+                     "level_label": option.label if option else "", "trials": len(trials),
+                     "course_name": course.name if course else "", "course_fee": course.fee if course else 0},
+            "_buttons": trials}
+
+
+def _trial_buttons(a, course):
+    """The free trial classes of the recommended course, as the trial_offer skill shows them (D-106)."""
+    trial = next((s for s in sorted(a.catalog.skills.values(), key=lambda s: s.order) if s.action == "trial_offer"), None)
+    if not (course and trial and a.data is not None):
+        return []
+    ctx = {**a.ctx, "course": course_context(course, a.catalog)}
+    return trial_offer(ActionInput(trial, ctx, a.slots, a.catalog, a.data, a.today)).get("_buttons", [])
 
 
 def applicable(promo, course, branch):

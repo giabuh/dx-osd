@@ -40,6 +40,8 @@ class Decision:
     faq: dict = field(default_factory=dict)     # course FAQ answered first (D-085)
     offer: str = ""                             # level quiz offered instead of the next slot question (D-106)
     declined: str = ""                          # level quiz the customer put off this turn
+    quiz_done: str = ""                         # level quiz finished this turn: ask the phone next (pipeline)
+    voucher: dict = field(default_factory=dict)  # level-test reward sent this turn (pipeline, D-106)
 
 
 def faq_question(faq, catalog):
