@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeJev, FakeRepo, demo_catalog, fill, render
+from engine_fixtures import FakeJev, FakeRepo, demo_catalog, fill, render, without_knowledge
 
 from mmm_custom.engine.combine import combine
 from mmm_custom.engine.decide import Decision, decide
@@ -40,7 +40,7 @@ class TestQuestion(unittest.TestCase):
     def test_not_asked_without_a_course_or_without_faqs(self):
         self.assertNotIn(COURSE_FAQ, build_questions(ConversationState("1"), Understanding(), CAT))
         word = ConversationState("1", slots={"course": fill("VP-WORD")})
-        self.assertNotIn(COURSE_FAQ, build_questions(word, Understanding(), CAT))
+        self.assertNotIn(COURSE_FAQ, build_questions(word, Understanding(), without_knowledge(CAT, "VP-WORD")))
 
 
 class TestCombine(unittest.TestCase):

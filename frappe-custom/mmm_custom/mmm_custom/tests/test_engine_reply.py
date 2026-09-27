@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeRepo, demo_catalog, fill, promo, render, schedule
+from engine_fixtures import FakeRepo, demo_catalog, fill, promo, render, schedule, without_knowledge
 
 from mmm_custom.engine.decide import Decision, decide
 from mmm_custom.engine.reply import Reply, add_buttons, compose, split_messages
@@ -42,7 +42,8 @@ class TestCompose(unittest.TestCase):
 
     def test_course_content_without_knowledge_keeps_the_short_answer(self):
         d = Decision("answer", slots={"course": fill("VP-WORD")}, skills=["course_content"])
-        self.assertEqual(self.compose(d).variants, [{"skill": "course_content", "variant": "default"}])
+        r = compose(d, ConversationState("1"), without_knowledge(CAT, "VP-WORD"), render, self.repo, self.repo.today())
+        self.assertEqual(r.variants, [{"skill": "course_content", "variant": "default"}])
 
     def test_schedule_variants(self):
         d = Decision("answer", slots={"course": fill("VP-EXCEL")}, skills=["schedule_lookup"])

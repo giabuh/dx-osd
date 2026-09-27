@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import demo_catalog, promo, render, schedule
+from engine_fixtures import demo_catalog, promo, render, schedule, without_knowledge
 
 from mmm_custom.engine.catalog import build_catalog
 from mmm_custom.engine.knowledge import CHECKS, course_overview, knowledge_table
@@ -24,7 +24,8 @@ class TestCourseOverview(unittest.TestCase):
         self.assertIn("Pivot Table", " ".join(o["syllabus"]))
 
     def test_gaps_tell_what_to_fill_in(self):
-        o = course_overview(CAT.courses["VP-WORD"], CAT, [], [], render)
+        cat = without_knowledge(CAT, "VP-WORD")
+        o = course_overview(cat.courses["VP-WORD"], cat, [], [], render)
         self.assertEqual(len(o["gaps"]), 4)
         for text in ("mô tả", "nội dung học", "câu hỏi thường gặp", "lịch khai giảng"):
             self.assertTrue(any(text in g for g in o["gaps"]), text)
@@ -44,6 +45,14 @@ class TestCourseOverview(unittest.TestCase):
     def test_branch_only_promotions_do_not_set_the_fee_everyone_sees(self):
         o = course_overview(CAT.courses["VP-EXCEL"], CAT, [], [promo("Long Thành -15%", amount=15, branches=["CN Long Thành"])], render)
         self.assertEqual((o["promotions"], o["final_fee"]), ([], 1800000.0))
+
+
+class TestDemoKnowledge(unittest.TestCase):
+    def test_every_demo_course_is_covered_and_its_replies_render(self):
+        for course in CAT.courses.values():
+            o = course_overview(course, CAT, SCHEDULES, [], render)
+            self.assertEqual(o["gaps"], [], course.code)
+            self.assertTrue(all(f["reply"] and "{" not in f["reply"] for f in o["faqs"]), course.code)
 
 
 class TestKnowledgeTable(unittest.TestCase):

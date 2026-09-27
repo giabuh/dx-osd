@@ -24,6 +24,14 @@ def demo_catalog(**settings):
     return build_catalog(data)
 
 
+def without_knowledge(catalog, code):
+    """A copy of the catalog where one course has no overview, syllabus or FAQs (a newly added course)."""
+    import dataclasses
+
+    course = dataclasses.replace(catalog.courses[code], summary="", syllabus=(), faqs=())
+    return dataclasses.replace(catalog, courses={**catalog.courses, code: course})
+
+
 def fill(value, source="keyword"):
     return {"value": value, "source": source, "confidence": 1.0}
 
