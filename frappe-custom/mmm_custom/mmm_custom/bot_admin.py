@@ -6,6 +6,9 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
+import html
+import re
+
 from mmm_custom.desk import can_open_bot
 
 whitelist = frappe.whitelist if frappe else (lambda **kw: (lambda fn: fn))
@@ -13,6 +16,8 @@ whitelist = frappe.whitelist if frappe else (lambda **kw: (lambda fn: fn))
 LEVELS = ("Consultant", "Team Lead")
 STAFF_ROLE = "Sales User"
 BRANCH_FIELDS = ("button_label", "branch_code", "address", "hotline", "map_url", "aliases")
+AUDIENCES = ("Trẻ em", "Học sinh – Sinh viên", "Người đi làm", "Doanh nghiệp")  # CRM Product.audience options
+OFFERS = ("all", "full")
 
 
 def _require_access():
@@ -68,6 +73,88 @@ def save_branch(name="", territory_name="", area="", new_area="", **fields):
         doc = frappe.get_doc({"doctype": "CRM Territory", "territory_name": territory_name, "is_group": 0,
                               "parent_crm_territory": area, **values}).insert()
     return doc.name
+
+
+def _text(value):
+    return str(value if value is not None else "").strip()
+
+
+def _lines(value):
+    items = value if isinstance(value, list) else _text(value).splitlines()
+    return "\n".join(line for line in (_text(i) for i in items) if line)
+
+
+def _int(value, label):
+    digits = re.sub(r"[^\d]", "", _text(value))  # "2.500.000đ" → 2500000
+    if _text(value) and not digits:
+        raise ValueError(f"{label} phải là số.")
+    return int(digits or 0)
+
+
+def _paragraphs(text):
+    """The overview as the CRM stores it (HTML); plain text becomes escaped paragraphs."""
+    if text.startswith("<"):
+        return text
+    return "".join(f"<p>{html.escape(p.strip(), quote=False)}</p>" for p in re.split(r"\n\s*\n", text) if p.strip())
+
+
+def course_values(data):
+    """A course from the /bot form or an imported file → CRM Product values; ValueError names what is wrong."""
+    values = {k: _text(data.get(k)) for k in ("product_name", "product_code", "course_group", "button_label",
+                                               "audience", "duration_text", "certificate", "offer")}
+    values["product_code"] = values["product_code"].upper()
+    for key, label in (("product_name", "tên khóa học"), ("product_code", "mã khóa học"),
+                       ("course_group", "nhóm khóa học")):
+        if not values[key]:
+            raise ValueError(f"Nhập {label}.")
+    if values["audience"] and values["audience"] not in AUDIENCES:
+        raise ValueError(f"Đối tượng phải là một trong: {', '.join(AUDIENCES)}.")
+    values["offer"] = values["offer"] or "all"
+    if values["offer"] not in OFFERS:
+        raise ValueError("Nơi mở lớp phải là all hoặc full.")
+    values["button_label"] = (values["button_label"] or values["product_name"])[:20].strip()
+    values["standard_rate"] = _int(data.get("standard_rate"), "Học phí")
+    values["min_age"], values["max_age"] = _int(data.get("min_age"), "Tuổi"), _int(data.get("max_age"), "Tuổi")
+    if values["min_age"] and values["max_age"] and values["min_age"] > values["max_age"]:
+        raise ValueError("Tuổi tối thiểu lớn hơn tuổi tối đa.")
+    aliases = data.get("aliases")
+    values["aliases"] = ", ".join(aliases) if isinstance(aliases, list) else _text(aliases)
+    values["description"] = _paragraphs(_text(data.get("description")))
+    values["syllabus"] = _lines(data.get("syllabus"))
+    faqs = []
+    for i, f in enumerate(data.get("faqs") or [], 1):
+        question, answer = _text(f.get("question")), _text(f.get("answer"))
+        if not question and not answer:
+            continue
+        if not question or not answer:
+            raise ValueError(f"Câu hỏi thường gặp {i} cần cả câu hỏi và câu trả lời.")
+        faqs.append({"question": question, "examples": _lines(f.get("examples")), "answer": answer})
+    values["faqs"] = faqs
+    return values
+
+
+@whitelist()
+def course_groups():
+    _require_access()
+    return frappe.get_all("Course Group", pluck="name", order_by="sort_order asc")
+
+
+@whitelist(methods=["POST"])
+def save_course(course=None):
+    """Create a course the bot can answer about right away (knowledge.overview lists it)."""
+    _require_access()
+    data = frappe.parse_json(course) if isinstance(course, str) else (course or {})
+    try:
+        values = course_values(data)
+    except ValueError as e:
+        frappe.throw(str(e))
+    if not frappe.db.exists("Course Group", values["course_group"]):
+        frappe.throw(f"Không có nhóm khóa học “{values['course_group']}”.")
+    if frappe.db.exists("CRM Product", values["product_code"]):
+        frappe.throw(f"Mã khóa học {values['product_code']} đã có.")
+    nexts = [n for n in (data.get("next_courses") or []) if frappe.db.exists("CRM Product", n)]
+    doc = frappe.get_doc({"doctype": "CRM Product", **values, "next_courses": [{"course": n} for n in nexts]})
+    return doc.insert().name
 
 
 @whitelist()

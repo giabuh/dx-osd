@@ -1,0 +1,53 @@
+{
+  "product_code": "MKT-CANVA",
+  "product_name": "Canva & CapCut cho bán hàng online",
+  "button_label": "Canva & CapCut",
+  "course_group": "Digital Marketing",
+  "audience": "Người đi làm",
+  "min_age": 16,
+  "max_age": 55,
+  "standard_rate": 1500000,
+  "duration_text": "1 tháng (8 buổi)",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "canva, capcut, thiet ke canva, lam video tiktok, ban hang online, dung video dien thoai",
+  "next_courses": ["MKT-FB", "MKT-TT"],
+  "description": "Khóa học cho chủ shop và nhân viên bán hàng online: tự thiết kế ảnh sản phẩm, banner, bài đăng Facebook bằng Canva và dựng video ngắn TikTok/Reels bằng CapCut ngay trên điện thoại.\n\nKhông cần năng khiếu vẽ. Học viên mang theo sản phẩm của mình, mỗi buổi làm ra ấn phẩm dùng được ngay cho shop.",
+  "syllabus": [
+    "Làm quen Canva: kích thước chuẩn cho Facebook, Instagram, TikTok",
+    "Bố cục, màu sắc và font chữ cho ảnh bán hàng",
+    "Chụp và xóa phông ảnh sản phẩm bằng điện thoại",
+    "Thiết kế banner khuyến mãi, bảng giá, bài đăng carousel",
+    "CapCut: cắt ghép, phụ đề tự động, nhạc và hiệu ứng",
+    "Kịch bản video 15–30 giây giữ chân người xem",
+    "Bộ nhận diện cho shop: logo, template dùng lại"
+  ],
+  "faqs": [
+    {
+      "question": "Không biết vẽ, không có năng khiếu có học được không?",
+      "examples": [
+        "không biết thiết kế học được không",
+        "không có khiếu vẽ",
+        "chưa dùng canva bao giờ"
+      ],
+      "answer": "Dạ học được ạ. Canva có sẵn mẫu, {{ brand.you }} chỉ cần học cách chọn bố cục, màu và chữ cho đẹp. Khóa {{ course.name }} học {{ course.duration }}, buổi nào cũng làm ra ấn phẩm dùng được ngay cho shop ạ."
+    },
+    {
+      "question": "Học trên điện thoại hay máy tính?",
+      "examples": [
+        "có học trên điện thoại được không",
+        "không có laptop học được không",
+        "capcut trên điện thoại hay máy tính"
+      ],
+      "answer": "Dạ học cả hai ạ: Canva làm trên máy tính tại lớp, CapCut dựng video ngay trên điện thoại của {{ brand.you }}. Không có laptop vẫn học được bình thường ạ."
+    },
+    {
+      "question": "Có phải trả phí Canva Pro không?",
+      "examples": [
+        "canva pro có mất tiền không",
+        "có cần mua tài khoản không"
+      ],
+      "answer": "Dạ không bắt buộc ạ. Khóa dạy trên bản Canva miễn phí; phần nào cần Canva Pro giáo viên sẽ chỉ cách dùng bản dùng thử và cách thay thế miễn phí ạ."
+    }
+  ]
+}

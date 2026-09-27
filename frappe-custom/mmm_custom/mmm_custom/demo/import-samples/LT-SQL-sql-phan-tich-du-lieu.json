@@ -1,0 +1,54 @@
+{
+  "product_code": "LT-SQL",
+  "product_name": "SQL & phân tích dữ liệu",
+  "button_label": "SQL & dữ liệu",
+  "course_group": "Lập trình",
+  "audience": "Người đi làm",
+  "min_age": 18,
+  "max_age": 50,
+  "standard_rate": 2800000,
+  "duration_text": "2 tháng (16 buổi)",
+  "certificate": "Chứng nhận hoàn thành Sao Việt",
+  "offer": "all",
+  "aliases": "sql, hoc sql, phan tich du lieu, data analyst, truy van du lieu, power bi",
+  "next_courses": ["LT-PY", "VP-EXCEL-NC"],
+  "description": "Khóa học dành cho người đi làm muốn tự lấy số liệu thay vì chờ phòng IT: viết câu truy vấn SQL trên dữ liệu bán hàng thật, làm báo cáo tuần/tháng và vẽ dashboard trên Power BI.\n\nKhông cần biết lập trình trước. Mỗi buổi học có bài tập trên bộ dữ liệu mẫu của một chuỗi cửa hàng, cuối khóa làm một báo cáo hoàn chỉnh để đưa vào CV.",
+  "syllabus": [
+    "Cơ sở dữ liệu là gì, cài đặt SQL Server và DBeaver",
+    "SELECT, WHERE, ORDER BY: lọc và sắp xếp dữ liệu",
+    "GROUP BY và hàm tổng hợp: doanh thu theo tháng, theo cửa hàng",
+    "JOIN nhiều bảng: khách hàng, đơn hàng, sản phẩm",
+    "Subquery, CTE và hàm cửa sổ (xếp hạng, lũy kế)",
+    "Làm sạch dữ liệu và xử lý giá trị trống",
+    "Kết nối Power BI, dựng dashboard doanh thu",
+    "Dự án cuối khóa: báo cáo bán hàng hoàn chỉnh"
+  ],
+  "faqs": [
+    {
+      "question": "Chưa biết lập trình có học SQL được không?",
+      "examples": [
+        "chưa biết code có học được không",
+        "dân kế toán học sql nổi không",
+        "không phải dân IT học được không"
+      ],
+      "answer": "Dạ được ạ. Khóa {{ course.name }} bắt đầu từ con số 0, SQL gần với tiếng Anh thông thường nên dễ hơn lập trình nhiều. Học viên của {{ brand.me }} phần lớn là kế toán, bán hàng, nhân sự ạ."
+    },
+    {
+      "question": "Học xong làm được công việc gì?",
+      "examples": [
+        "học xong sql làm gì",
+        "có xin được việc data analyst không",
+        "học xong có tự làm báo cáo được không"
+      ],
+      "answer": "Dạ học xong {{ brand.you }} tự viết truy vấn lấy số liệu, làm báo cáo và dashboard Power BI, đủ để ứng tuyển vị trí Data Analyst junior hoặc làm báo cáo tại công ty hiện tại ạ. Muốn đi sâu hơn, {{ brand.me }} gợi ý học tiếp {{ course.next_courses | join(', ') }} ạ."
+    },
+    {
+      "question": "Có cần mang laptop không?",
+      "examples": [
+        "có phải mang máy tính không",
+        "máy yếu học được không"
+      ],
+      "answer": "Dạ lớp có sẵn máy cài đủ phần mềm ạ. Nếu {{ brand.you }} mang laptop riêng thì buổi đầu giáo viên cài giúp, máy RAM 8GB là học thoải mái ạ."
+    }
+  ]
+}

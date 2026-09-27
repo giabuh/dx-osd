@@ -35,6 +35,14 @@
     .checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
     .checks label { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; margin: 4px 0; }
     label.inline { display: flex; align-items: center; gap: 6px; font-weight: 500; margin: 8px 0 0; }
+    dialog.wide { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 32px); }
+    dialog input[type="text"] { width: 100%; }
+    .head-actions { display: flex; gap: 10px; align-items: center; }
+    .file-btn { display: inline-block; margin: 0; font-size: 15px; font-weight: 400; cursor: pointer; }
+    .file-btn:focus-within { outline: 2px solid #2457a6; }
+    .faq-head { display: flex; justify-content: space-between; align-items: baseline; }
+    .faq-row { border: 1px solid #dce4ee; border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+    .faq-row-head { display: flex; justify-content: space-between; margin-bottom: 6px; }
     .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
     .toolbar input, .toolbar select { width: auto; min-width: 200px; }
@@ -130,7 +138,7 @@
     </nav>
     <main class="content">
       <section id="overview" class="pane"><div class="section-head"><div><h2>Tổng quan hôm nay</h2><span class="muted">Hoạt động của bot trên Messenger</span></div></div><div id="stats" class="cards"></div><div class="panel"><h3>Khách tiềm năng mới nhất</h3><div class="table-wrap"><table><thead><tr><th>Khách hàng</th><th>Điện thoại</th><th>Khóa học</th><th>Chi nhánh</th><th>Tư vấn viên</th><th>Thời gian</th></tr></thead><tbody id="latest-leads"></tbody></table></div></div></section>
-      <section id="knowledge" class="pane" hidden><div class="section-head"><div><h2>Tri thức khóa học</h2><span class="muted">Dữ liệu bot dùng để trả lời khách</span></div></div><div class="knowledge-grid"><div class="panel course-list"><input id="course-search" type="search" placeholder="Tìm khóa học" aria-label="Tìm khóa học"><div id="courses"></div></div><div id="course-detail" class="panel detail muted">Chọn một khóa học để xem bot trả lời như thế nào.</div></div></section>
+      <section id="knowledge" class="pane" hidden><div class="section-head"><div><h2>Tri thức khóa học</h2><span class="muted">Dữ liệu bot dùng để trả lời khách</span></div><div class="head-actions"><label class="secondary file-btn">Nhập từ file<input id="course-import" type="file" accept=".json,application/json" hidden></label><button id="add-course" class="primary" type="button">+ Thêm khóa học</button></div></div><div id="knowledge-notice"></div><div class="knowledge-grid"><div class="panel course-list"><input id="course-search" type="search" placeholder="Tìm khóa học" aria-label="Tìm khóa học"><div id="courses"></div></div><div id="course-detail" class="panel detail muted">Chọn một khóa học để xem bot trả lời như thế nào.</div></div></section>
       <section id="playground" class="pane" hidden><div class="section-head"><div><h2>Thử chat với bot</h2><span class="muted">Cuộc trò chuyện thử không gửi tin nhắn hoặc tạo Lead</span></div><button id="reset-chat" class="secondary" type="button">Cuộc trò chuyện mới</button></div><div class="chat-grid"><div class="panel"><div class="chat-options"><span class="muted">Bạn đang đóng vai khách hàng</span><label><input id="use-jev" type="checkbox"> Dùng Jev</label></div><div id="chat-log" class="chat-log" aria-live="polite"></div><form id="chat-form" class="chat-form"><input id="chat-input" type="text" autocomplete="off" placeholder="Nhập tin nhắn của khách hàng…" maxlength="1000" required><button class="primary" type="submit">Gửi</button></form></div><div class="panel"><h3>Bot hiểu gì</h3><p class="muted">Gửi tin nhắn để xem từ khóa, Jev và lý do bot trả lời.</p><details id="inspector" open><summary>Chi tiết lượt chat</summary><div id="inspector-content"></div></details></div></div></section>
       <section id="branches" class="pane" hidden><div class="section-head"><div><h2>Chi nhánh</h2><span class="muted">Bot hỏi khách theo khu vực → chi nhánh, rồi giao cho nhân viên của chi nhánh đó</span></div><button id="add-branch" class="primary" type="button">+ Thêm chi nhánh</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Chi nhánh</th><th>Mã</th><th>Địa chỉ</th><th>Hotline</th><th>Nhân viên</th><th></th></tr></thead><tbody id="branch-rows"></tbody></table></div></div></section>
       <section id="staff" class="pane" hidden><div class="section-head"><div><h2>Nhân viên</h2><span class="muted">Lưu ở đây là tự đồng bộ sang Chatwoot: tài khoản, nhóm chi nhánh</span></div><button id="add-staff" class="primary" type="button">+ Thêm nhân viên</button></div><div id="staff-notice"></div><div class="toolbar"><input id="staff-search" type="search" placeholder="Tìm tên hoặc email" aria-label="Tìm nhân viên"><select id="staff-branch" aria-label="Lọc chi nhánh"></select></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Chi nhánh</th><th>Cấp bậc</th><th>Chuyên môn</th><th>Trạng thái</th><th>Chatwoot</th><th></th></tr></thead><tbody id="staff-rows"></tbody></table></div></div></section>
@@ -159,6 +167,28 @@
     <p id="staff-error" class="error"></p>
     <div class="form-actions"><button type="button" class="secondary" data-close>Huỷ</button><button type="submit" class="primary">Lưu</button></div>
   </form></dialog>
+  <dialog id="course-dialog" class="wide"><form id="course-form" method="dialog">
+    <h3>Thêm khóa học</h3>
+    <p id="course-source" class="muted"></p>
+    <div class="form-row"><div><label for="cf-name">Tên khóa học</label><input id="cf-name" name="product_name" type="text" required placeholder="SQL cho phân tích dữ liệu"></div><div><label for="cf-code">Mã khóa học</label><input id="cf-code" name="product_code" type="text" required placeholder="LT-SQL"></div></div>
+    <div class="form-row"><div><label for="cf-group">Nhóm khóa học</label><select id="cf-group" name="course_group" required></select></div><div><label for="cf-button">Chữ trên nút bot</label><input id="cf-button" name="button_label" type="text" maxlength="20" placeholder="Để trống = tên khóa"></div></div>
+    <div class="form-row"><div><label for="cf-fee">Học phí (đ)</label><input id="cf-fee" name="standard_rate" type="text" inputmode="numeric" placeholder="2500000"></div><div><label for="cf-duration">Thời lượng</label><input id="cf-duration" name="duration_text" type="text" placeholder="2 tháng (16 buổi)"></div></div>
+    <div class="form-row"><div><label for="cf-audience">Đối tượng</label><select id="cf-audience" name="audience"><option value="">—</option><option>Trẻ em</option><option>Học sinh – Sinh viên</option><option>Người đi làm</option><option>Doanh nghiệp</option></select></div><div class="form-row"><div><label for="cf-min">Tuổi từ</label><input id="cf-min" name="min_age" type="text" inputmode="numeric"></div><div><label for="cf-max">đến</label><input id="cf-max" name="max_age" type="text" inputmode="numeric"></div></div></div>
+    <div class="form-row"><div><label for="cf-cert">Chứng chỉ</label><input id="cf-cert" name="certificate" type="text"></div><div><label for="cf-offer">Mở lớp tại</label><select id="cf-offer" name="offer"><option value="all">Mọi chi nhánh</option><option value="full">Chỉ chi nhánh lớn</option></select></div></div>
+    <label for="cf-aliases">Khách hay gọi là (cách nhau dấu phẩy)</label><input id="cf-aliases" name="aliases" type="text" placeholder="sql, hoc sql, phan tich du lieu">
+    <label for="cf-description">Tổng quan</label><textarea id="cf-description" name="description" rows="3"></textarea>
+    <label for="cf-syllabus">Nội dung học (mỗi dòng một phần)</label><textarea id="cf-syllabus" name="syllabus" rows="4"></textarea>
+    <div class="faq-head"><label>Câu hỏi thường gặp</label><button id="add-faq" type="button" class="link-btn">+ Thêm câu hỏi</button></div>
+    <div id="cf-faqs"></div>
+    <p id="course-error" class="error"></p>
+    <div class="form-actions"><button type="button" class="secondary" data-close>Huỷ</button><button type="submit" class="primary">Lưu khóa học</button></div>
+  </form></dialog>
+  <template id="faq-template"><fieldset class="faq-row">
+    <div class="faq-row-head"><strong>Câu hỏi</strong><button type="button" class="link-btn" data-remove-faq>Xoá</button></div>
+    <input data-faq="question" type="text" placeholder="Học xong có làm được việc không?">
+    <label>Khách có thể hỏi kiểu (mỗi dòng một câu)</label><textarea data-faq="examples" rows="2"></textarea>
+    <label>Bot trả lời</label><textarea data-faq="answer" rows="3" placeholder="Dạ học xong anh/chị …"></textarea>
+  </fieldset></template>
   <script src="/assets/mmm_custom/js/bot_page.js?v={{ asset_version }}"></script>
 </body>
 </html>

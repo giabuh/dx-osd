@@ -129,6 +129,79 @@
     } catch (error) { showError(detail, error); }
   }
 
+  /* New course: typed in, or read from a JSON file into the same form to review before saving. */
+  let courseGroups = null;
+
+  function faqRow(faq = {}) {
+    const row = $("#faq-template").content.firstElementChild.cloneNode(true);
+    const lines = (value) => Array.isArray(value) ? value.join("\n") : (value || "");
+    row.querySelector('[data-faq="question"]').value = faq.question || "";
+    row.querySelector('[data-faq="examples"]').value = lines(faq.examples);
+    row.querySelector('[data-faq="answer"]').value = faq.answer || "";
+    row.querySelector("[data-remove-faq]").addEventListener("click", () => row.remove());
+    $("#cf-faqs").append(row);
+  }
+
+  async function openCourse(data = {}, source = "") {
+    const form = $("#course-form");
+    try {
+      courseGroups = courseGroups || await call("mmm_custom.bot_admin.course_groups");
+    } catch (error) { $("#knowledge-notice").innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`; return; }
+    form.reset();
+    $("#course-error").textContent = "";
+    $("#course-source").textContent = source ? `Đã đọc từ ${source}. Xem lại rồi bấm Lưu.` : "";
+    form.course_group.innerHTML = '<option value="">— Chọn nhóm —</option>' + options(courseGroups, data.course_group);
+    const plain = (html) => new DOMParser().parseFromString(html || "", "text/html").body.textContent.trim();
+    ["product_name", "product_code", "button_label", "standard_rate", "duration_text", "min_age", "max_age",
+      "certificate", "aliases"].forEach((key) => { if (data[key]) form[key].value = data[key]; });
+    if (data.audience) form.audience.value = data.audience;
+    if (data.offer) form.offer.value = data.offer;
+    form.description.value = /^\s*</.test(data.description || "")
+      ? plain(String(data.description).replace(/<\/p>\s*<p>/g, "\n\n")) : (data.description || "");
+    form.syllabus.value = Array.isArray(data.syllabus) ? data.syllabus.join("\n") : (data.syllabus || "");
+    $("#cf-faqs").replaceChildren();
+    (data.faqs?.length ? data.faqs : [{}]).forEach(faqRow);
+    form.dataset.nextCourses = JSON.stringify(data.next_courses || []);
+    $("#course-dialog").showModal();
+  }
+
+  $("#add-course").addEventListener("click", () => openCourse());
+  $("#add-faq").addEventListener("click", () => faqRow());
+  $("#course-import").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    event.target.value = "";  // choosing the same file again still fires
+    if (!file) return;
+    try {
+      let data = JSON.parse(await file.text());
+      if (Array.isArray(data)) {
+        if (data.length !== 1) throw new Error("Mỗi file chứa một khóa học.");
+        data = data[0];
+      }
+      if (!data || typeof data !== "object") throw new Error("File không đúng mẫu khóa học.");
+      $("#knowledge-notice").replaceChildren();
+      openCourse(data, file.name);
+    } catch (error) {
+      const message = error instanceof SyntaxError ? "File không phải JSON hợp lệ." : error.message;
+      $("#knowledge-notice").innerHTML = `<p class="error">${escapeHtml(file.name)}: ${escapeHtml(message)}</p>`;
+    }
+  });
+  $("#course-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const course = Object.fromEntries(new FormData(form));
+    course.faqs = [...form.querySelectorAll(".faq-row")].map((row) => Object.fromEntries(
+      [...row.querySelectorAll("[data-faq]")].map((field) => [field.dataset.faq, field.value])));
+    course.next_courses = JSON.parse(form.dataset.nextCourses || "[]");
+    try {
+      const code = await call("mmm_custom.bot_admin.save_course", { course });
+      $("#course-dialog").close();
+      $("#knowledge-notice").innerHTML = `<div class="notice">Đã thêm khóa ${escapeHtml(code)}. Bot trả lời được khóa này ngay.</div>`;
+      $("#course-search").value = "";
+      await loadKnowledge();
+      showCourse(code);
+    } catch (error) { $("#course-error").textContent = error.message; }
+  });
+
   function bubble(text, role) {
     const item = document.createElement("div");
     item.className = `bubble ${role}`;
