@@ -169,7 +169,9 @@ def run_scenario(scenario, base_repo, render):
     cid, transcript, final = f"scenario-{scenario['id']}", [], None
     for i, text in enumerate(scenario["messages"], 1):
         before = len(effects.of("send"))
-        turn = run_turn(Event("customer_message", cid, i, text, {"id": cid}), repo, effects, render)
+        event = Event("customer_message", cid, i, text, {"id": cid}, channel=scenario.get("channel", "facebook_messenger"),
+                      campaign=scenario.get("campaign", ""))
+        turn = run_turn(event, repo, effects, render)
         sent = effects.of("send")[before:]
         final = turn or final
         transcript.append({"customer": text, "bot": [m for s in sent for m in s["messages"]],

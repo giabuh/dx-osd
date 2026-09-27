@@ -44,6 +44,7 @@ for real customers until a later labelled gate passes.
 | `intelligence.py:208` `analyze_conversation` | Jev intent/hotness/phone/email analysis and labels; skips conversations handled by an active Bot Conversation | — |
 | `intelligence.py:74` `ask_jev` | One System One call (`/v1/systemone`), typed questions | Reused |
 | `followup.py:39` `plan_followups` | Daily 08:00 (`hooks.py` cron): Jev picks follow-up for stale open leads → CRM Task | C6.4 |
+| `sources.py` | Channel list (D-100): Chatwoot channel → CRM Lead Source for new Leads, `source_campaign`, statuses for planned channels (Zalo, TikTok) | Add a channel = one row |
 | `dedupe.py`, `data_quality.py` | Email/phone normalisation and matching; data-quality label | Reused; C7.2 |
 | `chatwoot_client.py` | Chatwoot REST v1 wrapper; C1 added inbox/agent/team methods | Reused/extended |
 | `setup.py` | Custom fields on CRM Lead via `after_install` + patches (`patches.txt`); catalog custom fields on CRM Territory/CRM Product in `CATALOG_FIELDS`, applied idempotently by `create_catalog_fields()` on install and every migrate (`after_migrate` hook) | Add new catalog fields to `CATALOG_FIELDS` |
@@ -63,7 +64,7 @@ Chatwoot: 44 agents, 15 teams.
 
 ## CRM Lead custom fields (from `setup.py`)
 
-`chatwoot_contact_id` (Data, unique) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
+`chatwoot_contact_id` (Data, unique) · `source_campaign` (Data, D-100) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
 options**, no longer written) · `data_quality` (Select) · `ai_intent` (Select) · `ai_hotness` (Select).
 
 ## Standard Frappe CRM pieces we will reuse (vendored `crm/`, not edited)

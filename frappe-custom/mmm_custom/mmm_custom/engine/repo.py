@@ -17,6 +17,7 @@ from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
 
 CACHE_KEY = "lead_engine_catalog_rows"
+FIRST_TOUCH = ("source", "source_campaign")
 
 
 def _children(doctype, parent_doctype, parentfield, fields):
@@ -154,6 +155,8 @@ def save_lead(state, fields, courses, contact):
     for field, val in fields.items():
         if not doc.meta.has_field(field):
             continue
+        if field in FIRST_TOUCH and (name or (field == "source" and not frappe.db.exists("CRM Lead Source", val))):
+            continue  # an existing Lead keeps the channel it first came from (D-100)
         if field == "first_name":
             if doc.first_name not in PLACEHOLDER_NAMES:
                 continue

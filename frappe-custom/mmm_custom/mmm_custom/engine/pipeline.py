@@ -21,6 +21,7 @@ from mmm_custom.engine.log import log_row, signals
 from mmm_custom.engine.qualify import LABELS, NEW, lead_status
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.understand import understand
+from mmm_custom.sources import campaign_of, channel_key, source_name
 
 MAX_TEXT = 1000  # D-061 input cap
 
@@ -33,6 +34,8 @@ class Event:
     text: str = ""
     contact: dict = field(default_factory=dict)
     inbox_id: str = ""
+    channel: str = ""  # sources.CHANNELS key (D-100)
+    campaign: str = ""
 
 
 @dataclass
@@ -69,7 +72,7 @@ def parse_event(payload):
         contact = _dict(_dict(conv.get("meta")).get("sender")) or sender
         inbox = conv.get("inbox_id") or _dict(payload.get("inbox")).get("id") or ""
         return Event("customer_message", cid, int(payload.get("id") or 0), (payload.get("content") or "")[:MAX_TEXT],
-                     contact, str(inbox))
+                     contact, str(inbox), channel_key(conv), campaign_of(conv))
     if mtype in (1, "outgoing") and sender.get("type") == "user":
         return Event("agent_message", cid, int(payload.get("id") or 0))
     return Event("ignore", cid)
@@ -148,6 +151,10 @@ def write_lead(turn, effects, catalog):
         return
     fields, courses = lead_updates(state.slots, catalog)
     fields.update(ai)
+    if not state.lead and source_name(state.channel):  # first touch: a new Lead records where it came from
+        fields["source"] = source_name(state.channel)
+        if state.campaign:
+            fields["source_campaign"] = state.campaign
     try:
         state.lead = effects.save_lead(state, fields, courses, turn.event.contact) or state.lead
     except Exception as e:
@@ -164,6 +171,7 @@ def write_lead(turn, effects, catalog):
 def run_turn(event, repo, effects, render):
     catalog = repo.catalog()
     state = repo.load_state(event)
+    state.channel, state.campaign = event.channel or state.channel, event.campaign or state.campaign
     if event.message_id and event.message_id <= state.last_message_id:
         return None  # redelivered webhook: this message was already answered
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),

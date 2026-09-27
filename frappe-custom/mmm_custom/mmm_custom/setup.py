@@ -156,8 +156,11 @@ def update_crm_fields_layout():
 
 
 def create_lead_sources():
+	from mmm_custom.sources import ensure_sources
+
 	for source_name in ("Messenger", "Instagram", "Messenger Bot"):
 		frappe.get_doc({"doctype": "CRM Lead Source", "source_name": source_name}).insert(ignore_if_duplicate=True)
+	ensure_sources()
 	frappe.db.commit()
 	print("Lead sources created")
 
@@ -195,6 +198,9 @@ CATALOG_FIELDS = {
 		{"fieldname": "learner_type", "label": "Learner", "fieldtype": "Data", "insert_after": "course_interest"},
 		{"fieldname": "learner_age", "label": "Learner Age", "fieldtype": "Int", "insert_after": "learner_type"},
 		{"fieldname": "preferred_shift", "label": "Preferred Shift", "fieldtype": "Data", "insert_after": "learner_age"},
+		# Where the Lead first came from, next to the standard `source` (D-100)
+		{"fieldname": "source_campaign", "label": "Campaign", "fieldtype": "Data", "length": 140, "read_only": 1,
+		 "description": "Campaign or landing page reported by the channel", "insert_after": "source"},
 	],
 }
 

@@ -39,6 +39,7 @@ from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.engine.repo import add_products, load_catalog
 from mmm_custom.engine.understand import match_courses
 from mmm_custom.intelligence import enqueue_analysis
+from mmm_custom.sources import channel_key, source_name
 
 
 def detect_courses(text, catalog=None):
@@ -214,7 +215,7 @@ def chatwoot_sync():
                 "first_name": first_name,
                 "email": email,
                 "mobile_no": normalize_phone(phone),
-                "source": "Messenger",
+                "source": source_name(channel_key(conversation)) or "Messenger",  # D-100
                 "chatwoot_contact_id": str(contact_id) if contact_id is not None else None,
             }
             if course_interest:

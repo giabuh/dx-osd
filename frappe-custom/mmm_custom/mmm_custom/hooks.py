@@ -87,7 +87,7 @@ doctype_js = {"CRM Product": "public/js/crm_product.js"}
 
 after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
 # Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
-after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.desk.hide_unused_workspaces",
+after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.ensure_sources", "mmm_custom.desk.hide_unused_workspaces",
                  "mmm_custom.desk.remove_old_bot_workspace", "mmm_custom.desk.ensure_bot_workspace_icon",
                  "mmm_custom.desk.apply_default_apps", "mmm_custom.crm_links.ensure_lead_form_script"]
 
