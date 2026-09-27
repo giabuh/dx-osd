@@ -47,6 +47,11 @@ if token.blank?
   token = access_token.token
 end
 
+# Platform App: lets the CRM fetch each consultant's own Chatwoot token (staff_sync), so answers sent from
+# a Lead's Messages tab go out under that consultant's name.
+platform_app = PlatformApp.find_or_create_by!(name: 'EduFlow CRM')
+platform_token = platform_app.access_token&.token || platform_app.create_access_token.token
+
 puts "SUCCESS"
 puts "ACCOUNT_ID: #{account.id}"
 puts "ACCOUNT_NAME: #{account.name}"
@@ -57,6 +62,7 @@ puts "WEBHOOK_ID: #{webhook.id}"
 puts "WEBHOOK_URL: #{webhook.url}"
 puts "WEBHOOK_SECRET_VALUE=#{webhook.secret}"
 puts "ADMIN_TOKEN_VALUE=#{token}"
+puts "PLATFORM_TOKEN_VALUE=#{platform_token}"
 puts "WEBHOOK_SUBSCRIPTIONS: #{webhook.subscriptions}"
 puts "INBOX_ID: #{inbox.id}"
 puts "INBOX_NAME: #{inbox.name}"
@@ -74,7 +80,7 @@ def main():
     if proc.returncode != 0:
         print("STDERR:\n", stderr)
         sys.exit(proc.returncode)
-    values = {k: v for k, _, v in (line.partition("=") for line in stdout.splitlines()) if k in ("WEBHOOK_SECRET_VALUE", "ADMIN_TOKEN_VALUE")}
+    values = {k: v for k, _, v in (line.partition("=") for line in stdout.splitlines()) if k in ("WEBHOOK_SECRET_VALUE", "ADMIN_TOKEN_VALUE", "PLATFORM_TOKEN_VALUE")}
     print("\n".join(line for line in stdout.splitlines() if "_VALUE=" not in line))  # never print secrets
 
     # The CRM endpoint rejects every webhook until it knows the same secret, and needs an API token and a
@@ -83,6 +89,7 @@ def main():
         "chatwoot_webhook_secret": values["WEBHOOK_SECRET_VALUE"],
         "chatwoot_api_token": values["ADMIN_TOKEN_VALUE"],
         "chatwoot_api_url": "http://chatwoot-rails:3000",
+        "chatwoot_platform_token": values["PLATFORM_TOKEN_VALUE"],
     }
     for key, value in site_config.items():
         subprocess.run(
@@ -90,7 +97,7 @@ def main():
              "bench", "--site", "crm.localhost", "set-config", key, value],
             check=True, capture_output=True,
         )
-    print("CRM site config: chatwoot_webhook_secret, chatwoot_api_token, chatwoot_api_url set")
+    print("CRM site config: chatwoot_webhook_secret, chatwoot_api_token, chatwoot_api_url, chatwoot_platform_token set")
 
 if __name__ == "__main__":
     main()

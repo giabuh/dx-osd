@@ -37,10 +37,10 @@
       >
         <RouterLink
           v-for="n in notifications.data"
-          :key="n.comment"
+          :key="n.name || n.comment || n.notification_type_doc || n.creation"
           :to="getRoute(n)"
           class="flex cursor-pointer items-start gap-2.5 px-4 py-2.5 hover:bg-surface-gray-2"
-          @click="markAsRead(n.comment || n.notification_type_doc)"
+          @click="markAsRead(n.name || n.comment || n.notification_type_doc)"
         >
           <div class="mt-1 flex items-center gap-2.5">
             <div
@@ -48,16 +48,22 @@
               :class="[n.read ? 'bg-transparent' : 'bg-surface-gray-10']"
             />
             <WhatsAppIcon v-if="n.type == 'WhatsApp'" class="size-7" />
-            <UserAvatar v-else :user="n.from_user.name" size="lg" />
+            <div
+              v-else-if="n.type == 'Marketing' || n.reference_doctype == 'Facebook Post'"
+              class="flex size-7 items-center justify-center rounded-full bg-surface-blue-2 text-ink-blue-3"
+            >
+              <MegaphoneIcon class="size-4" />
+            </div>
+            <UserAvatar v-else :user="n.from_user?.name || 'Administrator'" size="lg" />
           </div>
-          <div>
+          <div class="flex-1 min-w-0">
             <div
               v-if="n.notification_text"
               v-html="sanitizeHTML(n.notification_text)"
             />
             <div v-else class="mb-2 space-x-1 leading-5 text-ink-gray-5">
               <span class="font-medium text-ink-gray-9">
-                {{ n.from_user.full_name }}
+                {{ n.from_user?.full_name || n.from_user?.name || 'Hệ thống' }}
               </span>
               <span>
                 {{ __('mentioned you in {0}', [n.reference_doctype]) }}
@@ -74,8 +80,8 @@
       </div>
       <EmptyState
         v-else
-        title="No New Notifications"
-        description="You have no new notifications"
+        :title="__('No New Notifications')"
+        :description="__('You have no new notifications')"
         :icon="NotificationsIcon"
         width="lg"
       />
@@ -86,6 +92,7 @@
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import MarkAsDoneIcon from '@/components/Icons/MarkAsDoneIcon.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
+import MegaphoneIcon from '~icons/lucide/megaphone'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import {
@@ -97,6 +104,7 @@ import { globalStore } from '@/stores/global'
 import { timeAgo, sanitizeHTML } from '@/utils'
 import { onClickOutside } from '@vueuse/core'
 import { useTelemetry } from 'frappe-ui/frappe'
+import { toast } from 'frappe-ui'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const { $socket } = globalStore()
@@ -129,12 +137,32 @@ onBeforeUnmount(() => {
 })
 
 onMounted(() => {
-  $socket.on('crm_notification', () => {
+  $socket.on('crm_notification', (data) => {
     notifications.reload()
+    if (data && (data.message || data.title)) {
+      const msg =
+        data.title && data.message && data.title !== data.message
+          ? `${data.title}: ${data.message}`
+          : data.message || data.title
+      if (toast.info) {
+        toast.info(msg)
+      } else if (typeof toast === 'function') {
+        toast(msg)
+      }
+    }
   })
 })
 
 function getRoute(notification) {
+  if (
+    notification.route_name === 'FacebookPosts' ||
+    notification.reference_doctype === 'Facebook Post'
+  ) {
+    return { name: 'FacebookPosts' }
+  }
+  if (notification.route_name === 'Tasks') {
+    return { name: 'Tasks' }
+  }
   let params = {
     leadId: notification.reference_name,
   }
@@ -145,7 +173,7 @@ function getRoute(notification) {
   }
 
   return {
-    name: notification.route_name,
+    name: notification.route_name || 'Leads',
     params: params,
     hash: notification.hash,
   }

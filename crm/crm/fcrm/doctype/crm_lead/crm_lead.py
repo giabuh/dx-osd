@@ -418,66 +418,28 @@ class CRMLead(Document):
 
 	@staticmethod
 	def default_list_data():
+		# Sao Việt: the same context the admin customer dashboard shows (branch, course, source, hotness).
 		columns = [
-			{
-				"label": "Full Name",
-				"type": "Data",
-				"key": "lead_name",
-				"width": "12rem",
-			},
-			{
-				"label": "Organization",
-				"type": "Link",
-				"key": "organization",
-				"options": "CRM Organization",
-				"width": "10rem",
-			},
-			{
-				"label": "Status",
-				"type": "Link",
-				"options": "CRM Lead Status",
-				"key": "status",
-				"width": "8rem",
-			},
-			{
-				"label": "Email",
-				"type": "Data",
-				"key": "email",
-				"width": "12rem",
-			},
-			{
-				"label": "Mobile No.",
-				"type": "Data",
-				"key": "mobile_no",
-				"width": "11rem",
-			},
-			{
-				"label": "Assigned To",
-				"type": "Text",
-				"key": "_assign",
-				"width": "10rem",
-			},
-			{
-				"label": "Data Quality",
-				"type": "Select",
-				"key": "data_quality",
-				"width": "9rem",
-			},
-			{
-				"label": "Last Modified",
-				"type": "Datetime",
-				"key": "modified",
-				"width": "8rem",
-			},
+			{"label": "Full Name", "type": "Data", "key": "lead_name", "width": "12rem"},
+			{"label": "Chi nhánh", "type": "Link", "key": "territory", "options": "CRM Territory", "width": "9rem"},
+			{"label": "Khóa quan tâm", "type": "Data", "key": "course_interest", "width": "12rem"},
+			{"label": "Source", "type": "Link", "key": "source", "options": "CRM Lead Source", "width": "8rem"},
+			{"label": "Độ nóng", "type": "Select", "key": "ai_hotness", "width": "6rem"},
+			{"label": "Status", "type": "Link", "options": "CRM Lead Status", "key": "status", "width": "8rem"},
+			{"label": "Mobile No.", "type": "Data", "key": "mobile_no", "width": "10rem"},
+			{"label": "Phụ trách", "type": "Link", "options": "User", "key": "lead_owner", "width": "10rem"},
+			{"label": "Last Modified", "type": "Datetime", "key": "modified", "width": "8rem"},
 		]
 		rows = [
 			"name",
 			"lead_name",
-			"organization",
+			"territory",
+			"course_interest",
+			"source",
+			"ai_hotness",
 			"status",
 			"email",
 			"mobile_no",
-			"data_quality",
 			"lead_owner",
 			"first_name",
 			"sla_status",

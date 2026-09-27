@@ -308,6 +308,12 @@ const { updateOnboardingStep } = useOnboarding('frappecrm')
 const { capture } = useTelemetry()
 const { showModal } = useDoctypeModal()
 
+const HOTNESS = {
+  hot: { label: 'Nóng', color: 'red' },
+  warm: { label: 'Ấm', color: 'orange' },
+  cold: { label: 'Lạnh', color: 'blue' },
+}
+
 const route = useRoute()
 
 const leadsListView = ref(null)
@@ -491,6 +497,15 @@ function parseRows(rows, columns = []) {
           label: value,
           value: value,
           color: color,
+        }
+      } else if (row == 'ai_hotness') {
+        // Sao Việt: bot's hotness as a coloured badge; `name` keeps the stored value for click-to-filter.
+        const hotness = HOTNESS[lead.ai_hotness]
+        _rows[row] = {
+          name: lead.ai_hotness || '',
+          label: hotness?.label || lead.ai_hotness || '',
+          value: hotness?.label || lead.ai_hotness || '',
+          color: hotness?.color || 'gray',
         }
       } else if (row == 'lead_owner') {
         _rows[row] = {

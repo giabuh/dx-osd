@@ -35,8 +35,9 @@ def build(leads, groups_by_lead, consultants, reasons, latest=15):
     channel = {r["name"]: channel_of_source(r.get("source") or "") for r in leads}
 
     by_channel = Counter(channel.values())
-    sources = [{**{k: c[k] for k in ("key", "label", "status", "how")}, "count": by_channel.get(c["key"], 0)}
-               for c in CHANNELS]
+    # `values`: the Lead.source values of the channel, so the dashboard can open the filtered Leads list
+    sources = [{**{k: c[k] for k in ("key", "label", "status", "how")}, "count": by_channel.get(c["key"], 0),
+                "values": [c["source"], *c["legacy"]]} for c in CHANNELS]
     if by_channel.get(""):
         sources.append({"key": "", "label": UNKNOWN, "status": "other", "how": "Nguồn khác do nhân viên nhập",
                         "count": by_channel[""]})

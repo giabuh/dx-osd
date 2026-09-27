@@ -28,7 +28,7 @@ if hasattr(sys.stdout, "reconfigure"):
 STAFF = [
     {
         "name": "Nguyễn Thị Mai",
-        "email": "mai.binhthanh@eduflow.vn",
+        "email": "mai.hcm-bt@demo.saoviet.invalid",
         "password": "EduFlow@2026",
         "branch": "binh_thanh",
         "branch_name": "CS1 Bình Thạnh",

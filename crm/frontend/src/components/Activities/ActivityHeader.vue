@@ -58,6 +58,8 @@
         @click="whatsappBox.show()"
       />
     </div>
+    <!-- Sao Việt: the Messages tab (LeadChat) has its own reply box -->
+    <div v-else-if="title == 'Messages'" />
     <Dropdown v-else :options="defaultActions" @click.stop>
       <template #default="{ open }">
         <Button

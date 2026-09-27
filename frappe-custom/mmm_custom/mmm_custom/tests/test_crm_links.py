@@ -54,28 +54,14 @@ class TestOpenChatUrl(unittest.TestCase):
 
 
 class TestFormScript(unittest.TestCase):
-    def test_script_calls_the_whitelisted_method(self):
-        self.assertIn("function setupForm(", crm_links.LEAD_FORM_SCRIPT)
-        self.assertIn('"mmm_custom.crm_links.open_chat_url"', crm_links.LEAD_FORM_SCRIPT)
-        self.assertIn("mmm_custom.crm_links.ensure_lead_form_script", hooks.after_migrate)
-
-    def test_existing_script_is_left_alone_when_unchanged(self):
+    def test_old_open_chat_script_is_switched_off_once(self):
         frappe = MagicMock()
-        frappe.db.exists.return_value = True
-        doc = {"dt": "CRM Lead", "view": "Form", "enabled": 1, "script": crm_links.LEAD_FORM_SCRIPT}
-        frappe.get_doc.return_value = MagicMock(get=doc.get)
+        frappe.db.get_value.side_effect = [1, 0]
         with patch.object(crm_links, "frappe", frappe):
-            crm_links.ensure_lead_form_script()
-        frappe.get_doc.return_value.save.assert_not_called()
-
-    def test_missing_script_is_created_under_its_name(self):
-        frappe = MagicMock()
-        frappe.db.exists.return_value = False
-        with patch.object(crm_links, "frappe", frappe):
-            crm_links.ensure_lead_form_script()
-        created = frappe.get_doc.return_value
-        self.assertEqual(created.name, crm_links.FORM_SCRIPT)
-        created.insert.assert_called_once_with(ignore_permissions=True)
+            crm_links.retire_lead_form_script()
+            crm_links.retire_lead_form_script()
+        frappe.db.set_value.assert_called_once_with("CRM Form Script", crm_links.FORM_SCRIPT, "enabled", 0)
+        self.assertIn("mmm_custom.crm_links.retire_lead_form_script", hooks.after_migrate)
 
 
 class TestBackfill(unittest.TestCase):

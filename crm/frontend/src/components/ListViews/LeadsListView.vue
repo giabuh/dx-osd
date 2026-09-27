@@ -171,7 +171,7 @@
             />
           </div>
           <div
-            v-else-if="column.key === 'data_quality'"
+            v-else-if="['data_quality', 'ai_hotness'].includes(column.key)"
             class="truncate text-base"
           >
             <Badge

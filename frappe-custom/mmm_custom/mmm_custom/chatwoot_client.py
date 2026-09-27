@@ -146,6 +146,13 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
+    def list_contact_conversations(self, contact_id: int) -> list[dict]:
+        """A contact's conversations (the newest first, as Chatwoot returns them)."""
+        resp = requests.get(f"{self._base}/contacts/{contact_id}/conversations", headers=self._headers,
+                            timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json().get("payload") or []
+
     def send_private_note(self, conversation_id: int, content: str) -> dict:
         """Post a note only agents can see."""
         resp = requests.post(
@@ -237,3 +244,12 @@ class ChatwootClient:
             "attribute_display_type": display_type}, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
+
+
+def platform_user_token(base_url: str, platform_token: str, name: str, email: str) -> str:
+    """A user's own Chatwoot access token through the Platform API. For an existing email Chatwoot returns
+    that user (and grants the platform app access to it) instead of creating one."""
+    resp = requests.post(f"{base_url.rstrip('/')}/platform/api/v1/users", headers={"api_access_token": platform_token},
+                         json={"name": name, "email": email}, timeout=REQUEST_TIMEOUT)
+    resp.raise_for_status()
+    return resp.json().get("access_token") or ""

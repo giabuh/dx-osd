@@ -8,6 +8,7 @@
   "user",
   "full_name",
   "chatwoot_agent_id",
+  "chatwoot_access_token",
   "branch",
   "level",
   "specialties",
@@ -37,6 +38,14 @@
    "fieldtype": "Int",
    "label": "Chatwoot Agent ID",
    "read_only": 1
+  },
+  {
+   "fieldname": "chatwoot_access_token",
+   "fieldtype": "Password",
+   "label": "Chatwoot Access Token",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "The consultant's own Chatwoot token, filled by the staff sync. Answers sent from the CRM go out under this identity."
   },
   {
    "fieldname": "branch",
@@ -74,7 +83,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-26 00:00:00.000000",
+ "modified": "2026-09-27 20:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Consultant",

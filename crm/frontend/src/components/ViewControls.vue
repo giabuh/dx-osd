@@ -561,6 +561,25 @@ listResource = createResource({
 list.value = listResource
 listResource.params = getParams()
 
+// Sao Việt: links from /crm/admin open a list pre-filtered through ?filters={"field": value}. They are
+// applied once like filters the user picked, then dropped from the URL.
+function queryFilters() {
+  if (!route.query.filters || route.query.view) return null
+  try {
+    const filters = JSON.parse(route.query.filters)
+    return filters && typeof filters === 'object' && !Array.isArray(filters)
+      ? filters
+      : null
+  } catch {
+    return null
+  }
+}
+const linkedFilters = queryFilters()
+if (route.query.filters) {
+  router.replace({ query: { ...route.query, filters: undefined } })
+}
+if (linkedFilters) updateFilter(linkedFilters)
+
 const isLoading = computed(() => list.value?.loading)
 
 function getListParams() {

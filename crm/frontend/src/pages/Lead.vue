@@ -16,6 +16,11 @@
         v-if="document.actions?.length"
         :actions="document.actions"
       />
+      <Button
+        label="Nhắn tin"
+        iconLeft="message-circle"
+        @click="changeTabTo('messages')"
+      />
       <AssignTo v-model="assignees.data" doctype="CRM Lead" :docname="leadId" />
       <Dropdown
         v-if="doc && document.statuses"
@@ -242,6 +247,7 @@
   />
 </template>
 <script setup>
+import MessageCircleIcon from '~icons/lucide/message-circle'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Icon from '@/components/Icon.vue'
@@ -469,6 +475,12 @@ const tabs = computed(() => {
       name: 'Attachments',
       label: __('Attachments'),
       icon: AttachmentIcon,
+    },
+    {
+      // Sao Việt: the customer's Chatwoot conversation (components/Activities/LeadChat.vue)
+      name: 'Messages',
+      label: __('Messages'),
+      icon: MessageCircleIcon,
     },
     {
       name: 'WhatsApp',

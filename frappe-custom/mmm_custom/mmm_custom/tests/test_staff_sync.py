@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
@@ -88,6 +88,32 @@ class TestSyncInboxes(unittest.TestCase):
         client.list_agent_bots.return_value = []
         self.assertEqual(staff_sync.sync_inboxes(client), 0)
         client.set_agent_bot.assert_not_called()
+
+
+class TestStoreTokens(unittest.TestCase):
+    ROWS = [{"name": "lan@x.vn", "full_name": "Lan", "active": 1, "chatwoot_access_token": ""},
+            {"name": "minh@x.vn", "full_name": "Minh", "active": 1, "chatwoot_access_token": "********"},
+            {"name": "tuan@x.vn", "full_name": "Tuấn", "active": 0, "chatwoot_access_token": ""}]
+
+    def test_only_active_consultants_without_a_token(self):
+        self.assertEqual([r["name"] for r in self.ROWS if staff_sync.needs_token(r)], ["lan@x.vn"])
+
+    def test_tokens_are_fetched_and_stored_encrypted(self):
+        frappe, password = MagicMock(), MagicMock()
+        with patch.object(staff_sync, "frappe", frappe), \
+                patch.dict(sys.modules, {"frappe.utils.password": password}), \
+                patch("mmm_custom.chatwoot_client.platform_user_token", return_value="tok-lan") as fetch:
+            stored = staff_sync.store_tokens({"chatwoot_platform_token": "pt", "chatwoot_api_url": "http://cw"},
+                                             self.ROWS)
+        self.assertEqual(stored, 1)
+        fetch.assert_called_once_with("http://cw", "pt", "Lan", "lan@x.vn")
+        password.set_encrypted_password.assert_called_once_with("Consultant", "lan@x.vn", "tok-lan",
+                                                                "chatwoot_access_token")
+
+    def test_without_platform_token_nothing_is_fetched(self):
+        with patch("mmm_custom.chatwoot_client.platform_user_token") as fetch:
+            self.assertEqual(staff_sync.store_tokens({}, self.ROWS), 0)
+        fetch.assert_not_called()
 
 
 if __name__ == "__main__":

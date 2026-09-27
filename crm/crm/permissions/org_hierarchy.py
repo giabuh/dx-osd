@@ -48,7 +48,7 @@ def _permission_query_conditions(user: str | None, doctype: str):
 				& ((Todo.allocated_to == user) | (Todo.allocated_to.isin(_team_mem_query(user))))
 			)
 		)
-		return q1 | q2
+		return _with_extra_scope(q1 | q2, user, doctype, DT)
 
 	# Sales User default: own records and records directly assigned to them
 	q1 = DT[owner_field] == user
@@ -57,7 +57,17 @@ def _permission_query_conditions(user: str | None, doctype: str):
 		.select(Todo.reference_name)
 		.where((Todo.reference_type == doctype) & (Todo.status != "Cancelled") & (Todo.allocated_to == user))
 	)
-	return q1 | q2
+	return _with_extra_scope(q1 | q2, user, doctype, DT)
+
+
+def _with_extra_scope(condition, user: str, doctype: str, DT):
+	"""Widen what a user sees with apps' `crm_record_scope` hooks: `fn(user, doctype, DT)` returns a
+	criterion (OR-ed in) or None. List queries and single-document checks share it."""
+	for path in frappe.get_hooks("crm_record_scope"):
+		extra = frappe.get_attr(path)(user, doctype, DT)
+		if extra is not None:
+			condition = condition | extra
+	return condition
 
 
 def get_lead_permission_query_conditions(user=None):
