@@ -5,7 +5,8 @@ of quick-reply buttons."""
 from dataclasses import dataclass, field
 
 from mmm_custom.engine.actions import run_action
-from mmm_custom.engine.context import base_context
+from mmm_custom.engine.context import base_context, course_context
+from mmm_custom.engine.jev_questions import COURSE_FAQ
 from mmm_custom.engine.render import RenderError, condition, render_text
 from mmm_custom.engine.slot_types import REGISTRY
 
@@ -113,6 +114,13 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         say(settings["greeting_template"], ctx, "greeting")
     if decision.fallback:
         say(settings["fallback_template"], ctx, "fallback")
+
+    if decision.faq:  # the customer's own question about the course comes first (D-085)
+        course = catalog.courses.get(decision.faq["course"])
+        index = decision.faq["index"]
+        if course and index < len(course.faqs):
+            say(course.faqs[index].answer, {**ctx, "course": course_context(course, catalog)}, COURSE_FAQ)
+            reply.variants.append({"skill": COURSE_FAQ, "variant": str(index)})
 
     action_buttons, follow_ups = [], []
     for key in decision.skills:

@@ -36,6 +36,11 @@ class Decision:
     confirm: dict = field(default_factory=dict)
     ai: dict = field(default_factory=dict)
     close: bool = False
+    faq: dict = field(default_factory=dict)     # course FAQ answered first (D-085)
+
+
+def faq_question(faq, catalog):
+    return catalog.courses[faq["course"]].faqs[faq["index"]].question
 
 
 def slot_active(slot, slots):
@@ -140,26 +145,27 @@ def decide(state, u, catalog):
 
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
-    greet = state.turns == 0 and not skills
-    progress = bool(new or changed or skills or waiting or u.handoff or u.focus or u.confirm or u.rejected)
+    faq = u.faq
+    greet = state.turns == 0 and not skills and not faq
+    progress = bool(new or changed or skills or waiting or faq or u.handoff or u.focus or u.confirm or u.rejected)
     stuck = 0 if progress or greet else state.stuck_turns + 1
-    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck,
+    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq,
                   ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
-    answered = ", ".join(catalog.skills[k].title for k in skills)
+    answered = ", ".join(([f'"{faq_question(faq, catalog)}"'] if faq else []) + [catalog.skills[k].title for k in skills])
 
     if state.status == "handed_off":
-        if skills:
+        if skills or faq:
             return Decision("answer", **common, reason=f"Đã chuyển tư vấn viên; trả lời: {answered}")
         return Decision("silent", **common, reason="Đã chuyển tư vấn viên, chờ tư vấn viên nhắn")
 
     confirm = u.confirm
-    if confirm.get("kind") == "skill" and (new or changed or skills or waiting):
+    if confirm.get("kind") == "skill" and (new or changed or skills or waiting or faq):
         confirm = {}  # the turn already answers or asks something: a "did you mean…?" on top is noise
     why = handoff_reason(u, skills, slots, stuck, catalog)
     if why and (why in IMMEDIATE or not confirm):
         return Decision("handoff", **common, handoff_reason=why, reason=HANDOFF_REASONS[why])
     if confirm:
-        reason = f"Xác nhận: {confirm['label']}" + (f"; trả lời: {answered}" if skills else "")
+        reason = f"Xác nhận: {confirm['label']}" + (f"; trả lời: {answered}" if answered else "")
         return Decision("confirm", **common, confirm=confirm, greet=greet, reason=reason)
 
     first = ([u.focus] if u.focus else []) + (list(catalog.skills[waiting].params) if waiting else [])
@@ -167,8 +173,8 @@ def decide(state, u, catalog):
     if ask:
         slots.setdefault(ask, {})["asked"] = 1
     label = catalog.slot(ask).label.lower() if ask else ""
-    reason = f"Trả lời: {answered}" if skills else ""
+    reason = f"Trả lời: {answered}" if answered else ""
     if ask:
         reason = f"{reason}; hỏi tiếp {label}" if reason else f"Hỏi {label} (còn thiếu)"
-    return Decision("answer" if skills else "ask_slot", **common, ask=ask, greet=greet,
+    return Decision("answer" if answered else "ask_slot", **common, ask=ask, greet=greet,
                     fallback=not progress and not greet, reason=reason)

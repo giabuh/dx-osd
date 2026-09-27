@@ -30,6 +30,7 @@ class Understanding:
     wants_human: float = 0.0
     spam: float = 0.0
     has_number: bool = False                       # the message contains digits (ages, counts)
+    faq: dict = field(default_factory=dict)        # {"course", "index", "confidence"}: a course FAQ to answer
 
 
 def apply_action(u, action):

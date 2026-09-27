@@ -8,7 +8,7 @@ At most one confirmation per turn, in slot order."""
 import copy
 
 from mmm_custom.engine.context import display
-from mmm_custom.engine.jev_questions import NONE
+from mmm_custom.engine.jev_questions import COURSE_FAQ, NONE, faq_course
 from mmm_custom.intelligence import HOTNESS
 
 
@@ -134,13 +134,22 @@ def _parents(u, answers, questions, catalog):
             u.parents.setdefault(slot.key, parent)
 
 
+def _course_faq(u, answers, questions, course, catalog):
+    choice, p = _choice(answers, questions, COURSE_FAQ)
+    if course and choice is not None and p >= float(catalog.settings["skill_act"]):
+        u.faq = {"course": course.code, "index": int(choice), "confidence": round(p, 3)}
+        u.matches.append({"faq": course.code, "index": int(choice), "kind": "jev", "confidence": round(p, 3)})
+
+
 def combine(u, answers, questions, state, catalog):
     if u.tapped:
         return u  # buttons (and typed answers to a confirmation) are never overridden
+    course = faq_course(state, u, catalog)  # the course the FAQ question was built for
     out = copy.deepcopy(u)
     answers = answers if isinstance(answers, dict) else {}
     _slots(out, answers, questions, catalog, state)
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)
+    _course_faq(out, answers, questions, course, catalog)
     _signals(out, answers, questions, catalog)
     return out

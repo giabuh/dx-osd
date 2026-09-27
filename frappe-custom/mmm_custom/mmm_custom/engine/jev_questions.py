@@ -2,6 +2,7 @@
 English carrying the Vietnamese names and aliases customers use. Keys:
     parent:<slot>  course group / area          slot:<slot>  course, branch, choice or number value
     skill:<key>    one noul per Bot Skill        intent · hotness · wants_human (D-032)
+    course_faq     which FAQ of the known course the message asks (D-085)
 """
 
 from mmm_custom.engine.context import shown_slots
@@ -12,6 +13,7 @@ from mmm_custom.intelligence import HOTNESS_CRITERIA, INTENTS
 NONE = "none"
 NONE_TEXT = "None of these, or not said in the chat"
 MAX_HISTORY = 20  # 10 turns of customer + bot lines (D-061, D-074)
+COURSE_FAQ = "course_faq"
 
 
 def _named(name, aliases=()):
@@ -20,6 +22,15 @@ def _named(name, aliases=()):
 
 def _choice(instructions, criteria):
     return {"type": "choice", "instructions": instructions, "criteria": {**criteria, NONE: NONE_TEXT}}
+
+
+def faq_course(state, u, catalog):
+    """The course whose FAQs Jev reads: the one named in this message, else the one already known."""
+    slot = catalog.slot_for("course")
+    if not slot:
+        return None
+    course = catalog.courses.get((u.fills.get(slot.key) or state.slots.get(slot.key) or {}).get("value"))
+    return course if course and course.faqs else None
 
 
 def jev_state(text, state, catalog):
@@ -77,6 +88,10 @@ def build_questions(state, u, catalog, skills=True):
                 question["criteria"] = {"true": "Messages like: " + " | ".join(skill.examples),
                                         "false": "The latest message is about something else"}
             q[f"skill:{key}"] = question
+        course = faq_course(state, u, catalog)
+        if course:
+            q[COURSE_FAQ] = _choice(f"Which of these questions about the course '{course.name}' does the customer's latest message ask?",
+                                    {str(i): _named(f.question, f.examples) for i, f in enumerate(course.faqs)})
     q["intent"] = {"type": "choice", "instructions": "What does the customer want in this Vietnamese chat with a training centre?",
                    "criteria": INTENTS}
     q["hotness"] = {"type": "score", "instructions": "How close is the customer to enrolling, based on the whole chat?",
