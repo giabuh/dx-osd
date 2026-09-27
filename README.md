@@ -50,8 +50,13 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000   # 200 once the 
 # 3. Wire Chatwoot to the CRM (account, inbox, webhook + its secret into the CRM site config), agent bot, staff
 python scripts/configure-chatwoot.py
 python scripts/setup-agent-bot.py
+# Demo data (branches, staff, course groups + courses with their knowledge, schedules, promotions, bot skills);
+# idempotent, from frappe-custom/mmm_custom/mmm_custom/demo/saoviet/*.json
+docker exec crm-frappe-1 bash -lc "cd /home/frappe/frappe-bench && bench --site crm.localhost execute mmm_custom.demo.loader.load"
 # Staff: add Consultants in CRM; they sync to Chatwoot on save and every 10 min, or right away with:
 docker exec crm-frappe-1 bash -lc "cd /home/frappe/frappe-bench && bench --site crm.localhost execute mmm_custom.staff_sync.sync_now"
+# After editing branches/staff/courses in the CRM, write them back into the demo dataset to share them:
+docker exec crm-frappe-1 bash -lc "cd /home/frappe/frappe-bench && bench --site crm.localhost execute mmm_custom.demo.exporter.export"
 
 # 4. Tests
 python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests

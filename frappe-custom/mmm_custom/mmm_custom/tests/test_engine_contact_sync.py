@@ -27,8 +27,14 @@ class TestContactUpdate(unittest.TestCase):
         self.assertEqual(contact_update({}, [], "CRM-LEAD-1"), {"custom_attributes": {"crm_lead_id": "CRM-LEAD-1"}})
 
     def test_every_attribute_has_a_definition(self):
-        keys = set(contact_update({"mobile_no": "+84912345678", "territory": "X", "status": "New"}, [EXCEL], "L")["custom_attributes"])
-        self.assertEqual(keys, {k for k, _ in CONTACT_ATTRIBUTES})
+        keys = set(contact_update({"mobile_no": "+84912345678", "territory": "X", "status": "New"}, [EXCEL], "L",
+                                  "http://crm.test")["custom_attributes"])
+        self.assertEqual(keys, {attr[0] for attr in CONTACT_ATTRIBUTES})
+
+    def test_crm_link_only_with_a_crm_url(self):
+        self.assertNotIn("ho_so_crm", contact_update({}, [], "CRM-LEAD-1")["custom_attributes"])
+        self.assertEqual(contact_update({}, [], "CRM-LEAD-1", "https://crm.example.vn/")["custom_attributes"]["ho_so_crm"],
+                         "https://crm.example.vn/crm/leads/CRM-LEAD-1")
 
 
 class TestSaveLeadWritesTheContact(unittest.TestCase):
@@ -44,6 +50,14 @@ class TestSaveLeadWritesTheContact(unittest.TestCase):
         user.update_contact.assert_called_once_with(9, {"crm_lead_id": "CRM-LEAD-1", "khoa_hoc_quan_tam": EXCEL.name},
                                                     phone_number="+84912345678")
 
+    def test_configured_crm_url_links_the_contact_to_the_lead(self):
+        user = MagicMock()
+        state = ConversationState("7", contact_id="9")
+        with patch("mmm_custom.engine.repo.save_lead", return_value="CRM-LEAD-1", create=True), \
+                patch("mmm_custom.engine.effects.compute_data_quality"):
+            ChatwootEffects(MagicMock(), user, "http://127.0.0.1:8000").save_lead(state, {}, [], {"id": 9})
+        self.assertEqual(user.update_contact.call_args.args[1]["ho_so_crm"], "http://127.0.0.1:8000/crm/leads/CRM-LEAD-1")
+
     def test_a_phone_chatwoot_refuses_still_saves_the_attributes(self):
         user = MagicMock()
         user.update_contact.side_effect = [RuntimeError("422 phone taken"), {}]
@@ -55,6 +69,10 @@ class TestSaveLeadWritesTheContact(unittest.TestCase):
 class TestContactAttributeSetup(unittest.TestCase):
     def test_missing_definitions_are_planned(self):
         self.assertEqual(plan_contact_attributes({"crm_lead_id"}), [a for a in CONTACT_ATTRIBUTES if a[0] != "crm_lead_id"])
+
+    def test_crm_link_is_a_clickable_attribute(self):
+        self.assertIn(("ho_so_crm", "Hồ sơ CRM", "link"), plan_contact_attributes({"crm_lead_id"}))
+        self.assertTrue(all(attr[2] == "text" for attr in CONTACT_ATTRIBUTES if attr[0] != "ho_so_crm"))
 
 
 if __name__ == "__main__":

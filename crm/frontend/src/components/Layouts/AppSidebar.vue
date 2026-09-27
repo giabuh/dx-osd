@@ -59,10 +59,11 @@
             </template>
           </SidebarItem>
 
-          <!-- Bot administration (branches, staff, courses) lives on the mmm_custom /bot page. -->
+          <!-- Manager screens (branches, staff, courses, bot playground): pages/Admin.vue. -->
           <SidebarItem
             v-if="isManager()"
-            :label="__('Admin')"
+            :label="'Quản trị'"
+            :active="activeItem === 'Admin'"
             @click="openBotAdmin"
           >
             <template #prefix>
@@ -274,6 +275,8 @@ const isCollapsed = computed(() => isSidebarCollapsed.value && !props.mobile)
 const isFCSite = ref(window.is_fc_site)
 const isDemoSite = ref(window.is_demo_site)
 
+// The education center works in Leads, Deals and Tasks; Contacts, Organizations, Notes and Call Logs keep
+// their routes (linked from a Lead page) but leave the sidebar.
 const links = [
   {
     label: 'Dashboard',
@@ -292,19 +295,9 @@ const links = [
     to: 'Deals',
   },
   {
-    label: 'Contacts',
-    icon: ContactsIcon,
-    to: 'Contacts',
-  },
-  {
     label: 'Tasks',
     icon: TaskIcon,
     to: 'Tasks',
-  },
-  {
-    label: 'Notes',
-    icon: NoteIcon,
-    to: 'Notes',
   },
 ]
 
@@ -439,7 +432,9 @@ function openFacebookMarketing() {
 }
 
 function openBotAdmin() {
-  window.location.href = '/bot'
+  activeItem.value = 'Admin'
+  router.push({ name: 'Admin' })
+  if (props.mobile) mobileSidebarOpened.value = false
 }
 const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 

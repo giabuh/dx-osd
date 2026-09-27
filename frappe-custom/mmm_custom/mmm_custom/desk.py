@@ -37,3 +37,41 @@ def remove_old_bot_workspace():
     if not frappe.db.exists("Workspace", BOT_WORKSPACE):
         import_file_by_path(frappe.get_app_path("mmm_custom", "mmm_custom", "workspace", "bot_sao_viet",
                                                 "bot_sao_viet.json"), force=True)
+
+
+ADMIN_APP = "mmm_custom"  # add_to_apps_screen route /crm/admin
+CRM_APP = "crm"
+
+
+def default_app_for(roles, current):
+    """Where a desk user lands after login (User.default_app): managers on /crm/admin, everyone else on /crm
+    (the System Settings default). Returns the new value, or None to leave the user's choice alone."""
+    manager = bool(BOT_ROLES.intersection(roles))
+    if manager and not current:
+        return ADMIN_APP
+    if not manager and current == ADMIN_APP:
+        return ""
+    return None
+
+
+def _set_default_app(user, roles, current):
+    new = default_app_for(roles, current or "")
+    if new is not None:
+        frappe.db.set_value("User", user, "default_app", new, update_modified=False)
+
+
+def apply_default_apps():
+    """after_migrate: CRM is the site-wide landing app; each enabled desk user gets their role's home."""
+    if not frappe.db.get_single_value("System Settings", "default_app"):
+        frappe.db.set_single_value("System Settings", "default_app", CRM_APP)
+    for user in frappe.get_all("User", filters={"enabled": 1, "user_type": "System User"},
+                               fields=["name", "default_app"]):
+        _set_default_app(user.name, frappe.get_roles(user.name), user.default_app)
+
+
+def apply_user_default_app(doc, method=None):
+    """User on_update: role changes and staff created by staff_sync get the right home."""
+    if not doc.enabled or doc.user_type != "System User":
+        return
+    roles = BOT_ROLES if doc.name == "Administrator" else [row.role for row in doc.get("roles") or []]
+    _set_default_app(doc.name, roles, frappe.db.get_value("User", doc.name, "default_app"))
