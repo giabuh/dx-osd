@@ -22,6 +22,10 @@ class TestDashboard(unittest.TestCase):
         self.assertEqual((result["new_today"], result["qualified_today"], result["unqualified_today"], result["handed_off_today"], result["coverage"]), (1, 1, 1, 2, 75))
         self.assertEqual([r["name"] for r in result["latest_leads"]], ["L1", "L4"])
 
+    def test_playground_handoffs_are_not_counted(self):
+        handoffs = [{"bot_conversation": "sandbox-a", "is_sandbox": 1}, {"bot_conversation": "C1", "is_sandbox": 0}]
+        self.assertEqual(dashboard.summarize([], handoffs, [], "2026-09-27")["handed_off_today"], 1)
+
     def test_latest_leads_limited_to_ten(self):
         leads = [{"name": str(i), "source": "Messenger Bot", "status": "Qualified", "creation": f"2026-09-{i + 1:02d} 10:00:00"} for i in range(12)]
         result = dashboard.summarize(leads, [], [], "2026-09-27")

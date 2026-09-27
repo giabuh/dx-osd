@@ -22,7 +22,8 @@ def summarize(leads, handoffs, coverages, today):
         "new_today": sum(is_today(row.get("creation")) for row in bot_leads),
         "qualified_today": sum(is_today(row.get("status_since")) for row in qualified),
         "unqualified_today": sum(is_today(row.get("status_since")) for row in bot_leads if row.get("status") == UNQUALIFIED),
-        "handed_off_today": len({row.get("bot_conversation") for row in handoffs if row.get("bot_conversation")}),
+        "handed_off_today": len({row.get("bot_conversation") for row in handoffs
+                                 if row.get("bot_conversation") and not row.get("is_sandbox")}),  # Playground chats are not customers
         "coverage": round(sum(coverages) / len(coverages)) if coverages else 0,
         "latest_leads": latest,
     }
@@ -52,7 +53,7 @@ def summary():
             change = latest_change.get(row["name"])
             row["status_since"] = change.from_date if change and change["from"] == row["status"] else row["creation"]
     handoffs = frappe.get_all("AI Decision Log",
-                              filters={"decision_type": "handoff", "creation": [">=", f"{today} 00:00:00"]},
-                              fields=["bot_conversation"], limit_page_length=0)
+                              filters={"decision_type": "handoff", "is_sandbox": 0, "creation": [">=", f"{today} 00:00:00"]},
+                              fields=["bot_conversation", "is_sandbox"], limit_page_length=0)
     coverage = [row["coverage"] for row in overview()]
     return summarize(rows, handoffs, coverage, today)
