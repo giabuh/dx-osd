@@ -89,7 +89,7 @@ class TestButtons(unittest.TestCase):
 
     def test_course_buttons_are_tiered(self):
         top = self.buttons("course")
-        self.assertEqual([b["title"] for b in top][:2], ["Tin học văn phòng", "Đồ họa"])
+        self.assertEqual([b["title"] for b in top][:2], ["Tin học văn phòng", "Chứng chỉ quốc tế"])
         self.assertEqual(top[0]["action"], {"type": "parent", "slot": "course", "value": "Tin học văn phòng"})
         inner = self.buttons("course", {"course": {"parent": "Kế toán"}})
         self.assertEqual(len(inner), 5)
@@ -113,7 +113,7 @@ class TestButtons(unittest.TestCase):
         d = decide(ConversationState("1", turns=1), understand("xyz", st(), CAT), CAT)
         from engine_fixtures import render
         r = compose(d, ConversationState("1"), CAT, render)
-        self.assertEqual(len(r.buttons), 8)
+        self.assertEqual(len(r.buttons), 9)
         self.assertEqual(r.options()["Kế toán"], {"type": "parent", "slot": "course", "value": "Kế toán"})
 
 

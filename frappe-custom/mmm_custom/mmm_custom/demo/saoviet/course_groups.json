@@ -5,7 +5,15 @@
   "emoji": "💼",
   "sort_order": 10,
   "aliases": "tin hoc van phong, thvp, office, word, excel",
-  "description": "Word, Excel, PowerPoint, AI văn phòng và chứng chỉ MOS/IC3"
+  "description": "Tin học cơ bản, Word, Excel, PowerPoint và AI trong văn phòng"
+ },
+ {
+  "group_name": "Tin học quốc tế",
+  "button_label": "Chứng chỉ quốc tế",
+  "emoji": "🏅",
+  "sort_order": 15,
+  "aliases": "tin hoc quoc te, chung chi quoc te, chung chi tin hoc, mos, ic3, microsoft office specialist",
+  "description": "Luyện thi chứng chỉ MOS (Word, Excel, PowerPoint) và IC3 theo đề thi thật"
  },
  {
   "group_name": "Thiết kế đồ họa",

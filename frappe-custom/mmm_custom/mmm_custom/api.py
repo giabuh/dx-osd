@@ -39,6 +39,7 @@ from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.engine.repo import add_products, load_catalog
 from mmm_custom.engine.understand import match_courses
 from mmm_custom.intelligence import enqueue_analysis
+from mmm_custom.sources import channel_key, source_name
 
 
 def detect_courses(text, catalog=None):
@@ -54,6 +55,12 @@ def detect_courses(text, catalog=None):
 
 def detect_course_interest(text, catalog=None):
     return ", ".join(c.name for c in detect_courses(text, catalog)) or None
+
+
+def _lead_source(conversation):
+    """The channel's CRM Lead Source (D-100); "Messenger" until migrate has created the channel sources."""
+    source = source_name(channel_key(conversation))
+    return source if source and frappe.db.exists("CRM Lead Source", source) else "Messenger"
 
 
 def extract_message_text(conversation: dict, payload: dict) -> str:
@@ -214,7 +221,7 @@ def chatwoot_sync():
                 "first_name": first_name,
                 "email": email,
                 "mobile_no": normalize_phone(phone),
-                "source": "Messenger",
+                "source": _lead_source(conversation),
                 "chatwoot_contact_id": str(contact_id) if contact_id is not None else None,
             }
             if course_interest:
@@ -271,3 +278,23 @@ def chatwoot_sync():
         pass
 
     return {"status": "success", "lead_id": lead_name}
+
+
+@frappe.whitelist()
+def switch_language(lang):
+    """Switch user interface language between Vietnamese ('vi') and English ('en')."""
+    if lang not in ["vi", "en"]:
+        frappe.throw(_("Ngôn ngữ không hợp lệ / Invalid language"))
+
+    user = getattr(frappe.session, "user", None) or "Administrator"
+    frappe.db.set_value("User", user, "language", lang)
+    if user == "Administrator":
+        frappe.db.set_single_value("System Settings", "language", lang)
+    if hasattr(frappe.db, "commit"):
+        frappe.db.commit()
+
+    if hasattr(frappe, "local") and hasattr(frappe.local, "cookie_manager"):
+        frappe.local.cookie_manager.set_cookie("user_lang", lang)
+
+    return {"status": "success", "language": lang}
+

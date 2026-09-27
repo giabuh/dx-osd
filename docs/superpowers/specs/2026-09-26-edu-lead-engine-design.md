@@ -169,10 +169,10 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C4.1 | Routing rule D, configurable in CRM (D-006) — rule in code (D-087); CRM toggles not built yet | M | 🔨 |
 | C4.2 | Working hours, holidays, away status + out-of-hours bot behaviour (D-046) | M | ⬜ |
 | C4.3 | Reassign when a consultant misses the response deadline | M | ⬜ |
-| C4.4 | B2B lead detection → B2B team (D-012) | M | ⬜ |
+| C4.4 | B2B lead detection → B2B team (D-012) — in code (D-099), offline scenarios pass; live check pending | M | 🔨 |
 
 **C5 — Visibility** · milestone: managers and consultants see the automation
-| C5.1 | CRM dashboard: funnel + charts by course/branch/consultant | M | ⬜ |
+| C5.1 | CRM dashboard: funnel + charts by course/branch/consultant — `/crm/admin/customers` (D-101); live check pending | M | 🔨 |
 | C5.2 | Decision log browser page | S | ⬜ |
 | C5.3 | Chatwoot Dashboard App, read-only: what AI understood, why assigned | M | ⬜ |
 | C5.4 | Chatwoot Dashboard App, actions: matching schedules/fees, insert into reply | M | ⬜ |
@@ -181,7 +181,7 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 **C6 — No lead left behind** · milestone: no lead goes overdue unnoticed
 | C6.1 | Lead statuses for a training centre + lost reasons | S | ⬜ |
 | C6.2 | First-response SLA + manager alert (CRM SLA) | S | ⬜ |
-| C6.3 | Consultation/trial appointments + date/time understanding + reminders (D-042) | M | ⬜ |
+| C6.3 | Consultation/trial appointments + date/time understanding + reminders (D-042) — trial booking from class buttons in code (D-102); free-text dates and reminders not yet | M | 🔨 |
 | C6.4 | Course-aware re-engagement, 24h-window aware (upgrade `followup.py`) | M | ⬜ |
 | C6.5 | Unified lead score | M | ⬜ |
 
@@ -203,7 +203,7 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 **C10 — After enrolment** (direction only; designed when reached)
 | C10.1 | Class schedule reminders | — | ⬜ |
 | C10.2 | Satisfaction survey | — | ⬜ |
-| C10.3 | Referrals | — | ⬜ |
+| C10.3 | Referrals — codes, chat recognition, referrer link (D-103) | — | 🔨 |
 | C10.4 | Next-course suggestion along learning paths | — | ⬜ |
 
 ### 6.3 Old layer numbers (before D-047)
@@ -286,7 +286,7 @@ the Consultant. It supersedes `scripts/seed-branch-agents.py`.
 
 - Unit tests for the loader's upsert/idempotency and the deterministic schedule generator.
 - On a fresh `-p crmverify` bench: `bench migrate` succeeds; loader run twice gives identical counts
-  (4 areas, 13 branches, 8 groups, 46 courses, 44 consultants, schedules as computed by the generator test); Chatwoot shows the
+  (4 areas, 13 branches, 9 groups, 51 courses (D-097), 44 consultants, schedules as computed by the generator test); Chatwoot shows the
   15 teams with their agents.
 - Existing suites still pass: `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests`
   and `scripts/test-chatwoot-crm-sync.py` (5/5).

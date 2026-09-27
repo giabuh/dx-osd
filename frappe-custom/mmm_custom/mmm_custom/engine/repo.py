@@ -17,6 +17,7 @@ from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
 
 CACHE_KEY = "lead_engine_catalog_rows"
+FIRST_TOUCH = ("source", "source_campaign")
 
 
 def _children(doctype, parent_doctype, parentfield, fields):
@@ -154,6 +155,8 @@ def save_lead(state, fields, courses, contact):
     for field, val in fields.items():
         if not doc.meta.has_field(field):
             continue
+        if field in FIRST_TOUCH and (name or (field == "source" and not frappe.db.exists("CRM Lead Source", val))):
+            continue  # an existing Lead keeps the channel it first came from (D-100)
         if field == "first_name":
             if doc.first_name not in PLACEHOLDER_NAMES:
                 continue
@@ -172,6 +175,41 @@ def save_lead(state, fields, courses, contact):
     else:
         doc.insert(ignore_permissions=True)
     return doc.name
+
+
+def trial_due(booking, today):
+    """The class date in "Excel · Thứ ba, 06/10 · Tối · CN Q7" as the next such date from `today`, else None."""
+    import re
+    from datetime import date
+
+    m = re.search(r"(\d{1,2})/(\d{1,2})", booking or "")
+    if not m:
+        return None
+    day, month = int(m.group(1)), int(m.group(2))
+    for year in (today.year, today.year + 1):
+        try:
+            due = date(year, month, day)
+        except ValueError:
+            return None
+        if due >= today:
+            return due
+    return None
+
+
+def create_trial_task(lead, booking, owner=""):
+    """D-102: one open trial-class Task per Lead and booking."""
+    if not lead:
+        return
+    title = f"Học thử: {booking}"[:140]
+    if frappe.db.exists("CRM Task", {"reference_doctype": "CRM Lead", "reference_docname": lead, "title": title}):
+        return
+    owner = owner or frappe.db.get_value("CRM Lead", lead, "lead_owner") or None
+    frappe.get_doc({
+        "doctype": "CRM Task", "title": title, "status": "Todo", "priority": "High", "assigned_to": owner,
+        "description": f"Khách giữ chỗ học thử qua chat: {booking}. Gọi xác nhận trước buổi học.",
+        "reference_doctype": "CRM Lead", "reference_docname": lead,
+        "due_date": trial_due(booking, frappe.utils.getdate()),
+    }).insert(ignore_permissions=True)
 
 
 def set_lead_owner(lead, user):

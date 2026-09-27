@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 from mmm_custom.engine.context import CUSTOMER_SLOTS, branch_context
 from mmm_custom.engine.advisor import advisor_questions, score_courses
-from mmm_custom.engine.render import vnd
+from mmm_custom.engine.render import date_vi, vnd
 from mmm_custom.engine.state import filled, value
 
 ACTIONS = {}
@@ -66,6 +66,63 @@ def find_schedules(data, ctx, today, limit):
 @action("schedule_lookup")
 def schedule_lookup(a):
     return {"schedules": find_schedules(a.data, a.ctx, a.today, int(a.skill.config.get("limit", 3)))}
+
+
+def _short_date(day):
+    """date → "T3 06/10" (Messenger buttons are at most 20 characters)."""
+    from datetime import date
+
+    if isinstance(day, str):
+        day = date.fromisoformat(day[:10])
+    weekday = "CN" if day.weekday() == 6 else f"T{day.weekday() + 2}"
+    return f"{weekday} {day:%d/%m}"
+
+
+@action("trial_offer")
+def trial_offer(a):
+    """Free trial (D-102): the next open classes of the course as buttons; a tap fills the slot named in
+    `action_config.slot` with a readable booking and answers the skill `action_config.skill`."""
+    cfg, course = a.skill.config, a.ctx["course"]
+    schedules = find_schedules(a.data, a.ctx, a.today, int(cfg.get("limit", 3))) if course else []
+    buttons = []
+    for s in schedules:
+        shift = str(s.get("shift") or "").split(" ")[0]
+        booking = " · ".join(x for x in (course["name"], date_vi(s["date"]), str(s.get("shift") or ""), s.get("branch") or "") if x)
+        buttons.append({"title": f"{_short_date(s['date'])} {shift}".strip()[:20],
+                        "action": {"type": "slot", "slot": cfg.get("slot", "trial_class"), "value": booking,
+                                   "skill": cfg.get("skill", "")}})
+    return {"schedules": schedules, "_buttons": buttons}
+
+
+@action("book_trial")
+def book_trial(a):
+    """The booked trial for the confirmation template; the CRM Task is created by the pipeline (effects)."""
+    return {"trial": value(a.slots, a.skill.config.get("slot", "trial_class")) or ""}
+
+
+@action("level_quiz")
+def level_quiz(a):
+    """Level quiz (D-104): the next question with one button per option, or the result (the pipeline
+    then fills level, placement and the recommended course, and the normal flow resumes)."""
+    from mmm_custom.engine import quiz
+
+    cfg, key = a.skill.config, a.skill.key
+    slot = cfg.get("slot", "quiz_progress")
+    answers = quiz.progress(value(a.slots, slot), key)
+    questions = cfg.get("questions") or []
+    res = quiz.result(cfg, answers)
+    if res is None:
+        q = questions[len(answers)]
+        buttons = [{"title": str(option)[:20],
+                    "action": {"type": "slot", "slot": slot, "value": quiz.encode(key, answers + [i]), "skill": key}}
+                   for i, option in enumerate(q.get("options") or [])]
+        return {"quiz": {"done": False, "step": len(answers) + 1, "total": len(questions), "question": q.get("q", ""),
+                         "subject": cfg.get("subject", "")}, "_buttons": buttons, "_hold": True}
+    course = a.catalog.courses.get(res["course"])
+    level_slot = a.catalog.slot("level")
+    option = level_slot.option(res["level"]) if level_slot else None
+    return {"quiz": {"done": True, **res, "subject": cfg.get("subject", ""), "level_label": option.label if option else "",
+                     "course_name": course.name if course else "", "course_fee": course.fee if course else 0}}
 
 
 def applicable(promo, course, branch):

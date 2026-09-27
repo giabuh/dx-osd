@@ -38,6 +38,15 @@ class TestRouting(unittest.TestCase):
                          (PEOPLE[3], "Khách quay lại · người phụ trách Lead"))
         self.assertEqual(pick_consultant("CN Dĩ An", PEOPLE, {}, owner="gone@x")[0]["name"], "lan@x")
 
+    def test_company_customer_goes_to_b2b_consultants_before_the_branch(self):
+        self.assertEqual(pick_consultant("CN Dĩ An", PEOPLE, {}, b2b=True), (PEOPLE[4], "Doanh nghiệp (B2B) · ít khách nhất"))
+
+    def test_company_customer_without_b2b_consultants_uses_the_normal_rule(self):
+        self.assertEqual(pick_consultant("CN Dĩ An", PEOPLE[:4], {"mai@x": 1}, b2b=True)[0]["name"], "lan@x")
+
+    def test_returning_company_customer_keeps_the_lead_owner(self):
+        self.assertEqual(pick_consultant("CN Dĩ An", PEOPLE, {}, owner="mai@x", b2b=True)[0]["name"], "mai@x")
+
     def test_central_team_when_branch_has_nobody(self):
         self.assertEqual(pick_consultant("CN Vũng Tàu", PEOPLE, {}), (PEOPLE[3], "Tổng đài · ít khách nhất"))
         self.assertEqual(pick_consultant("", [], {}), (None, "Chưa có tư vấn viên phù hợp"))

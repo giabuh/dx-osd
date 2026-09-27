@@ -202,13 +202,22 @@
    "course"
   ],
   "missing_policy": "ask",
-  "action_type": "answer_template",
-  "action_config": {},
+  "action_type": "trial_offer",
+  "action_config": {
+   "slot": "trial_class",
+   "skill": "trial_booked",
+   "limit": 3
+  },
   "templates": [
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi ạ, {{ brand.me }} xếp lịch cho {{ brand.you }} nhé?"
+    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi khóa {{ course.name }} ạ. Các buổi gần nhất:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn buổi phù hợp để {{ brand.me }} giữ chỗ nhé."
+   },
+   {
+    "variant_key": "none",
+    "when": "not schedules",
+    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi ạ. Khóa {{ course.name }} chưa có lịch mới, {{ brand.me }} chuyển tư vấn viên xếp buổi học thử riêng cho {{ brand.you }} nhé."
    }
   ],
   "follow_ups": [],
@@ -364,12 +373,15 @@
   "parameters": [],
   "missing_policy": "ask",
   "action_type": "handoff",
-  "action_config": {},
+  "action_config": {
+   "route": "b2b",
+   "alone": true
+  },
   "templates": [
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.me }} chuyển {{ brand.you }} sang bộ phận đào tạo doanh nghiệp ngay ạ."
+    "template": "Dạ {{ brand.me }} cảm ơn {{ brand.you }}. Với đào tạo cho doanh nghiệp, trung tâm báo giá theo số học viên, lịch học và địa điểm (tại trung tâm hoặc tại công ty), nên {{ brand.me }} chuyển {{ brand.you }} sang bộ phận đào tạo doanh nghiệp để lập báo giá riêng ạ."
    }
   ],
   "follow_ups": [],
@@ -746,5 +758,170 @@
   "creates_lead": 0,
   "handoff_after": 0,
   "sort_order": 300
+ },
+ {
+  "skill_key": "trial_booked",
+  "title": "giữ chỗ học thử",
+  "jev_description": "Only when the customer has just picked one of the offered trial class dates",
+  "examples": "",
+  "aliases": "",
+  "parameters": [
+   "phone"
+  ],
+  "missing_policy": "ask",
+  "action_type": "book_trial",
+  "action_config": {
+   "slot": "trial_class"
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} đã giữ chỗ học thử cho {{ brand.you }}: {{ trial }}. Tư vấn viên sẽ gọi xác nhận trước buổi học ạ."
+   },
+   {
+    "variant_key": "none",
+    "when": "not trial",
+    "template": "Dạ {{ brand.you }} muốn học thử buổi nào ạ?"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 1,
+  "sort_order": 85
+ },
+ {
+  "skill_key": "referral",
+  "title": "bạn bè giới thiệu",
+  "jev_description": "The customer says a friend or former student referred them, or gives a referral code",
+  "examples": "bạn mình giới thiệu qua đây\nmình có mã giới thiệu\nđược người quen học ở đây giới thiệu",
+  "aliases": "ma gioi thieu, ban gioi thieu, duoc gioi thieu, nguoi quen gioi thieu",
+  "parameters": [
+   "referral_code"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} đã ghi nhận mã giới thiệu {{ slots.referral_code }} ạ. Học viên được giới thiệu giảm thêm 5% học phí khi đăng ký, và người giới thiệu cũng nhận ưu đãi cho khóa tiếp theo ạ."
+   }
+  ],
+  "follow_ups": [
+   {
+    "title": "Xem học phí",
+    "target_type": "skill",
+    "target": "fee_quote"
+   }
+  ],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 155
+ },
+ {
+  "skill_key": "excel_quiz",
+  "title": "test trình độ Excel",
+  "jev_description": "The customer wants to test or check their Excel level",
+  "examples": "cho mình làm bài test excel\nkiểm tra trình độ excel\nkhông biết mình excel tới đâu",
+  "aliases": "test excel, kiem tra trinh do excel, bai test excel, test trinh do excel, kiem tra excel",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "level_quiz",
+  "action_config": {
+   "slot": "quiz_progress",
+   "subject": "Excel",
+   "questions": [
+    {
+     "q": "Hàm nào tính tổng một vùng ô?",
+     "options": [
+      "SUM",
+      "COUNT",
+      "AVERAGE",
+      "MAX"
+     ],
+     "answer": 0
+    },
+    {
+     "q": "Muốn cố định ô A1 khi kéo công thức, ta viết thế nào?",
+     "options": [
+      "A1",
+      "$A$1",
+      "#A1",
+      "A:1"
+     ],
+     "answer": 1
+    },
+    {
+     "q": "Hàm VLOOKUP dùng để làm gì?",
+     "options": [
+      "Dò tìm theo mã",
+      "Vẽ biểu đồ",
+      "Sắp xếp dữ liệu",
+      "Đếm số ô"
+     ],
+     "answer": 0
+    },
+    {
+     "q": "Tổng hợp doanh thu theo tháng và nhân viên nhanh nhất bằng công cụ nào?",
+     "options": [
+      "Pivot Table",
+      "Lọc thủ công",
+      "Copy – dán",
+      "Format Painter"
+     ],
+     "answer": 0
+    },
+    {
+     "q": "Hàm nào đếm số ô thỏa một điều kiện?",
+     "options": [
+      "COUNTIF",
+      "SUMIF",
+      "IF",
+      "LEN"
+     ],
+     "answer": 0
+    }
+   ],
+   "bands": [
+    {
+     "max": 2,
+     "level": "beginner",
+     "course": "VP-EXCEL"
+    },
+    {
+     "max": 4,
+     "level": "basic",
+     "course": "VP-EXCEL-NC"
+    },
+    {
+     "max": 5,
+     "level": "advanced",
+     "course": "QT-MOS-EXCEL"
+    }
+   ]
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Câu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "start",
+    "when": "not quiz.done and quiz.step == 1",
+    "template": "Dạ mình làm nhanh bài test {{ quiz.subject }} {{ quiz.total }} câu nhé, {{ brand.you }} bấm chọn đáp án ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "result",
+    "when": "quiz.done",
+    "template": "Dạ {{ brand.you }} đúng {{ quiz.score }}/{{ quiz.total }} câu, trình độ: {{ quiz.level_label }}. {{ brand.me | capitalize }} gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} lên trình nhanh nhất ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 160
  }
 ]

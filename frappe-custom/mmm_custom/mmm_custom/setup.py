@@ -143,6 +143,7 @@ def update_crm_fields_layout():
 						fields = ["course_interest", "branch", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
+							fields += ["source_campaign", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
 						for f in fields:
 							if f not in col_fields:
 								col_fields.append(f)
@@ -156,8 +157,11 @@ def update_crm_fields_layout():
 
 
 def create_lead_sources():
+	from mmm_custom.sources import ensure_sources
+
 	for source_name in ("Messenger", "Instagram", "Messenger Bot"):
 		frappe.get_doc({"doctype": "CRM Lead Source", "source_name": source_name}).insert(ignore_if_duplicate=True)
+	ensure_sources()
 	frappe.db.commit()
 	print("Lead sources created")
 
@@ -195,6 +199,18 @@ CATALOG_FIELDS = {
 		{"fieldname": "learner_type", "label": "Learner", "fieldtype": "Data", "insert_after": "course_interest"},
 		{"fieldname": "learner_age", "label": "Learner Age", "fieldtype": "Int", "insert_after": "learner_type"},
 		{"fieldname": "preferred_shift", "label": "Preferred Shift", "fieldtype": "Data", "insert_after": "learner_age"},
+		{"fieldname": "placement_result", "label": "Level Test", "fieldtype": "Data", "read_only": 1,
+		 "description": "Kết quả bài test trình độ qua chat (D-104)", "insert_after": "preferred_shift"},
+		# Where the Lead first came from, next to the standard `source` (D-100)
+		{"fieldname": "source_campaign", "label": "Campaign", "fieldtype": "Data", "length": 140, "read_only": 1,
+		 "description": "Campaign or landing page reported by the channel", "insert_after": "source"},
+		# Referral codes (D-103): this Lead's own code, the code a friend gave, and that friend
+		{"fieldname": "referral_code", "label": "Referral Code", "fieldtype": "Data", "length": 10, "unique": 1,
+		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "source_campaign"},
+		{"fieldname": "referred_by_code", "label": "Referred By Code", "fieldtype": "Data", "length": 20,
+		 "insert_after": "referral_code"},
+		{"fieldname": "referred_by", "label": "Referred By", "fieldtype": "Link", "options": "CRM Lead", "read_only": 1,
+		 "insert_after": "referred_by_code"},
 	],
 }
 

@@ -41,6 +41,44 @@ except ImportError:
     Image, ImageDraw, ImageFont = None, None, None
 
 
+def _extract_ai_response_text(resp):
+    """Safely extract text from an OpenAI-compatible response, handling both standard JSON and SSE streaming."""
+    if not resp:
+        return None
+    try:
+        data = resp.json()
+        choices = data.get("choices", [])
+        if choices:
+            msg = choices[0].get("message", {})
+            val = msg.get("content", "").strip()
+            if val:
+                return val
+    except Exception:
+        pass
+
+    # Fallback: Parse Server-Sent Events / SSE stream (e.g. data: {"choices": [{"delta": {"content": "..."}}]})
+    try:
+        text = resp.text
+        content_parts = []
+        for line in text.split("\n"):
+            line = line.strip()
+            if line.startswith("data: ") and line != "data: [DONE]":
+                chunk_str = line[6:].strip()
+                chunk = json.loads(chunk_str)
+                choices = chunk.get("choices", [])
+                if choices:
+                    delta = choices[0].get("delta", {})
+                    if "content" in delta and delta["content"]:
+                        content_parts.append(delta["content"])
+                    elif "message" in choices[0] and choices[0]["message"].get("content"):
+                        content_parts.append(choices[0]["message"]["content"])
+        if content_parts:
+            return "".join(content_parts).strip()
+    except Exception:
+        pass
+    return None
+
+
 # Course metadata for banner and AI generation
 COURSE_META = {
     "Tiếng Anh": {
@@ -116,15 +154,55 @@ class FacebookPost(Document):
         if user_feedback:
             self.ai_feedback = user_feedback
 
+        day_dow = getattr(self, "day_of_week", None) or ""
+        if "Hai" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: STORYTELLING (KỂ CHUYỆN THỰC TẾ)\n"
+                "- Bắt đầu bằng một câu chuyện ngắn hoặc cảm xúc chân thực của học viên/phụ huynh (từ bỡ ngỡ, tự ti ban đầu đến tự tin, tiến bộ vượt bậc).\n"
+                "- Chạm vào cảm xúc và truyền cảm hứng bắt đầu tuần mới tràn đầy năng lượng."
+            )
+        elif "Tư" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: EDUCATIONAL INSIGHT (CHUYÊN GIA & MẸO HAY)\n"
+                "- Chia sẻ 1 mẹo thực chiến, kiến thức chuyên môn hoặc giải đáp 1 sai lầm thường gặp khi học/rèn luyện.\n"
+                "- Cung cấp giá trị hữu ích trước khi dẫn dắt vào giải pháp của khóa học."
+            )
+        elif "Sáu" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: RELATABLE & HUMOR (ĐỜI THƯỜNG & HÓM HỈNH)\n"
+                "- Bắt đầu bằng 1 tình huống vui, gần gũi cuối tuần mà phụ huynh/người học nào cũng từng gặp.\n"
+                "- Giọng văn dí dỏm, thân thiện, giải tỏa căng thẳng và khơi gợi niềm vui học tập."
+            )
+        elif "Nhật" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: FOMO OFFER & SCHOLARSHIP (ƯU ĐÃI & HỌC BỔNG)\n"
+                "- Sắc bén, kích thích hành động với ưu đãi/học bổng giới hạn số lượng dành riêng cho ngày cuối tuần.\n"
+                "- Nêu lý do thuyết phục vì sao nên đăng ký giữ chỗ ngay hôm nay."
+            )
+        else:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: GIÁ TRỊ THỰC CHIẾN & ĐỘT PHÁ\n"
+                "- Tập trung vào sự thay đổi rõ rệt và giá trị cốt lõi khóa học mang lại."
+            )
+
+        anti_cliche_rules = (
+            "QUY TẮC CHỐNG VĂN MẪU SÁO RỖNG (ANTI-CLICHÉ):\n"
+            "- TUYỆT ĐỐI KHÔNG mở đầu bằng các câu sáo rỗng như: 'Hè rực rỡ...', 'Bạn có biết...', 'Đừng bỏ lỡ...', 'Chào mừng bạn đến với...', 'Bạn đang tìm kiếm...'.\n"
+            "- Hãy mở đầu trực tiếp bằng một câu hook bất ngờ, câu hỏi đánh trúng tâm lý, hoặc một lời tâm sự tự nhiên.\n"
+            "- Viết như một chuyên gia tâm huyết đang trò chuyện trực tiếp với người đọc, chân thật và cuốn hút."
+        )
+
         prompt = (
-            f"Bạn là chuyên viên marketing nội dung của trung tâm EduFlow Academy.\n"
-            f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n"
-            f"Yêu cầu:\n"
-            f"- Ngắn gọn dưới 150 từ, tiếng Việt, đầy cảm hứng\n"
-            f"- Có emoji sinh động\n"
+            f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm EduFlow Academy.\n"
+            f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n\n"
+            f"{angle_section}\n\n"
+            f"{anti_cliche_rules}\n\n"
+            f"Yêu cầu định dạng:\n"
+            f"- Ngắn gọn dưới 150 từ, tiếng Việt, giọng văn cuốn hút, tự nhiên\n"
+            f"- Có emoji sinh động, đặt đúng chỗ\n"
             f"- Nêu bật 3 lợi ích chính dạng gạch đầu dòng\n"
             f"- Đề cập rõ 3 cơ sở: CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức (kèm hotline 0901.888.666)\n"
-            f"- Kêu gọi hành động: nhắn tin/inbox fanpage để nhận tư vấn và ưu đãi\n"
+            f"- Kêu gọi hành động rõ ràng: nhắn tin/inbox fanpage để nhận tư vấn và ưu đãi\n"
             f"- Kèm hashtag: #EduFlow #EduFlowAcademy #{course_name.replace(' ', '')}\n"
             f"- Tuyệt đối KHÔNG dùng markdown (không dùng **, ##), trả về chữ thuần."
         )
@@ -137,41 +215,53 @@ class FacebookPost(Document):
             )
 
         content = None
-        gemini_key = os.getenv("GEMINI_API_KEY") or frappe.conf.get("gemini_api_key")
-        gemini_model = os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
+        nine_key = os.getenv("NINE_ROUTER_API_KEY") or frappe.conf.get("nine_router_api_key")
+        default_nine_url = "http://host.docker.internal:20128/v1" if (os.path.exists("/.dockerenv") or os.environ.get("container")) else "http://localhost:20128/v1"
+        nine_url = os.getenv("NINE_ROUTER_BASE_URL") or frappe.conf.get("nine_router_base_url") or default_nine_url
+        nine_model = os.getenv("NINE_ROUTER_MODEL") or frappe.conf.get("nine_router_model") or "ag/gemini-3.7-flash-low"
 
-        if gemini_key:
+        # 1. Try 9Router AI first
+        if nine_key:
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={gemini_key}"
-                resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
+                resp = requests.post(
+                    f"{nine_url}/chat/completions",
+                    json={
+                        "model": nine_model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 500,
+                        "stream": False,
+                    },
+                    headers={"Authorization": f"Bearer {nine_key}"},
+                    timeout=30,
+                )
                 if resp.status_code == 200:
-                    data = resp.json()
-                    content = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    content = _extract_ai_response_text(resp)
             except Exception as e:
-                frappe.log_error(title="Gemini API Error", message=str(e)[:500])
-
-        if not content:
-            nine_key = os.getenv("NINE_ROUTER_API_KEY") or frappe.conf.get("nine_router_api_key")
-            nine_url = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
-            nine_model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
-            if nine_key:
-                try:
-                    resp = requests.post(
-                        f"{nine_url}/chat/completions",
-                        json={"model": nine_model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 400},
-                        headers={"Authorization": f"Bearer {nine_key}"},
-                        timeout=25,
-                    )
-                    if resp.status_code == 200:
-                        content = resp.json()["choices"][0]["message"]["content"].strip()
-                except Exception as e:
+                if hasattr(frappe, "log_error"):
                     frappe.log_error(title="9Router Error", message=str(e)[:500])
+
+        # 2. Fallback to direct Gemini API if 9Router did not return content
+        if not content:
+            gemini_key = os.getenv("GEMINI_API_KEY") or frappe.conf.get("gemini_api_key")
+            gemini_model = os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
+            if gemini_key:
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={gemini_key}"
+                    resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        content = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                except Exception as e:
+                    if hasattr(frappe, "log_error"):
+                        frappe.log_error(title="Gemini API Error", message=str(e)[:500])
 
         if content:
             self.content = content.replace("**", "").replace("##", "")
             if not self.is_new():
                 try:
                     self.save()
+                    if hasattr(frappe.db, "commit"):
+                        frappe.db.commit()
                 except Exception:
                     pass
             return {"status": "success", "content": self.content}
@@ -256,15 +346,43 @@ class FacebookPost(Document):
             promo_text = meta.get("promo", "ƯU ĐÃI HÔM NAY")
             if feedback.strip():
                 fb_clean = feedback.strip()
-                if len(fb_clean) <= 26:
-                    promo_text = fb_clean.upper()
-                else:
-                    import re
-                    m = re.search(r"((?:giảm|tặng|học bổng|ưu đãi|sale|free|miễn phí)[^,\.\n]{2,25})", fb_clean, re.IGNORECASE)
-                    if m:
-                        promo_text = m.group(1).strip().upper()
+                nine_key = os.getenv("NINE_ROUTER_API_KEY") or frappe.conf.get("nine_router_api_key")
+                default_nine_url = "http://host.docker.internal:20128/v1" if (os.path.exists("/.dockerenv") or os.environ.get("container")) else "http://localhost:20128/v1"
+                nine_url = os.getenv("NINE_ROUTER_BASE_URL") or frappe.conf.get("nine_router_base_url") or default_nine_url
+                nine_model = os.getenv("NINE_ROUTER_MODEL") or frappe.conf.get("nine_router_model") or "ag/gemini-3.7-flash-low"
+                if nine_key and requests:
+                    try:
+                        p_badge = f"Từ yêu cầu: '{fb_clean}', hãy rút ra đúng 1 cụm từ ưu đãi/khẩu hiệu thật ngắn gọn dưới 24 ký tự in hoa để in lên huy hiệu banner quảng cáo (Ví dụ: ƯU ĐÃI 30% HÔM NAY, TẶNG 1 BUỔI HỌC THỬ, HỌC BỔNG VÀNG). Chỉ trả về đúng cụm từ in hoa đó."
+                        resp_b = requests.post(
+                            f"{nine_url}/chat/completions",
+                            json={
+                                "model": nine_model,
+                                "messages": [{"role": "user", "content": p_badge}],
+                                "max_tokens": 30,
+                                "stream": False,
+                            },
+                            headers={"Authorization": f"Bearer {nine_key}"},
+                            timeout=15,
+                        )
+                        if resp_b.status_code == 200:
+                            badge_cand = _extract_ai_response_text(resp_b)
+                            if badge_cand:
+                                badge_cand = badge_cand.replace('"', '').replace("'", "")
+                                if 3 <= len(badge_cand) <= 28:
+                                    promo_text = badge_cand.upper()
+                    except Exception:
+                        pass
+
+                if promo_text == meta.get("promo", "ƯU ĐÃI HÔM NAY"):
+                    if len(fb_clean) <= 26:
+                        promo_text = fb_clean.upper()
                     else:
-                        promo_text = fb_clean[:25].upper()
+                        import re
+                        m = re.search(r"((?:giảm|tặng|học bổng|ưu đãi|sale|free|miễn phí)[^,\.\n]{2,25})", fb_clean, re.IGNORECASE)
+                        if m:
+                            promo_text = m.group(1).strip().upper()
+                        else:
+                            promo_text = fb_clean[:25].upper()
 
             bbox_p = draw.textbbox((0, 0), promo_text, font=f_promo)
             pw = bbox_p[2] - bbox_p[0]
@@ -309,6 +427,8 @@ class FacebookPost(Document):
 
         self.image = file_doc.file_url
         self.save()
+        if hasattr(frappe.db, "commit"):
+            frappe.db.commit()
         return {"status": "success", "image": self.image}
 
     @frappe.whitelist()

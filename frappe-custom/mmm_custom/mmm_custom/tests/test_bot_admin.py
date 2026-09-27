@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import MagicMock, patch
 
 APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
@@ -96,6 +97,20 @@ class TestImportSamples(unittest.TestCase):
             self.assertIn(values["course_group"], groups, path.name)
             self.assertTrue(set(data["next_courses"]) <= seeded, path.name)
             self.assertGreaterEqual(len(values["faqs"]), 2, path.name)
+
+
+class TestAppLinks(unittest.TestCase):
+    def test_chatwoot_url_for_managers_only(self):
+        frappe = MagicMock()
+        frappe.conf = {"chatwoot_base_url": "https://chat.example.vn/"}
+        frappe.PermissionError = PermissionError
+        frappe.throw.side_effect = lambda msg, exc=Exception: (_ for _ in ()).throw(exc(msg))
+        with patch.object(bot_admin, "frappe", frappe):
+            with patch.object(bot_admin, "can_open_bot", return_value=True):
+                self.assertEqual(bot_admin.app_links(), {"chatwoot_url": "https://chat.example.vn"})
+            with patch.object(bot_admin, "can_open_bot", return_value=False):
+                with self.assertRaises(PermissionError):
+                    bot_admin.app_links()
 
 
 if __name__ == "__main__":

@@ -172,6 +172,7 @@ def create_post_image(course_key: str, output_path: str) -> str:
     f_foot_addr = get_font(20, bold=False)
     f_foot_hotline = get_font(20, bold=False)
     f_promo = get_font(23, bold=True)
+    f_cta = get_font(28, bold=True)
 
     # Top Bar
     draw.rectangle([0, 0, W, 120], fill=theme_color)
@@ -314,7 +315,8 @@ def generate_ai_caption(course_key: str) -> str | None:
 
     # 2. Try 9Router fallback
     api_key = os.getenv("NINE_ROUTER_API_KEY")
-    base_url = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
+    default_base_url = "http://host.docker.internal:20128/v1" if (os.path.exists("/.dockerenv") or os.environ.get("container")) else "http://localhost:20128/v1"
+    base_url = os.getenv("NINE_ROUTER_BASE_URL") or default_base_url
     model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
 
     if not api_key:

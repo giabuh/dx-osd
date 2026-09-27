@@ -42,7 +42,7 @@ def summary():
     linked = set(frappe.get_all("Bot Conversation", filters={"is_sandbox": 0, "lead": ["is", "set"]}, pluck="lead"))
     or_filters = {"source": BOT_SOURCE, "name": ["in", list(linked)]} if linked else None
     leads = frappe.get_all("CRM Lead", filters=None if linked else {"source": BOT_SOURCE}, or_filters=or_filters,
-                           fields=["name", "lead_name", "first_name", "mobile_no", "course_interest", "territory",
+                           fields=["name", "lead_name", "first_name", "mobile_no", "course_interest", "territory", "branch",
                                    "lead_owner", "source", "status", "creation"], limit_page_length=0)
     rows = [dict(row) for row in leads]
     names = [row["name"] for row in rows]
@@ -60,4 +60,14 @@ def summary():
                               filters={"decision_type": "handoff", "is_sandbox": 0, "creation": [">=", f"{today} 00:00:00"]},
                               fields=["bot_conversation", "is_sandbox"], limit_page_length=0)
     coverage = [row["coverage"] for row in overview()]
-    return summarize(rows, handoffs, coverage, today, linked)
+    result = summarize(rows, handoffs, coverage, today, linked)
+    if frappe.db.table_exists("Facebook Post"):
+        result["latest_posts"] = frappe.get_all(
+            "Facebook Post",
+            fields=["name", "title", "course", "status", "day_of_week", "scheduled_time", "creation"],
+            order_by="creation desc",
+            limit_page_length=5
+        )
+    else:
+        result["latest_posts"] = []
+    return result

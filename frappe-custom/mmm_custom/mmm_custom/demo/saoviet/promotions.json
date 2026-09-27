@@ -107,5 +107,16 @@
   ],
   "course_groups": [],
   "branches": []
+ },
+ {
+  "title": "Tin học văn phòng trọn gói còn 1.500.000đ",
+  "discount_type": "Amount",
+  "discount_value": 450000,
+  "days": 60,
+  "courses": [
+   "VP-TRONGOI"
+  ],
+  "course_groups": [],
+  "branches": []
  }
 ]

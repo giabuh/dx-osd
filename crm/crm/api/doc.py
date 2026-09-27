@@ -358,6 +358,11 @@ def get_data(
 		if meta.track_seen and "_seen" not in rows:
 			rows.append("_seen")
 
+		if doctype == "CRM Deal":
+			for extra in ("lead_name", "first_name"):
+				if extra not in rows:
+					rows.append(extra)
+
 		data = (
 			frappe.get_list(
 				doctype,
@@ -392,6 +397,11 @@ def get_data(
 
 		if title_field not in rows:
 			rows.append(title_field)
+
+		if doctype == "CRM Deal":
+			for extra in ("lead_name", "first_name"):
+				if extra not in rows:
+					rows.append(extra)
 
 		if not kanban_fields:
 			kanban_fields = ["name"]

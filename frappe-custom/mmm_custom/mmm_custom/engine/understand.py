@@ -38,6 +38,8 @@ def apply_action(u, action):
     kind = action.get("type")
     if kind == "slot":
         u.fills[action["slot"]] = {"value": action["value"], "source": "button", "confidence": 1.0}
+        if action.get("skill"):  # e.g. a trial class tap also answers the booking skill (D-102)
+            u.skills.append(action["skill"])
     elif kind == "parent":
         u.parents[action["slot"]] = action["value"]
     elif kind == "skip":
@@ -83,7 +85,7 @@ def understand(text, state, catalog):
     folded = fold(text)
     pending = state.pending.get("slot") or ""
     slots = [(s, REGISTRY[s.type]) for s in catalog.slots
-             if s.type in REGISTRY and (not s.on_demand or pending == s.key)]
+             if s.type in REGISTRY and (not s.on_demand or pending == s.key or REGISTRY[s.type].anywhere)]
     for slot, handler in slots:
         if not handler.late:
             handler.understand(slot, text or "", folded, pending == slot.key, catalog, u)

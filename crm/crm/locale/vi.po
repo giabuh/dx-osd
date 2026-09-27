@@ -536,7 +536,7 @@ msgstr "Địa Chỉ"
 #: frontend/src/components/Settings/Users.vue:221
 #: frontend/src/components/Settings/Users.vue:224
 msgid "Admin"
-msgstr ""
+msgstr "Quản trị"
 
 #: crm/integrations/twilio/twilio_handler.py:144
 msgid "Agent is unavailable to take the call, please call after some time."
@@ -2159,11 +2159,11 @@ msgstr "Giá trị Deal"
 #: frontend/src/pages/MobileDeal.vue:391
 #: frontend/src/pages/MobileOrganization.vue:343
 msgid "Deals"
-msgstr "Deals"
+msgstr "Học viên đăng ký"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:93
 msgid "Deals by Ongoing & Won Stage"
-msgstr "Deals theo Giai đoạn Đang diễn ra & Đã thắng"
+msgstr "Hồ sơ theo Giai đoạn Đang xử lý & Đã nhập học"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:96
 msgid "Deals by Salesperson"
@@ -2321,7 +2321,7 @@ msgstr ""
 #: frontend/src/pages/Notes.vue:44 frontend/src/pages/Organization.vue:90
 #: frontend/src/pages/Tasks.vue:363 frontend/src/utils/index.js:802
 msgid "Delete"
-msgstr "Đã cập nhật giá trị mặc định"
+msgstr "Xóa"
 
 #: crm/fcrm/doctype/fcrm_settings/fcrm_settings.js:34
 msgid "Delete & Restore"
@@ -4615,11 +4615,11 @@ msgstr "Biểu tượng"
 #: crm/fcrm/doctype/crm_deal_status/crm_deal_status.json
 #: crm/fcrm/doctype/crm_lead_status/crm_lead_status.json
 msgid "Lost"
-msgstr "Đã mất"
+msgstr "Không theo học"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:94
 msgid "Lost Deal Reasons"
-msgstr "Lý do Deal thất bại"
+msgstr "Lý do không theo học"
 
 #. Label of the lost_details_tab (Tab Break) field in DocType 'CRM Deal'
 #. Label of the lost_details_tab (Tab Break) field in DocType 'CRM Lead'
@@ -5587,7 +5587,7 @@ msgstr ""
 #: frontend/src/pages/Organization.vue:487
 #: frontend/src/pages/Organization.vue:541
 msgid "Organization"
-msgstr "Tổ chức"
+msgstr "Học viên / Tổ chức"
 
 #. Label of the organization_details_section (Section Break) field in DocType
 #. 'CRM Deal'
@@ -8218,15 +8218,15 @@ msgstr "Chiều rộng có thể là số, pixel hoặc rem (ví dụ: 3, 30px, 
 #: crm/fcrm/doctype/crm_lead_status/crm_lead_status.json
 #: frontend/src/components/Settings/ERPNextSettings.vue:254
 msgid "Won"
-msgstr "Đã thắng"
+msgstr "Đã nhập học"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:75
 msgid "Won Deals"
-msgstr "Deals đã Thắng"
+msgstr "Học viên đã nhập học"
 
 #: crm/api/dashboard.py:306
 msgid "Won deals"
-msgstr "Deals đã thắng"
+msgstr "Học viên đã nhập học"
 
 #: frontend/src/components/Settings/Sla/SlaHolidays.vue:5
 msgid "Work Schedule & Holidays"
@@ -8926,3 +8926,69 @@ msgstr "⚠️ Không tìm thấy dữ liệu cho trường cha: {0}"
 msgid "⚠️ No row found for idx: {0} in parent field: {1}"
 msgstr "⚠️ Không tìm thấy hàng cho idx: {0} trong trường cha: {1}"
 
+
+msgid "Facebook Marketing"
+msgstr "Facebook Marketing"
+
+msgid "Qualification"
+msgstr "Tiếp nhận & Tư vấn"
+
+msgid "Trial & Assessment"
+msgstr "Học thử & Đánh giá"
+
+msgid "Proposal & Tuition"
+msgstr "Báo học phí & Ưu đãi"
+
+msgid "Pending Payment"
+msgstr "Chờ đóng phí / Đặt cọc"
+
+msgid "All Views"
+msgstr "Danh mục làm việc"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+msgid "Switch to English"
+msgstr "Chuyển sang Tiếng Anh"
+
+msgid "Switch to Vietnamese"
+msgstr "Chuyển sang Tiếng Việt"
+
+msgid "Chatwoot Inbox"
+msgstr "Hộp thư Chatwoot"
+
+msgid "Messenger Bot Leads"
+msgstr "Lead từ Messenger Bot"
+
+msgid "Facebook Ads Leads"
+msgstr "Lead từ Facebook Ads (Biểu mẫu)"
+
+msgid "Leads with Phone"
+msgstr "Lead đã có Số điện thoại"
+
+msgid "Leads generated from Facebook Messenger bot"
+msgstr "Khách hàng tiềm năng qua Chatbot Messenger"
+
+msgid "Leads generated from Facebook Lead Ads"
+msgstr "Khách hàng tiềm năng qua biểu mẫu quảng cáo Facebook (Lead Form)"
+
+msgid "Leads that provided a phone number"
+msgstr "Khách hàng tiềm năng đã để lại số điện thoại"
+
+msgid "Lead Trend by Source"
+msgstr "Xu hướng Lead theo Nguồn"
+
+msgid "Daily leads split by acquisition channel"
+msgstr "Số lượng lead mỗi ngày phân theo kênh tiếp cận"
+
+msgid "Leads by Course Interest"
+msgstr "Phân bố Lead theo Khóa học quan tâm"
+
+msgid "Distribution of leads by their course interest"
+msgstr "Tỷ lệ khách hàng quan tâm theo từng khóa học"
+
+msgid "Leads by Branch"
+msgstr "Phân bố Lead theo Cơ sở"
+
+msgid "Distribution of leads across branches"
+msgstr "Số lượng khách hàng tiềm năng theo từng cơ sở"

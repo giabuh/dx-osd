@@ -28,7 +28,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(set(ctx), {"brand", "customer", "course", "branch", "area", "schedules", "promotions",
                                     "final_fee", "recommendations", "slots", "missing"})
         self.assertEqual((ctx["course"]["name"], ctx["course"]["fee"]), ("Excel từ cơ bản đến nâng cao", 1800000.0))
-        self.assertEqual(ctx["course"]["next_courses"], ["Excel nâng cao & Dashboard", "Luyện thi MOS quốc tế"])
+        self.assertEqual(ctx["course"]["next_courses"], ["Excel nâng cao & Dashboard", "Luyện thi MOS Excel"])
         self.assertEqual((ctx["branch"]["name"], ctx["area"]), ("CN Dĩ An", "Bình Dương"))
         self.assertEqual(ctx["customer"], {"name": "Lan", "learner": "Con em", "learner_age": "", "shift": "",
                                            "is_returning": True})

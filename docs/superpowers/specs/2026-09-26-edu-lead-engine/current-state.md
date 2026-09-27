@@ -28,21 +28,26 @@ for real customers until a later labelled gate passes.
 | `engine/cost_guard.py`, `evaluate.py`, `eval/utterances.json` | Per-conversation and daily budget checks; 104 labelled utterances and D-033 go-live gate | C4+ reads |
 | `engine/advisor.py` | Audience/age/group shortlist and bounded Jev composite ranking, with a data-only fallback | C4+ reads |
 | `engine/decide.py` | Pure `decide()` → answer / confirm / ask_slot / handoff / silent; wants-human and hot handoff, spam close, pending skill | C4+ reads |
-| `engine/context.py`, `render.py`, `actions.py`, `reply.py` | Template context, render guard + filters, action registry, advisor recommendations and combined replies | C6.3 `book_appointment` |
+| `engine/context.py`, `render.py`, `actions.py`, `reply.py` | Template context, render guard + filters, action registry (incl. `trial_offer`/`book_trial`, D-102; the Task is created by `pipeline.book_trials` → `repo.create_trial_task`), advisor recommendations and combined replies | C6.3 `book_appointment` |
 | `engine/lead.py`, `repo.py` | Slots ↔ Lead fields (`territory`, `products`, `learner_type`, `learner_age`, `preferred_shift`, `first_name`, `mobile_no`), returning-customer prefill; all database access (catalog cache cleared by `doc_events`) | — |
 | `engine/log.py`, `learning.py` | AI Decision Log rows + learning signals; daily retention purge; `consultant_corrected` on CRM Lead update | C9.2 review UI |
-| `engine/routing.py`, `handoff.py`, `chatwoot_setup.py` | Rule D pick (D-087: Lead owner → branch or Tổng đài → Team Lead if confidently hot → course-group specialist → least loaded), team, labels, `bot_*` conversation and contact attribute definitions, summary note | C4.1 CRM toggles |
+| `engine/routing.py`, `handoff.py`, `chatwoot_setup.py` | Rule D pick (D-087: Lead owner → B2B consultants for a skill with `route: b2b` (D-099) → branch or Tổng đài → Team Lead if confidently hot → course-group specialist → least loaded), team, labels, `bot_*` conversation and contact attribute definitions, summary note | C4.1 CRM toggles |
 | `engine/effects.py`, `events.py`, `pipeline.py` (Lead writes also update the Chatwoot contact, D-088) | Effects interface and hook; `run_turn` calls `understand_turn` with Jev/fallback and token accounting; RQ job guarded by per-conversation `filelock` | — |
 | `engine/qualify.py` | Pure `lead_status()` → New / Qualified / Unqualified (D-083); `pipeline.write_lead` writes it once per change, `repo.save_lead` skips Leads a person moved to another status | C6.1, C6.5 |
 | `mmm_custom/workspace/bot_sao_viet/` | Desk workspace grouping the bot pages and data (D-089) | — |
 | `engine/knowledge.py`, `mmm_custom/page/bot_knowledge/`, `public/js/crm_product.js`, `mmm_custom/doctype/course_faq/` | Course knowledge overview and coverage table (D-086); CRM Product fields `syllabus` + `faqs` (`setup.CATALOG_FIELDS`), answered through `jev_questions.faq_course`/`combine._course_faq` (D-085) | — |
 | `engine/playground.py`, `mmm_custom/page/bot_playground/` | `/app/bot-playground`: dry simulation, replay and an independent **Use Jev** toggle with question/answer/token inspector | — |
-| `desk.py`, `hooks.py` | Role gate for bot administration, migrate-time hiding of unused desk workspaces, and an Apps entry from `/crm` to `/bot` (D-091) | — |
-| `www/bot.py`, `www/bot.html`, `public/js/bot_page.js` | Standalone `/bot` page with overview, course knowledge and dry-run chat tabs; long inspector output scrolls inside its panel (D-092) | — |
+| `desk.py`, `hooks.py` | Role gate for bot administration, migrate-time hiding of unused desk workspaces, an Apps entry "Quản trị" to `/crm/admin` (D-091, D-096), `/bot` and `/admin` → `/crm/admin` redirects, and landing by role (`default_app_for`: managers → `/crm/admin`, others → `/crm`; after_migrate + User on_update) | — |
+| `crm/frontend/src/pages/Admin.vue`, `crm/frontend/src/components/Admin/` | Manager screens inside the CRM frontend at `/crm/admin/<tab>` (overview, customers, branches, staff, course knowledge, playground, scenarios), frappe-ui components, managers only (router guard + server checks); replaced the standalone `/bot` → `/admin` page (D-092, D-096) | — |
+| `engine/quiz.py` | Level quiz scoring and progress encoding (D-104); action `level_quiz` in `actions.py`, results applied by `pipeline.apply_quiz_results` | Add a quiz = one Bot Skill |
+| `engine/scenarios.py`, `engine/eval/scenarios.json` | Acceptance scenarios (D-098): scripted chats → expected team, consultant kind, Lead fields; dry runs offline (unit test) and on live data (`bench execute mmm_custom.engine.scenarios.report`, API `run_all`) | Add a scenario per new routing rule |
+| `engine/customers.py`, `crm/frontend/src/components/Admin/AdminCustomers.vue`, `AdminScenarios.vue` | Customer dashboard (D-101) and the scenario runner tab | — |
 | `engine/dashboard.py` | Role-gated summary of bot Lead creation, qualification, handoffs, knowledge coverage and latest qualified Leads | — |
 | `intelligence.py:208` `analyze_conversation` | Jev intent/hotness/phone/email analysis and labels; skips conversations handled by an active Bot Conversation | — |
 | `intelligence.py:74` `ask_jev` | One System One call (`/v1/systemone`), typed questions | Reused |
 | `followup.py:39` `plan_followups` | Daily 08:00 (`hooks.py` cron): Jev picks follow-up for stale open leads → CRM Task | C6.4 |
+| `referral.py` | Referral codes (D-103): code per Lead, `find_code`, CRM Lead `before_insert`/`validate` hooks resolving `referred_by`, migrate backfill | — |
+| `sources.py` | Channel list (D-100): Chatwoot channel → CRM Lead Source for new Leads, `source_campaign`, statuses for planned channels (Zalo, TikTok) | Add a channel = one row |
 | `dedupe.py`, `data_quality.py` | Email/phone normalisation and matching; data-quality label | Reused; C7.2 |
 | `chatwoot_client.py` | Chatwoot REST v1 wrapper; C1 added inbox/agent/team methods | Reused/extended |
 | `setup.py` | Custom fields on CRM Lead via `after_install` + patches (`patches.txt`); catalog custom fields on CRM Territory/CRM Product in `CATALOG_FIELDS`, applied idempotently by `create_catalog_fields()` on install and every migrate (`after_migrate` hook) | Add new catalog fields to `CATALOG_FIELDS` |
@@ -50,18 +55,19 @@ for real customers until a later labelled gate passes.
 | `mmm_custom/doctype/` | Bot Conversation adds `history`, `ai_signals`, `jev_calls`; AI Decision Log adds `jev_extra`; Bot Slot adds `ask_on_demand`; Lead Engine Settings adds Jev/cost/advisor sections; existing C1–C2 DocTypes and child tables remain | C4+ reads |
 | `demo/loader.py`, `demo/saoviet/*.json` | Idempotent Sao Việt demo loader (`bench execute mmm_custom.demo.loader.load`, optional `anchor`); `purge_demo()` | — |
 | `staff_sync.py` | CRM → Chatwoot staff sync: an agent per Consultant, one team per branch (+ B2B, Tổng đài) holding exactly its active consultants, bot attached to every Facebook page inbox; writes `Consultant.chatwoot_agent_id`. Runs on Consultant save and every 10 min; handoff adds the consultant to the conversation's inbox (`engine/effects.py`) | Staff are managed in CRM only |
-| `bot_admin.py`, `www/bot.html`, `public/js/bot_page.js` | `/bot` is the single admin page (left menu): overview, branches (CRM Territory by area), staff (User + Consultant, synced to Chatwoot on save), course knowledge, playground, links to the remaining desk lists; reached from the "Bot Sao Việt" item in the `/crm` sidebar (`crm/frontend/.../AppSidebar.vue`, managers only) | Add admin screens here |
+| `bot_admin.py`, `lead_ads.py` | APIs behind `/crm/admin`: branches (CRM Territory by area), staff (User + Consultant, synced to Chatwoot on save), course import/creation, `app_links`; reached from the "Quản trị" item in the `/crm` sidebar (`AppSidebar.vue`, managers only). `lead_ads.py` configures Facebook Lead Ads over `crm/lead_syncing` but has no screen | Add admin screens as tabs in `pages/Admin.vue` |
+| `crm_links.py` | Chatwoot ↔ CRM links: contact attribute `ho_so_crm` (link type, written by `effects.save_lead` from `crm_public_url`; `backfill_contact_links` for older contacts) and the "Mở cuộc chat" CRM Form Script on the Lead page (`open_chat_url`, created on migrate) | — |
 | `demo/chatwoot_seed.py` | Runs `staff_sync.sync_all()` for the loaded demo consultants | Supersedes `scripts/seed-branch-agents.py` |
 
 ## Live demo data (crm.localhost, checked 2026-09-27)
 
-18 territories (root + 4 areas + 13 branches), 8 course groups, 46 courses, 44 users/consultants, 1,070 course
+18 territories (root + 4 areas + 13 branches), 8 course groups, 46 courses (the dataset now has 9 groups and 51 courses, D-097; reload with `bench execute mmm_custom.demo.loader.load`), 44 users/consultants, 1,070 course
 schedules, 10 promotions, 9 bot slots (including on-demand `goal`/`level`), 30 bot skills, Lead Engine Settings;
 Chatwoot: 44 agents, 15 teams.
 
 ## CRM Lead custom fields (from `setup.py`)
 
-`chatwoot_contact_id` (Data, unique) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
+`chatwoot_contact_id` (Data, unique) · `source_campaign` (Data, D-100) · `referral_code`, `referred_by_code`, `referred_by` (D-103) · `placement_result` (D-104) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
 options**, no longer written) · `data_quality` (Select) · `ai_intent` (Select) · `ai_hotness` (Select).
 
 ## Standard Frappe CRM pieces we will reuse (vendored `crm/`, not edited)

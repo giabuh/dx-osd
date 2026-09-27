@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DX-OSD — Báo cáo Thuyết trình Cuộc thi OLP 2026 (10 Slides Chuẩn)</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* CSS RESET & VARIABLES - LIGHT EXECUTIVE TECH THEME */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* Backgrounds */
+      --bg-body: #f8fafc;
+      --bg-viewport: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f8fafc;
+      --bg-card-hover: #ffffff;
+      
+      /* Borders */
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --border-focus: #0284c7;
+
+      /* Typography Colors - High Contrast */
+      --text-main: #0f172a;       /* Slate 900 - cực kỳ sắc nét */
+      --text-body: #1e293b;       /* Slate 800 - dễ đọc */
+      --text-muted: #334155;      /* Slate 700 - phụ trợ rõ ràng */
+      --text-dim: #64748b;        /* Slate 500 - nhãn phụ */
+
+      /* Vibrant Accents Optimized for Light Background */
+      --cyan: #0284c7;           /* Sky 600 */
+      --cyan-subtle: #e0f2fe;
+      --blue: #2563eb;           /* Blue 600 */
+      --purple: #7c3aed;         /* Violet 600 */
+      --purple-subtle: #f3e8ff;
+      --emerald: #059669;        /* Emerald 600 */
+      --emerald-subtle: #ecfdf5;
+      --amber: #d97706;          /* Amber 600 */
+      --amber-subtle: #fef3c7;
+      --rose: #e11d48;           /* Rose 600 */
+      --rose-subtle: #ffe4e6;
+      
+      /* Fonts */
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-body);
+      font-family: var(--font-body);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* BACKGROUND TECH GRID (LIGHT & ELEGANT) */
+    .bg-grid-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.08) 0%, transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(5, 150, 105, 0.05) 0%, transparent 45%),
+        linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      z-index: 1;
+    }
+
+    /* TOP PROGRESS BAR */
+    .progress-bar-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: #e2e8f0;
+      z-index: 100;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 10%;
+      background: linear-gradient(90deg, #0284c7, #2563eb, #7c3aed);
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* SLIDE STAGE (16:9 VIEWPORT) */
+    .presentation-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px 68px 24px;
+      z-index: 2;
+    }
+
+    .slide-viewport {
+      position: relative;
+      width: min(100%, calc((100vh - 84px) * 16 / 9));
+      aspect-ratio: 16 / 9;
+      background: var(--bg-viewport);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      box-shadow: 
+        0 20px 45px -10px rgba(15, 23, 42, 0.1),
+        0 0 0 1px rgba(15, 23, 42, 0.04);
+      overflow: hidden;
+    }
+
+    /* SLIDE ELEMENTS */
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 36px 52px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.98) translateY(12px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      background: #ffffff;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+      z-index: 10;
+    }
+
+    /* HEADER OF SLIDE */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      border-bottom: 1.5px solid var(--border-subtle);
+      padding-bottom: 14px;
+    }
+
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--cyan-subtle);
+      color: var(--cyan);
+      border: 1px solid #bae6fd;
+      margin-bottom: 6px;
+    }
+
+    .slide-title {
+      font-family: var(--font-heading);
+      font-size: 1.88rem;
+      font-weight: 800;
+      line-height: 1.25;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: -0.015em;
+    }
+
+    .slide-subtitle {
+      font-size: 0.96rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .slide-number-badge {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--cyan);
+      padding: 6px 14px;
+      background: var(--bg-card-subtle);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 8px;
+    }
+
+    /* SLIDE BODY CONTAINER */
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* CARD SYSTEM (LIGHT ELEGANT SHADOWS) */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 18px 20px;
+      position: relative;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+    }
+    .card:hover {
+      border-color: var(--border-strong);
+      box-shadow: 0 10px 20px -3px rgba(15, 23, 42, 0.08);
+      transform: translateY(-2px);
+    }
+    .card.glow-cyan:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 10px 25px -4px rgba(2, 132, 199, 0.15);
+    }
+    .card.glow-purple:hover {
+      border-color: #c084fc;
+      box-shadow: 0 10px 25px -4px rgba(124, 58, 237, 0.15);
+    }
+
+    /* GRID LAYOUTS */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* TYPOGRAPHY HELPERS */
+    .highlight-cyan { color: #0284c7; font-weight: 700; }
+    .highlight-blue { color: #2563eb; font-weight: 700; }
+    .highlight-purple { color: #7c3aed; font-weight: 700; }
+    .highlight-emerald { color: #059669; font-weight: 700; }
+    .highlight-amber { color: #d97706; font-weight: 700; }
+    .highlight-rose { color: #e11d48; font-weight: 700; }
+
+    /* BADGE PILLS - HIGH CONTRAST LIGHT MODE */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .pill-rose { background: var(--rose-subtle); color: #be123c; border-color: #fecdd3; }
+    .pill-amber { background: var(--amber-subtle); color: #b45309; border-color: #fde68a; }
+    .pill-cyan { background: var(--cyan-subtle); color: #0369a1; border-color: #bae6fd; }
+    .pill-emerald { background: var(--emerald-subtle); color: #047857; border-color: #a7f3d0; }
+    .pill-purple { background: var(--purple-subtle); color: #6d28d9; border-color: #ddd6fe; }
+
+    /* FOOTER CONTROLS TOOLBAR (LIGHT FROSTED) */
+    .controls-toolbar {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px solid #cbd5e1;
+      border-radius: 9999px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      z-index: 50;
+      transition: opacity 0.3s;
+    }
+
+    .btn-control {
+      background: transparent;
+      border: none;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .btn-control:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      transform: scale(1.05);
+    }
+    .btn-control:active {
+      transform: scale(0.95);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      padding: 4px 12px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .timer-badge {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--cyan-subtle);
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .timer-badge.warning { color: #b45309; background: var(--amber-subtle); border-color: #fde68a; }
+    .timer-badge.danger { color: #be123c; background: var(--rose-subtle); border-color: #fecdd3; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* QUICK DEMO JUMP BUTTON */
+    .quick-demo-btn {
+      position: fixed;
+      top: 16px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      cursor: pointer;
+      z-index: 60;
+      backdrop-filter: blur(8px);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+    }
+    .quick-demo-btn:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+      transform: translateY(-1px);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+    }
+
+    /* SPEAKER NOTES DRAWER (LIGHT ELEGANT) */
+    .notes-drawer {
+      position: fixed;
+      bottom: 74px;
+      right: 24px;
+      width: 460px;
+      max-height: 290px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 18px 22px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+      backdrop-filter: blur(20px);
+      z-index: 90;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      animation: slideUp 0.2s ease-out;
+    }
+    .notes-drawer.open { display: flex; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .notes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+    .notes-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+    }
+    .notes-body {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #1e293b;
+    }
+    .notes-body p { margin-bottom: 8px; }
+    .notes-body p:last-child { margin-bottom: 0; }
+
+    /* OVERVIEW GRID MODAL (LIGHT THEME) */
+    .overview-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(241, 245, 249, 0.94);
+      backdrop-filter: blur(16px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .overview-modal.open { display: flex; }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+    }
+    .overview-card {
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+    }
+    .overview-card:hover {
+      border-color: #0284c7;
+      box-shadow: 0 10px 20px rgba(2, 132, 199, 0.2);
+      transform: translateY(-4px);
+    }
+    .overview-card.active {
+      border-color: #0284c7;
+      background: #f0f9ff;
+    }
+    .overview-num {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #0284c7;
+    }
+    .overview-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.35;
+    }
+
+    /* SLIDE 1: COVER SPECIFICS */
+    .slide-cover {
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 24px 44px;
+      background: radial-gradient(circle at center, #ffffff 40%, #f8fafc 100%);
+    }
+    .cover-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 20px;
+      background: var(--cyan-subtle);
+      border: 1.5px solid #bae6fd;
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #0369a1;
+      margin-bottom: 18px;
+    }
+    .cover-title {
+      font-family: var(--font-heading);
+      font-size: 3.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+    .cover-title span {
+      background: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cover-desc {
+      font-size: 1.25rem;
+      color: #334155;
+      max-width: 860px;
+      line-height: 1.55;
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+    .cover-meta-grid {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    .cover-meta-item {
+      padding: 12px 20px;
+      background: #ffffff;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      font-size: 0.88rem;
+      text-align: left;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+    }
+    .cover-meta-label {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .cover-meta-val {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* SLIDE 8: DEMO HIGHLIGHT SPECIFIC (LIGHT HIGH IMPACT) */
+    .slide-demo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      position: relative;
+    }
+    .demo-huge-title {
+      font-family: var(--font-heading);
+      font-size: 8rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 15px 30px rgba(2, 132, 199, 0.25));
+      margin-bottom: 12px;
+      animation: pulseScale 3s ease-in-out infinite alternate;
+    }
+    @keyframes pulseScale {
+      from { transform: scale(1); filter: drop-shadow(0 15px 30px rgba(2, 132, 199, 0.2)); }
+      to { transform: scale(1.02); filter: drop-shadow(0 20px 40px rgba(124, 58, 237, 0.35)); }
+    }
+    .demo-subtext {
+      font-size: 1.4rem;
+      color: #334155;
+      font-weight: 600;
+      max-width: 720px;
+      margin-bottom: 28px;
+      letter-spacing: -0.01em;
+    }
+    .demo-scenario-pills {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .demo-btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 9999px;
+      text-decoration: none;
+      box-shadow: 0 10px 25px -4px rgba(37, 99, 235, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.25s ease;
+    }
+    .demo-btn-action:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.5);
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+    }
+
+    /* CODE & WORKFLOW SNIPPET BOX */
+    .flow-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      line-height: 1.55;
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* SVG ICONS INLINE STYLING */
+    .icon {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .icon-lg {
+      width: 26px;
+      height: 26px;
+      stroke-width: 2.2;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tech Grid Background -->
+  <div class="bg-grid-overlay"></div>
+
+  <!-- Progress Bar Top -->
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progressBar"></div>
+  </div>
+
+  <!-- Quick Demo Button Top Right -->
+  <button class="quick-demo-btn" onclick="goToSlide(8)" title="Chuyển ngay tới Slide Demo (Slide 8)">
+    <span class="status-dot"></span>
+    <span>LIVE DEMO</span>
+    <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+
+  <!-- Presentation Viewport Container -->
+  <main class="presentation-container">
+    <div class="slide-viewport" id="viewport">
+
+      <!-- ==========================================
+           SLIDE 1: TRANG TIÊU ĐỀ & ĐẶT VẤN ĐỀ
+      =========================================== -->
+      <section class="slide slide-cover active" data-slide="1">
+        <div class="cover-badge">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          CUỘC THI PHẦN MỀM NGUỒN MỞ — OLP 2026 (VFOSSA)
+        </div>
+        <h1 class="cover-title">DX-<span>OSD</span></h1>
+        <p class="cover-desc">
+          Nền tảng Tiếp nhận Khách hàng Đa kênh Facebook / Instagram & Hội tụ Dữ liệu Frappe CRM Lõi mở theo Mô hình HPDI cho Doanh nghiệp SMB
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 24px;">
+          <span class="pill pill-cyan" style="font-size: 0.82rem; padding: 6px 14px;">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            100% Pure FOSS (AGPLv3 + MIT)
+          </span>
+          <span class="pill pill-purple" style="font-size: 0.82rem; padding: 6px 14px;">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Zero-Middleware · In-Bench Frappe App
+          </span>
+          <span class="pill pill-emerald" style="font-size: 0.82rem; padding: 6px 14px;">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Tự chủ On-Premise · $0đ Bản quyền
+          </span>
+        </div>
+
+        <div class="cover-meta-grid">
+          <div class="cover-meta-item">
+            <div class="cover-meta-label">Đơn vị Thực hiện</div>
+            <div class="cover-meta-val">Đội tuyển Olympic PMNM — ĐH HUTECH</div>
+          </div>
+          <div class="cover-meta-item">
+            <div class="cover-meta-label">Tác giả Đề tài</div>
+            <div class="cover-meta-val">Hoàng Thành & Lưu Gia Bảo</div>
+          </div>
+          <div class="cover-meta-item">
+            <div class="cover-meta-label">Kiến trúc Cốt lõi</div>
+            <div class="cover-meta-val">2-Stack Model: Chatwoot CE + Frappe CRM</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 2: PAINPOINT & LÝ DO CHỌN ĐỀ TÀI (Trọng tâm 1)
+      =========================================== -->
+      <section class="slide" data-slide="2">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">01 · BỐI CẢNH THỰC TẾ & NỖI ĐAU CỦA SMB</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-rose" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>
+              Pain Points Tiếp thị Đa kênh & Lý do Chọn Đề tài
+            </h2>
+            <p class="slide-subtitle">Nghịch lý thất thoát khách hàng và rào cản chi phí bản quyền tàn khốc của 900.000+ SMB Việt Nam</p>
+          </div>
+          <div class="slide-number-badge">02 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <!-- 4 Painpoint Cards Grid -->
+          <div class="grid-2" style="margin-bottom: 14px;">
+            <!-- Painpoint 1 -->
+            <div class="card glow-cyan">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 800; font-size: 1.02rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                  <span class="pill pill-rose">NỖI ĐAU 1</span>
+                  Phân mảnh Kênh & Trôi Lead Đa kênh
+                </div>
+                <span class="pill">Lead Leakage</span>
+              </div>
+              <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
+                Khách đổ về từ Facebook Lead Ads, Messenger, Instagram... Nhân viên tư vấn mở 5-6 tab trình duyệt, chat phân tán ➔ <strong class="highlight-rose">Trôi tin nhắn, phản hồi chậm trễ, thất thoát 30% - 50% khách hàng tiềm năng.</strong>
+              </p>
+            </div>
+
+            <!-- Painpoint 2 -->
+            <div class="card glow-cyan">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 800; font-size: 1.02rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                  <span class="pill pill-amber">NỖI ĐAU 2</span>
+                  Trùng lặp Dữ liệu & Rác Lead GIGO
+                </div>
+                <span class="pill">Data Collision</span>
+              </div>
+              <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
+                Một khách hàng vừa điền form quảng cáo vừa nhắn tin Messenger ➔ Tạo 2-3 hồ sơ Lead riêng rẽ. Telesale gọi chồng chéo gây phiền toái, <strong class="highlight-amber">dữ liệu phình rác, báo cáo sai lệch hoàn toàn.</strong>
+              </p>
+            </div>
+
+            <!-- Painpoint 3 -->
+            <div class="card glow-purple">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 800; font-size: 1.02rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                  <span class="pill pill-cyan">NỖI ĐAU 3</span>
+                  Chi phí Bản quyền SaaS & Giấy phép "Nguồn Mở Giả"
+                </div>
+                <span class="pill">License Trap</span>
+              </div>
+              <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
+                HubSpot, Salesforce tính phí theo đầu user quá đắt đỏ; các công cụ automation như n8n chuyển sang giấy phép Fair-code / Sustainable Use License <strong class="highlight-cyan">(không thuộc FOSS OSI)</strong> gây rủi ro pháp lý lớn cho doanh nghiệp.
+              </p>
+            </div>
+
+            <!-- Painpoint 4 -->
+            <div class="card glow-purple">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 800; font-size: 1.02rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                  <span class="pill pill-rose">NỖI ĐAU 4</span>
+                  Đứt gãy Bàn giao (Handoff Failure) & Thiếu Điều phối
+                </div>
+                <span class="pill">Staff Desync</span>
+              </div>
+              <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
+                Chatbot trả lời dập khuôn; khi khách hỏi sâu cần gặp tư vấn viên thì không định tuyến được đến đúng chi nhánh, <strong class="highlight-rose">danh sách nhân viên trên CRM và hộp thư Chatwoot hoàn toàn lệch pha.</strong>
+              </p>
+            </div>
+          </div>
+
+          <!-- Why Choose Topic Callout -->
+          <div class="card" style="background: var(--cyan-subtle); border: 1.5px solid #bae6fd; padding: 14px 20px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="background: #ffffff; padding: 10px; border-radius: 10px; color: var(--cyan); box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15);">
+                <svg class="icon-lg" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div>
+                <strong style="color: #0369a1; font-size: 0.96rem;">LÝ DO CHỌN ĐỀ TÀI & SỨ MỆNH CỦA DX-OSD:</strong>
+                <p style="font-size: 0.85rem; color: #1e293b; margin-top: 3px; line-height: 1.45;">
+                  Đứng trên vai 2 người khổng lồ nguồn mở hàng đầu thế giới (Chatwoot & Frappe CRM), DX-OSD xây dựng giải pháp hội tụ Lead-to-CRM <strong style="color: #0f172a;">100% Pure FOSS chuẩn OSI</strong> với Frappe App nội tại <code style="color: #0369a1; font-weight: 700;">mmm_custom</code> — triệt tiêu tầng trung gian cồng kềnh, chi phí bản quyền $0đ$, vận hành tin cậy cho hàng trăm nghìn SMB.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 3: TRÌNH BÀY HPDI CỦA SẢN PHẨM (Trọng tâm 2)
+      =========================================== -->
+      <section class="slide" data-slide="3">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">02 · NỀN TẢNG KIẾN TRÚC HỆ THỐNG</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-cyan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="12 6 12 12 16 14"/></svg>
+              Mô hình HPDI trong Nền tảng DX-OSD
+            </h2>
+            <p class="slide-subtitle">Sự phân định ranh giới chặt chẽ giữa 4 không gian vận hành: Human — Process — Data — Intelligence</p>
+          </div>
+          <div class="slide-number-badge">03 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <!-- 4 Spaces of HPDI Grid -->
+          <div class="grid-4" style="margin-bottom: 14px;">
+            <!-- [H] HUMAN SPACE -->
+            <div class="card" style="border-top: 4px solid #0284c7;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="pill pill-cyan" style="font-size: 0.82rem; font-weight: 800;">[H] HUMAN</span>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-mono); font-weight: 700;">INBOX ONLY</span>
+              </div>
+              <h4 style="color: var(--text-main); font-size: 1rem; font-weight: 800; margin-bottom: 6px;">Chatwoot Community</h4>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px;">
+                Hộp thư hội thoại đa kênh (Facebook, Instagram, Webchat). Bản quyền MIT Expat, đã cắt bỏ hoàn toàn enterprise/.
+              </p>
+              <div style="background: var(--bg-card-subtle); padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; border: 1px solid var(--border-subtle);">
+                <strong class="highlight-cyan">Vai trò:</strong> Giao tiếp khách hàng, đồng bộ Tư vấn viên từ CRM (`staff_sync.py`).
+              </div>
+            </div>
+
+            <!-- [P] PROCESS SPACE -->
+            <div class="card" style="border-top: 4px solid #7c3aed;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="pill pill-purple" style="font-size: 0.82rem; font-weight: 800;">[P] PROCESS</span>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-mono); font-weight: 700;">IN-BENCH APP</span>
+              </div>
+              <h4 style="color: var(--text-main); font-size: 1rem; font-weight: 800; margin-bottom: 6px;">App `mmm_custom`</h4>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px;">
+                Điều phối Webhook thời gian thực thay thế n8n, xác thực HMAC-SHA256, Anti-replay 300s, Lead Bot với Quick Replies.
+              </p>
+              <div style="background: var(--bg-card-subtle); padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; border: 1px solid var(--border-subtle);">
+                <strong class="highlight-purple">Rào chắn:</strong> 3-Tier Deduplication (Lead ID ➔ SĐT E.164 ➔ Email định chuẩn).
+              </div>
+            </div>
+
+            <!-- [D] DATA SPACE -->
+            <div class="card" style="border-top: 4px solid #059669;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="pill pill-emerald" style="font-size: 0.82rem; font-weight: 800;">[D] DATA</span>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-mono); font-weight: 700;">SOURCE OF TRUTH</span>
+              </div>
+              <h4 style="color: var(--text-main); font-size: 1rem; font-weight: 800; margin-bottom: 6px;">Frappe CRM v1.84.0</h4>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px;">
+                Nền tảng CRM AGPLv3 duy nhất lưu trữ Lead, Contact, Deal. Tích hợp Polling Meta Lead Ads nguyên bản (native).
+              </p>
+              <div style="background: var(--bg-card-subtle); padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; border: 1px solid var(--border-subtle);">
+                <strong class="highlight-emerald">Chuẩn hóa:</strong> Đo lường chỉ số Chất lượng Dữ liệu (Data Quality Score).
+              </div>
+            </div>
+
+            <!-- [I] INTELLIGENCE SPACE -->
+            <div class="card" style="border-top: 4px solid #d97706;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="pill pill-amber" style="font-size: 0.82rem; font-weight: 800;">[I] INTELLIGENCE</span>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-mono); font-weight: 700;">SAFE AGENTS</span>
+              </div>
+              <h4 style="color: var(--text-main); font-size: 1rem; font-weight: 800; margin-bottom: 6px;">AI Engine (Jev)</h4>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px;">
+                Đọc hiểu hội thoại, chấm Hotness (0-100), nhận diện Intent mua hàng, trích xuất SĐT/Email, sinh Suggested Replies.
+              </p>
+              <div style="background: var(--bg-card-subtle); padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; border: 1px solid var(--border-subtle);">
+                <strong class="highlight-amber">Nguyên tắc D-003:</strong> AI chỉ phân tích; câu trả lời xuất bản qua Template CRM.
+              </div>
+            </div>
+          </div>
+
+          <!-- Evolutionary Law Callout -->
+          <div class="card" style="padding: 12px 18px; background: #ffffff; border: 1.5px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--cyan); font-weight: 800;">QUY TẮC PHÂN ĐỊNH BIÊN GIỚI TRÁCH NHIỆM (SERVICE BOUNDARIES):</span>
+                <p style="font-size: 0.85rem; color: var(--text-body); margin-top: 2px;">
+                  <strong>Frappe CRM là nguồn sự thật duy nhất (Single Source of Truth).</strong> Chatwoot chỉ là giao diện tương tác tức thời (Inbox-only); `mmm_custom` không lưu database riêng mà thực thi trực tiếp trên database CRM với 0ms trễ middleware.
+                </p>
+              </div>
+              <div style="display: flex; gap: 8px; font-family: var(--font-mono); font-size: 0.78rem;">
+                <span class="pill pill-cyan">Chatwoot: Inbox</span>
+                <span class="pill pill-purple">mmm_custom: Logic</span>
+                <span class="pill pill-emerald">CRM: Canonical Data</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 4: BẢN ĐỒ CÔNG NGHỆ NGUỒN MỞ (2-STACK MODEL)
+      =========================================== -->
+      <section class="slide" data-slide="4">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">03 · BẢN ĐỒ CÔNG NGHỆ LÕI MỞ</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-purple" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              Kiến trúc Tinh gọn 2 Cụm (Streamlined 2-Stack Model)
+            </h2>
+            <p class="slide-subtitle">100% Giấy phép chuẩn OSI, Loại bỏ Middleware trung gian, Triển khai Docker 1-Click</p>
+          </div>
+          <div class="slide-number-badge">04 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <div class="grid-3" style="margin-bottom: 14px;">
+            <!-- Stack 1 -->
+            <div class="card">
+              <div style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--cyan); margin-bottom: 6px;">[H] CỤM 1: GIAO TIẾP KHÁCH HÀNG</div>
+              <h4 style="color: var(--text-main); font-size: 1.05rem; font-weight: 800; margin-bottom: 8px;">Chatwoot Community</h4>
+              <ul style="font-size: 0.84rem; color: var(--text-muted); list-style: none; display: flex; flex-direction: column; gap: 6px;">
+                <li>• <strong>Giấy phép:</strong> MIT Expat (OSI-Approved)</li>
+                <li>• <strong>Công nghệ:</strong> Ruby on Rails, Vue.js, Sidekiq</li>
+                <li>• <strong>Port lắng nghe:</strong> <code style="color: #0284c7; font-weight: 700;">127.0.0.1:3000</code></li>
+                <li>• <strong>Bảo mật:</strong> Cắt bỏ hoàn toàn mã độc quyền <code>enterprise/</code></li>
+              </ul>
+            </div>
+
+            <!-- Stack 2 -->
+            <div class="card">
+              <div style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--emerald); margin-bottom: 6px;">[D & P] CỤM 2: LÕI QUẢN TRỊ & CRM</div>
+              <h4 style="color: var(--text-main); font-size: 1.05rem; font-weight: 800; margin-bottom: 8px;">Frappe CRM & mmm_custom</h4>
+              <ul style="font-size: 0.84rem; color: var(--text-muted); list-style: none; display: flex; flex-direction: column; gap: 6px;">
+                <li>• <strong>Giấy phép:</strong> GNU AGPLv3 (CRM) + MIT (Custom App)</li>
+                <li>• <strong>Công nghệ:</strong> Python 3.10, MariaDB 10.8, Redis 7.2.4</li>
+                <li>• <strong>Port lắng nghe:</strong> <code style="color: #059669; font-weight: 700;">127.0.0.1:8000</code></li>
+                <li>• <strong>Webhook Endpoint:</strong> Nhận trực tiếp trong Bench</li>
+              </ul>
+            </div>
+
+            <!-- Gateway -->
+            <div class="card">
+              <div style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--purple); margin-bottom: 6px;">[EDGE] CỔNG BIÊN AN NINH MẠNG</div>
+              <h4 style="color: var(--text-main); font-size: 1.05rem; font-weight: 800; margin-bottom: 8px;">Caddy Reverse Proxy</h4>
+              <ul style="font-size: 0.84rem; color: var(--text-muted); list-style: none; display: flex; flex-direction: column; gap: 6px;">
+                <li>• <strong>Giấy phép:</strong> Apache 2.0 (OSI-Approved)</li>
+                <li>• <strong>Cổng công khai:</strong> 80 / 443 (Tự cấp phát TLS Let's Encrypt)</li>
+                <li>• <strong>Phân tuyến:</strong> <code>chat.domain.com</code> & <code>crm.domain.com</code></li>
+                <li>• <strong>Hạ tầng:</strong> Toàn bộ app nội bộ chỉ bind localhost</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Elimination comparison -->
+          <div class="card" style="background: var(--emerald-subtle); border: 1.5px solid #a7f3d0; padding: 12px 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #047857; font-size: 0.9rem;">QUYẾT ĐỊNH LOẠI BỎ N8N ĐỂ BẢO VỆ 100% FOSS PURITY:</strong>
+                <p style="font-size: 0.82rem; color: #1e293b; margin-top: 2px;">
+                  n8n áp dụng giấy phép <em>Sustainable Use License (Fair-code)</em> không thuộc OSI. DX-OSD đã loại bỏ 100% n8n và chuyển toàn bộ logic vào Frappe custom app <code>mmm_custom</code>: Tiết kiệm tài nguyên RAM, giảm độ trễ về 0ms và đảm bảo tuyệt đối điều lệ OLP PMNM.
+                </p>
+              </div>
+              <span class="pill pill-emerald" style="white-space: nowrap; font-size: 0.8rem;">0% NON-FOSS CODE</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 5: 3 LUỒNG NGHIỆP VỤ HỘI TỤ DỮ LIỆU
+      =========================================== -->
+      <section class="slide" data-slide="5">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">04 · QUY TRÌNH HỘI TỤ LEAD TOÀN DIỆN</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-emerald" viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+              Hành trình Hội tụ Dữ liệu: Lead-to-CRM Lifecycle
+            </h2>
+            <p class="slide-subtitle">Liên kết tự động mọi điểm chạm từ Meta Lead Ads và Messenger về Frappe CRM</p>
+          </div>
+          <div class="slide-number-badge">05 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <div class="grid-3" style="height: 100%;">
+            <!-- Workflow 1 -->
+            <div class="card glow-cyan" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span class="pill pill-cyan">LUỒNG A</span>
+                  <span style="font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-mono); font-weight: 700;">META GRAPH API</span>
+                </div>
+                <h4 style="color: var(--text-main); font-size: 1.05rem; font-weight: 800; margin-bottom: 8px;">Facebook Lead Ads Sync</h4>
+                <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px;">
+                  Khách điền biểu mẫu Form quảng cáo Facebook Instant Form:
+                </p>
+                <div class="flow-box">
+                  CRM Polling v23.0 ➔ Dedup theo `facebook_lead_id` ➔ Tự sinh Lead mới ➔ Chấm điểm Data Quality.
+                </div>
+              </div>
+              <div style="margin-top: 10px; border-top: 1px solid var(--border-subtle); padding-top: 8px; font-size: 0.78rem; font-weight: 700; color: var(--emerald);">
+                ✓ Đồng bộ trực tiếp không qua webhook bên thứ 3
+              </div>
+            </div>
+
+            <!-- Workflow 2 -->
+            <div class="card glow-purple" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span class="pill pill-purple">LUỒNG B</span>
+                  <span style="font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-mono); font-weight: 700;">MESSENGER / IG</span>
+                </div>
+                <h4 style="color: var(--text-main); font-size: 1.05rem; font-weight: 800; margin-bottom: 8px;">Messenger & Instagram Sync</h4>
+                <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px;">
+                  Khách nhắn tin qua Fanpage hoặc Instagram Direct:
+                </p>
+                <div class="flow-box">
+                  Chatwoot Webhook ➔ HMAC-SHA256 Verify ➔ 3-Tier Dedup ➔ Ghi FCRM Note ➔ Ghi ngược `crm_lead_id`.
+                </div>
+              </div>
+              <div style="margin-top: 10px; border-top: 1px solid var(--border-subtle); padding-top: 8px; font-size: 0.78rem; font-weight: 700; color: var(--cyan);">
+                ✓ Đồng bộ hai chiều 2-Way Custom Attribute
+              </div>
+            </div>
+
+            <!-- Workflow 3 -->
+            <div class="card glow-cyan" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span class="pill pill-emerald">LUỒNG C</span>
+                  <span style="font-size: 0.72rem; color: var(--text-dim); font-family: var(--font-mono); font-weight: 700;">QUALIFICATION</span>
+                </div>
+                <h4 style="color: var(--text-main); font-size: 1.05rem; font-weight: 800; margin-bottom: 8px;">Lead Bot & Handoff Chi nhánh</h4>
+                <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px;">
+                  Bot phân loại nhu cầu khóa học và cơ sở tuyển sinh:
+                </p>
+                <div class="flow-box">
+                  Quick Replies (Anh văn / Bơi / Toán) ➔ Keyword Detection ➔ Cập nhật CRM Product ➔ Handoff Tư vấn viên.
+                </div>
+              </div>
+              <div style="margin-top: 10px; border-top: 1px solid var(--border-subtle); padding-top: 8px; font-size: 0.78rem; font-weight: 700; color: var(--amber);">
+                ✓ Điều phối đúng chuyên viên tại chi nhánh
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 6: KỶ LUẬT KỸ THUẬT: 3-TIER DEDUP & AN TOÀN WEBHOOK
+      =========================================== -->
+      <section class="slide" data-slide="6">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">05 · KỶ LUẬT KỸ THUẬT & TOÀN VẸN DỮ LIỆU</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-amber" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Thuật toán 3-Tier Deduplication & Bảo mật Webhook
+            </h2>
+            <p class="slide-subtitle">Triệt tiêu hoàn toàn rủi ro trùng đơn, chống tấn công lặp gói tin (Replay Attack)</p>
+          </div>
+          <div class="slide-number-badge">06 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <div class="grid-3" style="margin-bottom: 14px;">
+            <!-- Tier 1 -->
+            <div class="card">
+              <div class="pill pill-cyan" style="margin-bottom: 8px;">TẦNG 1 · KHÓA DUY NHẤT</div>
+              <h4 style="color: var(--text-main); font-size: 1.02rem; font-weight: 800; margin-bottom: 6px;">Check `crm_lead_id`</h4>
+              <p style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.45;">
+                Kiểm tra trường <code>custom_attributes.crm_lead_id</code> trên Contact Chatwoot. Nếu đã tồn tại liên kết ➔ Chỉ ghi thêm log hội thoại vào bảng <code>FCRM Note</code>.
+              </p>
+              <div style="font-size: 0.76rem; color: var(--cyan); margin-top: 8px; font-family: var(--font-mono); font-weight: 700;">
+                ➔ Tránh truy vấn quét bảng tốn chi phí
+              </div>
+            </div>
+
+            <!-- Tier 2 -->
+            <div class="card">
+              <div class="pill pill-purple" style="margin-bottom: 8px;">TẦNG 2 · CHUẨN HÓA SỐ ĐT</div>
+              <h4 style="color: var(--text-main); font-size: 1.02rem; font-weight: 800; margin-bottom: 6px;">Regex Phone E.164</h4>
+              <p style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.45;">
+                Định chuẩn số điện thoại Việt Nam (090x ➔ +8490x) qua thuật toán Regex. Quét đối sánh trường <code>mobile_no</code> và <code>phone</code> trên CRM.
+              </p>
+              <div style="font-size: 0.76rem; color: var(--purple); margin-top: 8px; font-family: var(--font-mono); font-weight: 700;">
+                ➔ Bắt trùng chính xác dù khách gõ kiểu nào
+              </div>
+            </div>
+
+            <!-- Tier 3 -->
+            <div class="card">
+              <div class="pill pill-emerald" style="margin-bottom: 8px;">TẦNG 3 · ĐỐI SOÁT EMAIL</div>
+              <h4 style="color: var(--text-main); font-size: 1.02rem; font-weight: 800; margin-bottom: 6px;">Email Canonicalize</h4>
+              <p style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.45;">
+                Chuyển chữ thường (lowercase) và loại bỏ khoảng trắng thừa (trim). Nếu trùng khớp Lead có sẵn ➔ Nối quan hệ và cập nhật trường <code>chatwoot_contact_id</code>.
+              </p>
+              <div style="font-size: 0.76rem; color: var(--emerald); margin-top: 8px; font-family: var(--font-mono); font-weight: 700;">
+                ➔ Triệt tiêu 100% rác Lead trùng lặp
+              </div>
+            </div>
+          </div>
+
+          <!-- Webhook Security Callout -->
+          <div class="card" style="background: var(--amber-subtle); border: 1.5px solid #fde68a; padding: 12px 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="pill pill-amber" style="font-size: 0.78rem;">🛡️ HMAC-SHA256 & ANTI-REPLAY</span>
+                <span style="font-size: 0.84rem; color: #1e293b;">
+                  Mọi request từ Chatwoot đều được ký mật mã qua header <code>X-Chatwoot-Signature</code>. Bộ đệm Anti-Replay từ chối gói tin lệch quá <strong>300 giây</strong> ➔ <strong style="color: #b45309;">Chống giả mạo webhook và triệt tiêu lỗi tạo lặp đơn hàng khi rớt mạng.</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 7: QUẢN TRỊ AN TOÀN AI & HUMAN-IN-THE-LOOP
+      =========================================== -->
+      <section class="slide" data-slide="7">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">06 · QUẢN TRỊ AN TOÀN TRÍ TUỆ NHÂN TẠO</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-purple" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93L13 14h-2l.25-4.07A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/><circle cx="12" cy="18" r="2"/></svg>
+              Ma trận Phân quyền AI & Kiểm soát Rủi ro Handoff
+            </h2>
+            <p class="slide-subtitle">Triết lý bất biến: "AI hỗ trợ thấu hiểu, Con người giữ quyền chốt giao dịch"</p>
+          </div>
+          <div class="slide-number-badge">07 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <!-- 4 Risk Levels Matrix Table -->
+          <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 12px; border: 1.5px solid var(--border-subtle);">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem; text-align: left;">
+              <thead>
+                <tr style="background: #f1f5f9; border-bottom: 2px solid var(--border-subtle); color: var(--text-muted); font-family: var(--font-mono); font-size: 0.74rem;">
+                  <th style="padding: 10px 16px;">TÁC VỤ AI (JEV ENGINE)</th>
+                  <th style="padding: 10px 16px;">MỨC ĐỘ TỰ CHỦ</th>
+                  <th style="padding: 10px 16px;">HÀNH ĐỘNG HỆ THỐNG</th>
+                  <th style="padding: 10px 16px;">VAI TRÒ CON NGƯỜI (HUMAN GATE)</th>
+                </tr>
+              </thead>
+              <tbody style="color: var(--text-body);">
+                <tr style="border-bottom: 1px solid var(--border-subtle);">
+                  <td style="padding: 10px 16px; font-weight: 700; color: var(--text-main);">Intent Detection (Hỏi lịch, học phí)</td>
+                  <td style="padding: 10px 16px;"><span class="pill pill-emerald">TỰ ĐỘNG 100%</span></td>
+                  <td style="padding: 10px 16px;">Phản hồi theo Template định sẵn trên CRM</td>
+                  <td style="padding: 10px 16px; color: var(--text-dim);">Không can thiệp</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-subtle);">
+                  <td style="padding: 10px 16px; font-weight: 700; color: var(--text-main);">Trích xuất SĐT / Email trong Chat</td>
+                  <td style="padding: 10px 16px;"><span class="pill pill-cyan">BÁN TỰ ĐỘNG</span></td>
+                  <td style="padding: 10px 16px;">Điền vào Lead, gắn nhãn cờ đối soát trùng</td>
+                  <td style="padding: 10px 16px;"><strong class="highlight-cyan">Tư vấn viên xác thực khi liên hệ</strong></td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-subtle);">
+                  <td style="padding: 10px 16px; font-weight: 700; color: var(--text-main);">Hotness Score &gt; 80 / Khách cần tư vấn</td>
+                  <td style="padding: 10px 16px;"><span class="pill pill-rose">HANDOFF BẮT BUỘC</span></td>
+                  <td style="padding: 10px 16px;"><strong class="highlight-rose">Chuyển cuộc hội thoại sang Human Agent</strong></td>
+                  <td style="padding: 10px 16px;"><strong class="highlight-rose">Tư vấn viên nhận cuộc chat trong 60s</strong></td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; font-weight: 700; color: var(--text-main);">Gợi ý câu trả lời (Suggested Reply)</td>
+                  <td style="padding: 10px 16px;"><span class="pill pill-purple">HỖ TRỢ</span></td>
+                  <td style="padding: 10px 16px;">Hiện bản nháp riêng trong giao diện Chatwoot</td>
+                  <td style="padding: 10px 16px;"><strong class="highlight-purple">Người kiểm duyệt và bấm nút gửi</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Bottom Summary -->
+          <div class="grid-2">
+            <div class="card" style="padding: 10px 16px;">
+              <span style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--cyan); font-weight: 800;">NGUYÊN TẮC QUẢN TRỊ D-003</span>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+                AI không bao giờ tự ý sinh câu từ tự do tới khách hàng (No Free-form Generative Hallucination). Mọi tin nhắn phản hồi đều lấy từ kho tri thức và mẫu duyệt sẵn của CRM.
+              </p>
+            </div>
+            <div class="card" style="padding: 10px 16px;">
+              <span style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--purple); font-weight: 800;">DỰ PHÒNG HOÀN HẢO (SPEC §5.3)</span>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+                Hệ thống hoạt động trơn tru 100% ngay cả khi tắt toàn bộ module AI hoặc mất kết nối API key. Luồng webhook, CRM Lead và bot định tuyến vẫn vận hành chuẩn xác.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 8: TRANG DEMO (Trọng tâm 3: Hiện chữ DEMO to nổi bật)
+      =========================================== -->
+      <section class="slide" data-slide="8">
+        <div class="slide-demo-container">
+          <div class="pill pill-cyan" style="font-size: 0.85rem; padding: 6px 20px; margin-bottom: 16px;">
+            <span class="status-dot"></span>
+            LIVE SYSTEM DEMONSTRATION · 2-STACK RUNNING ENVIRONMENT
+          </div>
+
+          <!-- The requested bold simple DEMO word -->
+          <h1 class="demo-huge-title">DEMO</h1>
+
+          <p class="demo-subtext">
+            Trình diễn Trực tiếp Hệ thống Thực tế trên Hộp thư Chatwoot (:3000) & Frappe CRM (:8000)
+          </p>
+
+          <div class="demo-scenario-pills">
+            <span class="pill pill-emerald" style="font-size: 0.82rem; padding: 6px 14px;">01 · Webhook Ingress (Facebook ➔ CRM)</span>
+            <span class="pill pill-cyan" style="font-size: 0.82rem; padding: 6px 14px;">02 · 3-Tier Dedup (Chống trùng Lead)</span>
+            <span class="pill pill-purple" style="font-size: 0.82rem; padding: 6px 14px;">03 · AI Hotness & Intent Scoring</span>
+            <span class="pill pill-amber" style="font-size: 0.82rem; padding: 6px 14px;">04 · Live Handoff sang Tư vấn viên</span>
+          </div>
+
+          <!-- Demo action trigger button -->
+          <div style="display: flex; gap: 16px;">
+            <a href="http://127.0.0.1:3000" target="_blank" class="demo-btn-action">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>MỞ CHATWOOT INBOX (:3000)</span>
+            </a>
+            <a href="http://127.0.0.1:8000" target="_blank" class="demo-btn-action" style="background: linear-gradient(135deg, #059669, #047857);">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>MỞ FRAPPE CRM (:8000)</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 9: KIỂM THỬ THỰC ĐỊA & AUDIT FOSS COMPLIANCE
+      =========================================== -->
+      <section class="slide" data-slide="9">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">07 · ĐỐI SOÁT THỰC ĐỊA & CHỨNG NHẬN BẢN QUYỀN</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-cyan" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Kiểm thử Tự động & Báo cáo Tuân thủ Bản quyền FOSS
+            </h2>
+            <p class="slide-subtitle">Đối soát thực tế trên kịch bản chuỗi đào tạo EduFlow Academy và kiểm toán mã nguồn mở</p>
+          </div>
+          <div class="slide-number-badge">09 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <!-- 2 Columns: Testing and License Audit -->
+          <div class="grid-2" style="margin-bottom: 12px;">
+            <!-- Column 1: Test Suite -->
+            <div class="card glow-cyan">
+              <h4 style="color: #0369a1; font-family: var(--font-mono); font-size: 0.95rem; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                KIỂM THỬ TỰ ĐỘNG & VERIFICATION
+              </h4>
+              <ul style="font-size: 0.84rem; color: var(--text-body); list-style: none; display: flex; flex-direction: column; gap: 8px; line-height: 1.45;">
+                <li>• <strong>Python Unit Test Suite:</strong> <code>python -m unittest discover</code> kiểm tra toàn diện 100% logic trích xuất từ khóa, anti-replay, HMAC signature.</li>
+                <li>• <strong>End-to-End Live Integration:</strong> Script <code>test-chatwoot-crm-sync.py</code> chạy trực tiếp trên 2 cụm container thực tế, đạt <strong class="highlight-emerald">5/5 tests PASS</strong>.</li>
+                <li>• <strong>Kiểm nghiệm EduFlow:</strong> Dữ liệu mẫu hoàn chỉnh 3 chi nhánh (Quận 1, Bình Thạnh, Thủ Đức) với các khóa Anh văn, Bơi lội, Toán tư duy.</li>
+              </ul>
+            </div>
+
+            <!-- Column 2: FOSS License Audit -->
+            <div class="card glow-purple">
+              <h4 style="color: #6d28d9; font-family: var(--font-mono); font-size: 0.95rem; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                KIỂM TOÁN BẢN QUYỀN (FOSS AUDIT REPORT)
+              </h4>
+              <ul style="font-size: 0.84rem; color: var(--text-body); list-style: none; display: flex; flex-direction: column; gap: 8px; line-height: 1.45;">
+                <li>• <strong>100% OSI-Approved:</strong> GNU AGPL-3.0 (Frappe CRM), MIT Expat (Chatwoot, mmm_custom), Apache 2.0 (Caddy), GPLv2 (MariaDB), BSD-3 (Redis).</li>
+                <li>• <strong>Cắt bỏ triệt để mã đóng:</strong> Loại bỏ toàn bộ thư mục <code>enterprise/</code> của Chatwoot và các module non-FOSS.</li>
+                <li>• <strong>Redis BSD-3 Pinned:</strong> Cố định ở bản <code>7.2.4-alpine</code> trước thời điểm Redis đổi sang giấy phép nguồn đóng SSPL/RSAL.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Bottom Actionable Note -->
+          <div class="card" style="padding: 10px 16px; background: var(--cyan-subtle); border: 1.5px solid #bae6fd;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem;">
+              <span><strong>Tự chủ Dữ liệu & An ninh mạng:</strong> Không dữ liệu khách hàng nào bị rò rỉ ra dịch vụ thứ ba. Toàn bộ hội thoại và hồ sơ kinh doanh lưu trữ On-Premise nội bộ trên Docker.</span>
+              <span class="pill pill-cyan">ZERO DATA LEAK</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 10: TIÊU CHÍ CUỘC THI 100 ĐIỂM & KẾT LUẬN
+      =========================================== -->
+      <section class="slide" data-slide="10">
+        <header class="slide-header">
+          <div>
+            <div class="slide-tag">08 · TIÊU CHÍ CHẤM THI & TÁC ĐỘNG XÃ HỘI</div>
+            <h2 class="slide-title">
+              <svg class="icon-lg highlight-emerald" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Tuân thủ Toàn diện 100 Điểm OLP 2026 & Kết luận
+            </h2>
+            <p class="slide-subtitle">Đáp ứng trọn vẹn tiêu chuẩn thẩm định của Hội Tin học Việt Nam và CLB PMNM Việt Nam (VFOSSA)</p>
+          </div>
+          <div class="slide-number-badge">10 / 10</div>
+        </header>
+
+        <div class="slide-content">
+          <!-- 100 Points Breakdown -->
+          <div class="grid-2" style="margin-bottom: 12px;">
+            <!-- 50 Points PoF -->
+            <div class="card" style="border-left: 5px solid var(--cyan);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <h4 style="color: var(--text-main); font-size: 0.98rem; font-weight: 800;">1. KHO MÃ NGUỒN (50 ĐIỂM PoF)</h4>
+                <span class="pill pill-cyan">50 / 50 ĐIỂM</span>
+              </div>
+              <ul style="font-size: 0.83rem; color: var(--text-body); list-style: none; display: flex; flex-direction: column; gap: 6px; line-height: 1.45;">
+                <li>✓ <strong>Giấy phép:</strong> 100% OSI-approved FOSS, đầy đủ LICENSE & SPDX header.</li>
+                <li>✓ <strong>Đóng gói:</strong> Docker Compose build sạch từ source, chỉ bind localhost.</li>
+                <li>✓ <strong>Kho lưu trữ:</strong> Chuẩn Git, README, CONTRIBUTING, CHANGELOG & Audit Report.</li>
+              </ul>
+            </div>
+
+            <!-- 50 Points Showcase -->
+            <div class="card" style="border-left: 5px solid var(--purple);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <h4 style="color: var(--text-main); font-size: 0.98rem; font-weight: 800;">2. SẢN PHẨM & SHOWCASE (50 ĐIỂM)</h4>
+                <span class="pill pill-purple">50 / 50 ĐIỂM</span>
+              </div>
+              <ul style="font-size: 0.83rem; color: var(--text-body); list-style: none; display: flex; flex-direction: column; gap: 6px; line-height: 1.45;">
+                <li>✓ <strong>Kiến trúc đột phá:</strong> Mô hình 2 Cụm tinh gọn, thay thế n8n bằng Frappe App nội tại.</li>
+                <li>✓ <strong>Tính hoàn thiện:</strong> Đầy đủ 3 luồng dữ liệu, thuật toán 3-tier dedup, live demo mượt mà.</li>
+                <li>✓ <strong>Tính thực tiễn:</strong> Giải quyết trực tiếp bài toán chuyển đổi số sống còn cho 900.000+ SMB.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Impact & Closing Banner -->
+          <div class="card" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(124, 58, 237, 0.08)); border: 1.5px solid rgba(2, 132, 199, 0.25); text-align: center; padding: 18px 24px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
+              "DX-OSD: ĐƯA NGUỒN MỞ ĐỈNH CAO VÀO THỰC THI DOANH NGHIỆP VIỆT"
+            </h3>
+            <p style="font-size: 0.86rem; color: #334155; max-width: 780px; margin: 0 auto 10px auto; line-height: 1.5;">
+              Giải pháp xóa bỏ rào cản chi phí bản quyền cho doanh nghiệp vừa và nhỏ, thúc đẩy phong trào ứng dụng phần mềm tự do nguồn mở thiết thực và hiệu quả.
+            </p>
+            <div style="font-family: var(--font-mono); font-size: 0.96rem; font-weight: 800; color: #0284c7; letter-spacing: 0.05em;">
+              XIN TRÂN TRỌNG CẢM ƠN HỘI ĐỒNG GIÁM KHẢO!
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Bottom Floating Navigation Toolbar -->
+  <nav class="controls-toolbar" aria-label="Slide Navigation Controls">
+    <button class="btn-control" onclick="prevSlide()" title="Slide Trước (Phím Mũi tên Trái / H)">
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+
+    <div class="slide-counter" id="slideIndicator">01 / 10</div>
+
+    <button class="btn-control" onclick="nextSlide()" title="Slide Sau (Phím Mũi tên Phải / Phím Cách / L)">
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
+
+    <!-- Presentation Timer -->
+    <div class="timer-badge" id="timerBadge" onclick="toggleTimer()" title="Bấm để Tạm dừng/Bắt đầu Đếm giờ (Mục tiêu: 7 phút OLP)">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="timerText">00:00 / 07:00</span>
+    </div>
+
+    <!-- Speaker Notes Toggle -->
+    <button class="btn-control" onclick="toggleNotes()" title="Bật/Tắt Lời thoại Thuyết trình (Phím N hoặc S)">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </button>
+
+    <!-- Overview Grid Toggle -->
+    <button class="btn-control" onclick="toggleOverview()" title="Xem Tổng quan 10 Slides (Phím O)">
+      <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    </button>
+
+    <!-- Fullscreen Toggle -->
+    <button class="btn-control" onclick="toggleFullscreen()" title="Toàn Màn hình (Phím F)">
+      <svg class="icon" viewBox="0 0 24 24" id="fullscreenIcon"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+    </button>
+  </nav>
+
+  <!-- Speaker Notes Drawer Modal -->
+  <aside class="notes-drawer" id="notesDrawer">
+    <div class="notes-header">
+      <div class="notes-title">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        SPEAKER SCRIPT (LỜI THOẠI)
+      </div>
+      <span class="pill pill-cyan" id="noteDurationBadge">30s</span>
+    </div>
+    <div class="notes-body" id="noteContent">
+      <!-- Injected dynamically via JS based on current slide -->
+    </div>
+  </aside>
+
+  <!-- Overview Grid Modal -->
+  <div class="overview-modal" id="overviewModal" onclick="if(event.target === this) toggleOverview()">
+    <div class="overview-grid" id="overviewGrid">
+      <!-- 10 miniature cards generated by JS -->
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // State management
+    const TOTAL_SLIDES = 10;
+    let currentSlide = 1;
+
+    // Speaker script database for each slide (matching the 7-minute OLP pitch for DX-OSD)
+    const speakerNotes = {
+      1: {
+        duration: "30s",
+        text: "<p><strong>Lời thoại (30s):</strong> Kính thưa Ban Giám khảo và quý Thầy Cô! Em xin đại diện nhóm tác giả trường Đại học HUTECH trình bày đề tài: <em>DX-OSD — Nền tảng Tiếp nhận Khách hàng Đa kênh Facebook/Instagram và Hội tụ Dữ liệu Frappe CRM Lõi mở theo Mô hình HPDI cho Doanh nghiệp SMB</em>. Đề tài được xây dựng trên 100% mã nguồn mở chuẩn OSI (AGPLv3, MIT, Apache 2.0), bám sát đề bài Olympic Tin học Sinh viên Khối PMNM 2026.</p>"
+      },
+      2: {
+        duration: "45s",
+        text: "<p><strong>Lời thoại (45s):</strong> Hơn 900.000 doanh nghiệp vừa và nhỏ (SMB) tại Việt Nam đang gặp 4 nỗi đau lớn: Khách hàng đổ về từ nhiều kênh Facebook, Messenger, Instagram khiến nhân viên trôi việc, mất tới 30-50% khách tiềm năng; Dữ liệu trùng lặp khi 1 khách vừa điền form vừa chat; Chi phí CRM đóng như HubSpot quá đắt, trong khi công cụ như n8n chuyển sang license Fair-code không thuộc FOSS; Và sự đứt gãy giữa bot chat với đội ngũ tư vấn viên chi nhánh. DX-OSD ra đời để giải quyết tận gốc các nỗi đau này với $0đ$ bản quyền.</p>"
+      },
+      3: {
+        duration: "45s",
+        text: "<p><strong>Lời thoại (45s):</strong> Về mặt kiến trúc, DX-OSD định vị rõ 4 không gian HPDI: [H] Human là hộp thư Chatwoot CE quản trị chat đa kênh; [P] Process là Frappe custom app mmm_custom xử lý webhook và lọc trùng 3 tầng; [D] Data là Frappe CRM AGPLv3 làm nguồn sự thật duy nhất (Single Source of Truth); và [I] Intelligence là AI Agent thấu hiểu ý định, chấm độ nóng khách hàng. Chúng em quán triệt: Chatwoot chỉ là inbox tương tác, Frappe CRM là nơi duy nhất giữ dữ liệu gốc.</p>"
+      },
+      4: {
+        duration: "40s",
+        text: "<p><strong>Lời thoại (40s):</strong> Thay vì dùng kiến trúc trung gian n8n cồng kềnh và vi phạm tiêu chí bản quyền do giấy phép Fair-code, chúng em sáng tạo kiến trúc tinh gọn 2 Cụm: Chatwoot và Frappe CRM kết nối trực tiếp qua in-bench app mmm_custom. Toàn bộ hệ thống đóng gói qua Docker Compose 1-Click, cổng chỉ bind 127.0.0.1 và Caddy Server làm cổng biên an toàn, không phụ thuộc bất kỳ cloud bên thứ ba nào.</p>"
+      },
+      5: {
+        duration: "45s",
+        text: "<p><strong>Lời thoại (45s):</strong> DX-OSD điều phối đồng thời 3 luồng nghiệp vụ khép kín: Luồng A tự động poll Meta Lead Ads v23.0 về CRM; Luồng B nhận webhook hội thoại Messenger/Instagram từ Chatwoot, xác thực HMAC, ghi log FCRM Note và đồng bộ ngược mã Lead; Luồng C là Lead Bot với Quick Replies giúp phân loại nhu cầu khóa học và định tuyến ngay tới Tư vấn viên chi nhánh phụ trách.</p>"
+      },
+      6: {
+        duration: "45s",
+        text: "<p><strong>Lời thoại (45s):</strong> Để đảm bảo tính toàn vẹn dữ liệu, chúng em thiết kế thuật toán 3-Tier Deduplication: Tầng 1 kiểm tra mã liên kết crm_lead_id; Tầng 2 chuẩn hóa SĐT Việt Nam về định dạng E.164 (+84x) để đối soát; Tầng 3 chuẩn hóa Email. Kết hợp chữ ký HMAC-SHA256 và cửa sổ Anti-Replay 300 giây, hệ thống triệt tiêu 100% rủi ro tạo trùng đơn và chống tấn công giả mạo.</p>"
+      },
+      7: {
+        duration: "40s",
+        text: "<p><strong>Lời thoại (40s):</strong> Trong quản trị AI, chúng em tuân thủ nguyên tắc D-003: AI chỉ phân tích ý định (Intent), chấm điểm Hotness và gợi ý câu trả lời, không bao giờ tự sinh chữ tự do ra ngoài để chống ảo giác (hallucination). Khi phát hiện khách hàng nóng hoặc yêu cầu gặp người, bot lập tức Handoff chuyển giao cho chuyên viên. Đặc biệt, hệ thống vẫn vận hành 100% ổn định ngay cả khi không có AI key.</p>"
+      },
+      8: {
+        duration: "10s",
+        text: "<p><strong>Lời thoại (10s):</strong> Và sau đây, em xin kính mời Hội đồng Giám khảo cùng theo dõi phần <strong>DEMO TRỰC TIẾP</strong> sự kết hợp nhịp nhàng giữa Chatwoot Inbox và Frappe CRM ngay trên hệ thống thực nghiệm!</p>"
+      },
+      9: {
+        duration: "40s",
+        text: "<p><strong>Lời thoại (40s):</strong> Về độ tin cậy và tuân thủ bản quyền: Bộ kiểm thử Python Unit Tests và End-to-End Live Integration Tests đạt tỷ lệ vượt qua 100% (5/5 tests). Báo cáo kiểm toán FOSS chứng minh dự án 100% OSI-compliant, đã cắt bỏ hoàn toàn mã độc quyền enterprise/ của Chatwoot và ghim bản Redis 7.2 BSD-3 thuần túy.</p>"
+      },
+      10: {
+        duration: "35s",
+        text: "<p><strong>Lời thoại (35s):</strong> Tóm lại, DX-OSD đáp ứng trọn vẹn 100 điểm tiêu chuẩn OLP PMNM 2026: 50 điểm Kho mã nguồn mở chuẩn mực và 50 điểm Showcase sản phẩm thực tế, mang lại giá trị chuyển đổi số thiết thực cho hàng trăm nghìn SMB. Em xin trân trọng cảm ơn Ban Giám khảo!</p>"
+      }
+    };
+
+    const slideTitles = [
+      "Trang Tiêu đề & Đặt vấn đề",
+      "Pain Points & Lý do Chọn Đề tài",
+      "Mô hình HPDI của DX-OSD",
+      "Kiến trúc Tinh gọn 2 Cụm Nguồn mở",
+      "3 Luồng Nghiệp vụ Lead-to-CRM",
+      "3-Tier Deduplication & Bảo mật Webhook",
+      "Ma trận An toàn AI & Handoff",
+      "DEMO — Trình diễn Hệ thống",
+      "Kiểm thử Thực địa & Audit Bản quyền",
+      "Tiêu chuẩn 100đ OLP & Kết luận"
+    ];
+
+    // Navigation functions
+    function goToSlide(slideNum) {
+      if (slideNum < 1 || slideNum > TOTAL_SLIDES) return;
+      currentSlide = slideNum;
+      updateUI();
+    }
+
+    function nextSlide() {
+      if (currentSlide < TOTAL_SLIDES) {
+        currentSlide++;
+        updateUI();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      // Update active slide class
+      const slides = document.querySelectorAll('.slide');
+      slides.forEach((s) => {
+        const num = parseInt(s.getAttribute('data-slide'), 10);
+        if (num === currentSlide) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+
+      // Update progress bar
+      const progressPercent = (currentSlide / TOTAL_SLIDES) * 100;
+      document.getElementById('progressBar').style.width = progressPercent + '%';
+
+      // Update counter
+      const paddedCurrent = currentSlide < 10 ? '0' + currentSlide : currentSlide;
+      const paddedTotal = TOTAL_SLIDES < 10 ? '0' + TOTAL_SLIDES : TOTAL_SLIDES;
+      document.getElementById('slideIndicator').textContent = `${paddedCurrent} / ${paddedTotal}`;
+
+      // Update speaker notes content
+      const note = speakerNotes[currentSlide];
+      if (note) {
+        document.getElementById('noteDurationBadge').textContent = note.duration;
+        document.getElementById('noteContent').innerHTML = note.text;
+      }
+
+      // Update overview active card if modal open
+      updateOverviewSelection();
+    }
+
+    // Timer logic (7 minutes competition clock)
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    function toggleTimer() {
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+      } else {
+        isTimerRunning = true;
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          renderTimer();
+        }, 1000);
+      }
+    }
+
+    function renderTimer() {
+      const mins = Math.floor(timerSeconds / 60);
+      const secs = timerSeconds % 60;
+      const paddedMins = mins < 10 ? '0' + mins : mins;
+      const paddedSecs = secs < 10 ? '0' + secs : secs;
+      
+      const badge = document.getElementById('timerBadge');
+      document.getElementById('timerText').textContent = `${paddedMins}:${paddedSecs} / 07:00`;
+
+      // Warning states for 7m pitch
+      if (timerSeconds >= 390) { // 6m30s
+        badge.classList.remove('warning');
+        badge.classList.add('danger');
+      } else if (timerSeconds >= 300) { // 5m00s
+        badge.classList.add('warning');
+      } else {
+        badge.classList.remove('warning', 'danger');
+      }
+    }
+
+    // Toggle Speaker Notes Drawer
+    function toggleNotes() {
+      const drawer = document.getElementById('notesDrawer');
+      drawer.classList.toggle('open');
+    }
+
+    // Fullscreen Toggle
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    // Overview Grid Modal
+    function buildOverviewGrid() {
+      const grid = document.getElementById('overviewGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= TOTAL_SLIDES; i++) {
+        const card = document.createElement('div');
+        card.className = `overview-card ${i === currentSlide ? 'active' : ''}`;
+        card.onclick = () => {
+          goToSlide(i);
+          toggleOverview();
+        };
+        const numPadded = i < 10 ? '0' + i : i;
+        card.innerHTML = `
+          <div class="overview-num">SLIDE ${numPadded}</div>
+          <div class="overview-name">${slideTitles[i - 1]}</div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    function updateOverviewSelection() {
+      const cards = document.querySelectorAll('.overview-card');
+      cards.forEach((card, idx) => {
+        if (idx + 1 === currentSlide) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+    }
+
+    function toggleOverview() {
+      const modal = document.getElementById('overviewModal');
+      modal.classList.toggle('open');
+      if (modal.classList.contains('open')) {
+        updateOverviewSelection();
+      }
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      // Don't trigger if user is typing in an input
+      if (['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) return;
+
+      switch(e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case ' ': // Spacebar
+        case 'PageDown':
+        case 'l':
+        case 'L':
+          e.preventDefault();
+          nextSlide();
+          break;
+
+        case 'ArrowLeft':
+        case 'ArrowUp':
+        case 'PageUp':
+        case 'h':
+        case 'H':
+          e.preventDefault();
+          prevSlide();
+          break;
+
+        case 'Home':
+          e.preventDefault();
+          goToSlide(1);
+          break;
+
+        case 'End':
+          e.preventDefault();
+          goToSlide(TOTAL_SLIDES);
+          break;
+
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+
+        case 'n':
+        case 'N':
+        case 's':
+        case 'S':
+          e.preventDefault();
+          toggleNotes();
+          break;
+
+        case 'o':
+        case 'O':
+          e.preventDefault();
+          toggleOverview();
+          break;
+
+        case 'Escape':
+          document.getElementById('overviewModal').classList.remove('open');
+          document.getElementById('notesDrawer').classList.remove('open');
+          break;
+
+        case '1': case '2': case '3': case '4': case '5':
+        case '6': case '7': case '8': case '9':
+          goToSlide(parseInt(e.key, 10));
+          break;
+
+        case '0':
+          goToSlide(10);
+          break;
+      }
+    });
+
+    // Touch Swipe Support for Tablet / Mobile Presenter
+    let touchStartX = 0;
+    let touchEndX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+      const diff = touchEndX - touchStartX;
+      if (Math.abs(diff) > 50) {
+        if (diff < 0) nextSlide();
+        else prevSlide();
+      }
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      buildOverviewGrid();
+      updateUI();
+      // Auto-start presentation timer
+      toggleTimer();
+    });
+  </script>
+</body>
+</html>

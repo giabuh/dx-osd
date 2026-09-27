@@ -14,12 +14,12 @@ class TestBuildCatalog(unittest.TestCase):
 
     def test_counts_match_demo_dataset(self):
         self.assertEqual((len(self.cat.groups), len(self.cat.courses), len(self.cat.areas), len(self.cat.branches)),
-                         (8, 46, 4, 13))
-        self.assertEqual(len(self.cat.skills), 30)
+                         (9, 51, 4, 13))
+        self.assertEqual(len(self.cat.skills), 33)
 
     def test_slots_sorted_with_dependency(self):
         self.assertEqual([s.key for s in self.cat.slots],
-                         ["course", "branch", "learner", "goal", "level", "learner_age", "preferred_shift", "customer_name", "phone"])
+                         ["course", "branch", "learner", "goal", "level", "learner_age", "preferred_shift", "customer_name", "phone", "trial_class", "referral_code", "quiz_progress", "placement"])
         self.assertEqual(self.cat.slot("learner_age").depends_on, ("learner", "child"))
         self.assertEqual(self.cat.slot("learner").option("child").button, "Cho con em")
 
@@ -32,7 +32,7 @@ class TestBuildCatalog(unittest.TestCase):
     def test_course_and_parent_lookup(self):
         c = self.cat.courses["VP-EXCEL"]
         self.assertEqual((c.group, c.fee, c.button), ("Tin học văn phòng", 1800000.0, "Excel"))
-        self.assertEqual(c.next_courses, ("VP-EXCEL-NC", "VP-MOS"))
+        self.assertEqual(c.next_courses, ("VP-EXCEL-NC", "QT-MOS-EXCEL"))
         self.assertEqual(self.cat.parent_of(self.cat.slot("course"), "VP-EXCEL"), "Tin học văn phòng")
         self.assertEqual(self.cat.parent_of(self.cat.slot("branch"), "CN Dĩ An"), "Bình Dương")
         self.assertEqual(self.cat.slot_for("branch").key, "branch")

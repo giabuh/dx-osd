@@ -20,7 +20,9 @@ from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.log import log_row, signals
 from mmm_custom.engine.qualify import LABELS, NEW, lead_status
 from mmm_custom.engine.reply import compose
+from mmm_custom.engine.state import value
 from mmm_custom.engine.understand import understand
+from mmm_custom.sources import campaign_of, channel_key, source_name
 
 MAX_TEXT = 1000  # D-061 input cap
 
@@ -33,6 +35,8 @@ class Event:
     text: str = ""
     contact: dict = field(default_factory=dict)
     inbox_id: str = ""
+    channel: str = ""  # sources.CHANNELS key (D-100)
+    campaign: str = ""
 
 
 @dataclass
@@ -69,7 +73,7 @@ def parse_event(payload):
         contact = _dict(_dict(conv.get("meta")).get("sender")) or sender
         inbox = conv.get("inbox_id") or _dict(payload.get("inbox")).get("id") or ""
         return Event("customer_message", cid, int(payload.get("id") or 0), (payload.get("content") or "")[:MAX_TEXT],
-                     contact, str(inbox))
+                     contact, str(inbox), channel_key(conv), campaign_of(conv))
     if mtype in (1, "outgoing") and sender.get("type") == "user":
         return Event("agent_message", cid, int(payload.get("id") or 0))
     return Event("ignore", cid)
@@ -97,11 +101,13 @@ def apply_decision(state, decision, reply, event):
     state.pending_skill = reply.pending_skill or decision.pending_skill
     state.answered = list(dict.fromkeys(state.answered + [k for k in decision.skills if k != reply.pending_skill]))
     if decision.type != "silent":
-        state.pending = {"slot": reply.ask or decision.ask, "options": reply.options()}
+        state.pending = {"slot": reply.ask or ("" if reply.hold else decision.ask), "options": reply.options()}
         if decision.confirm:
             state.pending["confirm"] = decision.confirm
     if reply.ask:
         state.slots.setdefault(reply.ask, {})["asked"] = 1
+    if reply.hold and decision.ask and decision.ask != reply.ask:
+        state.slots.get(decision.ask, {}).pop("asked", None)  # not asked after all: ask it once the quiz ends
     lines = [{"from": "customer", "text": event.text[:300]}]
     if reply.messages:
         lines.append({"from": "bot", "text": " ".join(reply.messages)[:300]})
@@ -148,6 +154,10 @@ def write_lead(turn, effects, catalog):
         return
     fields, courses = lead_updates(state.slots, catalog)
     fields.update(ai)
+    if not state.lead and source_name(state.channel):  # first touch: a new Lead records where it came from
+        fields["source"] = source_name(state.channel)
+        if state.campaign:
+            fields["source_campaign"] = state.campaign
     try:
         state.lead = effects.save_lead(state, fields, courses, turn.event.contact) or state.lead
     except Exception as e:
@@ -161,9 +171,53 @@ def write_lead(turn, effects, catalog):
                                   "courses": [c.code for c in courses]})
 
 
+def apply_quiz_results(decision, catalog):
+    """A finished level quiz (D-104) fills `level`, the `placement` summary for the Lead and, when the
+    customer has not chosen one yet, the recommended course."""
+    from mmm_custom.engine import quiz
+
+    for key in decision.skills:
+        skill = catalog.skills.get(key)
+        if not skill or skill.action != "level_quiz":
+            continue
+        res = quiz.result(skill.config, quiz.progress(value(decision.slots, skill.config.get("slot", "quiz_progress")), key))
+        if res is None:
+            continue
+        level = catalog.slot("level")
+        option = level.option(res["level"]) if level else None
+        fills = {"level": res["level"] if option else None,
+                 "placement": quiz.summary(skill.config, res, option.label if option else "")}
+        course_slot = catalog.slot_for("course")
+        chosen = catalog.courses.get(value(decision.slots, course_slot.key)) if course_slot else None
+        best = catalog.courses.get(res["course"])
+        if course_slot and best and (not chosen or chosen.group == best.group):
+            fills[course_slot.key] = best.code  # the test knows which course of that group fits
+        for slot_key, val in fills.items():
+            if val and catalog.slot(slot_key):
+                decision.slots[slot_key] = {**(decision.slots.get(slot_key) or {}), "value": val, "source": "quiz",
+                                            "confidence": 1.0}
+                if slot_key not in decision.new_slots:
+                    decision.new_slots.append(slot_key)
+
+
+def book_trials(turn, effects, catalog, plan=None):
+    """A `book_trial` skill answered this turn (D-102): a CRM Task for whoever serves the Lead."""
+    state = turn.state
+    for key in turn.decision.skills:
+        skill = catalog.skills.get(key)
+        booking = value(state.slots, skill.config.get("slot", "trial_class")) if skill and skill.action == "book_trial" else ""
+        if not booking:
+            continue
+        try:
+            effects.book_trial(state, booking, plan.owner if plan else "")
+        except Exception as e:
+            turn.reply.errors.append({"type": "trial_failed", "detail": str(e)[:300]})
+
+
 def run_turn(event, repo, effects, render):
     catalog = repo.catalog()
     state = repo.load_state(event)
+    state.channel, state.campaign = event.channel or state.channel, event.campaign or state.campaign
     if event.message_id and event.message_id <= state.last_message_id:
         return None  # redelivered webhook: this message was already answered
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),
@@ -176,6 +230,7 @@ def run_turn(event, repo, effects, render):
     if turn.jev.error == "daily_budget":
         repo.warn_budget()
     turn.decision = decide(state, turn.understanding, catalog)
+    apply_quiz_results(turn.decision, catalog)
     turn.reason = turn.decision.reason
 
     plan, errors = None, []
@@ -214,6 +269,7 @@ def run_turn(event, repo, effects, render):
             turn.reply.errors += effects.handoff(state.conversation_id, plan, state.lead, state.inbox_id)
         except Exception as e:
             turn.reply.errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
+    book_trials(turn, effects, catalog, plan)
     repo.save_state(state)
     emit_events(effects, state, turn.decision)
     try:

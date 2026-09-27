@@ -65,11 +65,15 @@ def contact_prefill(contact, catalog):
     return {slot.key: _entry(name, "contact")}
 
 
-def contact_update(fields, courses, lead):
+def contact_update(fields, courses, lead, crm_url=""):
     """What the bot learned, for the Chatwoot contact: consultants read it in the inbox without the CRM.
-    Only values known in this write; Chatwoot merges custom_attributes, so earlier values stay."""
+    Only values known in this write; Chatwoot merges custom_attributes, so earlier values stay.
+    With `crm_url` (the CRM's public base URL) the contact also links back to the Lead (ho_so_crm)."""
+    from mmm_custom.crm_links import lead_url
+
     attrs = {"crm_lead_id": lead, "khoa_hoc_quan_tam": ", ".join(c.name for c in courses),
-             "chi_nhanh": fields.get("territory") or "", "trang_thai_lead": LABELS.get(fields.get("status"), "")}
+             "chi_nhanh": fields.get("territory") or "", "trang_thai_lead": LABELS.get(fields.get("status"), ""),
+             "ho_so_crm": lead_url(crm_url, lead) if crm_url and lead else ""}
     out = {"custom_attributes": {k: v for k, v in attrs.items() if v}}
     if fields.get("mobile_no"):
         out["phone_number"] = fields["mobile_no"]

@@ -23,6 +23,11 @@ class TestDecide(unittest.TestCase):
         self.assertEqual((d.type, d.ask, d.greet, d.fallback, d.stuck_turns), ("ask_slot", "course", True, False, 0))
         self.assertEqual(d.slots["course"]["asked"], 1)
 
+    def test_a_skill_marked_alone_drops_the_other_answers(self):
+        u = Understanding(skills=["fee_quote", "corporate_training"], fills={"course": fill("VP-EXCEL")})
+        d = decide(state(turns=1), u, CAT)
+        self.assertEqual((d.type, d.skills, d.handoff_reason), ("handoff", ["corporate_training"], "skill"))
+
     def test_course_filled_asks_branch_and_records_parent(self):
         d = decide(state(turns=1), Understanding(fills={"course": fill("VP-EXCEL")}), CAT)
         self.assertEqual((d.type, d.ask, d.new_slots), ("ask_slot", "branch", ["course"]))

@@ -331,6 +331,8 @@ class CRMDeal(Document):
 		rows = [
 			"name",
 			"organization",
+			"lead_name",
+			"first_name",
 			"annual_revenue",
 			"status",
 			"email",

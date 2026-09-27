@@ -103,6 +103,22 @@ const routes = [
     component: () => import('@/pages/CallLogs.vue'),
   },
   {
+    path: '/facebook-posts',
+    name: 'FacebookPosts',
+    component: () => import('@/pages/FacebookPosts.vue'),
+  },
+  {
+    path: '/chatwoot',
+    name: 'ChatwootInbox',
+    component: () => import('@/pages/ChatwootInbox.vue'),
+  },
+  {
+    // Manager screens (branches, staff, course knowledge, bot playground) over mmm_custom APIs.
+    path: '/admin/:tab?',
+    name: 'Admin',
+    component: () => import('@/pages/Admin.vue'),
+  },
+  {
     path: '/data-import',
     name: 'DataImportList',
     component: () => import('@/pages/DataImport.vue'),
@@ -154,7 +170,7 @@ router.beforeEach(async (to, from, next) => {
   router.previousRoute = from
 
   const { isLoggedIn, user } = sessionStore()
-  const { users, isCrmUser, isAdmin } = usersStore()
+  const { users, isCrmUser, isAdmin, isManager } = usersStore()
 
   if (isLoggedIn && !users.fetched) {
     try {
@@ -168,6 +184,16 @@ router.beforeEach(async (to, from, next) => {
   }
 
   const isAdminUser = isLoggedIn && (isAdmin() || user === 'Administrator')
+
+  // /admin is for managers only; the server checks every call again.
+  if (
+    isLoggedIn &&
+    to.name === 'Admin' &&
+    !isManager() &&
+    user !== 'Administrator'
+  ) {
+    return next({ name: 'Home' })
+  }
 
   // Only admins who haven't finished may reach the wizard, even via direct URL.
   if (isLoggedIn && to.name === 'Onboarding') {

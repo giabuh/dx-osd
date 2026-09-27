@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from mmm_custom.engine.actions import find_schedules
 from mmm_custom.engine.context import base_context
 from mmm_custom.engine.render import RenderError, date_vi, render_text
-from mmm_custom.engine.routing import CENTRAL_TEAM, pick_consultant
+from mmm_custom.engine.routing import B2B_TEAM, CENTRAL_TEAM, is_b2b, pick_consultant
 from mmm_custom.engine.text import slug
 
 
@@ -57,10 +57,14 @@ def plan_handoff(state, decision, catalog, repo, render):
     group = ctx["course"].get("group") or ((decision.slots.get(course_slot.key) or {}).get("parent", "") if course_slot else "")
     hotness = decision.ai.get("hotness", {})
     hot = hotness.get("value") == "hot" and hotness.get("confidence", 0) >= float(catalog.settings["handoff_noul"])
-    consultant, why = pick_consultant(branch, repo.consultants(), repo.consultant_load(), owner, group, hot)
-    team = (consultant.get("branch") if consultant else branch) or CENTRAL_TEAM
+    b2b = is_b2b(state.answered + decision.skills, catalog)
+    consultant, why = pick_consultant(branch, repo.consultants(), repo.consultant_load(), owner, group, hot, b2b)
+    if b2b and consultant and consultant.get("handles_b2b"):
+        team = B2B_TEAM
+    else:
+        team = (consultant.get("branch") if consultant else branch) or CENTRAL_TEAM
     plan = HandoffPlan(consultant, why, team, owner=(consultant or {}).get("name", ""))
-    plan.labels = [slug(x) for x in (group, branch) if x]
+    plan.labels = (["b2b"] if b2b else []) + [slug(x) for x in (group, branch) if x]
     if hot:
         plan.labels.append("hot")
     plan.attributes = {f"bot_{key}": shown for key, shown in ctx["slots"].items()}

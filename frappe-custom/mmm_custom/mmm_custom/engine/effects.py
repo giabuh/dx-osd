@@ -39,13 +39,17 @@ class RecordingEffects:
     def mark_spam(self, conversation_id):
         self.calls.append(("mark_spam", {"conversation_id": conversation_id}))
 
+    def book_trial(self, state, booking, owner=""):
+        self.calls.append(("book_trial", {"lead": state.lead, "booking": booking, "owner": owner}))
+
 
 class ChatwootEffects:
     """Customer-facing calls use the Agent Bot token so Chatwoot marks them as the bot's own messages
     (which the webhook then ignores); contact updates need the admin user token."""
 
-    def __init__(self, bot_client, user_client):
+    def __init__(self, bot_client, user_client, crm_url=""):
         self.bot, self.user = bot_client, user_client
+        self.crm_url = crm_url  # CRM public base URL for the contact's ho_so_crm link
 
     def send(self, conversation_id, reply):
         last = len(reply.messages) - 1
@@ -63,12 +67,20 @@ class ChatwootEffects:
         self.bot.add_labels(conversation_id, ["spam"])
         self.bot.toggle_status(conversation_id, "resolved")
 
+    def book_trial(self, state, booking, owner=""):
+        from mmm_custom.engine import repo
+
+        repo.create_trial_task(state.lead, booking, owner)
+
     def save_lead(self, state, fields, courses, contact):
         from mmm_custom.engine import repo
 
         name = repo.save_lead(state, fields, courses, contact)
         if state.contact_id:
-            self._update_contact(int(state.contact_id), contact_update(fields, courses, name))
+            try:
+                self._update_contact(int(state.contact_id), contact_update(fields, courses, name, self.crm_url))
+            except (ValueError, TypeError):
+                pass
         try:
             compute_data_quality(name)
         except Exception:
@@ -128,8 +140,10 @@ class ChatwootEffects:
 
 
 def chatwoot_effects(conf):
+    from mmm_custom.crm_links import crm_base
+
     base = conf.get("chatwoot_base_url") or conf.get("chatwoot_api_url") or "http://chatwoot-rails:3000"
     account = int(conf.get("chatwoot_bot_account_id") or conf.get("chatwoot_account_id") or 1)
     bot_token = conf.get("chatwoot_bot_api_token") or ""
     return ChatwootEffects(ChatwootClient(base, bot_token, account),
-                           ChatwootClient(base, conf.get("chatwoot_api_token") or bot_token, account))
+                           ChatwootClient(base, conf.get("chatwoot_api_token") or bot_token, account), crm_base(conf))
