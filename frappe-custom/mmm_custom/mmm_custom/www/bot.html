@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/assets/mmm_custom/images/bot.svg" type="image/svg+xml">
+  <meta name="csrf-token" content="{{ csrf_token | e }}">
+  <title>Bot Sao Việt</title>
+  <style>
+    :root { color-scheme: light; font: 15px/1.5 system-ui, -apple-system, sans-serif; color: #1e293b; background: #f3f6fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: #1c529d; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .shell { max-width: 1320px; margin: auto; padding: 0 24px 48px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 24px 0 18px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand img { width: 44px; height: 44px; }
+    h1 { font-size: 24px; margin: 0; line-height: 1.2; }
+    .eyebrow { color: #64748b; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .header-links { display: flex; flex-wrap: wrap; gap: 12px 22px; }
+    .tabs { display: flex; gap: 8px; border-bottom: 1px solid #d9e1ed; margin-bottom: 24px; overflow-x: auto; }
+    .tabs button { border: 0; border-bottom: 3px solid transparent; background: none; color: #526178; padding: 12px 16px; white-space: nowrap; font-weight: 650; }
+    .tabs button[aria-selected="true"] { border-color: #2457a6; color: #194785; }
+    .pane[hidden] { display: none; }
+    h2 { font-size: 22px; margin: 0 0 5px; }
+    h3 { font-size: 17px; margin: 0 0 12px; }
+    .muted { color: #64748b; }
+    .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+    .cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .card, .panel { background: #fff; border: 1px solid #dce4ee; border-radius: 14px; box-shadow: 0 2px 8px #233c6b0a; }
+    .card { padding: 18px; }
+    .card strong { display: block; font-size: 30px; line-height: 1.2; margin-bottom: 8px; color: #173e77; }
+    .card span { color: #58677c; font-size: 13px; }
+    .panel { padding: 20px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #edf1f5; vertical-align: top; }
+    th { color: #64748b; font-size: 12px; font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+    .knowledge-grid { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 18px; }
+    .course-list { max-height: 72vh; overflow-y: auto; }
+    .course-list input { width: 100%; margin-bottom: 14px; }
+    .group-label { color: #6b7890; font-size: 12px; font-weight: 750; text-transform: uppercase; margin: 14px 0 6px; }
+    .course-row { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 8px; padding: 10px; color: inherit; }
+    .course-row:hover, .course-row.active { background: #edf4ff; }
+    .course-row small { display: block; color: #64748b; }
+    .bar { height: 6px; background: #e6edf5; border-radius: 9px; overflow: hidden; margin-top: 7px; }
+    .bar i { display: block; height: 100%; background: #348461; }
+    .detail h4 { margin: 23px 0 8px; }
+    .detail p, .detail li { white-space: pre-wrap; }
+    .detail ul { padding-left: 22px; }
+    .gap { color: #aa402d; }
+    .faq { border-left: 3px solid #b6cbea; padding: 2px 0 2px 12px; margin: 12px 0; }
+    .faq p { background: #f5f8fc; padding: 9px 12px; border-radius: 8px; }
+    .chat-grid { display: grid; grid-template-columns: minmax(320px, 1fr) 360px; gap: 18px; }
+    .chat-log { height: 52vh; min-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px 0; }
+    .bubble { max-width: 84%; border-radius: 14px; padding: 9px 13px; white-space: pre-wrap; }
+    .bubble.customer { align-self: flex-end; background: #2457a6; color: #fff; }
+    .bubble.bot { align-self: flex-start; background: #edf2f8; }
+    .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+    .chips button { background: #eef5ff; border: 1px solid #bfd3f0; border-radius: 18px; padding: 5px 12px; color: #1c529d; }
+    .chat-form { display: flex; gap: 9px; border-top: 1px solid #e5eaf1; padding-top: 14px; }
+    input[type="text"], input[type="search"] { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; background: #fff; min-width: 0; }
+    .chat-form input { flex: 1; }
+    .primary { background: #2457a6; color: white; border: 0; border-radius: 8px; padding: 9px 17px; }
+    .secondary { background: white; color: #2457a6; border: 1px solid #a9c2e7; border-radius: 8px; padding: 8px 13px; }
+    .chat-options { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+    details { margin-top: 16px; }
+    summary { cursor: pointer; font-weight: 650; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; background: #f5f8fc; padding: 10px; border-radius: 8px; }
+    .error { color: #b23434; }
+    @media (max-width: 950px) { .cards { grid-template-columns: repeat(3, 1fr); } .chat-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 650px) { .shell { padding: 0 14px 30px; } header { align-items: flex-start; flex-direction: column; } .cards { grid-template-columns: repeat(2, 1fr); } .knowledge-grid { grid-template-columns: 1fr; } .section-head { display: block; } .panel { padding: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand"><img src="/assets/mmm_custom/images/bot.svg" alt=""><div><div class="eyebrow">Quản trị bot</div><h1>Bot Sao Việt</h1></div></div>
+      <nav class="header-links" aria-label="Liên kết"><a href="/crm">Mở CRM</a><a href="{{ chatwoot_url | e }}" target="_blank" rel="noopener">Mở Chatwoot</a><a href="/app/bot-sao-viet">Quản trị nâng cao</a></nav>
+    </header>
+    <nav class="tabs" aria-label="Các mục">
+      <button type="button" data-tab="overview" aria-selected="true">Tổng quan</button>
+      <button type="button" data-tab="knowledge" aria-selected="false">Tri thức khóa học</button>
+      <button type="button" data-tab="playground" aria-selected="false">Thử chat với bot</button>
+    </nav>
+    <main>
+      <section id="overview" class="pane"><div class="section-head"><div><h2>Tổng quan hôm nay</h2><span class="muted">Hoạt động của bot trên Messenger</span></div></div><div id="stats" class="cards"></div><div class="panel"><h3>Khách tiềm năng mới nhất</h3><div class="table-wrap"><table><thead><tr><th>Khách hàng</th><th>Điện thoại</th><th>Khóa học</th><th>Chi nhánh</th><th>Tư vấn viên</th><th>Thời gian</th></tr></thead><tbody id="latest-leads"></tbody></table></div></div></section>
+      <section id="knowledge" class="pane" hidden><div class="section-head"><div><h2>Tri thức khóa học</h2><span class="muted">Dữ liệu bot dùng để trả lời khách</span></div></div><div class="knowledge-grid"><div class="panel course-list"><input id="course-search" type="search" placeholder="Tìm khóa học" aria-label="Tìm khóa học"><div id="courses"></div></div><div id="course-detail" class="panel detail muted">Chọn một khóa học để xem bot trả lời như thế nào.</div></div></section>
+      <section id="playground" class="pane" hidden><div class="section-head"><div><h2>Thử chat với bot</h2><span class="muted">Cuộc trò chuyện thử không gửi tin nhắn hoặc tạo Lead</span></div><button id="reset-chat" class="secondary" type="button">Cuộc trò chuyện mới</button></div><div class="chat-grid"><div class="panel"><div class="chat-options"><span class="muted">Bạn đang đóng vai khách hàng</span><label><input id="use-jev" type="checkbox"> Dùng Jev</label></div><div id="chat-log" class="chat-log" aria-live="polite"></div><form id="chat-form" class="chat-form"><input id="chat-input" type="text" autocomplete="off" placeholder="Nhập tin nhắn của khách hàng…" maxlength="1000" required><button class="primary" type="submit">Gửi</button></form></div><div class="panel"><h3>Bot hiểu gì</h3><p class="muted">Gửi tin nhắn để xem từ khóa, Jev và lý do bot trả lời.</p><details id="inspector" open><summary>Chi tiết lượt chat</summary><div id="inspector-content"></div></details></div></div></section>
+    </main>
+  </div>
+  <script src="/assets/mmm_custom/js/bot_page.js"></script>
+</body>
+</html>

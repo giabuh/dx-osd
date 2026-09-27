@@ -43,6 +43,16 @@ class TestDesk(unittest.TestCase):
         self.assertEqual(hooks.add_to_apps_screen[0]["has_permission"], "mmm_custom.desk.can_open_bot")
         self.assertIn("mmm_custom.desk.hide_unused_workspaces", hooks.after_migrate)
 
+    def test_migrate_updates_existing_bot_workspace_icon(self):
+        frappe = MagicMock()
+        frappe.db.exists.return_value = True
+        frappe.db.get_value.side_effect = ["chat", "education"]
+        with patch.object(desk, "frappe", frappe):
+            desk.ensure_bot_workspace_icon()
+            desk.ensure_bot_workspace_icon()
+        frappe.db.set_value.assert_called_once_with("Workspace", "Bot Sao Viet", "icon", "education")
+        self.assertIn("mmm_custom.desk.ensure_bot_workspace_icon", hooks.after_migrate)
+
 
 if __name__ == "__main__":
     unittest.main()

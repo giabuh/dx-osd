@@ -17,3 +17,10 @@ def hide_unused_workspaces():
     for name in HIDDEN_WORKSPACES:
         if frappe.db.exists("Workspace", name) and not frappe.db.get_value("Workspace", name, "is_hidden"):
             frappe.db.set_value("Workspace", name, "is_hidden", 1)
+
+
+def ensure_bot_workspace_icon():
+    """Bring existing site records in line with the workspace JSON icon."""
+    name = "Bot Sao Viet"
+    if frappe.db.exists("Workspace", name) and frappe.db.get_value("Workspace", name, "icon") != "education":
+        frappe.db.set_value("Workspace", name, "icon", "education")
