@@ -50,7 +50,7 @@
           <!-- Bot administration (branches, staff, courses) lives on the mmm_custom /bot page. -->
           <SidebarItem
             v-if="isManager()"
-            label="Bot Sao Việt"
+            :label="__('Admin')"
             @click="openBotAdmin"
           >
             <template #prefix>
