@@ -42,6 +42,7 @@ import AdminBranches from '@/components/Admin/AdminBranches.vue'
 import AdminStaff from '@/components/Admin/AdminStaff.vue'
 import AdminKnowledge from '@/components/Admin/AdminKnowledge.vue'
 import AdminPlayground from '@/components/Admin/AdminPlayground.vue'
+import AdminQuizzes from '@/components/Admin/AdminQuizzes.vue'
 import { adminCall } from '@/components/Admin/adminApi'
 import { Breadcrumbs, Tabs, usePageMeta } from 'frappe-ui'
 import { computed, markRaw, onMounted, ref } from 'vue'
@@ -80,6 +81,12 @@ const tabs = [
     label: 'Tri thức khóa học',
     icon: 'lucide-book-open',
     component: markRaw(AdminKnowledge),
+  },
+  {
+    name: 'quizzes',
+    label: 'Bài test',
+    icon: 'lucide-clipboard-check',
+    component: markRaw(AdminQuizzes),
   },
   {
     name: 'playground',
