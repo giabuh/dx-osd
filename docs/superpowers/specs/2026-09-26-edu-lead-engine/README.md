@@ -34,7 +34,7 @@ If you find a conflict, say so, fix the lower-authority file, and continue from 
 - Build only what an approved decision or §7 design says. Anything new → propose it, record it in
   `decisions.md` once approved, then act.
 - A decision marked **assumed** must be confirmed with the user before code depends on it.
-- Follow the repo rules in `AGENTS.md` (area checks, vendored-edit log, no secrets, commit style).
+- Follow the repo rules in `AGENTS.md` (area checks, no secrets, commit style). `crm/` and `chatwoot/` may be edited directly (D-093).
 - Jev never generates text; every customer-facing sentence comes from a template + CRM data (D-003).
 - Everything must still work with no Jev key (spec §5.3).
 

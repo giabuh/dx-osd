@@ -1,6 +1,6 @@
 # Vendored upstreams
 
-`chatwoot/`, `crm/`, and `messenger-platform-samples/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote — this file is the record of where each copy came from, what we changed inside it, and how to re-sync.
+`chatwoot/`, `crm/`, and `messenger-platform-samples/` are vendored copies of upstream repos (nested `.git` removed in `3a0e4ef`). There is no upstream remote. Since 2026-09-27 (D-093) `chatwoot/` and `crm/` are our own fork, developed independently with no re-sync planned: this file is kept as history (baselines, older edit log) and for the build/run notes; new edits no longer need a row.
 
 ## Baselines
 
