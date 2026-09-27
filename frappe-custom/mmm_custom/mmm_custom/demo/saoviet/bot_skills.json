@@ -819,5 +819,109 @@
   "creates_lead": 1,
   "handoff_after": 0,
   "sort_order": 155
+ },
+ {
+  "skill_key": "excel_quiz",
+  "title": "test trình độ Excel",
+  "jev_description": "The customer wants to test or check their Excel level",
+  "examples": "cho mình làm bài test excel\nkiểm tra trình độ excel\nkhông biết mình excel tới đâu",
+  "aliases": "test excel, kiem tra trinh do excel, bai test excel, test trinh do excel, kiem tra excel",
+  "parameters": [],
+  "missing_policy": "ask",
+  "action_type": "level_quiz",
+  "action_config": {
+   "slot": "quiz_progress",
+   "subject": "Excel",
+   "questions": [
+    {
+     "q": "Hàm nào tính tổng một vùng ô?",
+     "options": [
+      "SUM",
+      "COUNT",
+      "AVERAGE",
+      "MAX"
+     ],
+     "answer": 0
+    },
+    {
+     "q": "Muốn cố định ô A1 khi kéo công thức, ta viết thế nào?",
+     "options": [
+      "A1",
+      "$A$1",
+      "#A1",
+      "A:1"
+     ],
+     "answer": 1
+    },
+    {
+     "q": "Hàm VLOOKUP dùng để làm gì?",
+     "options": [
+      "Dò tìm theo mã",
+      "Vẽ biểu đồ",
+      "Sắp xếp dữ liệu",
+      "Đếm số ô"
+     ],
+     "answer": 0
+    },
+    {
+     "q": "Tổng hợp doanh thu theo tháng và nhân viên nhanh nhất bằng công cụ nào?",
+     "options": [
+      "Pivot Table",
+      "Lọc thủ công",
+      "Copy – dán",
+      "Format Painter"
+     ],
+     "answer": 0
+    },
+    {
+     "q": "Hàm nào đếm số ô thỏa một điều kiện?",
+     "options": [
+      "COUNTIF",
+      "SUMIF",
+      "IF",
+      "LEN"
+     ],
+     "answer": 0
+    }
+   ],
+   "bands": [
+    {
+     "max": 2,
+     "level": "beginner",
+     "course": "VP-EXCEL"
+    },
+    {
+     "max": 4,
+     "level": "basic",
+     "course": "VP-EXCEL-NC"
+    },
+    {
+     "max": 5,
+     "level": "advanced",
+     "course": "QT-MOS-EXCEL"
+    }
+   ]
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Câu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "start",
+    "when": "not quiz.done and quiz.step == 1",
+    "template": "Dạ mình làm nhanh bài test {{ quiz.subject }} {{ quiz.total }} câu nhé, {{ brand.you }} bấm chọn đáp án ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}"
+   },
+   {
+    "variant_key": "result",
+    "when": "quiz.done",
+    "template": "Dạ {{ brand.you }} đúng {{ quiz.score }}/{{ quiz.total }} câu, trình độ: {{ quiz.level_label }}. {{ brand.me | capitalize }} gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) để {{ brand.you }} lên trình nhanh nhất ạ."
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 160
  }
 ]

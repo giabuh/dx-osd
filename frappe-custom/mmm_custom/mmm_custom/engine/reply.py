@@ -33,6 +33,7 @@ class Reply:
     ask: str = ""
     pending_skill: str = ""
     jev_extra: list = field(default_factory=list)
+    hold: bool = False  # an action is mid-dialogue (a quiz question): ask no other slot this turn (D-104)
 
     def options(self):
         return {b["title"]: b["action"] for b in self.buttons}
@@ -141,6 +142,7 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         if template:
             say(template.text, skill_ctx, key)
             reply.variants.append({"skill": key, "variant": template.key})
+        reply.hold = reply.hold or bool(out.get("_hold"))
         reply.attachments += out.get("_attachments", [])
         action_buttons += out.get("_buttons", [])
         follow_ups += [{"title": f.title, "action": FOLLOW_UP_ACTIONS[f.target_type](f.target)}
@@ -158,7 +160,7 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
                            {"title": CONFIRM_NO, "action": {"type": "confirm_no", **c}}]
 
     ask_buttons = []
-    ask_key = reply.ask or decision.ask
+    ask_key = reply.ask or ("" if reply.hold else decision.ask)
     if ask_key:
         slot = catalog.slot(ask_key)
         say(slot.ask_template, ctx, f"slot:{slot.key}")

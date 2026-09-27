@@ -233,5 +233,33 @@
   "depends_on_slot": "",
   "depends_on_value": "",
   "lead_field": "referred_by_code"
+ },
+ {
+  "slot_key": "quiz_progress",
+  "label": "Tiến độ bài test",
+  "slot_type": "text",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 100,
+  "ask_on_demand": 1,
+  "ask_template": "{{ brand.you | capitalize }} chọn đáp án nhé ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": ""
+ },
+ {
+  "slot_key": "placement",
+  "label": "Kết quả test trình độ",
+  "slot_type": "text",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 110,
+  "ask_on_demand": 1,
+  "ask_template": "{{ brand.you | capitalize }} muốn làm bài test trình độ không ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": "placement_result"
  }
 ]

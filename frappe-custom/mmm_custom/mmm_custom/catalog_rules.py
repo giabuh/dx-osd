@@ -24,7 +24,7 @@ def validate_promotion(discount_type, discount_value, valid_from, valid_to):
 SLOT_TYPES = ("catalog", "choice", "phone", "number", "text", "referral_code")
 CATALOG_SOURCES = ("course", "branch")
 ACTION_TYPES = ("answer_template", "schedule_lookup", "fee_quote", "branch_info", "send_media", "recommend_courses", "handoff",
-                "trial_offer", "book_trial")
+                "trial_offer", "book_trial", "level_quiz")
 FOLLOW_UP_TARGETS = ("skill", "slot", "handoff")
 
 

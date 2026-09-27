@@ -367,5 +367,46 @@
     "SVK7M2Q"
    ]
   }
+ },
+ {
+  "id": "S18",
+  "title": "Khách làm bài test Excel 5 câu",
+  "why": "Bài test qua nút bấm xếp trình độ, gợi ý đúng khóa và ghi kết quả lên Lead",
+  "messages": [
+   "cho mình làm bài test excel",
+   {
+    "tap": 0
+   },
+   {
+    "tap": 1
+   },
+   {
+    "tap": 0
+   },
+   {
+    "tap": 0
+   },
+   {
+    "tap": 1
+   }
+  ],
+  "expect": {
+   "handoff": false,
+   "reply_has": [
+    "4/5",
+    "Excel nâng cao & Dashboard"
+   ],
+   "slots": {
+    "level": "basic",
+    "placement": "Excel: 4/5 · Biết cơ bản",
+    "course": "VP-EXCEL-NC"
+   },
+   "lead": {
+    "placement_result": "Excel: 4/5 · Biết cơ bản"
+   },
+   "courses": [
+    "VP-EXCEL-NC"
+   ]
+  }
  }
 ]

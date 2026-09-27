@@ -39,6 +39,7 @@ for real customers until a later labelled gate passes.
 | `engine/playground.py`, `mmm_custom/page/bot_playground/` | `/app/bot-playground`: dry simulation, replay and an independent **Use Jev** toggle with question/answer/token inspector | — |
 | `desk.py`, `hooks.py` | Role gate for bot administration, migrate-time hiding of unused desk workspaces, an Apps entry "Quản trị" to `/crm/admin` (D-091, D-096), `/bot` and `/admin` → `/crm/admin` redirects, and landing by role (`default_app_for`: managers → `/crm/admin`, others → `/crm`; after_migrate + User on_update) | — |
 | `crm/frontend/src/pages/Admin.vue`, `crm/frontend/src/components/Admin/` | Manager screens inside the CRM frontend at `/crm/admin/<tab>` (overview, customers, branches, staff, course knowledge, playground, scenarios), frappe-ui components, managers only (router guard + server checks); replaced the standalone `/bot` → `/admin` page (D-092, D-096) | — |
+| `engine/quiz.py` | Level quiz scoring and progress encoding (D-104); action `level_quiz` in `actions.py`, results applied by `pipeline.apply_quiz_results` | Add a quiz = one Bot Skill |
 | `engine/scenarios.py`, `engine/eval/scenarios.json` | Acceptance scenarios (D-098): scripted chats → expected team, consultant kind, Lead fields; dry runs offline (unit test) and on live data (`bench execute mmm_custom.engine.scenarios.report`, API `run_all`) | Add a scenario per new routing rule |
 | `engine/customers.py`, `crm/frontend/src/components/Admin/AdminCustomers.vue`, `AdminScenarios.vue` | Customer dashboard (D-101) and the scenario runner tab | — |
 | `engine/dashboard.py` | Role-gated summary of bot Lead creation, qualification, handoffs, knowledge coverage and latest qualified Leads | — |
@@ -66,7 +67,7 @@ Chatwoot: 44 agents, 15 teams.
 
 ## CRM Lead custom fields (from `setup.py`)
 
-`chatwoot_contact_id` (Data, unique) · `source_campaign` (Data, D-100) · `referral_code`, `referred_by_code`, `referred_by` (D-103) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
+`chatwoot_contact_id` (Data, unique) · `source_campaign` (Data, D-100) · `referral_code`, `referred_by_code`, `referred_by` (D-103) · `placement_result` (D-104) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
 options**, no longer written) · `data_quality` (Select) · `ai_intent` (Select) · `ai_hotness` (Select).
 
 ## Standard Frappe CRM pieces we will reuse (vendored `crm/`, not edited)
