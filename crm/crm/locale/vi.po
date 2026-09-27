@@ -5238,7 +5238,7 @@ msgstr ""
 #: frontend/src/components/ListViews/EmptyState.vue:37
 #: frontend/src/pages/MobileOrganization.vue:145
 msgid "No {0} Found"
-msgstr ""
+msgstr "Không có {0} nào"
 
 #: frontend/src/components/PrimaryDropdown.vue:33
 msgid "No {0} available"
