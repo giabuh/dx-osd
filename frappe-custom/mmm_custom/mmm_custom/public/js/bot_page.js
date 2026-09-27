@@ -43,7 +43,9 @@
     target.innerHTML = `<p class="error">${escapeHtml(error.message || error)}</p>`;
   }
 
-  const TABS = ["overview", "branches", "staff", "knowledge", "playground", "lead-ads"];
+  // The Facebook Lead Ads pane (#lead-ads) is built but hidden: no menu button, and not in TABS, so /admin#lead-ads
+  // falls back to the overview. Add "lead-ads" here and its nav button back in admin.html to show it.
+  const TABS = ["overview", "branches", "staff", "knowledge", "playground"];
   const loaders = { knowledge: () => knowledgeLoaded || loadKnowledge(), branches: () => loadBranches(), staff: () => loadStaff(),
     "lead-ads": () => loadLeadAds() };
 
