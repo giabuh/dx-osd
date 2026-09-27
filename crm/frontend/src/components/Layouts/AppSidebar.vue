@@ -47,15 +47,39 @@
               />
             </template>
           </SidebarItem>
+          <!-- Chatwoot Inbox navigation -->
+          <SidebarItem
+            :label="__('Chatwoot Inbox')"
+            :to="{ name: 'ChatwootInbox' }"
+            :active="activeItem === 'ChatwootInbox'"
+            @click="selectItem($event, 'ChatwootInbox')"
+          >
+            <template #prefix>
+              <MessageSquareIcon class="size-4 text-ink-gray-7" />
+            </template>
+          </SidebarItem>
+
+          <!-- Facebook Marketing navigation -->
+          <SidebarItem
+            :label="__('Facebook Marketing')"
+            :to="{ name: 'FacebookPosts' }"
+            :active="activeItem === 'FacebookPosts'"
+            @click="selectItem($event, 'FacebookPosts')"
+          >
+            <template #prefix>
+              <MegaphoneIcon class="size-4 text-ink-gray-7" />
+            </template>
+          </SidebarItem>
+
           <!-- Manager screens (branches, staff, courses, bot playground): pages/Admin.vue. -->
           <SidebarItem
             v-if="isManager()"
-            :label="'Quản trị'"
+            :label="__('Admin')"
             :active="activeItem === 'Admin'"
             @click="openBotAdmin"
           >
             <template #prefix>
-              <BotIcon class="size-4 text-ink-gray-7" />
+              <SettingsIcon class="size-4 text-ink-gray-7" />
             </template>
           </SidebarItem>
 
@@ -146,6 +170,15 @@
             </template>
           </SidebarItem>
           <SidebarItem
+            :label="isCollapsed ? '' : (currentLang === 'vi' ? 'Tiếng Việt' : 'English')"
+            :title="currentLang === 'vi' ? 'Chuyển sang Tiếng Anh' : 'Switch to Vietnamese'"
+            @click="toggleLanguage"
+          >
+            <template #prefix>
+              <GlobeIcon class="size-4 text-ink-gray-7" />
+            </template>
+          </SidebarItem>
+          <SidebarItem
             :label="isCollapsed ? __('Expand') : __('Collapse')"
             @click="isSidebarCollapsed = !isSidebarCollapsed"
           >
@@ -184,7 +217,10 @@
 
 <script setup>
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
-import BotIcon from '~icons/lucide/bot'
+import SettingsIcon from '~icons/lucide/settings'
+import MegaphoneIcon from '~icons/lucide/megaphone'
+import MessageSquareIcon from '~icons/lucide/message-square'
+import GlobeIcon from '~icons/lucide/globe'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
@@ -414,10 +450,30 @@ function toggleHelpModal() {
 const { user } = sessionStore()
 const { users, isManager } = usersStore()
 
+function openFacebookMarketing() {
+  window.location.href = '/app/facebook-post'
+}
+
 function openBotAdmin() {
   activeItem.value = 'Admin'
   router.push({ name: 'Admin' })
   if (props.mobile) mobileSidebarOpened.value = false
+}
+
+const currentLang = ref(
+  (document.cookie.split('; ').find(row => row.startsWith('user_lang='))?.split('=')[1]) ||
+  'vi'
+)
+
+async function toggleLanguage() {
+  const target = currentLang.value === 'vi' ? 'en' : 'vi'
+  try {
+    await call('mmm_custom.api.switch_language', { lang: target })
+  } catch (err) {
+    console.error('Failed to switch language:', err)
+  }
+  document.cookie = `user_lang=${target}; path=/; max-age=31536000`
+  window.location.reload()
 }
 const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 

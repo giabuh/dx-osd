@@ -15,6 +15,9 @@ import json
 import sys
 import time
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 import requests
 
 DEFAULT_URL = "http://127.0.0.1:8000"

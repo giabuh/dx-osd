@@ -126,5 +126,41 @@ class TestFacebookPost(unittest.TestCase):
             self.assertEqual(doc.image, "/files/test_banner.jpg")
 
 
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.requests.post")
+    def test_generate_ai_content_with_dynamic_angle(self, mock_post):
+        """Test AI content generation includes dynamic angle and anti-cliche constraints."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {"text": "Bé từng rất sợ nước, nhưng hôm nay đã tự tin bơi 50m! #EduFlow"}
+                        ]
+                    }
+                }
+            ]
+        }
+        mock_post.return_value = mock_resp
+
+        doc = FacebookPost()
+        doc.course = "Bơi lội"
+        doc.title = "Khóa bơi sinh tồn cho bé"
+        doc.day_of_week = "Thứ Sáu"
+        doc.save = MagicMock()
+
+        with patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.os.getenv") as mock_env:
+            mock_env.side_effect = lambda k, default=None: "dummy_key" if k == "GEMINI_API_KEY" else default
+            res = doc.generate_ai_content()
+            self.assertEqual(res["status"], "success")
+            sent_payload = mock_post.call_args[1]["json"]
+            prompt_text = sent_payload["contents"][0]["parts"][0]["text"]
+            self.assertIn("ANTI-CLICHÉ", prompt_text)
+            self.assertIn("GÓC TIẾP CẬN", prompt_text)
+            self.assertIn("HUMOR", prompt_text)
+
+
 if __name__ == "__main__":
     unittest.main()
+

@@ -278,3 +278,23 @@ def chatwoot_sync():
         pass
 
     return {"status": "success", "lead_id": lead_name}
+
+
+@frappe.whitelist()
+def switch_language(lang):
+    """Switch user interface language between Vietnamese ('vi') and English ('en')."""
+    if lang not in ["vi", "en"]:
+        frappe.throw(_("Ngôn ngữ không hợp lệ / Invalid language"))
+
+    user = getattr(frappe.session, "user", None) or "Administrator"
+    frappe.db.set_value("User", user, "language", lang)
+    if user == "Administrator":
+        frappe.db.set_single_value("System Settings", "language", lang)
+    if hasattr(frappe.db, "commit"):
+        frappe.db.commit()
+
+    if hasattr(frappe, "local") and hasattr(frappe.local, "cookie_manager"):
+        frappe.local.cookie_manager.set_cookie("user_lang", lang)
+
+    return {"status": "success", "language": lang}
+

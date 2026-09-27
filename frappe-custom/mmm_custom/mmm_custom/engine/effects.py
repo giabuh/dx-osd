@@ -77,7 +77,10 @@ class ChatwootEffects:
 
         name = repo.save_lead(state, fields, courses, contact)
         if state.contact_id:
-            self._update_contact(int(state.contact_id), contact_update(fields, courses, name, self.crm_url))
+            try:
+                self._update_contact(int(state.contact_id), contact_update(fields, courses, name, self.crm_url))
+            except (ValueError, TypeError):
+                pass
         try:
             compute_data_quality(name)
         except Exception:

@@ -128,6 +128,8 @@ class TestAutopilotEngine(unittest.TestCase):
         self.assertEqual(res["batch_id"], "BATCH-2026-W40")
         self.assertEqual(res["count"], 4)
         self.assertEqual(len(res["posts"]), 4)
+        self.assertIn("pipeline", res)
+        self.assertEqual(len(res["pipeline"]), 5)
         self.assertEqual(mock_frappe.new_doc.call_count, 4)
 
         # Verify docs attributes and method calls
@@ -247,6 +249,8 @@ class TestAutopilotEngine(unittest.TestCase):
         mock_frappe.db.set_value.assert_any_call("Facebook Post", "OLD-POST-2", "status", "Cancelled")
         self.assertEqual(res["status"], "success")
         self.assertEqual(res["cancelled_count"], 2)
+        self.assertIn("pipeline", res)
+        self.assertEqual(len(res["pipeline"]), 4)
         self.assertEqual(res["new_batch"]["status"], "success")
         self.assertEqual(res["new_batch"]["batch_id"], "BATCH-2026-W40")
 
