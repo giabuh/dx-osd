@@ -123,5 +123,5 @@ def promo(title, kind="Percent", amount=10, courses=(), groups=(), branches=()):
 
 def demo_consultants():
     return [{"name": c["email"], "full_name": c["full_name"], "branch": c["branch"], "chatwoot_agent_id": i + 1,
-             "active": 1, "handles_b2b": c["handles_b2b"], "level": c["level"]}
+             "active": 1, "handles_b2b": c["handles_b2b"], "level": c["level"], "specialties": list(c["specialties"])}
             for i, c in enumerate(load_dataset()["consultants"])]

@@ -325,8 +325,10 @@ class FrappeRepo:
         frappe.get_doc({"doctype": "Bot Learning Signal", **row}).insert(ignore_permissions=True)
 
     def consultants(self):
-        return [dict(r) for r in frappe.get_all("Consultant", filters={"active": 1}, fields=[
-            "name", "full_name", "branch", "chatwoot_agent_id", "level", "handles_b2b", "active"])]
+        specialties = _children("Course Group Link", "Consultant", "specialties", ["course_group"])
+        return [{**r, "specialties": [s["course_group"] for s in specialties.get(r.name, [])]}
+                for r in frappe.get_all("Consultant", filters={"active": 1}, fields=[
+                    "name", "full_name", "branch", "chatwoot_agent_id", "level", "handles_b2b", "active"])]
 
     def consultant_load(self):
         rows = frappe.get_all("Bot Conversation", filters={"status": "handed_off", "is_sandbox": 0, "consultant": ["is", "set"]},

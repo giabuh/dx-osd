@@ -120,7 +120,7 @@ class TestRunTurn(unittest.TestCase):
         self.assertEqual(handoff["team"], "CN Dĩ An")
         consultant = next(c for c in demo_consultants() if c["name"] == self.repo.states["7"].consultant)
         self.assertIn(f"tư vấn viên {consultant['full_name']} (CN Dĩ An)", self.fx.of("send")[0]["messages"][0])
-        self.assertIn("CN Dĩ An · ít khách nhất", t.reason)
+        self.assertIn("CN Dĩ An · chuyên Tin học văn phòng · ít khách nhất", t.reason)
         self.assertEqual([e["consultant"] for e in self.fx.of("emit") if e["event"] == "handed_off"], [consultant["name"]])
 
 class TestJevTurn(unittest.TestCase):

@@ -53,13 +53,15 @@ def plan_handoff(state, decision, catalog, repo, render):
     ctx = base_context(decision.slots, catalog, state)
     branch = ctx["branch"].get("name", "")
     owner = repo.lead_owner(state.lead) if state.is_returning and state.lead else ""
-    consultant, why = pick_consultant(branch, repo.consultants(), repo.consultant_load(), owner)
-    team = (consultant.get("branch") if consultant else branch) or CENTRAL_TEAM
-    plan = HandoffPlan(consultant, why, team, owner=(consultant or {}).get("name", ""))
     course_slot = catalog.slot_for("course")
     group = ctx["course"].get("group") or ((decision.slots.get(course_slot.key) or {}).get("parent", "") if course_slot else "")
+    hotness = decision.ai.get("hotness", {})
+    hot = hotness.get("value") == "hot" and hotness.get("confidence", 0) >= float(catalog.settings["handoff_noul"])
+    consultant, why = pick_consultant(branch, repo.consultants(), repo.consultant_load(), owner, group, hot)
+    team = (consultant.get("branch") if consultant else branch) or CENTRAL_TEAM
+    plan = HandoffPlan(consultant, why, team, owner=(consultant or {}).get("name", ""))
     plan.labels = [slug(x) for x in (group, branch) if x]
-    if decision.ai.get("hotness", {}).get("value") == "hot":
+    if hot:
         plan.labels.append("hot")
     plan.attributes = {f"bot_{key}": shown for key, shown in ctx["slots"].items()}
     answered = [catalog.skills[k].title for k in dict.fromkeys(state.answered + decision.skills) if k in catalog.skills]

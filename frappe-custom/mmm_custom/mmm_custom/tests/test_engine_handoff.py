@@ -43,6 +43,37 @@ class TestRouting(unittest.TestCase):
         self.assertEqual(pick_consultant("", [], {}), (None, "Chưa có tư vấn viên phù hợp"))
 
 
+TEAM = [
+    {"name": "lead@x", "branch": "CN Dĩ An", "chatwoot_agent_id": 1, "active": 1, "handles_b2b": 0, "level": "Team Lead",
+     "specialties": ["Tin học văn phòng"]},
+    {"name": "vp@x", "branch": "CN Dĩ An", "chatwoot_agent_id": 2, "active": 1, "handles_b2b": 0, "level": "Consultant",
+     "specialties": ["Tin học văn phòng", "Kế toán"]},
+    {"name": "dh@x", "branch": "CN Dĩ An", "chatwoot_agent_id": 3, "active": 1, "handles_b2b": 0, "level": "Consultant",
+     "specialties": ["Thiết kế đồ họa"]},
+]
+
+
+class TestRuleD(unittest.TestCase):
+    def test_specialist_for_the_course_group_wins_over_a_less_busy_colleague(self):
+        c, why = pick_consultant("CN Dĩ An", TEAM, {"lead@x": 9, "vp@x": 5, "dh@x": 0}, group="Tin học văn phòng")
+        self.assertEqual((c["name"], why), ("vp@x", "CN Dĩ An · chuyên Tin học văn phòng · ít khách nhất"))
+
+    def test_no_specialist_falls_back_to_the_least_busy_in_the_branch(self):
+        c, why = pick_consultant("CN Dĩ An", TEAM, {"lead@x": 2, "vp@x": 1, "dh@x": 3}, group="Lập trình")
+        self.assertEqual((c["name"], why), ("vp@x", "CN Dĩ An · ít khách nhất"))
+
+    def test_hot_customer_goes_to_a_team_lead(self):
+        c, why = pick_consultant("CN Dĩ An", TEAM, {"lead@x": 9, "vp@x": 0}, group="Tin học văn phòng", hot=True)
+        self.assertEqual((c["name"], why), ("lead@x", "CN Dĩ An · khách hot → trưởng nhóm · chuyên Tin học văn phòng · ít khách nhất"))
+
+    def test_hot_without_a_team_lead_uses_the_normal_rule(self):
+        people = [p for p in TEAM if p["level"] != "Team Lead"]
+        self.assertEqual(pick_consultant("CN Dĩ An", people, {}, group="Tin học văn phòng", hot=True)[0]["name"], "vp@x")
+
+    def test_returning_customer_still_goes_to_the_owner(self):
+        self.assertEqual(pick_consultant("CN Dĩ An", TEAM, {}, owner="dh@x", group="Tin học văn phòng", hot=True)[0]["name"], "dh@x")
+
+
 class TestPlan(unittest.TestCase):
     def setUp(self):
         self.repo = FakeRepo(CAT)
@@ -58,9 +89,25 @@ class TestPlan(unittest.TestCase):
                             reason="Đã đủ thông tin bắt buộc")
         return plan_handoff(state or ConversationState("1", answered=["schedule_lookup"]), decision, cat, self.repo, render)
 
+    def hot_plan(self, confidence):
+        decision = Decision("handoff", slots=self.slots, handoff_reason="hot", reason="Khách hot",
+                            ai={"hotness": {"value": "hot", "score": 2.0, "confidence": confidence}})
+        self.repo.load = {"hung.bd-da@demo.saoviet.invalid": 9}
+        return plan_handoff(ConversationState("1"), decision, CAT, self.repo, render)
+
+    def test_confidently_hot_customer_goes_to_the_branch_team_lead(self):
+        p = self.hot_plan(0.9)
+        self.assertEqual((p.consultant["full_name"], p.consultant["level"]), ("Đinh Văn Hùng", "Team Lead"))
+        self.assertIn("hot", p.labels)
+
+    def test_an_unsure_hot_reading_uses_the_normal_rule(self):
+        self.assertNotEqual(self.hot_plan(0.4).consultant["level"], "Team Lead")
+
     def test_branch_consultant_team_labels_attributes(self):
         p = self.plan()
-        self.assertEqual((p.consultant["branch"], p.team, p.why), ("CN Dĩ An", "CN Dĩ An", "CN Dĩ An · ít khách nhất"))
+        self.assertEqual((p.consultant["branch"], p.team), ("CN Dĩ An", "CN Dĩ An"))
+        self.assertIn("Tin học văn phòng", p.consultant["specialties"])
+        self.assertEqual(p.why, "CN Dĩ An · chuyên Tin học văn phòng · ít khách nhất")
         self.assertEqual(p.labels, ["tin-hoc-van-phong", "cn-di-an"])
         self.assertEqual(p.attributes["bot_course"], "Excel từ cơ bản đến nâng cao")
         self.assertEqual(p.attributes["bot_learner"], "Con em")
@@ -71,7 +118,7 @@ class TestPlan(unittest.TestCase):
         s = self.plan().summary
         for part in ("Lan", "+84901234567", "Con em (9 tuổi)", "Excel từ cơ bản đến nâng cao (1.800.000đ)", "CN Dĩ An",
                      "lịch khai giảng", "học phí", "gọi xác nhận lớp Thứ 3, 06/10 (Tối 17:00–21:00) tại CN Dĩ An, còn 6 chỗ",
-                     "CN Dĩ An · ít khách nhất"):
+                     "CN Dĩ An · chuyên Tin học văn phòng · ít khách nhất"):
             self.assertIn(part, s)
 
     def test_returning_customer_goes_back_to_owner(self):
