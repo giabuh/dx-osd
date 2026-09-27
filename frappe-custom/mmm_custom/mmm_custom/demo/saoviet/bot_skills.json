@@ -364,12 +364,15 @@
   "parameters": [],
   "missing_policy": "ask",
   "action_type": "handoff",
-  "action_config": {},
+  "action_config": {
+   "route": "b2b",
+   "alone": true
+  },
   "templates": [
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.me }} chuyển {{ brand.you }} sang bộ phận đào tạo doanh nghiệp ngay ạ."
+    "template": "Dạ {{ brand.me }} cảm ơn {{ brand.you }}. Với đào tạo cho doanh nghiệp, trung tâm báo giá theo số học viên, lịch học và địa điểm (tại trung tâm hoặc tại công ty), nên {{ brand.me }} chuyển {{ brand.you }} sang bộ phận đào tạo doanh nghiệp để lập báo giá riêng ạ."
    }
   ],
   "follow_ups": [],

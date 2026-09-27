@@ -146,6 +146,9 @@ def decide(state, u, catalog):
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
     faq = u.faq
+    alone = [k for k in skills if catalog.skills[k].config.get("alone")]
+    if alone:  # e.g. a company asking for a quote: no retail fee or course FAQ on top (D-099)
+        skills, faq = alone, None
     if faq:  # the course's own answer beats a generic template answer to the same question (D-085)
         skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     greet = state.turns == 0 and not skills and not faq

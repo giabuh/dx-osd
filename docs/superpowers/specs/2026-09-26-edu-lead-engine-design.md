@@ -169,7 +169,7 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C4.1 | Routing rule D, configurable in CRM (D-006) — rule in code (D-087); CRM toggles not built yet | M | 🔨 |
 | C4.2 | Working hours, holidays, away status + out-of-hours bot behaviour (D-046) | M | ⬜ |
 | C4.3 | Reassign when a consultant misses the response deadline | M | ⬜ |
-| C4.4 | B2B lead detection → B2B team (D-012) | M | ⬜ |
+| C4.4 | B2B lead detection → B2B team (D-012) — in code (D-099), offline scenarios pass; live check pending | M | 🔨 |
 
 **C5 — Visibility** · milestone: managers and consultants see the automation
 | C5.1 | CRM dashboard: funnel + charts by course/branch/consultant | M | ⬜ |
