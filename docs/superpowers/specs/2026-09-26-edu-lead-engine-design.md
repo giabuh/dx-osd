@@ -162,6 +162,8 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C3.4 | Intent/hotness/wants-human → early handoff; coordination with `intelligence.py` (D-032) | S | ✅ |
 | C3.5 | Cost guard + spam stop (D-044) | S | ✅ |
 | C3.6 | Course advisor: goal/level slots, data filter, composite scoring, top 3 (D-040) | M | ✅ |
+| C3.7 | Automatic lead qualification: Qualified / Unqualified from slots and Jev signals + public CRM views (D-083) | S | ✅ |
+| C3.8 | Course knowledge: overview, syllabus, course FAQs answered via Jev, Bot Knowledge coverage page (D-084–D-086) | M | ✅ |
 
 **C4 — Route to the right person** · milestone: every lead reaches the right consultant, with a reason
 | C4.1 | Routing rule D, configurable in CRM (D-006) | M | ⬜ |

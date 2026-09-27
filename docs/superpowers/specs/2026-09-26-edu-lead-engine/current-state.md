@@ -33,6 +33,8 @@ for real customers until a later labelled gate passes.
 | `engine/log.py`, `learning.py` | AI Decision Log rows + learning signals; daily retention purge; `consultant_corrected` on CRM Lead update | C9.2 review UI |
 | `engine/routing.py`, `handoff.py`, `chatwoot_setup.py` | C2.6 pick (Lead owner → least-loaded branch consultant → Tổng đài), team, labels, `bot_*` conversation attributes, summary note | C4.1 replaces routing with rule D |
 | `engine/effects.py`, `events.py`, `pipeline.py` | Effects interface and hook; `run_turn` calls `understand_turn` with Jev/fallback and token accounting; RQ job guarded by per-conversation `filelock` | — |
+| `engine/qualify.py` | Pure `lead_status()` → New / Qualified / Unqualified (D-083); `pipeline.write_lead` writes it once per change, `repo.save_lead` skips Leads a person moved to another status | C6.1, C6.5 |
+| `engine/knowledge.py`, `mmm_custom/page/bot_knowledge/`, `public/js/crm_product.js`, `mmm_custom/doctype/course_faq/` | Course knowledge overview and coverage table (D-086); CRM Product fields `syllabus` + `faqs` (`setup.CATALOG_FIELDS`), answered through `jev_questions.faq_course`/`combine._course_faq` (D-085) | — |
 | `engine/playground.py`, `mmm_custom/page/bot_playground/` | `/app/bot-playground`: dry simulation, replay and an independent **Use Jev** toggle with question/answer/token inspector | — |
 | `intelligence.py:208` `analyze_conversation` | Jev intent/hotness/phone/email analysis and labels; skips conversations handled by an active Bot Conversation | — |
 | `intelligence.py:74` `ask_jev` | One System One call (`/v1/systemone`), typed questions | Reused |
