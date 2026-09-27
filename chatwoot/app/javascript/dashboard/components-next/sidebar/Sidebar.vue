@@ -351,8 +351,36 @@ const newReportRoutes = () => [
 
 const reportRoutes = computed(() => newReportRoutes());
 
+// DX-OSD: entries hidden to keep the consultant UI simple; their routes still work.
+const HIDDEN_ITEMS = new Set([
+  'Folders',
+  'Teams',
+  'Active',
+  'Segments',
+  'Tagged With',
+  'Companies',
+  'Reports Label',
+  'Reports Inbox',
+  'Reports Team',
+  'Reports CSAT',
+  'Reports SLA',
+  'Settings Templates',
+  'Settings Labels',
+  'Settings Custom Attributes',
+  'Conversation Workflow',
+]);
+
+const withoutHidden = items =>
+  items
+    .filter(item => !HIDDEN_ITEMS.has(item.name))
+    .map(item =>
+      Array.isArray(item.children)
+        ? { ...item, children: withoutHidden(item.children) }
+        : item
+    );
+
 const menuItems = computed(() => {
-  return [
+  return withoutHidden([
     // DX-OSD: My Inbox, Mentions, Participating and Unattended are hidden to keep the demo UI simple
     {
       name: 'Conversation',
@@ -899,7 +927,7 @@ const menuItems = computed(() => {
         },
       ],
     },
-  ];
+  ]);
 });
 </script>
 

@@ -41,7 +41,7 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/frontend/src/pages/Leads.vue` | Add `data_quality` case in `parseRows()` with green/orange/red color mapping | Colors the Data Quality badge based on value |
 | `crm/frontend/src/components/ListViews/LeadsListView.vue` | Add `<Badge>` rendering block for `data_quality` column | Renders a colored badge (like SLA Status) instead of plain text |
 | `chatwoot/app/models/channel/facebook_page.rb` | Add `validates :page_access_token, :user_access_token, length: { maximum: 4096 }` | Meta's current tokens exceed the 255-char string guard in `ApplicationRecord`, so saving a Facebook Page channel failed with "Page access token is too long" |
-| `chatwoot/app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | Remove the My Inbox, Mentions, Participating and Unattended sidebar entries (routes stay) | Simpler inbox UI for consultants; Campaigns/Help Center etc. are hidden by account feature flags plus `INSTALLATION_NAME` ≠ "Chatwoot" (data, not code) |
+| `chatwoot/app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | Remove the My Inbox, Mentions, Participating and Unattended sidebar entries; `HIDDEN_ITEMS` filters Folders, Teams, contact Active/Segments/Tagged With/Companies, Label/Inbox/Team/CSAT/SLA reports and the Templates, Labels, Custom Attributes, Conversation Workflow settings (routes stay) | Simpler inbox UI for consultants; Campaigns/Help Center etc. are hidden by account feature flags plus `INSTALLATION_NAME` ≠ "Chatwoot" (data, not code) |
 
 ## Re-sync procedure
 
