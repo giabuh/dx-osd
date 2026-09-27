@@ -15,6 +15,8 @@ def keywords_resolved(u, state):
 
 def allow_jev(u, state, catalog, now, tokens_today=0, budget=0):
     settings = catalog.settings
+    if state.status == "closed" or state.consultant_replied:
+        return False, "bot_silent"  # decide() stays silent: a Jev call would be spent for nothing
     if u.tapped:
         return False, "button"
     if keywords_resolved(u, state):

@@ -25,6 +25,11 @@ def incoming(text, message_id=5):
 
 
 class TestAllowJev(unittest.TestCase):
+    def test_no_call_when_the_bot_will_stay_silent(self):
+        u = Understanding(unmatched=["x"])
+        self.assertEqual(allow_jev(u, ConversationState("1", status="closed"), CAT, NOW), (False, "bot_silent"))
+        self.assertEqual(allow_jev(u, ConversationState("1", consultant_replied=True), CAT, NOW), (False, "bot_silent"))
+
     def test_button_tap(self):
         self.assertEqual(allow_jev(Understanding(tapped=True), ConversationState("1"), CAT, NOW), (False, "button"))
 
