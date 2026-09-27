@@ -11,6 +11,7 @@ except ImportError:  # offline tests
 
 from mmm_custom.dedupe import find_matching_lead, normalize_phone
 from mmm_custom.engine.lead import PLACEHOLDER_NAMES, contact_prefill, prefill_slots
+from mmm_custom.engine.qualify import AUTO_STATUSES
 from mmm_custom.engine.catalog import DEFAULT_SETTINGS, build_catalog
 from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
@@ -160,6 +161,8 @@ def save_lead(state, fields, courses, contact):
             val = normalize_phone(val)
             if doc.mobile_no and doc.mobile_no != val:
                 continue
+        if field == "status" and name and doc.status not in AUTO_STATUSES:
+            continue  # a person moved this Lead (Contacted, Converted…): the bot leaves it (D-083)
         doc.set(field, val)
     _append_products(doc, courses)
     doc.flags.lead_engine = True  # learning.on_lead_update skips the engine's own saves (D-057)

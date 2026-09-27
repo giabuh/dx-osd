@@ -18,6 +18,7 @@ from mmm_custom.engine.jev import JevResult
 from mmm_custom.engine.jev_questions import MAX_HISTORY, build_questions, jev_state
 from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.log import log_row, signals
+from mmm_custom.engine.qualify import LABELS, NEW, lead_status
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.understand import understand
 
@@ -139,6 +140,10 @@ def write_lead(turn, effects, catalog):
     lead_slots = [k for k in decision.new_slots if catalog.slot(k) and catalog.slot(k).lead_field]
     wanted = not state.lead and any(catalog.skills[k].creates_lead for k in decision.skills)
     ai = {k: v for k, v in ai_fields(turn.understanding, catalog.settings).items() if state.ai.get(k) != v}
+    previous = state.ai.get("status", "")
+    status = lead_status(state.slots, {**state.ai, **ai}, catalog, previous)
+    if status != (previous or NEW):
+        ai["status"] = status
     if not (lead_slots or wanted or (ai and state.lead)):
         return
     fields, courses = lead_updates(state.slots, catalog)
@@ -149,6 +154,8 @@ def write_lead(turn, effects, catalog):
         turn.reply.errors.append({"type": "lead_failed", "detail": str(e)[:300]})
         return
     state.ai.update(ai)
+    if "status" in ai:
+        turn.reason = f"{turn.reason} · Lead: {LABELS[status]}"
     effects.emit("lead_updated", {"conversation_id": state.conversation_id, "lead": state.lead,
                                   "is_sandbox": state.is_sandbox, "fields": sorted(fields),
                                   "courses": [c.code for c in courses]})
