@@ -41,6 +41,10 @@ class TestCourseOverview(unittest.TestCase):
         o = course_overview(CAT.courses["VP-EXCEL"], CAT, [], [promo("Robot -20%", courses=["TE-ROBO"])], render)
         self.assertEqual((o["promotions"], o["final_fee"]), ([], 1800000.0))
 
+    def test_branch_only_promotions_do_not_set_the_fee_everyone_sees(self):
+        o = course_overview(CAT.courses["VP-EXCEL"], CAT, [], [promo("Long Thành -15%", amount=15, branches=["CN Long Thành"])], render)
+        self.assertEqual((o["promotions"], o["final_fee"]), ([], 1800000.0))
+
 
 class TestKnowledgeTable(unittest.TestCase):
     def test_every_course_least_covered_first(self):

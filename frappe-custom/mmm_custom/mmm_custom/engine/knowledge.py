@@ -49,7 +49,7 @@ def course_overview(course, catalog, schedules, promotions, render):
             missing.append(f"Mẫu câu trả lời {i} bị lỗi, bot sẽ không gửi được")
         faqs.append({"question": f.question, "examples": list(f.examples), "answer": f.answer, "reply": reply,
                      "error": error})
-    promos = [p for p in promotions if applicable({**p, "branches": []}, ctx["course"], None)]
+    promos = [p for p in promotions if applicable(p, ctx["course"], None)]  # what a customer anywhere is offered
     best = max((discount(p, course.fee) for p in promos), default=0)
     return {**ctx["course"], "button": course.button, "offer": course.offer, "aliases": list(course.aliases),
             "final_fee": max(course.fee - best, 0), "promotions": [p["title"] for p in promos], "faqs": faqs,
