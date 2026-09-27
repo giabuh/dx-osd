@@ -21,6 +21,10 @@ DEFAULT_SETTINGS = {
     "advisor_goal_weight": 0.6, "advisor_level_weight": 0.4, "advisor_floor": 0.5, "advisor_shortlist": 8,
     "confirm_slot_template": "Dạ ý {{ brand.you }} là {{ confirm.label }} phải không ạ?",
     "confirm_skill_template": "Dạ {{ brand.you }} muốn hỏi về {{ confirm.label }} phải không ạ?",
+    "quiz_offer_template": "Dạ để {{ brand.me }} tư vấn đúng lớp hơn, {{ brand.you }} làm thử bài test {{ quiz.subject }} "
+                           "nhỏ {{ quiz.total }} câu, chừng 1 phút thôi nhé ạ 😊 Làm xong {{ brand.me }} tặng {{ brand.you }} "
+                           "một buổi học thử miễn phí và mã ưu đãi ạ.",
+    "quiz_decline_template": "Dạ không sao ạ, khi nào tiện {{ brand.you }} cứ nhắn {{ brand.me }} làm bài test nhé ạ.",
 }
 
 

@@ -408,5 +408,46 @@
     "VP-EXCEL-NC"
    ]
   }
+ },
+ {
+  "id": "S19",
+  "title": "Bot chủ động mời làm bài test Excel",
+  "why": "Biết khóa mà chưa rõ trình độ thì bot mời làm bài test thay câu hỏi phụ; làm xong xếp đúng lớp",
+  "messages": [
+   "học excel ở dĩ an bao nhiêu tiền",
+   "mình tự học",
+   {
+    "tap": 0
+   },
+   {
+    "tap": 0
+   },
+   {
+    "tap": 1
+   },
+   {
+    "tap": 0
+   },
+   {
+    "tap": 0
+   },
+   {
+    "tap": 1
+   }
+  ],
+  "expect": {
+   "handoff": false,
+   "reply_has": [
+    "bài test Excel nhỏ 5 câu",
+    "đúng 4/5 câu"
+   ],
+   "slots": {
+    "level": "basic",
+    "course": "VP-EXCEL-NC"
+   },
+   "lead": {
+    "placement_result": "Excel: 4/5 · Biết cơ bản"
+   }
+  }
  }
 ]

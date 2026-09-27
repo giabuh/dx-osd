@@ -3,10 +3,12 @@ English carrying the Vietnamese names and aliases customers use. Keys:
     parent:<slot>  course group / area          slot:<slot>  course, branch, choice or number value
     skill:<key>    one noul per Bot Skill        intent · hotness · wants_human (D-032)
     course_faq     which FAQ of the known course the message asks (D-085)
+    level_unsure   unsure of their level, asked only while a level test can be offered (D-106)
 """
 
 from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.decide import slot_active
+from mmm_custom.engine.offers import LEVEL_UNSURE, available
 from mmm_custom.engine.state import filled
 from mmm_custom.intelligence import HOTNESS_CRITERIA, INTENTS
 
@@ -102,4 +104,7 @@ def build_questions(state, u, catalog, skills=True):
     q["hotness"] = {"type": "score", "instructions": "How close is the customer to enrolling, based on the whole chat?",
                     "criteria": HOTNESS_CRITERIA}
     q["wants_human"] = {"type": "noul", "instructions": "Does the customer ask to talk to a real person or consultant, or to be called back?"}
+    if available(state, {**state.slots, **u.fills}, catalog):  # only when a level test could be offered (D-106)
+        q[LEVEL_UNSURE] = {"type": "noul", "instructions": "Is the customer unsure of their current level, or of "
+                                                          "whether a basic or an advanced course fits them?"}
     return q

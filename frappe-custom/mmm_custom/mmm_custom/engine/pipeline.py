@@ -18,6 +18,7 @@ from mmm_custom.engine.jev import JevResult
 from mmm_custom.engine.jev_questions import MAX_HISTORY, build_questions, jev_state
 from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.log import log_row, signals
+from mmm_custom.engine.offers import track
 from mmm_custom.engine.qualify import LABELS, NEW, lead_status
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.state import value
@@ -95,7 +96,7 @@ def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0
     return combine(u, result.answers, questions, state, catalog), result
 
 
-def apply_decision(state, decision, reply, event):
+def apply_decision(state, decision, reply, event, catalog):
     state.slots = decision.slots
     state.stuck_turns = decision.stuck_turns
     state.pending_skill = reply.pending_skill or decision.pending_skill
@@ -116,6 +117,7 @@ def apply_decision(state, decision, reply, event):
         state.status = "handed_off"
     if decision.close:
         state.status = "closed"
+    state.offers = track(state.offers, decision, catalog, decision.declined)
     state.last_message_id = max(state.last_message_id, event.message_id)
     state.turns += 1
 
@@ -257,7 +259,7 @@ def run_turn(event, repo, effects, render):
         except Exception as e:  # never raise into RQ: a retry would answer twice
             turn.reply.errors.append({"type": "send_failed", "detail": str(e)[:300]})
 
-    apply_decision(state, turn.decision, turn.reply, event)
+    apply_decision(state, turn.decision, turn.reply, event, catalog)
     if turn.decision.close:
         try:
             effects.mark_spam(state.conversation_id)

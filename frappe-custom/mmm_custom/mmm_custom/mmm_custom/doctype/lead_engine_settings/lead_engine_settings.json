@@ -43,7 +43,10 @@
   "advisor_goal_weight",
   "advisor_level_weight",
   "advisor_floor",
-  "advisor_shortlist"
+  "advisor_shortlist",
+  "quiz_section",
+  "quiz_offer_template",
+  "quiz_decline_template"
  ],
  "fields": [
   {
@@ -168,11 +171,14 @@
   {"fieldname": "advisor_goal_weight", "fieldtype": "Float", "label": "Goal fit weight", "description": "Default 0.6"},
   {"fieldname": "advisor_level_weight", "fieldtype": "Float", "label": "Level fit weight", "description": "Default 0.4"},
   {"fieldname": "advisor_floor", "fieldtype": "Float", "label": "Ask goal/level below", "description": "Default 0.5"},
-  {"fieldname": "advisor_shortlist", "fieldtype": "Int", "label": "Courses scored per call", "description": "Default 8"}
+  {"fieldname": "advisor_shortlist", "fieldtype": "Int", "label": "Courses scored per call", "description": "Default 8"},
+  {"fieldname": "quiz_section", "fieldtype": "Section Break", "label": "Level test offer"},
+  {"fieldname": "quiz_offer_template", "fieldtype": "Small Text", "label": "Quiz offer template", "description": "Offers the level test once the course is known; gets quiz (subject, total). Buttons: Làm bài test · Để sau"},
+  {"fieldname": "quiz_decline_template", "fieldtype": "Small Text", "label": "Quiz declined template", "description": "Answer to the Để sau button"}
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-09-26 00:00:00.000000",
+ "modified": "2026-09-27 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Lead Engine Settings",

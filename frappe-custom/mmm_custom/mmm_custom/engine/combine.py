@@ -9,6 +9,7 @@ import copy
 
 from mmm_custom.engine.context import display
 from mmm_custom.engine.jev_questions import COURSE_FAQ, NONE, faq_course
+from mmm_custom.engine.offers import LEVEL_UNSURE
 from mmm_custom.intelligence import HOTNESS
 
 
@@ -92,6 +93,9 @@ def _signals(u, answers, questions, catalog):
     n = _noul(answers, questions, "wants_human")
     if n is not None:
         u.wants_human = round(n, 3)
+    n = _noul(answers, questions, LEVEL_UNSURE)
+    if n is not None:
+        u.level_unsure = round(n, 3)
 
 
 def _slots(u, answers, questions, catalog, state):

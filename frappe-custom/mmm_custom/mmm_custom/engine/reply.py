@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from mmm_custom.engine.actions import run_action
 from mmm_custom.engine.context import base_context, course_context
+from mmm_custom.engine import offers
 from mmm_custom.engine.jev_questions import COURSE_FAQ
 from mmm_custom.engine.render import RenderError, condition, render_text
 from mmm_custom.engine.slot_types import REGISTRY
@@ -113,6 +114,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
 
     if decision.greet:
         say(settings["greeting_template"], ctx, "greeting")
+    if decision.declined:
+        say(settings["quiz_decline_template"], ctx, "quiz_decline")
     if decision.fallback:
         say(settings["fallback_template"], ctx, "fallback")
 
@@ -159,6 +162,12 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         confirm_buttons = [{"title": CONFIRM_YES, "action": {"type": "confirm_yes", **c}},
                            {"title": CONFIRM_NO, "action": {"type": "confirm_no", **c}}]
 
+    offer_buttons = []
+    if decision.offer and not reply.ask and not reply.hold:
+        say(settings["quiz_offer_template"], {**ctx, "quiz": offers.offer_context(decision.offer, decision.slots, catalog)},
+            "quiz_offer")
+        offer_buttons = offers.buttons(decision.offer)
+
     ask_buttons = []
     ask_key = reply.ask or ("" if reply.hold else decision.ask)
     if ask_key:
@@ -167,7 +176,7 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)
 
-    for group in (confirm_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
+    for group in (confirm_buttons, offer_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
         if group:
             add_buttons(reply, group)
             break

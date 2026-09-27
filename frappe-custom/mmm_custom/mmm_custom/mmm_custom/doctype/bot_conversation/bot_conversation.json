@@ -23,7 +23,8 @@
   "answered_skills",
   "history",
   "ai_signals",
-  "jev_calls"
+  "jev_calls",
+  "quiz_offers"
  ],
  "fields": [
   {
@@ -136,10 +137,16 @@
    "fieldtype": "JSON",
    "label": "Jev calls in the last hour",
    "read_only": 1
+  },
+  {
+   "fieldname": "quiz_offers",
+   "fieldtype": "JSON",
+   "label": "Level test offers (quiz → offered/declined/started/done/reminded)",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-09-26 00:00:00.000000",
+ "modified": "2026-09-27 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Bot Conversation",

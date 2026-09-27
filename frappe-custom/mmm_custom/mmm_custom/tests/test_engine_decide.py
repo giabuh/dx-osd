@@ -97,9 +97,10 @@ class TestDecide(unittest.TestCase):
 
     def test_optional_slot_asked_once_and_dependency_respected(self):
         slots = {"course": fill("VP-EXCEL"), "branch": fill("CN Dĩ An"), "learner": {"asked": 1}}
-        d = decide(state(turns=3, slots=slots), Understanding(), CAT)
+        tested = {"excel_quiz": "declined"}  # else the level test is offered first (D-106)
+        d = decide(state(turns=3, slots=slots, offers=tested), Understanding(), CAT)
         self.assertEqual(d.ask, "preferred_shift")
-        d2 = decide(state(turns=3, slots={**slots, "learner": fill("child")}), Understanding(), CAT)
+        d2 = decide(state(turns=3, slots={**slots, "learner": fill("child")}, offers=tested), Understanding(), CAT)
         self.assertEqual(d2.ask, "learner_age")
 
     def test_focus_asks_that_slot(self):

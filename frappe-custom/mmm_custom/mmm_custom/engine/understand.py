@@ -31,6 +31,8 @@ class Understanding:
     spam: float = 0.0
     has_number: bool = False                       # the message contains digits (ages, counts)
     faq: dict = field(default_factory=dict)        # {"course", "index", "confidence"}: a course FAQ to answer
+    level_unsure: float = 0.0                      # Jev: unsure of their level / basic vs advanced (D-106)
+    declined: str = ""                             # the level quiz the customer put off ("Để sau")
 
 
 def apply_action(u, action):
@@ -59,6 +61,8 @@ def apply_action(u, action):
             u.focus = action["slot"]
     elif kind == "handoff":
         u.handoff = True
+    elif kind == "offer_decline":
+        u.declined = action["skill"]
 
 
 def _match_skills(folded, catalog, u):
