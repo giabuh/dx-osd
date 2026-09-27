@@ -39,6 +39,8 @@ class TestCustomerDashboard(unittest.TestCase):
         counts = {s["key"]: s["count"] for s in self.out["sources"]}
         self.assertEqual((counts["facebook_messenger"], counts["facebook_lead_ads"], counts["zalo"], counts[""]), (2, 1, 0, 1))
         self.assertEqual(next(s for s in self.out["sources"] if s["key"] == "tiktok")["status"], "planned")
+        messenger = next(s for s in self.out["sources"] if s["key"] == "facebook_messenger")
+        self.assertEqual(messenger["values"], ["Facebook Messenger", "Messenger", "Messenger Bot"])  # list filter
 
     def test_groups_branches_and_hotness(self):
         self.assertEqual(self.out["groups"][0], {"name": "Tin học văn phòng", "count": 2})

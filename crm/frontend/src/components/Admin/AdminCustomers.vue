@@ -12,13 +12,17 @@
     <ErrorMessage :message="error" />
 
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-      <div
+      <component
+        :is="card.open ? 'button' : 'div'"
         v-for="card in cards"
         :key="card.title"
-        class="overflow-hidden rounded shadow"
+        class="overflow-hidden rounded text-left shadow"
+        :class="card.open ? 'hover:shadow-md' : ''"
+        :title="card.open ? 'Mở danh sách khách này' : undefined"
+        @click="card.open?.()"
       >
         <NumberChart :config="card" />
-      </div>
+      </component>
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -39,11 +43,16 @@
         </div>
       </div>
       <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div
+        <component
+          :is="source.count ? 'button' : 'div'"
           v-for="source in data?.sources || []"
           :key="source.key"
-          class="flex flex-col gap-1 rounded border border-outline-gray-1 p-3"
-          :class="source.status === 'planned' ? 'bg-surface-gray-1' : ''"
+          class="flex flex-col gap-1 rounded border border-outline-gray-1 p-3 text-left"
+          :class="[
+            source.status === 'planned' ? 'bg-surface-gray-1' : '',
+            source.count ? 'hover:bg-surface-gray-1' : '',
+          ]"
+          @click="source.count && openSource(source)"
         >
           <div class="flex items-center justify-between gap-2">
             <span class="truncate text-base-medium text-ink-gray-8">
@@ -58,7 +67,7 @@
             {{ source.status === 'planned' ? '—' : source.count }}
           </div>
           <div class="text-p-sm text-ink-gray-5">{{ source.how }}</div>
-        </div>
+        </component>
       </div>
     </div>
 
@@ -87,6 +96,7 @@
         row-key="user"
         :options="{
           selectable: false,
+          onRowClick: (row) => openLeads({ lead_owner: row.user }),
           emptyState: {
             title: 'Chưa có khách được giao',
             description: 'Khi bot chuyển khách, tư vấn viên sẽ hiện ở đây',
@@ -167,6 +177,9 @@ import {
   Select,
 } from 'frappe-ui'
 import { computed, onActivated, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const STATUS = {
   live: { label: 'Đang chạy', theme: 'green' },
@@ -186,15 +199,54 @@ const days = ref('30')
 const data = ref(null)
 const error = ref('')
 
+// Every number opens the same customers in the CRM lists (spec 2026-09-27-one-customer-record, B1):
+// the dashboard and the Leads list read the same CRM Lead rows.
+const since = computed(() => {
+  const day = new Date()
+  day.setDate(day.getDate() - Number(days.value))
+  return day.toISOString().slice(0, 10)
+})
+
+function openList(name, filters) {
+  router.push({
+    name,
+    params: { viewType: 'list' },
+    query: {
+      filters: JSON.stringify({ creation: ['>=', since.value], ...filters }),
+    },
+  })
+}
+const openLeads = (filters = {}) => openList('Leads', filters)
+
+function openSource(source) {
+  openLeads({ source: ['in', source.values || []] })
+}
+
 const cards = computed(() => {
   const t = data.value?.totals || {}
   return [
-    { title: 'Lead mới', value: t.leads ?? 0 },
-    { title: 'Có số điện thoại', value: t.with_phone ?? 0 },
-    { title: 'Khách tiềm năng', value: t.qualified ?? 0 },
-    { title: 'Khách nóng', value: t.hot ?? 0 },
+    { title: 'Lead mới', value: t.leads ?? 0, open: () => openLeads() },
+    {
+      title: 'Có số điện thoại',
+      value: t.with_phone ?? 0,
+      open: () => openLeads({ mobile_no: ['is', 'set'] }),
+    },
+    {
+      title: 'Khách tiềm năng',
+      value: t.qualified ?? 0,
+      open: () => openLeads({ status: 'Qualified' }),
+    },
+    {
+      title: 'Khách nóng',
+      value: t.hot ?? 0,
+      open: () => openLeads({ ai_hotness: 'hot' }),
+    },
     { title: 'Khách doanh nghiệp', value: t.b2b ?? 0 },
-    { title: 'Đã ghi danh', value: t.converted ?? 0 },
+    {
+      title: 'Đã ghi danh',
+      value: t.converted ?? 0,
+      open: () => openList('Deals', {}),
+    },
   ]
 })
 
