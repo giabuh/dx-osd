@@ -94,12 +94,16 @@ def _signals(u, answers, questions, catalog):
         u.wants_human = round(n, 3)
 
 
-def _slots(u, answers, questions, catalog):
+def _slots(u, answers, questions, catalog, state):
     for slot in catalog.slots:
         choice, p = _choice(answers, questions, f"slot:{slot.key}")
         if choice is None:
             continue
         value = int(choice) if slot.type == "number" else choice
+        if slot.depends_on:
+            dep = (u.fills.get(slot.depends_on[0]) or state.slots.get(slot.depends_on[0]) or {}).get("value")
+            if dep != slot.depends_on[1]:
+                continue  # e.g. an age only counts once the learner is a child
         act, confirm = slot_limits(slot, catalog.settings)
         candidate = {"kind": "slot", "slot": slot.key, "value": value, "label": display(slot, value, catalog)}
         keyword = u.fills.get(slot.key)
@@ -135,7 +139,7 @@ def combine(u, answers, questions, state, catalog):
         return u  # buttons (and typed answers to a confirmation) are never overridden
     out = copy.deepcopy(u)
     answers = answers if isinstance(answers, dict) else {}
-    _slots(out, answers, questions, catalog)
+    _slots(out, answers, questions, catalog, state)
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)
     _signals(out, answers, questions, catalog)

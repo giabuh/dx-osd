@@ -56,7 +56,11 @@ def build_questions(state, u, catalog, skills=True):
     for slot in catalog.slots:
         if slot.on_demand and state.pending.get("slot") != slot.key:
             continue
-        if not slot_active(slot, {**state.slots, **u.fills}) or (filled(state.slots, slot.key) and u.focus != slot.key):
+        known = {**state.slots, **u.fills}
+        # a number said together with a still-unknown dependency ("con mình 8 tuổi"): ask now, combine checks it
+        early = (slot.type == "number" and slot.depends_on and not filled(known, slot.depends_on[0])
+                 and any(w.isdigit() for w in u.unmatched))
+        if not (slot_active(slot, known) or early) or (filled(state.slots, slot.key) and u.focus != slot.key):
             continue  # D-075: open before this message; this turn's keyword matches are still cross-checked
         if slot.type == "catalog":
             q.update(_catalog_questions(slot, state, u, catalog))

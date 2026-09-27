@@ -99,6 +99,14 @@ class TestSlots(unittest.TestCase):
         state = ConversationState("1", slots={"learner": fill("child")})
         self.assertEqual(run({"slot:learner_age": pick("9", 0.9)}, state=state).fills["learner_age"]["value"], 9)
 
+    def test_age_given_with_a_jev_learner_needs_that_learner(self):
+        # "con mình 8 tuổi": learner and age arrive in the same Jev call; the age only counts for a child
+        u = Understanding(unmatched=["8"])
+        kid = run({"slot:learner": pick("child", 0.95), "slot:learner_age": pick("8", 0.9)}, u)
+        self.assertEqual(kid.fills["learner_age"]["value"], 8)
+        adult = run({"slot:learner": pick("self", 0.95), "slot:learner_age": pick("8", 0.9)}, u)
+        self.assertNotIn("learner_age", adult.fills)
+
     def test_only_one_confirmation_per_turn_in_slot_order(self):
         out = run({"slot:course": pick("VKT-REVIT", 0.7), "slot:branch": pick("CN Dĩ An", 0.7)})
         self.assertEqual(out.confirm["slot"], "course")

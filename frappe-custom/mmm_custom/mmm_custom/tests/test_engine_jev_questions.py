@@ -56,6 +56,10 @@ class TestQuestions(unittest.TestCase):
         q = build_questions(ConversationState("1"), Understanding(fills={"learner": fill("child")}), CAT)
         self.assertIn("slot:learner_age", q)
 
+    def test_number_slot_asked_with_a_number_while_its_dependency_is_open(self):
+        self.assertIn("slot:learner_age", build_questions(ConversationState("1"), Understanding(unmatched=["8"]), CAT))
+        self.assertNotIn("slot:learner_age", build_questions(ConversationState("1"), Understanding(unmatched=["robot"]), CAT))
+
     def test_skills_can_be_left_out(self):
         self.assertFalse(any(k.startswith("skill:") for k in build_questions(ConversationState("1"), Understanding(), CAT, skills=False)))
 
