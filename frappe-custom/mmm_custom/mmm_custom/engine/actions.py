@@ -75,7 +75,7 @@ def applicable(promo, course, branch):
             and (not promo["branches"] or branch in promo["branches"]))
 
 
-def _discount(promo, fee):
+def discount(promo, fee):
     if promo["discount_type"] == "Percent":
         return fee * float(promo["discount_value"]) / 100
     return float(promo["discount_value"])
@@ -94,7 +94,7 @@ def fee_quote(a):
     if not course:
         return {}
     promos = [p for p in a.data.active_promotions(a.today) if applicable(p, course, a.ctx["branch"].get("name"))]
-    best = max((_discount(p, course["fee"]) for p in promos), default=0)
+    best = max((discount(p, course["fee"]) for p in promos), default=0)
     return {"promotions": [{"title": p["title"], "discount": _label(p)} for p in promos],
             "final_fee": max(course["fee"] - best, 0)}
 

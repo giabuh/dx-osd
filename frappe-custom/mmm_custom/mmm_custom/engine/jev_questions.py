@@ -20,6 +20,11 @@ def _named(name, aliases=()):
     return f"{name} (customers also write: {', '.join(aliases)})" if aliases else name
 
 
+def course_criterion(c):
+    """How Jev reads one course among the choices of the course question."""
+    return f"{_named(c.name, c.aliases)}; group: {c.group}; for: {c.audience}"
+
+
 def _choice(instructions, criteria):
     return {"type": "choice", "instructions": instructions, "criteria": {**criteria, NONE: NONE_TEXT}}
 
@@ -45,7 +50,7 @@ def _catalog_questions(slot, state, u, catalog):
     parent = u.parents.get(slot.key) or entry.get("parent") or ""
     if slot.source == "course":
         parents = {g.name: _named(g.name, g.aliases) for g in catalog.groups.values()}
-        leaves = {c.code: f"{_named(c.name, c.aliases)}; group: {c.group}; for: {c.audience}" for c in catalog.courses.values()}
+        leaves = {c.code: course_criterion(c) for c in catalog.courses.values()}
         what, parent_what = "course", "course group (field of study)"
     else:
         parents = {a.name: _named(a.name, a.aliases) for a in catalog.areas.values()}
