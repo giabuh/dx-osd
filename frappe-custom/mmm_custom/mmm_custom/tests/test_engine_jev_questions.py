@@ -51,6 +51,11 @@ class TestQuestions(unittest.TestCase):
         self.assertEqual(len(q["slot:learner_age"]["criteria"]), 100)
         self.assertEqual(q["slot:learner_age"]["criteria"]["9"], "9")
 
+    def test_number_slot_asked_when_its_dependency_is_filled_in_this_message(self):
+        # "con mình 8 tuổi …": learner=child comes from keywords in the same message, so Jev reads the age
+        q = build_questions(ConversationState("1"), Understanding(fills={"learner": fill("child")}), CAT)
+        self.assertIn("slot:learner_age", q)
+
     def test_skills_can_be_left_out(self):
         self.assertFalse(any(k.startswith("skill:") for k in build_questions(ConversationState("1"), Understanding(), CAT, skills=False)))
 

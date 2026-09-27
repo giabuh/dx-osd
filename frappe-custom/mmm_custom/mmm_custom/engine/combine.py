@@ -55,9 +55,9 @@ def _skills(u, answers, questions, catalog):
         return {"kind": "skill", "skill": key, "label": catalog.skills[key].title}
 
     kept = []
-    for key in u.skills:
+    for key in u.skills:  # the customer typed the alias: it lifts Jev's score one band (D-063)
         n = _noul(answers, questions, f"skill:{key}")
-        if n is None or n >= act:
+        if n is None or n >= confirm:
             kept.append(key)
         else:
             ask_confirm(u, candidate(key))

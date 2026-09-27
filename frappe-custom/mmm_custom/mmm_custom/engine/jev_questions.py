@@ -56,7 +56,7 @@ def build_questions(state, u, catalog, skills=True):
     for slot in catalog.slots:
         if slot.on_demand and state.pending.get("slot") != slot.key:
             continue
-        if not slot_active(slot, state.slots) or (filled(state.slots, slot.key) and u.focus != slot.key):
+        if not slot_active(slot, {**state.slots, **u.fills}) or (filled(state.slots, slot.key) and u.focus != slot.key):
             continue  # D-075: open before this message; this turn's keyword matches are still cross-checked
         if slot.type == "catalog":
             q.update(_catalog_questions(slot, state, u, catalog))

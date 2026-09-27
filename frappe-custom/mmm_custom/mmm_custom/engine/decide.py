@@ -152,12 +152,15 @@ def decide(state, u, catalog):
             return Decision("answer", **common, reason=f"Đã chuyển tư vấn viên; trả lời: {answered}")
         return Decision("silent", **common, reason="Đã chuyển tư vấn viên, chờ tư vấn viên nhắn")
 
+    confirm = u.confirm
+    if confirm.get("kind") == "skill" and (new or changed or skills or waiting):
+        confirm = {}  # the turn already answers or asks something: a "did you mean…?" on top is noise
     why = handoff_reason(u, skills, slots, stuck, catalog)
-    if why and (why in IMMEDIATE or not u.confirm):
+    if why and (why in IMMEDIATE or not confirm):
         return Decision("handoff", **common, handoff_reason=why, reason=HANDOFF_REASONS[why])
-    if u.confirm:
-        reason = f"Xác nhận: {u.confirm['label']}" + (f"; trả lời: {answered}" if skills else "")
-        return Decision("confirm", **common, confirm=u.confirm, greet=greet, reason=reason)
+    if confirm:
+        reason = f"Xác nhận: {confirm['label']}" + (f"; trả lời: {answered}" if skills else "")
+        return Decision("confirm", **common, confirm=confirm, greet=greet, reason=reason)
 
     first = ([u.focus] if u.focus else []) + (list(catalog.skills[waiting].params) if waiting else [])
     ask = next_slot(slots, catalog, first)

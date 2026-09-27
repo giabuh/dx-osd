@@ -56,6 +56,18 @@ class TestConfirmDecision(unittest.TestCase):
         d = decide(ConversationState("1", turns=1), Understanding(confirm=CONFIRM, skills=["hotline"]), CAT)
         self.assertEqual((d.type, d.skills), ("confirm", ["hotline"]))
 
+    def test_skill_confirmation_is_dropped_when_the_turn_already_made_progress(self):
+        c = {"kind": "skill", "skill": "next_course", "label": "học tiếp khóa nào"}
+        d = decide(ConversationState("1", turns=1), Understanding(confirm=c, skills=["course_advisor"],
+                                                                 fills={"learner": fill("self")}), CAT)
+        self.assertEqual((d.type, d.confirm), ("answer", {}))
+        d = decide(ConversationState("1", turns=1), Understanding(confirm=c, fills={"branch": fill("CN Dĩ An")}), CAT)
+        self.assertEqual(d.type, "ask_slot")
+
+    def test_skill_confirmation_is_kept_when_nothing_else_was_understood(self):
+        c = {"kind": "skill", "skill": "fee_quote", "label": "học phí"}
+        self.assertEqual(decide(ConversationState("1", turns=1), Understanding(confirm=c), CAT).type, "confirm")
+
     def test_handoff_button_beats_a_confirmation(self):
         d = decide(ConversationState("1", turns=1), Understanding(confirm=CONFIRM, handoff=True), CAT)
         self.assertEqual(d.type, "handoff")

@@ -127,6 +127,10 @@ class TestSkills(unittest.TestCase):
         self.assertEqual(run({"skill:hotline": yes(0.9)}, Understanding(skills=["hotline"])).skills, ["hotline"])
         self.assertEqual(run({}, Understanding(skills=["hotline"])).skills, ["hotline"])
 
+    def test_alias_match_in_the_confirm_band_is_answered(self):
+        # "autocad hoc phi bn": the customer typed the alias; a medium Jev score must not turn it into a question
+        self.assertEqual(run({"skill:fee_quote": yes(0.7)}, Understanding(skills=["fee_quote"])).skills, ["fee_quote"])
+
     def test_alias_match_with_a_low_score_is_lifted_to_confirm(self):
         out = run({"skill:hotline": yes(0.1)}, Understanding(skills=["hotline"]))
         self.assertEqual((out.skills, out.confirm["skill"]), ([], "hotline"))
