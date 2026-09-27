@@ -1,0 +1,167 @@
+[
+ {
+  "id": "S01",
+  "title": "Khách nói đủ chi nhánh + khóa, để lại SĐT",
+  "why": "Luồng chuẩn: về đúng chi nhánh, đúng người chuyên nhóm khóa",
+  "messages": ["Mình ở Bình Thạnh muốn học Excel", "0901234567"],
+  "expect": {
+   "handoff": true,
+   "team": "CN Bình Thạnh",
+   "consultant": {"branch": "CN Bình Thạnh", "specialty": "Tin học văn phòng"},
+   "labels": ["tin-hoc-van-phong", "cn-binh-thanh"],
+   "lead": {"territory": "CN Bình Thạnh", "mobile_no": "+84901234567", "status": "Qualified"},
+   "courses": ["VP-EXCEL"]
+  }
+ },
+ {
+  "id": "S02",
+  "title": "Hỏi AutoCAD, bot hỏi chi nhánh, khách chọn Thủ Đức",
+  "why": "Bot phải hỏi đủ thông tin còn thiếu rồi mới giao",
+  "messages": ["học autocad", "Thủ Đức", "0987654321"],
+  "expect": {
+   "handoff": true,
+   "consultant": {"branch": "CN Thủ Đức", "specialty": "Vẽ kỹ thuật"},
+   "lead": {"territory": "CN Thủ Đức", "status": "Qualified"},
+   "courses": ["VKT-CAD2D"]
+  }
+ },
+ {
+  "id": "S03",
+  "title": "Phụ huynh cho bé học Scratch ở Biên Hòa",
+  "why": "Khóa trẻ em về người chuyên Tin học trẻ em; ghi nhận người học là con em",
+  "messages": ["cho bé nhà mình học Scratch ở Biên Hòa", "0912345678"],
+  "expect": {
+   "handoff": true,
+   "consultant": {"branch": "CN Biên Hòa", "specialty": "Tin học trẻ em"},
+   "slots": {"learner": "child"},
+   "lead": {"learner_type": "Con em"},
+   "courses": ["TE-SCRATCH"]
+  }
+ },
+ {
+  "id": "S04",
+  "title": "Thi chứng chỉ MOS Excel ở Quận 7",
+  "why": "Nhóm mới Tin học quốc tế được nhận ra và định tuyến theo chuyên môn",
+  "messages": ["mình cần thi chứng chỉ MOS Excel, học ở Quận 7", "0934567890"],
+  "expect": {
+   "handoff": true,
+   "consultant": {"branch": "CN Quận 7", "specialty": "Tin học quốc tế"},
+   "labels": ["tin-hoc-quoc-te"],
+   "courses": ["QT-MOS-EXCEL"]
+  }
+ },
+ {
+  "id": "S05",
+  "title": "Khách chỉ đòi gặp người, chưa biết chi nhánh",
+  "why": "Không rõ chi nhánh → Tổng đài; câu nói không được hiểu nhầm thành người học",
+  "messages": ["cho gặp nhân viên tư vấn"],
+  "expect": {
+   "handoff": true,
+   "team": "Tổng đài",
+   "consultant": {"central": true},
+   "slots_empty": ["learner"]
+  }
+ },
+ {
+  "id": "S06",
+  "title": "Doanh nghiệp xin báo giá đào tạo Excel cho nhân viên",
+  "why": "Khách B2B về team Doanh nghiệp, không báo giá lẻ, không gắn gói lẻ (lỗi u057)",
+  "messages": ["Công ty mình cần đào tạo Excel cho 20 nhân viên, báo giá giúp"],
+  "expect": {
+   "handoff": true,
+   "team": "Doanh nghiệp (B2B)",
+   "consultant": {"handles_b2b": true},
+   "labels": ["b2b"],
+   "lead": {"learner_type": "Nhân viên công ty"},
+   "no_courses": ["VP-TRONGOI"],
+   "reply_lacks": ["1.800.000đ"]
+  }
+ },
+ {
+  "id": "S07",
+  "title": "Khách chọn nút “Cho công ty” giữa chừng",
+  "why": "Khách B2B nhận ra qua nút bấm cũng về team Doanh nghiệp",
+  "messages": ["học excel", "Cho công ty"],
+  "expect": {
+   "handoff": true,
+   "team": "Doanh nghiệp (B2B)",
+   "consultant": {"handles_b2b": true}
+  }
+ },
+ {
+  "id": "S08",
+  "title": "Khách nóng ở Bình Thạnh",
+  "why": "Jev đọc khách sắp đăng ký → trưởng nhóm chi nhánh",
+  "messages": ["Mình ở Bình Thạnh, đăng ký Excel luôn hôm nay, gọi mình 0901111222"],
+  "signals": {"hotness": 2.0, "confidence": 0.9},
+  "expect": {
+   "handoff": true,
+   "consultant": {"branch": "CN Bình Thạnh", "level": "Team Lead"},
+   "labels": ["hot"]
+  }
+ },
+ {
+  "id": "S09",
+  "title": "Khách cũ quay lại",
+  "why": "Khách đã có Lead → giao lại người đang phụ trách, không chia lại",
+  "setup": {"returning_owner_branch": "CN Quận 6"},
+  "messages": ["Chào em, mình muốn học thêm Photoshop ở Bình Thạnh", "0909876543"],
+  "expect": {
+   "handoff": true,
+   "consultant": {"branch": "CN Quận 6"}
+  }
+ },
+ {
+  "id": "S10",
+  "title": "Hỏi học phí Photoshop",
+  "why": "Câu hỏi thông tin: bot tự trả lời từ dữ liệu, chưa chuyển người",
+  "messages": ["học phí photoshop cơ bản bao nhiêu vậy"],
+  "expect": {
+   "handoff": false,
+   "reply_has": ["1.800.000đ"]
+  }
+ },
+ {
+  "id": "S11",
+  "title": "Khách sửa lại khóa học",
+  "why": "“Không phải X, Y” thay khóa cũ bằng khóa mới",
+  "messages": ["học photoshop", "không phải photoshop, mình học illustrator"],
+  "expect": {
+   "handoff": false,
+   "slots": {"course": "DH-AI"}
+  }
+ },
+ {
+  "id": "S12",
+  "title": "Tin nhắn rác",
+  "why": "Spam → đóng hội thoại, không tạo Lead",
+  "messages": ["kiếm tiền online 5 triệu/ngày, inbox ngay"],
+  "signals": {"intent": "spam", "confidence": 0.95},
+  "expect": {
+   "handoff": false,
+   "closed": true,
+   "lead_written": false
+  }
+ },
+ {
+  "id": "S13",
+  "title": "Học ở Thủ Dầu Một, khóa Kế toán",
+  "why": "Chi nhánh ngoài TP.HCM vẫn về đúng người chuyên Kế toán",
+  "messages": ["mình ở Thủ Dầu Một muốn học kế toán tổng hợp", "0971234567"],
+  "expect": {
+   "handoff": true,
+   "consultant": {"branch": "CN Thủ Dầu Một", "specialty": "Kế toán"},
+   "courses": ["KT-TH"]
+  }
+ },
+ {
+  "id": "S14",
+  "title": "Học viên Excel hỏi học tiếp gì",
+  "why": "Gợi ý lộ trình: khóa tiếp theo lấy từ dữ liệu khóa học",
+  "messages": ["mình học xong Excel cơ bản rồi, nên học tiếp khóa gì"],
+  "expect": {
+   "handoff": false,
+   "reply_has": ["Excel nâng cao"]
+  }
+ }
+]

@@ -1650,7 +1650,7 @@
   "duration_text": "3–4 tuần",
   "certificate": "MOS Word (Microsoft)",
   "offer": "all",
-  "aliases": "mos word, chung chi word",
+  "aliases": "mos word, chung chi word, chung chi mos word, thi mos word",
   "next_courses": [
    "VP-MOS"
   ],
@@ -1686,7 +1686,7 @@
   "duration_text": "3–4 tuần",
   "certificate": "MOS Excel (Microsoft)",
   "offer": "all",
-  "aliases": "mos excel, chung chi excel",
+  "aliases": "mos excel, chung chi excel, chung chi mos excel, thi mos excel",
   "next_courses": [
    "VP-MOS"
   ],
@@ -1722,7 +1722,7 @@
   "duration_text": "3–4 tuần",
   "certificate": "MOS PowerPoint (Microsoft)",
   "offer": "all",
-  "aliases": "mos powerpoint, mos ppt, chung chi powerpoint",
+  "aliases": "mos powerpoint, mos ppt, chung chi powerpoint, chung chi mos powerpoint, thi mos powerpoint, chung chi mos ppt, thi mos ppt",
   "next_courses": [
    "VP-MOS"
   ],
