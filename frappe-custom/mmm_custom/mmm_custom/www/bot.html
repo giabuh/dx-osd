@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="/assets/mmm_custom/images/bot.svg" type="image/svg+xml">
   <meta name="csrf-token" content="{{ csrf_token | e }}">
-  <title>Bot Sao Việt</title>
+  <title>Quản trị</title>
   <style>
     :root { color-scheme: light; font: 15px/1.5 system-ui, -apple-system, sans-serif; color: #1e293b; background: #f3f6fb; }
     * { box-sizing: border-box; }
@@ -19,7 +19,6 @@
     .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 18px; }
     .brand img { width: 38px; height: 38px; }
     h1 { font-size: 19px; margin: 0; line-height: 1.2; }
-    .eyebrow { color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
     .nav-label { color: #8290a5; font-size: 11px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; margin: 18px 10px 6px; }
     .side a, .side button { display: block; width: 100%; text-align: left; border: 0; background: none; color: #334155; padding: 8px 10px; border-radius: 8px; font-weight: 600; }
     .side a { font-weight: 500; color: #475569; }
@@ -119,7 +118,7 @@
 <body>
   <div class="shell">
     <nav class="side" aria-label="Các mục">
-      <div class="brand"><img src="/assets/mmm_custom/images/bot.svg" alt=""><div><div class="eyebrow">Quản trị</div><h1>Bot Sao Việt</h1></div></div>
+      <div class="brand"><img src="/assets/mmm_custom/images/bot.svg" alt=""><h1>Quản trị</h1></div>
       <button type="button" data-tab="overview" aria-selected="true">Tổng quan</button>
       <button type="button" data-tab="branches" aria-selected="false">Chi nhánh</button>
       <button type="button" data-tab="staff" aria-selected="false">Nhân viên</button>
