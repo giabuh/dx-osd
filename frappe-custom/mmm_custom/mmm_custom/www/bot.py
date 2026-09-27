@@ -1,8 +1,12 @@
 """Standalone bot administration page."""
 
+from pathlib import Path
+
 import frappe
 
 from mmm_custom.desk import can_open_bot
+
+SCRIPT = Path(__file__).resolve().parent.parent / "public" / "js" / "bot_page.js"
 
 
 def get_context(context):
@@ -14,3 +18,4 @@ def get_context(context):
     context.no_cache = 1
     context.csrf_token = frappe.sessions.get_csrf_token()
     context.chatwoot_url = frappe.conf.get("chatwoot_base_url") or "http://127.0.0.1:3000"
+    context.asset_version = int(SCRIPT.stat().st_mtime)  # assets are cached 12 h; a changed file gets a new URL

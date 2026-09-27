@@ -54,6 +54,12 @@ class TestBotPage(unittest.TestCase):
         self.assertEqual(context.csrf_token, "csrf-test")
         self.assertEqual(context.chatwoot_url, "http://127.0.0.1:3000")
         self.assertEqual(context.no_cache, 1)
+        script = Path(__file__).resolve().parent.parent / "public" / "js" / "bot_page.js"
+        self.assertEqual(context.asset_version, int(script.stat().st_mtime))  # a new file busts the 12 h asset cache
+
+    def test_page_loads_the_script_with_its_version(self):
+        html = (PAGE.parent / "bot.html").read_text(encoding="utf-8")
+        self.assertIn('src="/assets/mmm_custom/js/bot_page.js?v={{ asset_version }}"', html)
 
 
 if __name__ == "__main__":
