@@ -24,10 +24,10 @@ class TestDemoData(unittest.TestCase):
     def test_counts(self):
         self.assertEqual(len(self.areas["areas"]), 4)
         self.assertEqual(len(self.branches), 13)
-        self.assertEqual(len(self.groups), 8)
-        self.assertEqual(len(self.courses), 46)
+        self.assertEqual(len(self.groups), 9)
+        self.assertEqual(len(self.courses), 51)
         self.assertEqual(len(self.consultants), 44)
-        self.assertEqual(len(self.promotions), 10)
+        self.assertEqual(len(self.promotions), 11)
         self.assertEqual(len(self.slots), 9)
         self.assertEqual(len(self.skills), 30)
 

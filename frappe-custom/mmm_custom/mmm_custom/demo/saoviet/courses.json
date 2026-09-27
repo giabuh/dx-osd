@@ -87,7 +87,7 @@
   "aliases": "excel, bang tinh",
   "next_courses": [
    "VP-EXCEL-NC",
-   "VP-MOS"
+   "QT-MOS-EXCEL"
   ],
   "weekdays": "T2, T4, T6",
   "shifts": [
@@ -229,9 +229,9 @@
  },
  {
   "product_code": "VP-MOS",
-  "product_name": "Luyện thi MOS quốc tế",
-  "button_label": "Chứng chỉ MOS",
-  "course_group": "Tin học văn phòng",
+  "product_name": "Luyện thi MOS trọn bộ",
+  "button_label": "MOS trọn bộ",
+  "course_group": "Tin học quốc tế",
   "audience": "Người đi làm",
   "min_age": 15,
   "max_age": 60,
@@ -239,7 +239,7 @@
   "duration_text": "1,5–2 tháng",
   "certificate": "MOS (Microsoft)",
   "offer": "all",
-  "aliases": "mos, chung chi mos",
+  "aliases": "mos, chung chi mos, mos tron bo, mos word excel powerpoint",
   "next_courses": [],
   "weekdays": "T2, T4, T6",
   "shifts": [
@@ -265,7 +265,7 @@
   "product_code": "VP-IC3",
   "product_name": "Luyện thi IC3",
   "button_label": "Chứng chỉ IC3",
-  "course_group": "Tin học văn phòng",
+  "course_group": "Tin học quốc tế",
   "audience": "Học sinh – Sinh viên",
   "min_age": 15,
   "max_age": 60,
@@ -303,12 +303,13 @@
   "audience": "Người đi làm",
   "min_age": 15,
   "max_age": 60,
-  "standard_rate": 3900000,
+  "standard_rate": 1950000,
   "duration_text": "2–3 tháng",
   "certificate": "",
   "offer": "all",
   "aliases": "tron goi van phong, word excel powerpoint",
   "next_courses": [
+   "QT-MOS-EXCEL",
    "VP-MOS"
   ],
   "weekdays": "T2, T4, T6",
@@ -1634,6 +1635,184 @@
     "question": "Cần biết lập trình để học n8n không?",
     "examples": "cần biết code\nkhông biết lập trình",
     "answer": "Dạ không cần ạ, n8n kéo thả là chính, biết thêm chút logic sẽ làm được quy trình phức tạp hơn ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "QT-MOS-WORD",
+  "product_name": "Luyện thi MOS Word",
+  "button_label": "MOS Word",
+  "course_group": "Tin học quốc tế",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1500000,
+  "duration_text": "3–4 tuần",
+  "certificate": "MOS Word (Microsoft)",
+  "offer": "all",
+  "aliases": "mos word, chung chi word",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Luyện thi riêng môn MOS Word của Microsoft theo đề thi thật trên phần mềm mô phỏng, phù hợp người cần một chứng chỉ Word cho hồ sơ xin việc hoặc chuẩn đầu ra.</p>",
+  "syllabus": "Định dạng văn bản chuyên nghiệp\nMục lục, tham chiếu, trộn thư\nLuyện đề theo cấu trúc bài thi\nThi thử và chữa lỗi thường gặp",
+  "faqs": [
+   {
+    "question": "Thi riêng MOS Word có được cấp chứng chỉ không?",
+    "examples": "thi mỗi word được không\nchỉ cần chứng chỉ word\nthi lẻ một môn",
+    "answer": "Dạ được ạ. Mỗi môn MOS là một chứng chỉ riêng do Microsoft cấp, {{ brand.you }} thi đậu Word là có chứng chỉ Word ạ."
+   },
+   {
+    "question": "Thi rớt thì sao?",
+    "examples": "thi trượt\nrớt có được học lại không\nkhông đậu thì sao",
+    "answer": "Dạ trung tâm cho ôn lại miễn phí đến khi {{ brand.you }} tự tin thi lại ạ; lệ phí thi lại tính theo đơn vị tổ chức thi ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "QT-MOS-EXCEL",
+  "product_name": "Luyện thi MOS Excel",
+  "button_label": "MOS Excel",
+  "course_group": "Tin học quốc tế",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1700000,
+  "duration_text": "3–4 tuần",
+  "certificate": "MOS Excel (Microsoft)",
+  "offer": "all",
+  "aliases": "mos excel, chung chi excel",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Luyện thi riêng môn MOS Excel của Microsoft theo đề thi thật trên phần mềm mô phỏng, phù hợp người cần một chứng chỉ Excel cho hồ sơ xin việc hoặc chuẩn đầu ra.</p>",
+  "syllabus": "Hàm và công thức theo đề thi\nBảng, biểu đồ, Pivot Table\nLuyện đề theo cấu trúc bài thi\nThi thử và chữa lỗi thường gặp",
+  "faqs": [
+   {
+    "question": "Thi riêng MOS Excel có được cấp chứng chỉ không?",
+    "examples": "thi mỗi excel được không\nchỉ cần chứng chỉ excel\nthi lẻ một môn",
+    "answer": "Dạ được ạ. Mỗi môn MOS là một chứng chỉ riêng do Microsoft cấp, {{ brand.you }} thi đậu Excel là có chứng chỉ Excel ạ."
+   },
+   {
+    "question": "Thi rớt thì sao?",
+    "examples": "thi trượt\nrớt có được học lại không\nkhông đậu thì sao",
+    "answer": "Dạ trung tâm cho ôn lại miễn phí đến khi {{ brand.you }} tự tin thi lại ạ; lệ phí thi lại tính theo đơn vị tổ chức thi ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "QT-MOS-PPT",
+  "product_name": "Luyện thi MOS PowerPoint",
+  "button_label": "MOS PowerPoint",
+  "course_group": "Tin học quốc tế",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1300000,
+  "duration_text": "3–4 tuần",
+  "certificate": "MOS PowerPoint (Microsoft)",
+  "offer": "all",
+  "aliases": "mos powerpoint, mos ppt, chung chi powerpoint",
+  "next_courses": [
+   "VP-MOS"
+  ],
+  "weekdays": "T2, T4, T6",
+  "shifts": [
+   "evening",
+   "morning"
+  ],
+  "description": "<p>Luyện thi riêng môn MOS PowerPoint của Microsoft theo đề thi thật trên phần mềm mô phỏng, phù hợp người cần một chứng chỉ PowerPoint cho hồ sơ xin việc hoặc chuẩn đầu ra.</p>",
+  "syllabus": "Thiết kế slide, bố cục, hiệu ứng\nTrình chiếu và chia sẻ\nLuyện đề theo cấu trúc bài thi\nThi thử và chữa lỗi thường gặp",
+  "faqs": [
+   {
+    "question": "Thi riêng MOS PowerPoint có được cấp chứng chỉ không?",
+    "examples": "thi mỗi powerpoint được không\nchỉ cần chứng chỉ powerpoint\nthi lẻ một môn",
+    "answer": "Dạ được ạ. Mỗi môn MOS là một chứng chỉ riêng do Microsoft cấp, {{ brand.you }} thi đậu PowerPoint là có chứng chỉ PowerPoint ạ."
+   },
+   {
+    "question": "Thi rớt thì sao?",
+    "examples": "thi trượt\nrớt có được học lại không\nkhông đậu thì sao",
+    "answer": "Dạ trung tâm cho ôn lại miễn phí đến khi {{ brand.you }} tự tin thi lại ạ; lệ phí thi lại tính theo đơn vị tổ chức thi ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "DH-ID",
+  "product_name": "InDesign dàn trang",
+  "button_label": "InDesign",
+  "course_group": "Thiết kế đồ họa",
+  "audience": "Người đi làm",
+  "min_age": 15,
+  "max_age": 60,
+  "standard_rate": 1900000,
+  "duration_text": "1 tháng",
+  "certificate": "",
+  "offer": "all",
+  "aliases": "indesign, in design, dan trang",
+  "next_courses": [],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Adobe InDesign dàn trang sách, tạp chí, catalogue, profile công ty và ấn phẩm nhiều trang, chuẩn file in.</p>",
+  "syllabus": "Giao diện, trang mẫu (master page)\nKiểu chữ, đoạn văn, lưới dàn trang\nChèn ảnh, bảng biểu\nCatalogue và profile công ty\nXuất PDF in ấn",
+  "faqs": [
+   {
+    "question": "InDesign khác Photoshop và Illustrator thế nào?",
+    "examples": "indesign dùng làm gì\nkhác photoshop chỗ nào\ncó cần học indesign không",
+    "answer": "Dạ Photoshop chỉnh ảnh, Illustrator vẽ hình, còn InDesign chuyên dàn trang ấn phẩm nhiều trang như sách, catalogue ạ."
+   },
+   {
+    "question": "Có cần biết Photoshop trước không?",
+    "examples": "phải học photoshop trước không\nchưa biết photoshop",
+    "answer": "Dạ không bắt buộc ạ; biết Photoshop cơ bản sẽ giúp {{ brand.you }} xử lý ảnh chèn vào trang nhanh hơn ạ."
+   }
+  ]
+ },
+ {
+  "product_code": "VKT-NOITHAT",
+  "product_name": "Thiết kế nội thất trọn gói",
+  "button_label": "Nội thất trọn gói",
+  "course_group": "Vẽ kỹ thuật",
+  "audience": "Người đi làm",
+  "min_age": 16,
+  "max_age": 60,
+  "standard_rate": 6000000,
+  "duration_text": "3–4 tháng",
+  "certificate": "",
+  "offer": "full",
+  "aliases": "thiet ke noi that, noi that, noi that tron goi",
+  "next_courses": [
+   "VKT-VRAY"
+  ],
+  "weekdays": "T3, T5, T7",
+  "shifts": [
+   "evening",
+   "afternoon"
+  ],
+  "description": "<p>Lộ trình trọn gói cho người làm nội thất: AutoCAD bản vẽ kỹ thuật, SketchUp dựng hình và 3DS Max phối cảnh, làm trọn một dự án căn hộ thật.</p>",
+  "syllabus": "AutoCAD: mặt bằng, mặt đứng, chi tiết đồ gỗ\nSketchUp: dựng không gian nội thất\n3DS Max: vật liệu, ánh sáng, render\nDự án căn hộ hoàn chỉnh\nTrình bày hồ sơ cho khách",
+  "faqs": [
+   {
+    "question": "Chưa biết vẽ có học thiết kế nội thất được không?",
+    "examples": "không biết vẽ tay\nngười trái ngành học được không\nchưa học kiến trúc",
+    "answer": "Dạ được ạ, khóa đi từ AutoCAD cơ bản, không cần vẽ tay; nhiều học viên trái ngành đã làm được hồ sơ nội thất ạ."
+   },
+   {
+    "question": "Học xong có tự nhận dự án được không?",
+    "examples": "nhận việc freelance\ntự làm thiết kế\nđi làm công ty nội thất",
+    "answer": "Dạ khóa kết thúc bằng một dự án căn hộ hoàn chỉnh, {{ brand.you }} dùng làm hồ sơ năng lực để xin việc hoặc nhận dự án ạ."
    }
   ]
  }

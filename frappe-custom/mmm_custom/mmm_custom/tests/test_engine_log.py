@@ -32,7 +32,7 @@ class TestLogRow(unittest.TestCase):
         row = self.repo.logs[0]
         self.assertEqual((row["decision_type"], row["asked_slot"], row["jev_status"], row["message_id"]),
                          ("ask_slot", "course", "disabled", "5"))
-        self.assertEqual(len(json.loads(row["reply_buttons"])), 8)
+        self.assertEqual(len(json.loads(row["reply_buttons"])), 9)
         self.assertEqual((json.loads(row["slots_before"]), row["status_before"], row["turns_before"]), ({}, "active", 0))
         self.assertIn("Trợ lý Sao Việt", row["reply_text"])
         self.assertEqual(json.loads(row["errors"]), [])

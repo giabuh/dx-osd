@@ -286,7 +286,7 @@ the Consultant. It supersedes `scripts/seed-branch-agents.py`.
 
 - Unit tests for the loader's upsert/idempotency and the deterministic schedule generator.
 - On a fresh `-p crmverify` bench: `bench migrate` succeeds; loader run twice gives identical counts
-  (4 areas, 13 branches, 8 groups, 46 courses, 44 consultants, schedules as computed by the generator test); Chatwoot shows the
+  (4 areas, 13 branches, 9 groups, 51 courses (D-097), 44 consultants, schedules as computed by the generator test); Chatwoot shows the
   15 teams with their agents.
 - Existing suites still pass: `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests`
   and `scripts/test-chatwoot-crm-sync.py` (5/5).

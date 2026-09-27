@@ -58,7 +58,7 @@ class TestDemoKnowledge(unittest.TestCase):
 class TestKnowledgeTable(unittest.TestCase):
     def test_every_course_least_covered_first(self):
         rows = knowledge_table(CAT, {"VP-EXCEL": 3})
-        self.assertEqual(len(rows), 46)
+        self.assertEqual(len(rows), 51)
         self.assertEqual([r["coverage"] for r in rows], sorted(r["coverage"] for r in rows))
         excel = next(r for r in rows if r["code"] == "VP-EXCEL")
         self.assertEqual((excel["coverage"], excel["faqs"], excel["schedules"]), (100, 4, 3))

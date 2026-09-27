@@ -56,7 +56,7 @@ for real customers until a later labelled gate passes.
 
 ## Live demo data (crm.localhost, checked 2026-09-27)
 
-18 territories (root + 4 areas + 13 branches), 8 course groups, 46 courses, 44 users/consultants, 1,070 course
+18 territories (root + 4 areas + 13 branches), 8 course groups, 46 courses (the dataset now has 9 groups and 51 courses, D-097; reload with `bench execute mmm_custom.demo.loader.load`), 44 users/consultants, 1,070 course
 schedules, 10 promotions, 9 bot slots (including on-demand `goal`/`level`), 30 bot skills, Lead Engine Settings;
 Chatwoot: 44 agents, 15 teams.
 
