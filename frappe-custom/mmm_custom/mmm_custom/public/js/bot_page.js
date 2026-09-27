@@ -47,8 +47,8 @@
     try {
       const data = await call("mmm_custom.engine.dashboard.summary");
       const cards = [
-        ["Lead mới hôm nay", data.new_today], ["Đủ điều kiện hôm nay", data.qualified_today],
-        ["Chưa phù hợp hôm nay", data.unqualified_today], ["Đã chuyển tư vấn hôm nay", data.handed_off_today],
+        ["Lead mới hôm nay", data.new_today], ["Khách tiềm năng hôm nay", data.qualified_today],
+        ["Không tiềm năng hôm nay", data.unqualified_today], ["Đã chuyển tư vấn hôm nay", data.handed_off_today],
         ["Độ phủ tri thức trung bình", `${data.coverage}%`]
       ];
       $("#stats").innerHTML = cards.map(([label, value]) => `<div class="card"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join("");
