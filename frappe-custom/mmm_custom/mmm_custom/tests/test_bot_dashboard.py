@@ -22,6 +22,13 @@ class TestDashboard(unittest.TestCase):
         self.assertEqual((result["new_today"], result["qualified_today"], result["unqualified_today"], result["handed_off_today"], result["coverage"]), (1, 1, 1, 2, 75))
         self.assertEqual([r["name"] for r in result["latest_leads"]], ["L1", "L4"])
 
+    def test_leads_the_bot_talked_to_count_whatever_their_source(self):
+        # the Chatwoot sync often creates the Lead first (source "Messenger"); the bot then continues it
+        leads = [{"name": "L9", "source": "Messenger", "status": "Qualified", "creation": "2026-09-27 08:00:00",
+                  "status_since": "2026-09-27 08:30:00"}]
+        result = dashboard.summarize(leads, [], [], "2026-09-27", bot_leads={"L9"})
+        self.assertEqual((result["new_today"], result["qualified_today"], [r["name"] for r in result["latest_leads"]]), (1, 1, ["L9"]))
+
     def test_playground_handoffs_are_not_counted(self):
         handoffs = [{"bot_conversation": "sandbox-a", "is_sandbox": 1}, {"bot_conversation": "C1", "is_sandbox": 0}]
         self.assertEqual(dashboard.summarize([], handoffs, [], "2026-09-27")["handed_off_today"], 1)

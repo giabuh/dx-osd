@@ -11,10 +11,12 @@ from mmm_custom.engine.qualify import QUALIFIED, UNQUALIFIED
 BOT_SOURCE = "Messenger Bot"
 
 
-def summarize(leads, handoffs, coverages, today):
-    """Build display metrics from plain rows; dates are in the site's local timezone."""
+def summarize(leads, handoffs, coverages, today, bot_leads=frozenset()):
+    """Build display metrics from plain rows; dates are in the site's local timezone. A bot Lead is one the
+    bot created (source "Messenger Bot") or one a real Bot Conversation is linked to (`bot_leads`): the
+    Chatwoot sync often creates the Lead first with source "Messenger"."""
     day = str(today)[:10]
-    bot_leads = [row for row in leads if row.get("source") == BOT_SOURCE]
+    bot_leads = [row for row in leads if row.get("source") == BOT_SOURCE or row.get("name") in bot_leads]
     is_today = lambda value: str(value or "")[:10] == day
     qualified = [row for row in bot_leads if row.get("status") == QUALIFIED]
     latest = sorted(qualified, key=lambda row: str(row.get("creation") or ""), reverse=True)[:10]
@@ -37,7 +39,9 @@ def summary():
     from mmm_custom.engine.knowledge import overview
 
     today = frappe.utils.today()
-    leads = frappe.get_all("CRM Lead", filters={"source": BOT_SOURCE},
+    linked = set(frappe.get_all("Bot Conversation", filters={"is_sandbox": 0, "lead": ["is", "set"]}, pluck="lead"))
+    or_filters = {"source": BOT_SOURCE, "name": ["in", list(linked)]} if linked else None
+    leads = frappe.get_all("CRM Lead", filters=None if linked else {"source": BOT_SOURCE}, or_filters=or_filters,
                            fields=["name", "lead_name", "first_name", "mobile_no", "course_interest", "territory",
                                    "lead_owner", "source", "status", "creation"], limit_page_length=0)
     rows = [dict(row) for row in leads]
@@ -56,4 +60,4 @@ def summary():
                               filters={"decision_type": "handoff", "is_sandbox": 0, "creation": [">=", f"{today} 00:00:00"]},
                               fields=["bot_conversation", "is_sandbox"], limit_page_length=0)
     coverage = [row["coverage"] for row in overview()]
-    return summarize(rows, handoffs, coverage, today)
+    return summarize(rows, handoffs, coverage, today, linked)
