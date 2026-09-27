@@ -131,9 +131,16 @@
 - [x] **Step 1: Implement the read-only audit command.** Compare dotted string leaf keys in `en` and `vi` catalogs, print per-file and total counts, and flag duplicate effective keys. Do not print contact data or secrets.
 - [x] **Step 2: Translate screenshot keys in the shipped Vietnamese catalog.** Include `CONTACTS_LAYOUT.EMPTY_STATE.TITLE = "Không có liên hệ nào trong tài khoản này"`, `SUBTITLE = "Bắt đầu thêm liên hệ bằng nút bên dưới"`, and `BUTTON_LABEL = "Thêm liên hệ"`; verify already translated sidebar and heading keys, and correct any other fixed English strings visible in the screenshot.
 - [x] **Step 3: Verify catalog and output.** Run `python scripts/audit-chatwoot-i18n.py`; expect valid JSON, no duplicate keys, and fewer identical Vietnamese values than the measured baseline of 3,807. Inspect each screenshot key in the effective merged catalog, not merely as text in one JSON file.
-- [ ] **Step 4: Run the affected stack and product check.** Build/restart only Chatwoot through the documented root compose commands while preserving named volumes. Verify HTTP 200/302 on `127.0.0.1:3000`. In a browser, set one staff user's profile language to Vietnamese and leave another English; inspect the supplied Contacts view, save/reset an override without rebuilding, reload another session, and switch accounts to verify isolation. Record the actual command and observed UI result.
+- [x] **Step 4: Run the affected stack and product check.** Build/restart only Chatwoot through the documented root compose commands while preserving named volumes. Verify HTTP 200/302 on `127.0.0.1:3000`. In a browser, set one staff user's profile language to Vietnamese and leave another English; inspect the supplied Contacts view, save/reset an override without rebuilding, reload another session, and switch accounts to verify isolation. Record the actual command and observed UI result.
 - [x] **Step 5: Run focused regression checks.** Run the Task 1–4 RSpec and Vitest commands and lint changed files after integration; quote their actual output before calling the work done.
 
 ## Completion Boundary
 
 Task 5 completes the editable translation system and the screenshot milestone. The wider goal remains active while the audit/editor still finds user-facing English text in the Chatwoot staff dashboard. Continue translation review in subsequent work until remaining English UI strings are either translated or explicitly identified as terms that should stay unchanged; do not equate a working editor with complete localization.
+
+## Verification Record (2026-09-27)
+
+- Vitest (loader, catalog, editor): 12 passed; ESLint on changed JS/Vue: exit 0.
+- RSpec (catalog, model, request): 20 examples, 0 failures, on an isolated `cwvi-test` Postgres/Redis; RuboCop: no offenses.
+- `scripts/audit-chatwoot-i18n.py`: 3,691 Vietnamese values still identical to English (baseline 3,807).
+- `docker compose build chatwoot-rails` + `docker compose up -d chatwoot-rails chatwoot-sidekiq` from the root compose; `:3000` answered 200. In the browser, Settings → Bản dịch tiếng Việt saved `AGENT_MGMT.DESCRIPTION` and the Agents page showed the new Vietnamese text after a reload, with no rebuild.
