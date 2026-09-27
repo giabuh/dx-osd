@@ -11,7 +11,11 @@
   "title",
   "course",
   "status",
+  "day_of_week",
   "scheduled_time",
+  "batch_id",
+  "boss_directive",
+  "ai_feedback",
   "column_break_main",
   "posted_at",
   "fb_post_id",
@@ -47,7 +51,15 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Trạng thái",
-   "options": "Draft\nScheduled\nPosted\nFailed"
+   "options": "Draft\nPending Approval\nScheduled\nPosted\nFailed\nCancelled"
+  },
+  {
+   "fieldname": "day_of_week",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Thứ trong tuần",
+   "options": "Thứ Hai\nThứ Ba\nThứ Tư\nThứ Năm\nThứ Sáu\nThứ Bảy\nChủ Nhật"
   },
   {
    "fieldname": "scheduled_time",
@@ -55,6 +67,24 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Lịch hẹn đăng"
+  },
+  {
+   "fieldname": "batch_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Mã đợt (Batch ID)"
+  },
+  {
+   "fieldname": "boss_directive",
+   "fieldtype": "Small Text",
+   "label": "Chỉ đạo tuần (Boss Directive)"
+  },
+  {
+   "description": "Gợi ý thêm để AI điều chỉnh nội dung hoặc banner theo mong muốn",
+   "fieldname": "ai_feedback",
+   "fieldtype": "Small Text",
+   "label": "Gợi ý cho AI (Tùy chọn)"
   },
   {
    "fieldname": "column_break_main",
