@@ -116,15 +116,55 @@ class FacebookPost(Document):
         if user_feedback:
             self.ai_feedback = user_feedback
 
+        day_dow = getattr(self, "day_of_week", None) or ""
+        if "Hai" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: STORYTELLING (KỂ CHUYỆN THỰC TẾ)\n"
+                "- Bắt đầu bằng một câu chuyện ngắn hoặc cảm xúc chân thực của học viên/phụ huynh (từ bỡ ngỡ, tự ti ban đầu đến tự tin, tiến bộ vượt bậc).\n"
+                "- Chạm vào cảm xúc và truyền cảm hứng bắt đầu tuần mới tràn đầy năng lượng."
+            )
+        elif "Tư" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: EDUCATIONAL INSIGHT (CHUYÊN GIA & MẸO HAY)\n"
+                "- Chia sẻ 1 mẹo thực chiến, kiến thức chuyên môn hoặc giải đáp 1 sai lầm thường gặp khi học/rèn luyện.\n"
+                "- Cung cấp giá trị hữu ích trước khi dẫn dắt vào giải pháp của khóa học."
+            )
+        elif "Sáu" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: RELATABLE & HUMOR (ĐỜI THƯỜNG & HÓM HỈNH)\n"
+                "- Bắt đầu bằng 1 tình huống vui, gần gũi cuối tuần mà phụ huynh/người học nào cũng từng gặp.\n"
+                "- Giọng văn dí dỏm, thân thiện, giải tỏa căng thẳng và khơi gợi niềm vui học tập."
+            )
+        elif "Nhật" in day_dow:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: FOMO OFFER & SCHOLARSHIP (ƯU ĐÃI & HỌC BỔNG)\n"
+                "- Sắc bén, kích thích hành động với ưu đãi/học bổng giới hạn số lượng dành riêng cho ngày cuối tuần.\n"
+                "- Nêu lý do thuyết phục vì sao nên đăng ký giữ chỗ ngay hôm nay."
+            )
+        else:
+            angle_section = (
+                "GÓC TIẾP CẬN MARKETING: GIÁ TRỊ THỰC CHIẾN & ĐỘT PHÁ\n"
+                "- Tập trung vào sự thay đổi rõ rệt và giá trị cốt lõi khóa học mang lại."
+            )
+
+        anti_cliche_rules = (
+            "QUY TẮC CHỐNG VĂN MẪU SÁO RỖNG (ANTI-CLICHÉ):\n"
+            "- TUYỆT ĐỐI KHÔNG mở đầu bằng các câu sáo rỗng như: 'Hè rực rỡ...', 'Bạn có biết...', 'Đừng bỏ lỡ...', 'Chào mừng bạn đến với...', 'Bạn đang tìm kiếm...'.\n"
+            "- Hãy mở đầu trực tiếp bằng một câu hook bất ngờ, câu hỏi đánh trúng tâm lý, hoặc một lời tâm sự tự nhiên.\n"
+            "- Viết như một chuyên gia tâm huyết đang trò chuyện trực tiếp với người đọc, chân thật và cuốn hút."
+        )
+
         prompt = (
-            f"Bạn là chuyên viên marketing nội dung của trung tâm EduFlow Academy.\n"
-            f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n"
-            f"Yêu cầu:\n"
-            f"- Ngắn gọn dưới 150 từ, tiếng Việt, đầy cảm hứng\n"
-            f"- Có emoji sinh động\n"
+            f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm EduFlow Academy.\n"
+            f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n\n"
+            f"{angle_section}\n\n"
+            f"{anti_cliche_rules}\n\n"
+            f"Yêu cầu định dạng:\n"
+            f"- Ngắn gọn dưới 150 từ, tiếng Việt, giọng văn cuốn hút, tự nhiên\n"
+            f"- Có emoji sinh động, đặt đúng chỗ\n"
             f"- Nêu bật 3 lợi ích chính dạng gạch đầu dòng\n"
             f"- Đề cập rõ 3 cơ sở: CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức (kèm hotline 0901.888.666)\n"
-            f"- Kêu gọi hành động: nhắn tin/inbox fanpage để nhận tư vấn và ưu đãi\n"
+            f"- Kêu gọi hành động rõ ràng: nhắn tin/inbox fanpage để nhận tư vấn và ưu đãi\n"
             f"- Kèm hashtag: #EduFlow #EduFlowAcademy #{course_name.replace(' ', '')}\n"
             f"- Tuyệt đối KHÔNG dùng markdown (không dùng **, ##), trả về chữ thuần."
         )
@@ -172,6 +212,8 @@ class FacebookPost(Document):
             if not self.is_new():
                 try:
                     self.save()
+                    if hasattr(frappe.db, "commit"):
+                        frappe.db.commit()
                 except Exception:
                     pass
             return {"status": "success", "content": self.content}
@@ -309,6 +351,8 @@ class FacebookPost(Document):
 
         self.image = file_doc.file_url
         self.save()
+        if hasattr(frappe.db, "commit"):
+            frappe.db.commit()
         return {"status": "success", "image": self.image}
 
     @frappe.whitelist()

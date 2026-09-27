@@ -47,6 +47,18 @@
               />
             </template>
           </SidebarItem>
+          <!-- Facebook Marketing navigation -->
+          <SidebarItem
+            :label="__('Facebook Marketing')"
+            :to="{ name: 'FacebookPosts' }"
+            :active="activeItem === 'FacebookPosts'"
+            @click="selectItem($event, 'FacebookPosts')"
+          >
+            <template #prefix>
+              <MegaphoneIcon class="size-4 text-ink-gray-7" />
+            </template>
+          </SidebarItem>
+
           <!-- Bot administration (branches, staff, courses) lives on the mmm_custom /bot page. -->
           <SidebarItem
             v-if="isManager()"
@@ -184,6 +196,7 @@
 <script setup>
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
 import BotIcon from '~icons/lucide/bot'
+import MegaphoneIcon from '~icons/lucide/megaphone'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
@@ -284,24 +297,14 @@ const links = [
     to: 'Contacts',
   },
   {
-    label: 'Organizations',
-    icon: OrganizationsIcon,
-    to: 'Organizations',
-  },
-  {
-    label: 'Notes',
-    icon: NoteIcon,
-    to: 'Notes',
-  },
-  {
     label: 'Tasks',
     icon: TaskIcon,
     to: 'Tasks',
   },
   {
-    label: 'Call Logs',
-    icon: PhoneIcon,
-    to: 'Call Logs',
+    label: 'Notes',
+    icon: NoteIcon,
+    to: 'Notes',
   },
 ]
 
@@ -430,6 +433,10 @@ function toggleHelpModal() {
 // onboarding
 const { user } = sessionStore()
 const { users, isManager } = usersStore()
+
+function openFacebookMarketing() {
+  window.location.href = '/app/facebook-post'
+}
 
 function openBotAdmin() {
   window.location.href = '/bot'

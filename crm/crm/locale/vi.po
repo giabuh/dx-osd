@@ -8926,3 +8926,24 @@ msgstr "⚠️ Không tìm thấy dữ liệu cho trường cha: {0}"
 msgid "⚠️ No row found for idx: {0} in parent field: {1}"
 msgstr "⚠️ Không tìm thấy hàng cho idx: {0} trong trường cha: {1}"
 
+
+msgid "Facebook Marketing"
+msgstr "Facebook Marketing"
+
+msgid "Qualification"
+msgstr "Tiếp nhận & Tư vấn"
+
+msgid "Trial & Assessment"
+msgstr "Học thử & Đánh giá"
+
+msgid "Proposal & Tuition"
+msgstr "Báo học phí & Ưu đãi"
+
+msgid "Pending Payment"
+msgstr "Chờ đóng phí / Đặt cọc"
+
+msgid "Won"
+msgstr "Đã nhập học"
+
+msgid "Lost"
+msgstr "Không tham gia"

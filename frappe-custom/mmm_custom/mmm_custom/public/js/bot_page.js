@@ -67,10 +67,31 @@
       ];
       $("#stats").innerHTML = cards.map(([label, value]) => `<div class="card"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join("");
       $("#latest-leads").innerHTML = data.latest_leads.length ? data.latest_leads.map((lead) => `<tr>
-        <td><a href="/crm/leads/${encodeURIComponent(lead.name)}">${escapeHtml(lead.lead_name || lead.first_name || lead.name)}</a></td>
+        <td><a href="/crm/leads/${encodeURIComponent(lead.name)}"><strong>${escapeHtml(lead.lead_name || lead.first_name || lead.name)}</strong></a></td>
         <td>${escapeHtml(lead.mobile_no || "—")}</td><td>${escapeHtml(lead.course_interest || "—")}</td>
-        <td>${escapeHtml(lead.territory || "—")}</td><td>${escapeHtml(lead.lead_owner || "—")}</td>
+        <td>${escapeHtml(lead.branch || lead.territory || "—")}</td><td>${escapeHtml(lead.lead_owner || "—")}</td>
         <td>${escapeHtml(displayTime(lead.creation))}</td></tr>`).join("") : '<tr><td colspan="6" class="muted">Chưa có khách tiềm năng từ bot.</td></tr>';
+
+      if ($("#latest-posts")) {
+        const postStatusBadges = {
+          "Draft": '<span class="pill off">Bản nháp</span>',
+          "Pending Approval": '<span class="pill wait">Chờ duyệt</span>',
+          "Approved": '<span class="pill ok">Đã duyệt</span>',
+          "Scheduled": '<span class="pill wait">Đã lên lịch</span>',
+          "Posted": '<span class="pill ok">Đã đăng</span>',
+          "Failed": '<span class="pill off" style="background:#fee2e2;color:#991b1b">Thất bại</span>',
+          "Cancelled": '<span class="pill off">Đã hủy</span>'
+        };
+        const posts = data.latest_posts || [];
+        $("#latest-posts").innerHTML = posts.length ? posts.map((post) => `<tr>
+          <td><a href="/app/facebook-post/${encodeURIComponent(post.name)}" target="_blank"><strong>${escapeHtml(post.title || ("Bài #" + post.name))}</strong> ↗</a></td>
+          <td>${escapeHtml(post.course || "—")}</td>
+          <td>${postStatusBadges[post.status] || escapeHtml(post.status)}</td>
+          <td>${escapeHtml(post.day_of_week || "—")}${post.scheduled_time ? " (" + displayTime(post.scheduled_time) + ")" : ""}</td>
+          <td>${escapeHtml(displayTime(post.creation))}</td>
+          <td><a href="/app/facebook-post/${encodeURIComponent(post.name)}" target="_blank" class="link-btn">Xem chi tiết ↗</a></td>
+        </tr>`).join("") : '<tr><td colspan="6" class="muted">Chưa có bài đăng nào được tạo.</td></tr>';
+      }
     } catch (error) { showError($("#stats"), error); }
   }
 

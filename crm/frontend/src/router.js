@@ -103,6 +103,11 @@ const routes = [
     component: () => import('@/pages/CallLogs.vue'),
   },
   {
+    path: '/facebook-posts',
+    name: 'FacebookPosts',
+    component: () => import('@/pages/FacebookPosts.vue'),
+  },
+  {
     path: '/data-import',
     name: 'DataImportList',
     component: () => import('@/pages/DataImport.vue'),

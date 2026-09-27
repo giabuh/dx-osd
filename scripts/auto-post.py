@@ -172,6 +172,7 @@ def create_post_image(course_key: str, output_path: str) -> str:
     f_foot_addr = get_font(20, bold=False)
     f_foot_hotline = get_font(20, bold=False)
     f_promo = get_font(23, bold=True)
+    f_cta = get_font(28, bold=True)
 
     # Top Bar
     draw.rectangle([0, 0, W, 120], fill=theme_color)

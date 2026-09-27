@@ -127,10 +127,50 @@
       <div class="nav-label">Ứng dụng</div>
       <a href="/crm">Mở CRM</a>
       <a href="{{ chatwoot_url | e }}" target="_blank" rel="noopener">Mở Chatwoot ↗</a>
+      <a href="/app/facebook-post">Facebook Marketing & AI</a>
       <a href="/app/bot-sao-việt">Quản trị nâng cao</a>
     </nav>
     <main class="content">
-      <section id="overview" class="pane"><div class="section-head"><div><h2>Tổng quan hôm nay</h2><span class="muted">Hoạt động của bot trên Messenger</span></div></div><div id="stats" class="cards"></div><div class="panel"><h3>Khách tiềm năng mới nhất</h3><div class="table-wrap"><table><thead><tr><th>Khách hàng</th><th>Điện thoại</th><th>Khóa học</th><th>Chi nhánh</th><th>Tư vấn viên</th><th>Thời gian</th></tr></thead><tbody id="latest-leads"></tbody></table></div></div></section>
+      <section id="overview" class="pane">
+        <div class="section-head">
+          <div><h2>Tổng quan hôm nay</h2><span class="muted">Hoạt động của bot trên Messenger & Facebook Marketing</span></div>
+        </div>
+        <div id="stats" class="cards"></div>
+        <div class="panel" style="margin-bottom: 24px;">
+          <div class="section-head" style="margin-bottom: 12px;">
+            <div>
+              <h3>Khách tiềm năng mới nhất</h3>
+              <span class="muted">Được tạo tự động từ Messenger Bot hoặc Facebook</span>
+            </div>
+            <a href="/app/crm-lead" class="secondary" style="display: inline-block; padding: 6px 14px; text-decoration: none;">Xem danh sách Leads →</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Khách hàng</th><th>Điện thoại</th><th>Khóa học quan tâm</th><th>Chi nhánh</th><th>Tư vấn viên</th><th>Thời gian</th></tr>
+              </thead>
+              <tbody id="latest-leads"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="section-head" style="margin-bottom: 12px;">
+            <div>
+              <h3>Chiến dịch Facebook Marketing & AI gần nhất</h3>
+              <span class="muted">Bài đăng được hệ thống Multi-Agent AI tạo tự động theo ngày</span>
+            </div>
+            <a href="/app/facebook-post" class="secondary" style="display: inline-block; padding: 6px 14px; text-decoration: none;">Quản lý bài đăng & AI →</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Tiêu đề / Chiến dịch</th><th>Khóa học</th><th>Trạng thái</th><th>Lịch đăng dự kiến</th><th>Thời gian tạo</th><th>Hành động</th></tr>
+              </thead>
+              <tbody id="latest-posts"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
       <section id="knowledge" class="pane" hidden><div class="section-head"><div><h2>Tri thức khóa học</h2><span class="muted">Dữ liệu bot dùng để trả lời khách</span></div><div class="head-actions"><label class="secondary file-btn">Nhập từ file<input id="course-import" type="file" accept=".json,application/json" hidden></label><button id="add-course" class="primary" type="button">+ Thêm khóa học</button></div></div><div id="knowledge-notice"></div><div class="knowledge-grid"><div class="panel course-list"><input id="course-search" type="search" placeholder="Tìm khóa học" aria-label="Tìm khóa học"><div id="courses"></div></div><div id="course-detail" class="panel detail muted">Chọn một khóa học để xem bot trả lời như thế nào.</div></div></section>
       <section id="playground" class="pane" hidden><div class="section-head"><div><h2>Thử chat với bot</h2><span class="muted">Cuộc trò chuyện thử không gửi tin nhắn hoặc tạo Lead</span></div><button id="reset-chat" class="secondary" type="button">Cuộc trò chuyện mới</button></div><div class="chat-grid"><div class="panel"><div class="chat-options"><span class="muted">Bạn đang đóng vai khách hàng</span><label><input id="use-jev" type="checkbox"> Dùng Jev</label></div><div id="chat-log" class="chat-log" aria-live="polite"></div><form id="chat-form" class="chat-form"><input id="chat-input" type="text" autocomplete="off" placeholder="Nhập tin nhắn của khách hàng…" maxlength="1000" required><button class="primary" type="submit">Gửi</button></form></div><div class="panel"><h3>Bot hiểu gì</h3><p class="muted">Gửi tin nhắn để xem từ khóa, Jev và lý do bot trả lời.</p><details id="inspector" open><summary>Chi tiết lượt chat</summary><div id="inspector-content"></div></details></div></div></section>
       <section id="branches" class="pane" hidden><div class="section-head"><div><h2>Chi nhánh</h2><span class="muted">Bot hỏi khách theo khu vực → chi nhánh, rồi giao cho nhân viên của chi nhánh đó</span></div><button id="add-branch" class="primary" type="button">+ Thêm chi nhánh</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Chi nhánh</th><th>Mã</th><th>Địa chỉ</th><th>Hotline</th><th>Nhân viên</th><th></th></tr></thead><tbody id="branch-rows"></tbody></table></div></div></section>
