@@ -130,4 +130,11 @@ def send(lead, text):
     client = sender_client(frappe.session.user)
     if not client:
         frappe.throw("Tài khoản Chatwoot của bạn chưa sẵn sàng. Nhờ quản trị chạy đồng bộ nhân viên.")
-    return to_message(client.send_message(conversation, text))
+    try:
+        sent = client.send_message(conversation, text)
+    except Exception as error:
+        status = getattr(getattr(error, "response", None), "status_code", None)
+        if status in (401, 403, 404):  # Chatwoot: the conversation is not assigned to this agent's team yet
+            frappe.throw("Cuộc chat này chưa được giao cho nhóm của bạn trên Chatwoot (bot chưa chuyển khách).")
+        raise
+    return to_message(sent)

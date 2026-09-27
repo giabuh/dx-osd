@@ -103,6 +103,16 @@ class TestSend(unittest.TestCase):
         own.send_message.assert_called_once_with(123, "Dạ lớp tối T3 khai giảng 07/10 ạ")
         self.assertEqual(out["kind"], "staff")
 
+    def test_conversation_not_yet_handed_to_the_team(self):
+        own = MagicMock()
+        own.send_message.side_effect = Exception("403")
+        own.send_message.side_effect.response = SimpleNamespace(status_code=403)
+        frappe = fake_frappe(linked=["123"])
+        with patch.object(lead_chat, "frappe", frappe), patch.object(lead_chat, "admin_client"), \
+                patch.object(lead_chat, "sender_client", return_value=own):
+            with self.assertRaisesRegex(Exception, "chưa được giao"):
+                lead_chat.send("CRM-LEAD-1", "Chào anh")
+
     def test_refusals(self):
         for frappe, kwargs in [(fake_frappe(readable=False, linked=["123"]), {}),
                                (fake_frappe(linked=["123"]), {"text": "   "}),
