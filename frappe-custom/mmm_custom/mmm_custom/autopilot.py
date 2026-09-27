@@ -164,14 +164,14 @@ def approve_weekly_batch(batch_id=None):
     for post in posts:
         name = (
             post
-            if isinstance(post, str)
+            if isinstance(post, (str, int))
             else (
                 post.get("name")
                 if isinstance(post, dict)
                 else getattr(post, "name", None)
             )
         )
-        if name:
+        if name is not None:
             frappe.db.set_value("Facebook Post", name, "status", "Scheduled")
             count += 1
 
@@ -193,14 +193,14 @@ def rollback_weekly_batch(batch_id=None, new_directive=None):
     for post in posts:
         name = (
             post
-            if isinstance(post, str)
+            if isinstance(post, (str, int))
             else (
                 post.get("name")
                 if isinstance(post, dict)
                 else getattr(post, "name", None)
             )
         )
-        if name:
+        if name is not None:
             frappe.db.set_value("Facebook Post", name, "status", "Cancelled")
             cancelled_count += 1
 

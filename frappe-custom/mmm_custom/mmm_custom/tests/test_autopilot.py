@@ -209,6 +209,18 @@ class TestAutopilotEngine(unittest.TestCase):
         self.assertEqual(res, {"status": "success", "approved_count": 3})
 
     @patch("mmm_custom.autopilot.frappe")
+    def test_approve_weekly_batch_integer_ids(self, mock_frappe):
+        mock_frappe.get_all.return_value = [10, 11, 12]
+        res = autopilot.approve_weekly_batch(batch_id="BATCH-2026-W39")
+
+        self.assertEqual(mock_frappe.db.set_value.call_count, 3)
+        mock_frappe.db.set_value.assert_any_call("Facebook Post", 10, "status", "Scheduled")
+        mock_frappe.db.set_value.assert_any_call("Facebook Post", 11, "status", "Scheduled")
+        mock_frappe.db.set_value.assert_any_call("Facebook Post", 12, "status", "Scheduled")
+        mock_frappe.db.commit.assert_called_once()
+        self.assertEqual(res, {"status": "success", "approved_count": 3})
+
+    @patch("mmm_custom.autopilot.frappe")
     def test_rollback_weekly_batch(self, mock_frappe):
         mock_frappe.get_all.return_value = ["OLD-POST-1", "OLD-POST-2"]
 
