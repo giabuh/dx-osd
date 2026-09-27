@@ -345,5 +345,27 @@
     "đã giữ chỗ học thử"
    ]
   }
+ },
+ {
+  "id": "S17",
+  "title": "Khách được bạn giới thiệu, có mã",
+  "why": "Mã giới thiệu được nhận ra và ghi lên Lead để CRM liên kết người giới thiệu",
+  "messages": [
+   "Bạn mình giới thiệu qua, mã giới thiệu SVK7M2Q, mình muốn học Photoshop ở Quận 7",
+   "0945678123"
+  ],
+  "expect": {
+   "handoff": true,
+   "consultant": {
+    "branch": "CN Quận 7",
+    "specialty": "Thiết kế đồ họa"
+   },
+   "lead": {
+    "referred_by_code": "SVK7M2Q"
+   },
+   "reply_has": [
+    "SVK7M2Q"
+   ]
+  }
  }
 ]

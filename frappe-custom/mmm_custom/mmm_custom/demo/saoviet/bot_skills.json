@@ -789,5 +789,35 @@
   "creates_lead": 1,
   "handoff_after": 1,
   "sort_order": 85
+ },
+ {
+  "skill_key": "referral",
+  "title": "bạn bè giới thiệu",
+  "jev_description": "The customer says a friend or former student referred them, or gives a referral code",
+  "examples": "bạn mình giới thiệu qua đây\nmình có mã giới thiệu\nđược người quen học ở đây giới thiệu",
+  "aliases": "ma gioi thieu, ban gioi thieu, duoc gioi thieu, nguoi quen gioi thieu",
+  "parameters": [
+   "referral_code"
+  ],
+  "missing_policy": "ask",
+  "action_type": "answer_template",
+  "action_config": {},
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} đã ghi nhận mã giới thiệu {{ slots.referral_code }} ạ. Học viên được giới thiệu giảm thêm 5% học phí khi đăng ký, và người giới thiệu cũng nhận ưu đãi cho khóa tiếp theo ạ."
+   }
+  ],
+  "follow_ups": [
+   {
+    "title": "Xem học phí",
+    "target_type": "skill",
+    "target": "fee_quote"
+   }
+  ],
+  "creates_lead": 1,
+  "handoff_after": 0,
+  "sort_order": 155
  }
 ]

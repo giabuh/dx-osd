@@ -27,6 +27,7 @@ def course_phrases(catalog):
 
 class SlotType:
     late = False  # understood after skills (free-text answers such as a name)
+    anywhere = False  # understood even when the slot is on-demand and not being asked (an unmistakable pattern)
 
     def understand(self, slot, text, folded, pending, catalog, u):
         pass
@@ -120,6 +121,24 @@ class PhoneSlot(SlotType):
 
     def buttons(self, slot, slots, catalog):
         return [] if slot.required else [{"title": "Bỏ qua", "action": {"type": "skip", "slot": slot.key}}]
+
+
+@register("referral_code")
+class ReferralSlot(SlotType):
+    """A friend's referral code (D-103), recognised anywhere in a message."""
+
+    anywhere = True
+
+    def understand(self, slot, text, folded, pending, catalog, u):
+        from mmm_custom.referral import find_code
+
+        code = find_code(text)
+        if code:
+            _fill(u, slot, code)
+            u.matches.append({"slot": slot.key, "kind": "referral_code", "values": [code]})
+            at = f" {folded} ".find(f" {code.lower()} ")
+            if at >= 0:
+                u.spans.append((at, at + len(code)))
 
 
 @register("number")

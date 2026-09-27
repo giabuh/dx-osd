@@ -22,7 +22,7 @@ class TestQuestions(unittest.TestCase):
             self.assertNotIn(key, q)
         self.assertEqual(len(q["slot:course"]["criteria"]), 52)  # 51 courses + none
         self.assertIn(NONE, q["slot:course"]["criteria"])
-        self.assertEqual(sum(k.startswith("skill:") for k in q), 31)
+        self.assertEqual(sum(k.startswith("skill:") for k in q), 32)
         self.assertEqual(q["skill:fee_quote"]["type"], "noul")
         self.assertEqual((q["hotness"]["type"], q["wants_human"]["type"]), ("score", "noul"))
 

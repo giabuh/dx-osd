@@ -203,7 +203,7 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 **C10 — After enrolment** (direction only; designed when reached)
 | C10.1 | Class schedule reminders | — | ⬜ |
 | C10.2 | Satisfaction survey | — | ⬜ |
-| C10.3 | Referrals | — | ⬜ |
+| C10.3 | Referrals — codes, chat recognition, referrer link (D-103) | — | 🔨 |
 | C10.4 | Next-course suggestion along learning paths | — | ⬜ |
 
 ### 6.3 Old layer numbers (before D-047)

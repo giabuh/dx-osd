@@ -143,6 +143,7 @@ def update_crm_fields_layout():
 						fields = ["course_interest", "branch", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
+							fields += ["source_campaign", "referral_code", "referred_by"]  # D-100, D-103
 						for f in fields:
 							if f not in col_fields:
 								col_fields.append(f)
@@ -201,6 +202,13 @@ CATALOG_FIELDS = {
 		# Where the Lead first came from, next to the standard `source` (D-100)
 		{"fieldname": "source_campaign", "label": "Campaign", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "description": "Campaign or landing page reported by the channel", "insert_after": "source"},
+		# Referral codes (D-103): this Lead's own code, the code a friend gave, and that friend
+		{"fieldname": "referral_code", "label": "Referral Code", "fieldtype": "Data", "length": 10, "unique": 1,
+		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "source_campaign"},
+		{"fieldname": "referred_by_code", "label": "Referred By Code", "fieldtype": "Data", "length": 20,
+		 "insert_after": "referral_code"},
+		{"fieldname": "referred_by", "label": "Referred By", "fieldtype": "Link", "options": "CRM Lead", "read_only": 1,
+		 "insert_after": "referred_by_code"},
 	],
 }
 
