@@ -15,12 +15,13 @@ add_to_apps_screen = [{
     "name": "mmm_custom",
     "logo": "/assets/mmm_custom/images/bot.svg",
     "title": "Quản trị",
-    "route": "/admin",
+    "route": "/crm/admin",
     "has_permission": "mmm_custom.desk.can_open_bot",
 }]
 
-# The admin page used to live at /bot; browsers keep the #tab fragment across the redirect.
-website_redirects = [{"source": "/bot", "target": "/admin"}]
+# The manager screens live in the CRM frontend (/crm/admin). The old standalone pages redirect there;
+# browsers keep an old #tab fragment, which the CRM page turns into that tab.
+website_redirects = [{"source": "/bot", "target": "/crm/admin"}, {"source": "/admin", "target": "/crm/admin"}]
 
 # Includes in <head>
 # ------------------
@@ -99,7 +100,7 @@ doc_events = {
 }
 # Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
 doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update"}
-# Landing page by role: managers on /admin, everyone else on /crm (mmm_custom.desk.default_app_for).
+# Landing page by role: managers on /crm/admin, everyone else on /crm (mmm_custom.desk.default_app_for).
 doc_events["User"] = {"on_update": "mmm_custom.desk.apply_user_default_app"}
 # Staff live in CRM; Chatwoot agents/teams follow (mmm_custom.staff_sync).
 doc_events["Consultant"] = {"on_update": "mmm_custom.staff_sync.enqueue_sync",

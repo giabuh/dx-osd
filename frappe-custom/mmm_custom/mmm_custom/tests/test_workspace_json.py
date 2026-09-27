@@ -27,7 +27,7 @@ class TestBotWorkspace(unittest.TestCase):
                 self.assertIn(s["link_to"], pages, s["label"])
             else:
                 self.assertEqual(s["type"], "URL", s["label"])
-                self.assertTrue(s["url"].startswith(("/crm", "/admin")), s["label"])
+                self.assertTrue(s["url"].startswith("/crm"), s["label"])
 
     def test_name_label_and_title_match(self):
         # the desk routes a workspace by slug(name) but its sidebar link uses slug(title): they must be equal

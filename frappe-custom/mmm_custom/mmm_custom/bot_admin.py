@@ -1,4 +1,4 @@
-"""Branches and staff for the /admin page. CRM is where both live; saving a Consultant
+"""Branches, staff and courses for the manager screens (/crm/admin, crm/frontend pages/Admin.vue). CRM is where both live; saving a Consultant
 triggers the Chatwoot staff sync (mmm_custom.staff_sync)."""
 
 try:
@@ -23,6 +23,13 @@ OFFERS = ("all", "full")
 def _require_access():
     if not can_open_bot():
         frappe.throw("Bạn không có quyền quản trị bot.", frappe.PermissionError)
+
+
+@whitelist()
+def app_links():
+    """Links the admin header opens in a new tab."""
+    _require_access()
+    return {"chatwoot_url": (frappe.conf.get("chatwoot_base_url") or "http://127.0.0.1:3000").rstrip("/")}
 
 
 def split_tree(rows):
@@ -99,7 +106,7 @@ def _paragraphs(text):
 
 
 def course_values(data):
-    """A course from the /admin form or an imported file → CRM Product values; ValueError names what is wrong."""
+    """A course from the admin course form or an imported file → CRM Product values; ValueError names what is wrong."""
     values = {k: _text(data.get(k)) for k in ("product_name", "product_code", "course_group", "button_label",
                                                "audience", "duration_text", "certificate", "offer")}
     values["product_code"] = values["product_code"].upper()

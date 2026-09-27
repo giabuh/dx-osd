@@ -40,9 +40,10 @@ class TestDesk(unittest.TestCase):
             self.assertTrue(desk.can_open_bot())
 
     def test_apps_entry_targets_admin_page(self):
-        self.assertEqual(hooks.add_to_apps_screen[0]["route"], "/admin")
+        self.assertEqual(hooks.add_to_apps_screen[0]["route"], "/crm/admin")
         self.assertEqual(hooks.add_to_apps_screen[0]["title"], "Quản trị")
-        self.assertIn({"source": "/bot", "target": "/admin"}, hooks.website_redirects)
+        for old in ("/bot", "/admin"):
+            self.assertIn({"source": old, "target": "/crm/admin"}, hooks.website_redirects)
         self.assertEqual(hooks.add_to_apps_screen[0]["has_permission"], "mmm_custom.desk.can_open_bot")
         self.assertIn("mmm_custom.desk.hide_unused_workspaces", hooks.after_migrate)
 

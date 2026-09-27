@@ -36,7 +36,7 @@
    "color": "Blue",
    "label": "Trang quản trị bot",
    "type": "URL",
-   "url": "/admin"
+   "url": "/crm/admin"
   },
   {
    "color": "Grey",

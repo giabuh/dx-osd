@@ -39,12 +39,12 @@ def remove_old_bot_workspace():
                                                 "bot_sao_viet.json"), force=True)
 
 
-ADMIN_APP = "mmm_custom"  # add_to_apps_screen route /admin
+ADMIN_APP = "mmm_custom"  # add_to_apps_screen route /crm/admin
 CRM_APP = "crm"
 
 
 def default_app_for(roles, current):
-    """Where a desk user lands after login (User.default_app): managers on /admin, everyone else on /crm
+    """Where a desk user lands after login (User.default_app): managers on /crm/admin, everyone else on /crm
     (the System Settings default). Returns the new value, or None to leave the user's choice alone."""
     manager = bool(BOT_ROLES.intersection(roles))
     if manager and not current:

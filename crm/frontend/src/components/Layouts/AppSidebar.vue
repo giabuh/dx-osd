@@ -47,10 +47,11 @@
               />
             </template>
           </SidebarItem>
-          <!-- Bot administration (branches, staff, courses) lives on the mmm_custom /admin page. -->
+          <!-- Manager screens (branches, staff, courses, bot playground): pages/Admin.vue. -->
           <SidebarItem
             v-if="isManager()"
-            :label="__('Admin')"
+            :label="'Quản trị'"
+            :active="activeItem === 'Admin'"
             @click="openBotAdmin"
           >
             <template #prefix>
@@ -414,7 +415,9 @@ const { user } = sessionStore()
 const { users, isManager } = usersStore()
 
 function openBotAdmin() {
-  window.location.href = '/admin'
+  activeItem.value = 'Admin'
+  router.push({ name: 'Admin' })
+  if (props.mobile) mobileSidebarOpened.value = false
 }
 const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 
