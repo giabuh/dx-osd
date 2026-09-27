@@ -43,8 +43,9 @@
     target.innerHTML = `<p class="error">${escapeHtml(error.message || error)}</p>`;
   }
 
-  const TABS = ["overview", "branches", "staff", "knowledge", "playground"];
-  const loaders = { knowledge: () => knowledgeLoaded || loadKnowledge(), branches: () => loadBranches(), staff: () => loadStaff() };
+  const TABS = ["overview", "branches", "staff", "knowledge", "playground", "lead-ads"];
+  const loaders = { knowledge: () => knowledgeLoaded || loadKnowledge(), branches: () => loadBranches(), staff: () => loadStaff(),
+    "lead-ads": () => loadLeadAds() };
 
   function switchTab(name) {
     if (!TABS.includes(name)) name = "overview";
@@ -375,6 +376,143 @@
       clearTimeout(syncPoll);
       syncPoll = setTimeout(async () => { await loadStaff(); $("#staff-notice").replaceChildren(); }, 8000);
     } catch (error) { $("#staff-error").textContent = error.message; }
+  });
+
+  /* Facebook Lead Ads: crm/lead_syncing sources through mmm_custom.lead_ads. */
+  const FREQUENCY_LABELS = { "Every 5 Minutes": "5 phút", "Every 10 Minutes": "10 phút", "Every 15 Minutes": "15 phút",
+    "Hourly": "Mỗi giờ", "Daily": "Mỗi ngày", "Monthly": "Mỗi tháng" };
+  let leadAds = { sources: [], frequencies: [] };
+  let fbPages = [];
+  let mappingForm = "";
+  const leadAdsNotice = (html) => { $("#lead-ads-notice").innerHTML = html; };
+
+  async function loadLeadAds() {
+    $("#source-rows").innerHTML = '<tr><td colspan="7" class="muted">Đang tải…</td></tr>';
+    try {
+      const [data, failed] = await Promise.all([call("mmm_custom.lead_ads.list_sources"), call("mmm_custom.lead_ads.failures")]);
+      leadAds = data;
+      $("#source-rows").innerHTML = data.sources.map((s) => `<tr>
+        <td>${escapeHtml(s.page_name || "—")}</td><td><strong>${escapeHtml(s.form_name || "—")}</strong><br><small class="muted">${escapeHtml(s.name)}</small></td>
+        <td>${escapeHtml(FREQUENCY_LABELS[s.background_sync_frequency] || s.background_sync_frequency || "—")}</td>
+        <td>${escapeHtml(displayTime(s.last_synced_at))}</td>
+        <td>${s.failures ? `<span class="pill wait">${escapeHtml(s.failures)}</span>` : "0"}</td>
+        <td><input type="checkbox" data-toggle-source="${escapeHtml(s.name)}" aria-label="Bật ${escapeHtml(s.name)}" ${s.enabled ? "checked" : ""}></td>
+        <td><button type="button" class="secondary" data-sync-source="${escapeHtml(s.name)}">Đồng bộ ngay</button>
+          <button type="button" class="secondary" data-edit-source="${escapeHtml(s.name)}">Sửa</button></td></tr>`).join("")
+        || '<tr><td colspan="7" class="muted">Chưa kết nối form nào. Bấm “Kết nối form”.</td></tr>';
+      $("#failure-rows").innerHTML = failed.map((f) => `<tr><td>${escapeHtml(displayTime(f.creation))}</td>
+        <td>${escapeHtml(f.source || "—")}</td><td><small>${escapeHtml(f.error || "—")}</small></td>
+        <td><button type="button" class="secondary" data-retry="${escapeHtml(f.name)}">Thử lại</button></td></tr>`).join("")
+        || '<tr><td colspan="4" class="muted">Không có lỗi.</td></tr>';
+      const rows = $("#source-rows");
+      rows.querySelectorAll("[data-toggle-source]").forEach((box) => box.addEventListener("change", async () => {
+        try { await call("mmm_custom.lead_ads.set_enabled", { name: box.dataset.toggleSource, enabled: box.checked ? 1 : 0 }); }
+        catch (error) { box.checked = !box.checked; leadAdsNotice(`<p class="error">${escapeHtml(error.message)}</p>`); }
+      }));
+      rows.querySelectorAll("[data-sync-source]").forEach((button) => button.addEventListener("click", async () => {
+        button.disabled = true;
+        try {
+          await call("mmm_custom.lead_ads.sync_now", { name: button.dataset.syncSource });
+          leadAdsNotice('<div class="notice">Đang đồng bộ. Lead mới hiện trong CRM sau ít phút.</div>');
+        } catch (error) { leadAdsNotice(`<p class="error">${escapeHtml(error.message)}</p>`); }
+        finally { button.disabled = false; }
+      }));
+      rows.querySelectorAll("[data-edit-source]").forEach((button) => button.addEventListener("click", () => openSource(leadAds.sources.find((s) => s.name === button.dataset.editSource))));
+      $("#failure-rows").querySelectorAll("[data-retry]").forEach((button) => button.addEventListener("click", async () => {
+        button.disabled = true;
+        try {
+          const lead = await call("mmm_custom.lead_ads.retry", { name: button.dataset.retry });
+          leadAdsNotice(`<div class="notice">Đã tạo Lead <a href="/crm/leads/${encodeURIComponent(lead)}">${escapeHtml(lead)}</a>.</div>`);
+          loadLeadAds();
+        } catch (error) { button.disabled = false; leadAdsNotice(`<p class="error">${escapeHtml(error.message)}</p>`); }
+      }));
+    } catch (error) { showError($("#source-rows"), error); }
+  }
+
+  function fillPages(page, form) {
+    const select = $("#sr-page");
+    select.innerHTML = '<option value="">— Chọn Page —</option>' + fbPages.map((p) => `<option value="${escapeHtml(p.id)}" ${p.id === page ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("");
+    fillForms(form);
+  }
+
+  function fillForms(form) {
+    const forms = fbPages.find((p) => p.id === $("#sr-page").value)?.forms || [];
+    $("#sr-form").innerHTML = '<option value="">— Chọn form —</option>' + forms.map((f) => `<option value="${escapeHtml(f.id)}" ${f.id === form ? "selected" : ""}>${escapeHtml(f.name)}</option>`).join("");
+  }
+
+  async function openSource(source) {
+    const form = $("#source-form");
+    form.reset();
+    $("#source-error").textContent = "";
+    $("#mapping").hidden = true;
+    $("#source-title").textContent = source ? `Sửa ${source.name}` : "Kết nối form";
+    form.original.value = source?.name || "";
+    form.source_name.value = source?.name || "";
+    form.source_name.disabled = Boolean(source);
+    form.enabled.checked = source ? Boolean(source.enabled) : true;
+    form.background_sync_frequency.innerHTML = options(leadAds.frequencies, source?.background_sync_frequency || "Hourly", (f) => FREQUENCY_LABELS[f] || f);
+    $("#source-editor").hidden = false;
+    $("#source-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+    try { fbPages = await call("mmm_custom.lead_ads.pages") || []; } catch (error) { fbPages = []; $("#source-error").textContent = error.message; }
+    fillPages(source?.facebook_page, source?.facebook_lead_form);
+    if (source?.facebook_lead_form) showMapping(source.facebook_lead_form);
+  }
+
+  async function showMapping(formId) {
+    mappingForm = formId;
+    $("#mapping-error").textContent = "";
+    try {
+      const data = await call("mmm_custom.lead_ads.form_mapping", { form: formId });
+      const values = data.fields.map((f) => f.value);
+      const labels = Object.fromEntries(data.fields.map((f) => [f.value, f.label]));
+      $("#mapping-rows").innerHTML = data.questions.map((q) => `<tr><td>${escapeHtml(q.label || q.key)}<br><small class="muted">${escapeHtml(q.key)}</small></td>
+        <td><select data-question="${escapeHtml(q.key)}"><option value="">— Không lấy —</option>${options(values, q.mapped_to_crm_field, (v) => labels[v] || v)}</select></td></tr>`).join("")
+        || '<tr><td colspan="2" class="muted">Form này không có câu hỏi.</td></tr>';
+      $("#mapping").hidden = false;
+    } catch (error) { $("#mapping-error").textContent = error.message; $("#mapping").hidden = false; }
+  }
+
+  $("#add-source").addEventListener("click", () => { leadAdsNotice(""); openSource(null); });
+  $("#close-source").addEventListener("click", () => { $("#source-editor").hidden = true; });
+  $("#sr-page").addEventListener("change", () => fillForms(""));
+  $("#load-pages").addEventListener("click", async () => {
+    const button = $("#load-pages");
+    $("#source-error").textContent = "";
+    button.disabled = true;
+    try {
+      fbPages = await call("mmm_custom.lead_ads.connect", { access_token: $("#sr-token").value }) || [];
+      fillPages(fbPages.length === 1 ? fbPages[0].id : "", "");
+      if (!fbPages.length) $("#source-error").textContent = "Token này không quản lý Page nào.";
+    } catch (error) { $("#source-error").textContent = error.message; }
+    finally { button.disabled = false; }
+  });
+  $("#source-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const values = {
+      name: form.original.value, title: form.source_name.value, access_token: form.access_token.value,
+      facebook_page: form.facebook_page.value, facebook_lead_form: form.facebook_lead_form.value,
+      background_sync_frequency: form.background_sync_frequency.value, enabled: form.enabled.checked ? 1 : 0
+    };
+    try {
+      const name = await call("mmm_custom.lead_ads.save_source", { values });
+      form.original.value = name;
+      form.source_name.value = name;
+      form.source_name.disabled = true;
+      form.access_token.value = "";
+      $("#source-title").textContent = `Sửa ${name}`;
+      leadAdsNotice(`<div class="notice">Đã lưu ${escapeHtml(name)}. Chọn trường CRM cho từng câu hỏi bên dưới.</div>`);
+      loadLeadAds();
+      showMapping(values.facebook_lead_form);
+    } catch (error) { $("#source-error").textContent = error.message; }
+  });
+  $("#save-mapping").addEventListener("click", async () => {
+    const mapping = Object.fromEntries([...$("#mapping-rows").querySelectorAll("[data-question]")].map((select) => [select.dataset.question, select.value]));
+    try {
+      await call("mmm_custom.lead_ads.save_mapping", { form: mappingForm, mapping });
+      $("#mapping-error").textContent = "";
+      leadAdsNotice('<div class="notice">Đã lưu cách lấy dữ liệu. Lead đồng bộ sau sẽ dùng cách này.</div>');
+    } catch (error) { $("#mapping-error").textContent = error.message; }
   });
 
   loadOverview();

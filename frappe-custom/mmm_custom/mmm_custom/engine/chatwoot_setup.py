@@ -12,12 +12,14 @@ except ImportError:  # offline tests
 from mmm_custom.chatwoot_client import ChatwootClient
 
 
-CONTACT_ATTRIBUTES = [("crm_lead_id", "Mã Lead CRM"), ("khoa_hoc_quan_tam", "Khóa học quan tâm"),
-                      ("chi_nhanh", "Chi nhánh"), ("trang_thai_lead", "Trạng thái khách")]
+# (key, display name, Chatwoot attribute_display_type)
+CONTACT_ATTRIBUTES = [("crm_lead_id", "Mã Lead CRM", "text"), ("khoa_hoc_quan_tam", "Khóa học quan tâm", "text"),
+                      ("chi_nhanh", "Chi nhánh", "text"), ("trang_thai_lead", "Trạng thái khách", "text"),
+                      ("ho_so_crm", "Hồ sơ CRM", "link")]
 
 
 def plan_contact_attributes(existing_keys):
-    return [(key, name) for key, name in CONTACT_ATTRIBUTES if key not in existing_keys]
+    return [attr for attr in CONTACT_ATTRIBUTES if attr[0] not in existing_keys]
 
 
 def plan_attributes(slots, existing_keys):
@@ -36,7 +38,7 @@ def ensure_conversation_attributes():
         client.create_custom_attribute(key, name)
         created.append(key)
     existing = {a.get("attribute_key") for a in client.list_custom_attributes("contact_attribute")}
-    for key, name in plan_contact_attributes(existing):  # what the bot writes on the contact
-        client.create_custom_attribute(key, name, model="contact_attribute")
+    for key, name, display_type in plan_contact_attributes(existing):  # what the bot writes on the contact
+        client.create_custom_attribute(key, name, model="contact_attribute", display_type=display_type)
         created.append(key)
     return {"created": created}

@@ -1,4 +1,4 @@
-"""Branches and staff for the /bot administration page. CRM is where both live; saving a Consultant
+"""Branches and staff for the /admin page. CRM is where both live; saving a Consultant
 triggers the Chatwoot staff sync (mmm_custom.staff_sync)."""
 
 try:
@@ -99,7 +99,7 @@ def _paragraphs(text):
 
 
 def course_values(data):
-    """A course from the /bot form or an imported file → CRM Product values; ValueError names what is wrong."""
+    """A course from the /admin form or an imported file → CRM Product values; ValueError names what is wrong."""
     values = {k: _text(data.get(k)) for k in ("product_name", "product_code", "course_group", "button_label",
                                                "audience", "duration_text", "certificate", "offer")}
     values["product_code"] = values["product_code"].upper()

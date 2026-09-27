@@ -44,8 +44,9 @@ class ChatwootEffects:
     """Customer-facing calls use the Agent Bot token so Chatwoot marks them as the bot's own messages
     (which the webhook then ignores); contact updates need the admin user token."""
 
-    def __init__(self, bot_client, user_client):
+    def __init__(self, bot_client, user_client, crm_url=""):
         self.bot, self.user = bot_client, user_client
+        self.crm_url = crm_url  # CRM public base URL for the contact's ho_so_crm link
 
     def send(self, conversation_id, reply):
         last = len(reply.messages) - 1
@@ -68,7 +69,7 @@ class ChatwootEffects:
 
         name = repo.save_lead(state, fields, courses, contact)
         if state.contact_id:
-            self._update_contact(int(state.contact_id), contact_update(fields, courses, name))
+            self._update_contact(int(state.contact_id), contact_update(fields, courses, name, self.crm_url))
         try:
             compute_data_quality(name)
         except Exception:
@@ -128,8 +129,10 @@ class ChatwootEffects:
 
 
 def chatwoot_effects(conf):
+    from mmm_custom.crm_links import crm_base
+
     base = conf.get("chatwoot_base_url") or conf.get("chatwoot_api_url") or "http://chatwoot-rails:3000"
     account = int(conf.get("chatwoot_bot_account_id") or conf.get("chatwoot_account_id") or 1)
     bot_token = conf.get("chatwoot_bot_api_token") or ""
     return ChatwootEffects(ChatwootClient(base, bot_token, account),
-                           ChatwootClient(base, conf.get("chatwoot_api_token") or bot_token, account))
+                           ChatwootClient(base, conf.get("chatwoot_api_token") or bot_token, account), crm_base(conf))

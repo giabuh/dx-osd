@@ -9,7 +9,7 @@ APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-PAGE = Path(__file__).resolve().parent.parent / "www" / "bot.py"
+PAGE = Path(__file__).resolve().parent.parent / "www" / "admin.py"
 
 
 class TestBotPage(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestBotPage(unittest.TestCase):
         with self.assertRaises(Redirect) as raised:
             page.get_context(SimpleNamespace())
         self.assertEqual(raised.exception.args, (302,))
-        self.assertEqual(frappe.flags.redirect_location, "/login?redirect-to=/bot")
+        self.assertEqual(frappe.flags.redirect_location, "/login?redirect-to=/admin")
 
     def test_wrong_role_is_forbidden(self):
         frappe = MagicMock()
@@ -58,7 +58,7 @@ class TestBotPage(unittest.TestCase):
         self.assertEqual(context.asset_version, int(script.stat().st_mtime))  # a new file busts the 12 h asset cache
 
     def test_page_loads_the_script_with_its_version(self):
-        html = (PAGE.parent / "bot.html").read_text(encoding="utf-8")
+        html = (PAGE.parent / "admin.html").read_text(encoding="utf-8")
         self.assertIn('src="/assets/mmm_custom/js/bot_page.js?v={{ asset_version }}"', html)
 
 

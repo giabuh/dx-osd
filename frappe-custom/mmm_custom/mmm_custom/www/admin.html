@@ -103,6 +103,12 @@
     pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; background: #f5f8fc; padding: 10px; border-radius: 8px; }
     .chat-grid pre { max-height: 180px; overflow: auto; }
     .error { color: #b23434; }
+    .editor { margin-bottom: 18px; }
+    .spaced { margin-top: 18px; }
+    .inline-row { display: flex; gap: 10px; }
+    .inline-row input { flex: 1; }
+    table.narrow { min-width: 0; }
+    #source-rows td:last-child { white-space: nowrap; }
     @media (max-width: 950px) { .cards { grid-template-columns: repeat(3, 1fr); } .chat-grid { grid-template-columns: 1fr; } }
     @media (max-width: 800px) {
       .shell { display: block; }
@@ -124,6 +130,7 @@
       <button type="button" data-tab="staff" aria-selected="false">Nhân viên</button>
       <button type="button" data-tab="knowledge" aria-selected="false">Tri thức khóa học</button>
       <button type="button" data-tab="playground" aria-selected="false">Thử chat với bot</button>
+      <button type="button" data-tab="lead-ads" aria-selected="false">Facebook Lead Ads</button>
       <div class="nav-label">Ứng dụng</div>
       <a href="/crm">Mở CRM</a>
       <a href="{{ chatwoot_url | e }}" target="_blank" rel="noopener">Mở Chatwoot ↗</a>
@@ -135,6 +142,20 @@
       <section id="playground" class="pane" hidden><div class="section-head"><div><h2>Thử chat với bot</h2><span class="muted">Cuộc trò chuyện thử không gửi tin nhắn hoặc tạo Lead</span></div><button id="reset-chat" class="secondary" type="button">Cuộc trò chuyện mới</button></div><div class="chat-grid"><div class="panel"><div class="chat-options"><span class="muted">Bạn đang đóng vai khách hàng</span><label><input id="use-jev" type="checkbox"> Dùng Jev</label></div><div id="chat-log" class="chat-log" aria-live="polite"></div><form id="chat-form" class="chat-form"><input id="chat-input" type="text" autocomplete="off" placeholder="Nhập tin nhắn của khách hàng…" maxlength="1000" required><button class="primary" type="submit">Gửi</button></form></div><div class="panel"><h3>Bot hiểu gì</h3><p class="muted">Gửi tin nhắn để xem từ khóa, Jev và lý do bot trả lời.</p><details id="inspector" open><summary>Chi tiết lượt chat</summary><div id="inspector-content"></div></details></div></div></section>
       <section id="branches" class="pane" hidden><div class="section-head"><div><h2>Chi nhánh</h2><span class="muted">Bot hỏi khách theo khu vực → chi nhánh, rồi giao cho nhân viên của chi nhánh đó</span></div><button id="add-branch" class="primary" type="button">+ Thêm chi nhánh</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Chi nhánh</th><th>Mã</th><th>Địa chỉ</th><th>Hotline</th><th>Nhân viên</th><th></th></tr></thead><tbody id="branch-rows"></tbody></table></div></div></section>
       <section id="staff" class="pane" hidden><div class="section-head"><div><h2>Nhân viên</h2><span class="muted">Lưu ở đây là tự đồng bộ sang Chatwoot: tài khoản, nhóm chi nhánh</span></div><button id="add-staff" class="primary" type="button">+ Thêm nhân viên</button></div><div id="staff-notice"></div><div class="toolbar"><input id="staff-search" type="search" placeholder="Tìm tên hoặc email" aria-label="Tìm nhân viên"><select id="staff-branch" aria-label="Lọc chi nhánh"></select></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Chi nhánh</th><th>Cấp bậc</th><th>Chuyên môn</th><th>Trạng thái</th><th>Chatwoot</th><th></th></tr></thead><tbody id="staff-rows"></tbody></table></div></div></section>
+      <section id="lead-ads" class="pane" hidden><div class="section-head"><div><h2>Facebook Lead Ads</h2><span class="muted">Khách điền form quảng cáo Facebook tự vào CRM thành Lead</span></div><button id="add-source" class="primary" type="button">+ Kết nối form</button></div><div id="lead-ads-notice"></div>
+        <div id="source-editor" class="panel editor" hidden><form id="source-form">
+          <h3 id="source-title">Kết nối form</h3>
+          <input type="hidden" name="original">
+          <label for="sr-token">Access token Facebook</label><div class="inline-row"><input id="sr-token" name="access_token" type="text" autocomplete="off" placeholder="Để trống khi sửa = giữ token cũ"><button id="load-pages" type="button" class="secondary">Tải Page</button></div>
+          <div class="form-row"><div><label for="sr-page">Page</label><select id="sr-page" name="facebook_page"></select></div><div><label for="sr-form">Form</label><select id="sr-form" name="facebook_lead_form"></select></div></div>
+          <div class="form-row"><div><label for="sr-name">Tên nguồn</label><input id="sr-name" name="source_name" type="text" placeholder="Để trống = tên form"></div><div><label for="sr-frequency">Tần suất đồng bộ</label><select id="sr-frequency" name="background_sync_frequency"></select></div></div>
+          <label class="inline"><input name="enabled" type="checkbox" checked> Đang bật</label>
+          <p id="source-error" class="error"></p>
+          <div class="form-actions"><button type="button" class="secondary" id="close-source">Đóng</button><button type="submit" class="primary">Lưu</button></div>
+        </form>
+        <div id="mapping" hidden><h3>Câu hỏi trong form → trường CRM</h3><div class="table-wrap"><table class="narrow"><thead><tr><th>Câu hỏi</th><th>Trường CRM</th></tr></thead><tbody id="mapping-rows"></tbody></table></div><p id="mapping-error" class="error"></p><div class="form-actions"><button id="save-mapping" type="button" class="primary">Lưu</button></div></div></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Page</th><th>Form</th><th>Tần suất</th><th>Lần đồng bộ cuối</th><th>Lỗi</th><th>Bật</th><th></th></tr></thead><tbody id="source-rows"></tbody></table></div></div>
+        <div class="panel spaced"><h3>Lỗi đồng bộ gần đây</h3><div class="table-wrap"><table><thead><tr><th>Thời gian</th><th>Nguồn</th><th>Lỗi</th><th></th></tr></thead><tbody id="failure-rows"></tbody></table></div></div></section>
     </main>
   </div>
   <dialog id="branch-dialog"><form id="branch-form" method="dialog">

@@ -2159,7 +2159,7 @@ msgstr "Giá trị Deal"
 #: frontend/src/pages/MobileDeal.vue:391
 #: frontend/src/pages/MobileOrganization.vue:343
 msgid "Deals"
-msgstr "Deals"
+msgstr "Học viên đăng ký"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:93
 msgid "Deals by Ongoing & Won Stage"

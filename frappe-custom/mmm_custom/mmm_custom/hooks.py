@@ -14,10 +14,13 @@ app_license = "mit"
 add_to_apps_screen = [{
     "name": "mmm_custom",
     "logo": "/assets/mmm_custom/images/bot.svg",
-    "title": "Bot Sao Việt",
-    "route": "/bot",
+    "title": "Quản trị",
+    "route": "/admin",
     "has_permission": "mmm_custom.desk.can_open_bot",
 }]
+
+# The admin page used to live at /bot; browsers keep the #tab fragment across the redirect.
+website_redirects = [{"source": "/bot", "target": "/admin"}]
 
 # Includes in <head>
 # ------------------
@@ -84,7 +87,8 @@ doctype_js = {"CRM Product": "public/js/crm_product.js"}
 after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
 # Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
 after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.desk.hide_unused_workspaces",
-                 "mmm_custom.desk.remove_old_bot_workspace", "mmm_custom.desk.ensure_bot_workspace_icon"]
+                 "mmm_custom.desk.remove_old_bot_workspace", "mmm_custom.desk.ensure_bot_workspace_icon",
+                 "mmm_custom.desk.apply_default_apps", "mmm_custom.crm_links.ensure_lead_form_script"]
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
 # clears the engine's cached catalog snapshot so the next customer message sees it.
@@ -95,6 +99,8 @@ doc_events = {
 }
 # Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
 doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update"}
+# Landing page by role: managers on /admin, everyone else on /crm (mmm_custom.desk.default_app_for).
+doc_events["User"] = {"on_update": "mmm_custom.desk.apply_user_default_app"}
 # Staff live in CRM; Chatwoot agents/teams follow (mmm_custom.staff_sync).
 doc_events["Consultant"] = {"on_update": "mmm_custom.staff_sync.enqueue_sync",
                             "on_trash": "mmm_custom.staff_sync.enqueue_sync"}

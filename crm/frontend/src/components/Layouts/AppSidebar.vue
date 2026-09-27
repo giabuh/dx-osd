@@ -47,7 +47,7 @@
               />
             </template>
           </SidebarItem>
-          <!-- Bot administration (branches, staff, courses) lives on the mmm_custom /bot page. -->
+          <!-- Bot administration (branches, staff, courses) lives on the mmm_custom /admin page. -->
           <SidebarItem
             v-if="isManager()"
             :label="__('Admin')"
@@ -261,6 +261,8 @@ const isCollapsed = computed(() => isSidebarCollapsed.value && !props.mobile)
 const isFCSite = ref(window.is_fc_site)
 const isDemoSite = ref(window.is_demo_site)
 
+// The education center works in Leads, Deals and Tasks; Contacts, Organizations, Notes and Call Logs keep
+// their routes (linked from a Lead page) but leave the sidebar.
 const links = [
   {
     label: 'Dashboard',
@@ -279,29 +281,9 @@ const links = [
     to: 'Deals',
   },
   {
-    label: 'Contacts',
-    icon: ContactsIcon,
-    to: 'Contacts',
-  },
-  {
-    label: 'Organizations',
-    icon: OrganizationsIcon,
-    to: 'Organizations',
-  },
-  {
-    label: 'Notes',
-    icon: NoteIcon,
-    to: 'Notes',
-  },
-  {
     label: 'Tasks',
     icon: TaskIcon,
     to: 'Tasks',
-  },
-  {
-    label: 'Call Logs',
-    icon: PhoneIcon,
-    to: 'Call Logs',
   },
 ]
 
@@ -432,7 +414,7 @@ const { user } = sessionStore()
 const { users, isManager } = usersStore()
 
 function openBotAdmin() {
-  window.location.href = '/bot'
+  window.location.href = '/admin'
 }
 const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 
