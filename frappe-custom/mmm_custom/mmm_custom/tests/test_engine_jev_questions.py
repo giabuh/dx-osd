@@ -57,8 +57,13 @@ class TestQuestions(unittest.TestCase):
         self.assertIn("slot:learner_age", q)
 
     def test_number_slot_asked_with_a_number_while_its_dependency_is_open(self):
-        self.assertIn("slot:learner_age", build_questions(ConversationState("1"), Understanding(unmatched=["8"]), CAT))
-        self.assertNotIn("slot:learner_age", build_questions(ConversationState("1"), Understanding(unmatched=["robot"]), CAT))
+        self.assertIn("slot:learner_age", build_questions(ConversationState("1"), Understanding(has_number=True), CAT))
+        self.assertNotIn("slot:learner_age", build_questions(ConversationState("1"), Understanding(), CAT))
+
+    def test_digits_in_the_message_are_noticed(self):
+        from mmm_custom.engine.understand import understand
+        self.assertTrue(understand("con mình 8 tuổi", ConversationState("1"), CAT).has_number)
+        self.assertFalse(understand("con mình tám tuổi", ConversationState("1"), CAT).has_number)
 
     def test_skills_can_be_left_out(self):
         self.assertFalse(any(k.startswith("skill:") for k in build_questions(ConversationState("1"), Understanding(), CAT, skills=False)))

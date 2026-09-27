@@ -101,7 +101,7 @@ class TestSlots(unittest.TestCase):
 
     def test_age_given_with_a_jev_learner_needs_that_learner(self):
         # "con mình 8 tuổi": learner and age arrive in the same Jev call; the age only counts for a child
-        u = Understanding(unmatched=["8"])
+        u = Understanding(has_number=True)
         kid = run({"slot:learner": pick("child", 0.95), "slot:learner_age": pick("8", 0.9)}, u)
         self.assertEqual(kid.fills["learner_age"]["value"], 8)
         adult = run({"slot:learner": pick("self", 0.95), "slot:learner_age": pick("8", 0.9)}, u)

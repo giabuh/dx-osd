@@ -29,6 +29,7 @@ class Understanding:
     hotness: dict = field(default_factory=dict)
     wants_human: float = 0.0
     spam: float = 0.0
+    has_number: bool = False                       # the message contains digits (ages, counts)
 
 
 def apply_action(u, action):
@@ -104,6 +105,7 @@ def understand(text, state, catalog):
                 u.fills[slot.key] = {"value": alternatives[0], "source": "keyword", "confidence": 1.0}
                 u.ambiguous[slot.key] = alternatives  # Jev may cross-check, but cannot restore the rejected value
     u.unmatched = content_words(folded, u.spans)
+    u.has_number = any(ch.isdigit() for ch in folded)
     return u
 
 
