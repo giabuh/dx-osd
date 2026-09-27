@@ -29,6 +29,10 @@ class TestBotWorkspace(unittest.TestCase):
                 self.assertEqual(s["type"], "URL", s["label"])
                 self.assertTrue(s["url"].startswith("/crm"), s["label"])
 
+    def test_name_label_and_title_match(self):
+        # the desk routes a workspace by slug(name) but its sidebar link uses slug(title): they must be equal
+        self.assertEqual((self.ws["name"], self.ws["label"]), (self.ws["title"], self.ws["title"]))
+
     def test_only_managers_see_it(self):
         self.assertEqual({r["role"] for r in self.ws["roles"]}, {"System Manager", "Sales Manager"})
 

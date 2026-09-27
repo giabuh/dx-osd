@@ -50,8 +50,27 @@ class TestDesk(unittest.TestCase):
         with patch.object(desk, "frappe", frappe):
             desk.ensure_bot_workspace_icon()
             desk.ensure_bot_workspace_icon()
-        frappe.db.set_value.assert_called_once_with("Workspace", "Bot Sao Viet", "icon", "education")
+        frappe.db.set_value.assert_called_once_with("Workspace", "Bot Sao Việt", "icon", "education")
         self.assertIn("mmm_custom.desk.ensure_bot_workspace_icon", hooks.after_migrate)
+
+    def test_migrate_removes_the_old_unaccented_workspace(self):
+        frappe = MagicMock()
+        present = {"Bot Sao Viet", "Bot Sao Việt"}
+        frappe.db.exists.side_effect = lambda doctype, name: name in present
+        frappe.delete_doc.side_effect = lambda doctype, name, **kw: present.discard(name)
+        with patch.object(desk, "frappe", frappe):
+            desk.remove_old_bot_workspace()
+            desk.remove_old_bot_workspace()
+        frappe.delete_doc.assert_called_once_with("Workspace", "Bot Sao Viet", ignore_permissions=True, force=True)
+
+    def test_migrate_imports_the_workspace_when_the_sync_skipped_it(self):
+        frappe = MagicMock()
+        frappe.db.exists.side_effect = lambda doctype, name: False
+        frappe.get_app_path.return_value = "/app/ws.json"
+        with patch.object(desk, "frappe", frappe), patch.object(desk, "import_file_by_path", create=True) as imp:
+            desk.remove_old_bot_workspace()
+        imp.assert_called_once_with("/app/ws.json", force=True)
+        self.assertIn("mmm_custom.desk.remove_old_bot_workspace", hooks.after_migrate)
 
 
 if __name__ == "__main__":
