@@ -2,7 +2,7 @@
 
 The north star for this project: where the product is going, in what order, and how we know each stage is done. It sits above the per-feature specs and plans in `docs/superpowers/` — every phase below gets its own spec + plan when work on it starts.
 
-_Last updated: 2026-09-24 (v2 — 100% FOSS Architecture)_
+_Last updated: 2026-09-27 (v2.1 — Autonomous Marketing Multi-Agent System)_
 
 ---
 
@@ -22,7 +22,7 @@ Every phase must respect these. If a proposed change breaks one, it needs an exp
 6. **Done means verified.** A phase is complete when its exit criteria are demonstrated on running systems — not when the code is written.
 7. **Multi-SMB from the start of productization.** Once Phase 2 begins, nothing is built that only works for a single hard-coded customer.
 
-## Current state (2026-09-24)
+## Current state (2026-09-27)
 
 | Area | Status |
 |---|---|
@@ -33,6 +33,7 @@ Every phase must respect these. If a proposed change breaks one, it needs an exp
 | Dedup & Ingestion logic | `frappe-custom/mmm_custom/mmm_custom/dedupe.py` & `api.py` with 23 unit tests (100% pass) + 5 live end-to-end sync verification tests. |
 | FOSS / License Compliance | 100% OSI-compliant. Chatwoot stripped of `enterprise/` (pure MIT), Redis pinned to `7.2.4-alpine` (BSD-3-Clause), Frappe CRM (AGPLv3), MariaDB (GPLv2), Caddy (Apache 2.0). n8n and messenger-platform-samples purged. |
 | [I] Intelligence (optional) | `mmm_custom/intelligence.py` + `followup.py` on TypeSafe Jev, off unless `typesafe_api_key` is set; confidence-gated (0.7). Same decisions and thresholds as the Activepieces prototype, which was verified on the real local stacks with the real Jev API: on 10 hand-labelled Vietnamese chats every wrong answer came back below 0.7. |
+| Autonomous Marketing System | EduFlow Autopilot (`mmm_custom/autopilot.py`): Weekly 4-post batching (Mon/Wed/Fri/Sun), 1-click batch approval, 3-tier rollback, agency-grade flyer generation, background publisher cron (`publish_scheduled_posts`), fully verified with 123 unit tests + live bench execution. |
 | Shared demo accounts | `scripts/seed-shared-accounts/` & `scripts/configure-chatwoot.py` |
 | Security checklist | Passed (no secrets in git history; anti-replay timestamp & HMAC-SHA256 verification on webhook). |
 | Meta App (plan Task 0) | **Not started** — needs Business Manager access |
@@ -40,7 +41,7 @@ Every phase must respect these. If a proposed change breaks one, it needs an exp
 | Production deployment, backups, monitoring | **None yet** |
 | Vendored source at runtime | **Used** — Chatwoot Community built from `chatwoot/`, CRM `v1.84.0` runs from `crm/` on pinned Frappe `v15.121.1` (see `docs/vendored-upstreams.md`) |
 
-Source of detail: `docs/superpowers/plans/2026-09-24-foss-meta-integration.md` (Execution Status table).
+Source of detail: `docs/superpowers/plans/2026-09-24-foss-meta-integration.md` (Execution Status table) and `docs/superpowers/plans/2026-09-27-autonomous-marketing-agent.md`.
 
 ---
 
@@ -72,6 +73,7 @@ Phases are ordered by dependency, not by date. A phase may start early work in p
 **Goal:** one real SMB receives real leads and messages in production, reliably.
 
 **Key deliverables**
+- ✅ **Autonomous Marketing Multi-Agent System (EduFlow Autopilot)**: Weekly 4-post batching (Mon/Wed/Fri/Sun matrix), 1-click batch approval, 3-tier rollback (regenerate single, recall post, rollback batch), and background publisher cron (`publish_scheduled_posts` every 15 min).
 - Meta App created, permissions granted, long-lived Page token (plan Task 0).
 - VPS + domain; Caddy live with TLS for `chat.` and `crm.` subdomains.
 - Real end-to-end test: Chatwoot → `mmm_custom` (CRM) live webhook delivery.
