@@ -4,7 +4,7 @@ Start here if you are an AI agent (or a new human) picking up this work. It tell
 in what order, and how to turn the spec into a correct plan without loading everything.
 
 **The spec:** [`../2026-09-26-edu-lead-engine-design.md`](../2026-09-26-edu-lead-engine-design.md).
-This folder holds its companions. **Current position:** C1, C2 and C3 (incl. C3.7 qualification, C3.8 course knowledge) done (plans
+This folder holds its companions. **Current position:** C1, C2 and C3 (incl. C3.7 qualification, C3.8 course knowledge) done; C4.1 rule D in code (CRM toggles pending) (plans
 `docs/superpowers/plans/2026-09-26-edu-lead-engine-c01-data-foundation.md`,
 `…-c02-conversation-engine.md`, `…-c03-jev-understanding.md`); Jev evaluation gate **failed**
 on 2026-09-27 with 1 critical act-band error in 104 items (u057: a B2B office-training quote picked the

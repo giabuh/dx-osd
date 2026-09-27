@@ -166,7 +166,7 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C3.8 | Course knowledge: overview, syllabus, course FAQs answered via Jev, Bot Knowledge coverage page (D-084–D-086) | M | ✅ |
 
 **C4 — Route to the right person** · milestone: every lead reaches the right consultant, with a reason
-| C4.1 | Routing rule D, configurable in CRM (D-006) | M | ⬜ |
+| C4.1 | Routing rule D, configurable in CRM (D-006) — rule in code (D-087); CRM toggles not built yet | M | 🔨 |
 | C4.2 | Working hours, holidays, away status + out-of-hours bot behaviour (D-046) | M | ⬜ |
 | C4.3 | Reassign when a consultant misses the response deadline | M | ⬜ |
 | C4.4 | B2B lead detection → B2B team (D-012) | M | ⬜ |
