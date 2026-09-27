@@ -44,18 +44,31 @@ One command does everything, and it is safe to run again (every step is idempote
 2. builds Chatwoot from `chatwoot/` and prepares its database;
 3. starts the unified stack and waits until both apps answer (Frappe CRM installs its bench and builds its frontend on the first start);
 4. wires Chatwoot to the CRM: account, inbox, HMAC webhook, agent bot, and the shared secrets in the CRM site config;
-5. loads the demo education center (branches, consultants, courses, schedules, promotions, bot skills) and mirrors the staff into Chatwoot.
+5. loads the demo education center (branches, consultants, courses, schedules, promotions, bot skills) and mirrors the staff into Chatwoot;
+6. gives every demo account the same login in both apps (`scripts/seed-demo-logins.py`).
 
 The **first run takes about 20–40 minutes** (mostly the Chatwoot image build and the CRM bench init); later runs take a minute. To follow the CRM while it installs: `docker compose logs -f crm-frappe`.
 
 When it finishes:
 
-| Service | URL | Login |
-|---|---|---|
-| Frappe CRM | http://127.0.0.1:8000 | `Administrator` / `admin123` |
-| Chatwoot | http://127.0.0.1:3000 | `admin@eduflow.vn` / `admin123` |
+| Service | URL |
+|---|---|
+| Frappe CRM | http://127.0.0.1:8000 |
+| Chatwoot | http://127.0.0.1:3000 |
 
-These are dev-only credentials. Stop with `docker compose stop` and start again with `docker compose up -d`. **Never run `docker compose down -v`** — the named volumes hold the data.
+The same email and password sign in to both apps (Chatwoot CE has no SSO, so the demo accounts share one password instead):
+
+| Sign in as | Email | Password |
+|---|---|---|
+| Admin | `admin@eduflow.vn` (CRM also accepts `Administrator`) | `admin123` |
+| Team lead, CN Bình Thạnh | `mai.hcm-bt@demo.saoviet.invalid` | `EduFlow@2026` |
+| Consultant, CN Bình Thạnh | `nam.hcm-bt@demo.saoviet.invalid` | `EduFlow@2026` |
+| B2B team lead | `anh.b2b@demo.saoviet.invalid` | `EduFlow@2026` |
+| Call center (central team) | `thu.tongdai@demo.saoviet.invalid` | `EduFlow@2026` |
+
+All 44 consultants are in [`consultants.json`](frappe-custom/mmm_custom/mmm_custom/demo/saoviet/consultants.json) and use `EduFlow@2026`; a consultant sees the Leads of their own branch. Staff are managed in the CRM (*Consultant*) and mirrored to Chatwoot as agents and branch teams.
+
+These are public demo credentials for a stack bound to `127.0.0.1`; never reuse them on a real deployment. Stop with `docker compose stop` and start again with `docker compose up -d`. **Never run `docker compose down -v`** — the named volumes hold the data.
 
 ### What to try
 
@@ -99,6 +112,8 @@ python3 scripts/setup-agent-bot.py
 docker exec crm-frappe-1 bash -lc "cd /home/frappe/frappe-bench && bench --site crm.localhost execute mmm_custom.demo.loader.load"
 # Staff: add Consultants in CRM; they sync to Chatwoot on save and every 10 min, or right away with:
 docker exec crm-frappe-1 bash -lc "cd /home/frappe/frappe-bench && bench --site crm.localhost execute mmm_custom.staff_sync.sync_now"
+# Same demo logins in both apps: admin@eduflow.vn / admin123, every consultant email / EduFlow@2026
+python3 scripts/seed-demo-logins.py
 # After editing branches/staff/courses in the CRM, write them back into the demo dataset to share them:
 docker exec crm-frappe-1 bash -lc "cd /home/frappe/frappe-bench && bench --site crm.localhost execute mmm_custom.demo.exporter.export"
 ```

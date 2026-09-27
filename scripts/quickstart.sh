@@ -101,6 +101,8 @@ if (( DEMO )); then
   bench execute mmm_custom.demo.loader.load
   bench execute mmm_custom.staff_sync.sync_now
   ok "demo data loaded and staff mirrored to Chatwoot"
+  step "Same demo logins in both apps"
+  python3 scripts/seed-demo-logins.py
 fi
 
 if (( VERIFY )); then
@@ -116,8 +118,13 @@ cat <<'EOF'
 ==================================================================
  DX-OSD is up.
 
-   Frappe CRM   http://127.0.0.1:8000   Administrator / admin123
-   Chatwoot     http://127.0.0.1:3000   admin@eduflow.vn / admin123
+   Frappe CRM   http://127.0.0.1:8000
+   Chatwoot     http://127.0.0.1:3000
+
+ Same login in both apps:
+   admin        admin@eduflow.vn / admin123   (CRM also: Administrator / admin123)
+   consultant   any consultant email / EduFlow@2026
+                e.g. mai.hcm-bt@demo.saoviet.invalid (branch team lead)
 
  Stop:     docker compose stop       (keeps all data)
  Restart:  docker compose up -d
