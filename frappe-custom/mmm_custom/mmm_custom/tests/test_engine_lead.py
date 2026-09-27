@@ -57,7 +57,8 @@ class TestLeadMapping(unittest.TestCase):
                 sys.modules["frappe"] = saved
         custom = {f["fieldname"] for f in setup_mod.CATALOG_FIELDS["CRM Lead"]}
         for slot in CAT.slots:
-            self.assertIn(slot.lead_field, custom | {"products", "territory", "first_name", "mobile_no"}, slot.key)
+            if slot.lead_field:
+                self.assertIn(slot.lead_field, custom | {"products", "territory", "first_name", "mobile_no"}, slot.key)
 
 
 if __name__ == "__main__":

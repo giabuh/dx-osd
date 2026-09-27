@@ -99,6 +99,8 @@ def next_slot(slots, catalog, first=()):
     ordered = [catalog.slot(k) for k in first if catalog.slot(k)] + list(catalog.slots)
     for slot in ordered:
         entry = slots.get(slot.key) or {}
+        if slot.on_demand and slot.key not in first:
+            continue
         if filled(slots, slot.key) or not slot_active(slot, slots):
             continue
         if slot.key not in first and not slot.required and (entry.get("asked") or entry.get("skipped")):

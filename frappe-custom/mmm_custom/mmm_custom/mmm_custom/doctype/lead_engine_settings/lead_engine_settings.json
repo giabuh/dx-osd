@@ -38,7 +38,12 @@
   "cost_section",
   "jev_calls_per_hour",
   "jev_daily_token_budget",
-  "playground_daily_token_budget"
+  "playground_daily_token_budget",
+  "advisor_section",
+  "advisor_goal_weight",
+  "advisor_level_weight",
+  "advisor_floor",
+  "advisor_shortlist"
  ],
  "fields": [
   {
@@ -158,7 +163,12 @@
   {"fieldname": "cost_section", "fieldtype": "Section Break", "label": "Jev cost guard"},
   {"fieldname": "jev_calls_per_hour", "fieldtype": "Int", "label": "Jev calls per conversation per hour", "description": "Default 20"},
   {"fieldname": "jev_daily_token_budget", "fieldtype": "Int", "label": "Daily input-token budget (customers)", "description": "0 = unlimited"},
-  {"fieldname": "playground_daily_token_budget", "fieldtype": "Int", "label": "Daily input-token budget (Playground)", "description": "0 = unlimited"}
+  {"fieldname": "playground_daily_token_budget", "fieldtype": "Int", "label": "Daily input-token budget (Playground)", "description": "0 = unlimited"},
+  {"fieldname": "advisor_section", "fieldtype": "Section Break", "label": "Course advisor"},
+  {"fieldname": "advisor_goal_weight", "fieldtype": "Float", "label": "Goal fit weight", "description": "Default 0.6"},
+  {"fieldname": "advisor_level_weight", "fieldtype": "Float", "label": "Level fit weight", "description": "Default 0.4"},
+  {"fieldname": "advisor_floor", "fieldtype": "Float", "label": "Ask goal/level below", "description": "Default 0.5"},
+  {"fieldname": "advisor_shortlist", "fieldtype": "Int", "label": "Courses scored per call", "description": "Default 8"}
  ],
  "issingle": 1,
  "links": [],

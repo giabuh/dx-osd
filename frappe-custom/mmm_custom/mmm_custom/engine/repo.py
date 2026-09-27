@@ -58,7 +58,7 @@ def load_rows():
                                                     "description"], order_by="sort_order asc")
     slots = frappe.get_all("Bot Slot", filters={"active": 1}, fields=[
         "slot_key", "label", "slot_type", "catalog_source", "required", "sort_order", "ask_template",
-        "depends_on_slot", "depends_on_value", "lead_field"])
+        "depends_on_slot", "depends_on_value", "lead_field", "ask_on_demand"])
     options = _children("Bot Slot Option", "Bot Slot", "options", ["value", "label", "button_label", "aliases"])
     skills = frappe.get_all("Bot Skill", filters={"active": 1}, fields=[
         "skill_key", "title", "jev_description", "examples", "aliases", "missing_policy", "action_type",

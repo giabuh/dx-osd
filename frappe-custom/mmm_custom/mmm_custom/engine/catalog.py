@@ -47,6 +47,7 @@ class Slot:
     options: tuple = ()
     depends_on: tuple = ()  # (slot_key, value) or ()
     lead_field: str = ""
+    on_demand: bool = False
 
     def option(self, value):
         return next((o for o in self.options if o.value == value), None)
@@ -200,7 +201,7 @@ def build_catalog(data):
         options=tuple(Option(o["value"], o["label"], o.get("button_label") or o["label"], _aliases(o.get("aliases")))
                       for o in s.get("options") or ()),
         depends_on=(s["depends_on_slot"], s.get("depends_on_value") or "") if s.get("depends_on_slot") else (),
-        lead_field=s.get("lead_field") or "")
+        lead_field=s.get("lead_field") or "", on_demand=bool(s.get("ask_on_demand")))
         for s in data.get("bot_slots") or [] if _active(s)), key=lambda s: s.order)
     skills = {k["skill_key"]: Skill(
         key=k["skill_key"], title=k["title"], action=k["action_type"], params=tuple(k.get("parameters") or ()),

@@ -157,7 +157,8 @@ def load(anchor=None):
 
 	slot_fields = ("label", "slot_type", "catalog_source", "required", "sort_order", "ask_template", "lead_field")
 	for s in data["bot_slots"]:
-		put("Bot Slot", {"slot_key": s["slot_key"]}, {**{k: s[k] for k in slot_fields}, "active": 1, "options": s["options"]})
+		put("Bot Slot", {"slot_key": s["slot_key"]}, {**{k: s[k] for k in slot_fields}, "active": 1,
+		                                             "ask_on_demand": s.get("ask_on_demand", 0), "options": s["options"]})
 	for s in data["bot_slots"]:  # second pass: dependencies point at slots that now exist
 		put("Bot Slot", {"slot_key": s["slot_key"]},
 		    {"depends_on_slot": s["depends_on_slot"] or None, "depends_on_value": s["depends_on_value"] or None})

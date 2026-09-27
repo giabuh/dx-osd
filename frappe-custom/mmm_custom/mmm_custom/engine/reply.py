@@ -29,6 +29,9 @@ class Reply:
     variants: list = field(default_factory=list)     # [{"skill": key, "variant": key}]
     attachments: list = field(default_factory=list)
     errors: list = field(default_factory=list)
+    ask: str = ""
+    pending_skill: str = ""
+    jev_extra: list = field(default_factory=list)
 
     def options(self):
         return {b["title"]: b["action"] for b in self.buttons}
@@ -81,7 +84,7 @@ def choose_template(skill, ctx, render):
     return default
 
 
-def compose(decision, state, catalog, render, data=None, today=None, extra=None):
+def compose(decision, state, catalog, render, data=None, today=None, extra=None, jev=None, jev_state=None):
     reply = Reply()
     if decision.type == "silent":
         return reply
@@ -115,10 +118,16 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None)
     for key in decision.skills:
         skill = catalog.skills[key]
         try:
-            out = run_action(skill, ctx, decision.slots, catalog, data, today)
+            out = run_action(skill, ctx, decision.slots, catalog, data, today, jev, jev_state)
         except Exception as e:
             reply.errors.append({"type": "action_error", "source": key, "detail": str(e)[:300]})
             out = {}
+        if "_jev" in out:
+            reply.jev_extra.append(out["_jev"])
+            jev = None
+        if out.get("_ask"):
+            reply.ask, reply.pending_skill = reply.ask or out["_ask"], reply.pending_skill or key
+            continue
         skill_ctx = {**ctx, **{k: v for k, v in out.items() if not k.startswith("_")}}
         template = choose_template(skill, skill_ctx, render)
         if template:
@@ -141,8 +150,9 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None)
                            {"title": CONFIRM_NO, "action": {"type": "confirm_no", **c}}]
 
     ask_buttons = []
-    if decision.ask:
-        slot = catalog.slot(decision.ask)
+    ask_key = reply.ask or decision.ask
+    if ask_key:
+        slot = catalog.slot(ask_key)
         say(slot.ask_template, ctx, f"slot:{slot.key}")
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)

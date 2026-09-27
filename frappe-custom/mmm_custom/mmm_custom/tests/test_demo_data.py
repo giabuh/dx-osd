@@ -28,7 +28,7 @@ class TestDemoData(unittest.TestCase):
         self.assertEqual(len(self.courses), 46)
         self.assertEqual(len(self.consultants), 44)
         self.assertEqual(len(self.promotions), 10)
-        self.assertEqual(len(self.slots), 7)
+        self.assertEqual(len(self.slots), 9)
         self.assertEqual(len(self.skills), 30)
 
     def test_unique_keys(self):

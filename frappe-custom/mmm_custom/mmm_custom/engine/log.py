@@ -28,7 +28,7 @@ def log_row(turn, jev=None):
         "status_before": turn.status_before, "turns_before": turn.turns_before, "stuck_before": turn.stuck_before,
         "slots_before": _j(turn.slots_before), "pending_before": _j(turn.pending_before), "slots_after": _j(d.slots),
         "reply_text": "\n\n".join(r.messages), "reply_buttons": _j([b["title"] for b in r.buttons]),
-        "reply_variants": _j(r.variants), "errors": _j(r.errors),
+        "reply_variants": _j(r.variants), "errors": _j(r.errors), "jev_extra": _j(r.jev_extra),
     }
 
 

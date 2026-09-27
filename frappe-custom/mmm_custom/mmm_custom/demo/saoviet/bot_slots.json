@@ -128,4 +128,21 @@
   "depends_on_value": "",
   "lead_field": "mobile_no"
  }
+,
+{"slot_key": "goal", "label": "Mục tiêu học", "slot_type": "choice", "catalog_source": "", "required": 0, "sort_order": 32,
+ "ask_on_demand": 1, "ask_template": "{{ brand.you | capitalize }} học để phục vụ mục tiêu gì ạ?",
+ "options": [
+  {"value": "office", "label": "Công việc văn phòng", "button_label": "Công việc văn phòng", "aliases": "van phong, di lam van phong"},
+  {"value": "certificate", "label": "Lấy chứng chỉ", "button_label": "Lấy chứng chỉ", "aliases": "lay chung chi, thi chung chi"},
+  {"value": "kids_start", "label": "Cho bé làm quen máy tính", "button_label": "Cho bé làm quen", "aliases": "be lam quen, lam quen may tinh"},
+  {"value": "career", "label": "Chuyển nghề / tìm việc", "button_label": "Chuyển nghề", "aliases": "chuyen nghe, tim viec, xin viec"},
+  {"value": "hobby", "label": "Sở thích cá nhân", "button_label": "Sở thích", "aliases": "so thich, hoc cho vui"}],
+ "depends_on_slot": "", "depends_on_value": "", "lead_field": ""},
+{"slot_key": "level", "label": "Trình độ hiện tại", "slot_type": "choice", "catalog_source": "", "required": 0, "sort_order": 34,
+ "ask_on_demand": 1, "ask_template": "{{ brand.you | capitalize }} đã biết về lĩnh vực này tới đâu rồi ạ?",
+ "options": [
+  {"value": "beginner", "label": "Chưa biết gì", "button_label": "Chưa biết gì", "aliases": "chua biet gi, mat goc, moi bat dau"},
+  {"value": "basic", "label": "Biết cơ bản", "button_label": "Biết cơ bản", "aliases": "biet co ban, biet chut chut"},
+  {"value": "advanced", "label": "Muốn nâng cao", "button_label": "Muốn nâng cao", "aliases": "muon nang cao, da biet kha"}],
+ "depends_on_slot": "", "depends_on_value": "", "lead_field": ""}
 ]

@@ -10,6 +10,7 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.engine.combine import combine
+from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.cost_guard import allow_jev, recent_calls
 from mmm_custom.engine.decide import decide
 from mmm_custom.engine.handoff import plan_handoff
@@ -92,12 +93,14 @@ def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0
 def apply_decision(state, decision, reply, event):
     state.slots = decision.slots
     state.stuck_turns = decision.stuck_turns
-    state.pending_skill = decision.pending_skill
-    state.answered = list(dict.fromkeys(state.answered + decision.skills))
+    state.pending_skill = reply.pending_skill or decision.pending_skill
+    state.answered = list(dict.fromkeys(state.answered + [k for k in decision.skills if k != reply.pending_skill]))
     if decision.type != "silent":
-        state.pending = {"slot": decision.ask, "options": reply.options()}
+        state.pending = {"slot": reply.ask or decision.ask, "options": reply.options()}
         if decision.confirm:
             state.pending["confirm"] = decision.confirm
+    if reply.ask:
+        state.slots.setdefault(reply.ask, {})["asked"] = 1
     lines = [{"from": "customer", "text": event.text[:300]}]
     if reply.messages:
         lines.append({"from": "bot", "text": " ".join(reply.messages)[:300]})
@@ -177,7 +180,13 @@ def run_turn(event, repo, effects, render):
         except Exception as e:
             errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
     extra = {"consultant": plan.consultant_ctx} if plan else None
-    turn.reply = compose(turn.decision, state, catalog, render, repo, repo.today(), extra)
+    advisor_jev = jev if turn.jev.status == "ok" else None
+    advisor_state = {**jev_state(event.text, state, catalog), "known": shown_slots(turn.decision.slots, catalog)}
+    turn.reply = compose(turn.decision, state, catalog, render, repo, repo.today(), extra, advisor_jev, advisor_state)
+    for call in turn.reply.jev_extra:
+        state.jev_calls.append(repo.now())
+        if call.get("input_tokens"):
+            repo.add_jev_tokens(call["input_tokens"])
     turn.reply.errors[:0] = errors
     if turn.reply.messages:
         try:

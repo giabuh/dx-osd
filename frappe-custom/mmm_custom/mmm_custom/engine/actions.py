@@ -8,8 +8,9 @@ An action returns extra template context; keys starting with "_" are instruction
 from dataclasses import dataclass
 
 from mmm_custom.engine.context import CUSTOMER_SLOTS, branch_context
+from mmm_custom.engine.advisor import advisor_questions, score_courses
 from mmm_custom.engine.render import vnd
-from mmm_custom.engine.state import value
+from mmm_custom.engine.state import filled, value
 
 ACTIONS = {}
 
@@ -29,11 +30,13 @@ class ActionInput:
     catalog: object
     data: object
     today: object
+    jev: object = None
+    jev_state: dict = None
 
 
-def run_action(skill, ctx, slots, catalog, data, today):
+def run_action(skill, ctx, slots, catalog, data, today, jev=None, jev_state=None):
     fn = ACTIONS.get(skill.action)
-    return fn(ActionInput(skill, ctx, slots, catalog, data, today)) if fn else {}
+    return fn(ActionInput(skill, ctx, slots, catalog, data, today, jev, jev_state)) if fn else {}
 
 
 @action("answer_template")
@@ -111,18 +114,33 @@ def send_media(a):
 
 @action("recommend_courses")
 def recommend_courses(a):
-    """C2 course advisor: filters are data in action_config (D-071); C3.6 adds Jev fit scoring."""
-    cfg = a.skill.config
+    """Course advisor: data filters from action_config (D-071), then Jev fit scoring of the shortlist
+    with one extra call (D-055); below the floor it asks goal/level instead."""
+    cfg, settings = a.skill.config, a.catalog.settings
     learner = value(a.slots, CUSTOMER_SLOTS["learner"])
     age = value(a.slots, CUSTOMER_SLOTS["learner_age"])
     audiences = [cfg["audience"]] if cfg.get("audience") else list((cfg.get("audience_by_learner") or {}).get(learner or "", []))
     course_slot = a.catalog.slot_for("course")
     group = (a.slots.get(course_slot.key) or {}).get("parent", "") if course_slot else ""
-    picked = [c for c in a.catalog.courses.values()
-              if (not audiences or c.audience in audiences)
-              and (not age or (c.min_age or 0) <= int(age) <= (c.max_age or 200))
-              and (not group or c.group == group)][: int(cfg.get("top", 3))]
+    candidates = [c for c in a.catalog.courses.values()
+                  if (not audiences or c.audience in audiences)
+                  and (not age or (c.min_age or 0) <= int(age) <= (c.max_age or 200))
+                  and (not group or c.group == group)]
+    top, out, scores = int(cfg.get("top", 3)), {}, {}
+    picked = candidates[:top]
+    if a.jev is not None and len(candidates) > 1:
+        shortlist = candidates[: int(settings["advisor_shortlist"])]
+        result = a.jev.ask(a.jev_state or {}, advisor_questions(shortlist))
+        out["_jev"] = result.log()
+        ranked = score_courses(shortlist, result.answers, settings) if result.status == "ok" else []
+        if ranked and ranked[0][1] < float(settings["advisor_floor"]):
+            ask = next((k for k in ("goal", "level") if a.catalog.slot(k) and not filled(a.slots, k)), "")
+            if ask:
+                return {**out, "_ask": ask}
+        if ranked:
+            picked, scores = [c for c, _ in ranked[:top]], dict((c.code, s) for c, s in ranked)
     buttons = [{"title": c.button, "action": {"type": "slot", "slot": course_slot.key, "value": c.code}}
                for c in picked] if course_slot else []
-    return {"recommendations": [{"course": c.name, "code": c.code, "fee": c.fee, "score": None} for c in picked],
-            "_buttons": buttons}
+    out.update(recommendations=[{"course": c.name, "code": c.code, "fee": c.fee, "score": scores.get(c.code)}
+                                for c in picked], _buttons=buttons)
+    return out

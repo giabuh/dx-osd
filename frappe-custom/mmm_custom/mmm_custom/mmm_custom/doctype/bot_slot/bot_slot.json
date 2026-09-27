@@ -16,7 +16,8 @@
   "depends_on_slot",
   "depends_on_value",
   "lead_field",
-  "active"
+  "active",
+  "ask_on_demand"
  ],
  "fields": [
   {
@@ -95,6 +96,12 @@
    "fieldtype": "Check",
    "label": "Active",
    "default": "1"
+  },
+  {
+   "fieldname": "ask_on_demand",
+   "fieldtype": "Check",
+   "label": "Ask only when a skill needs it",
+   "description": "Not part of the normal question sequence"
   }
  ],
  "links": [],

@@ -80,7 +80,8 @@ def understand(text, state, catalog):
         return u
     folded = fold(text)
     pending = state.pending.get("slot") or ""
-    slots = [(s, REGISTRY[s.type]) for s in catalog.slots if s.type in REGISTRY]
+    slots = [(s, REGISTRY[s.type]) for s in catalog.slots
+             if s.type in REGISTRY and (not s.on_demand or pending == s.key)]
     for slot, handler in slots:
         if not handler.late:
             handler.understand(slot, text or "", folded, pending == slot.key, catalog, u)

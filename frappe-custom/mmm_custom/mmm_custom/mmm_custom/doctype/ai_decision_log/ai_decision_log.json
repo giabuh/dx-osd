@@ -35,7 +35,8 @@
   "reply_text",
   "reply_buttons",
   "reply_variants",
-  "errors"
+  "errors",
+  "jev_extra"
  ],
  "fields": [
   {
@@ -206,6 +207,11 @@
    "fieldname": "errors",
    "fieldtype": "JSON",
    "label": "Errors"
+  },
+  {
+   "fieldname": "jev_extra",
+   "fieldtype": "JSON",
+   "label": "Extra Jev calls (course advisor)"
   }
  ],
  "links": [],
