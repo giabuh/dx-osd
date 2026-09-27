@@ -38,7 +38,7 @@ for real customers until a later labelled gate passes.
 | `engine/knowledge.py`, `mmm_custom/page/bot_knowledge/`, `public/js/crm_product.js`, `mmm_custom/doctype/course_faq/` | Course knowledge overview and coverage table (D-086); CRM Product fields `syllabus` + `faqs` (`setup.CATALOG_FIELDS`), answered through `jev_questions.faq_course`/`combine._course_faq` (D-085) | — |
 | `engine/playground.py`, `mmm_custom/page/bot_playground/` | `/app/bot-playground`: dry simulation, replay and an independent **Use Jev** toggle with question/answer/token inspector | — |
 | `desk.py`, `hooks.py` | Role gate for bot administration, migrate-time hiding of unused desk workspaces, and an Apps entry from `/crm` to `/bot` (D-091) | — |
-| `www/bot.py`, `www/bot.html`, `public/js/bot_page.js` | Standalone `/bot` page with overview, course knowledge and dry-run chat tabs (D-092) | — |
+| `www/bot.py`, `www/bot.html`, `public/js/bot_page.js` | Standalone `/bot` page with overview, course knowledge and dry-run chat tabs; long inspector output scrolls inside its panel (D-092) | — |
 | `engine/dashboard.py` | Role-gated summary of bot Lead creation, qualification, handoffs, knowledge coverage and latest qualified Leads | — |
 | `intelligence.py:208` `analyze_conversation` | Jev intent/hotness/phone/email analysis and labels; skips conversations handled by an active Bot Conversation | — |
 | `intelligence.py:74` `ask_jev` | One System One call (`/v1/systemone`), typed questions | Reused |
