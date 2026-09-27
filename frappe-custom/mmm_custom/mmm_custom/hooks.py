@@ -95,6 +95,9 @@ doc_events = {
 }
 # Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
 doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update"}
+# Staff live in CRM; Chatwoot agents/teams follow (mmm_custom.staff_sync).
+doc_events["Consultant"] = {"on_update": "mmm_custom.staff_sync.enqueue_sync",
+                            "on_trash": "mmm_custom.staff_sync.enqueue_sync"}
 
 # Template filters for bot copy: {{ course.fee | vnd }} → "1.800.000đ", {{ s.date | date_vi }} → "Thứ 7, 04/10".
 jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.date_vi"]}
@@ -106,6 +109,8 @@ jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.d
 scheduler_events = {
 	"cron": {
 		"0 8 * * *": ["mmm_custom.followup.run_daily"],
+		# Heals failed staff syncs and gives newly connected Facebook pages the bot.
+		"*/10 * * * *": ["mmm_custom.staff_sync.sync_all"],
 	},
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
 	"daily": ["mmm_custom.engine.log.purge_old_logs"],

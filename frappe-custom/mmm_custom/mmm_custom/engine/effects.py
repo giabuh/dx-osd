@@ -30,7 +30,7 @@ class RecordingEffects:
         self.calls.append(("save_lead", {"fields": dict(fields), "courses": [c.code for c in courses]}))
         return state.lead
 
-    def handoff(self, conversation_id, plan, lead):
+    def handoff(self, conversation_id, plan, lead, inbox_id=""):
         self.calls.append(("handoff", {"agent_id": plan.agent_id, "team": plan.team, "labels": list(plan.labels),
                                        "attributes": dict(plan.attributes), "summary": plan.summary,
                                        "owner": plan.owner, "lead": lead}))
@@ -90,8 +90,10 @@ class ChatwootEffects:
         except Exception:
             logger.exception("contact write-back to Chatwoot failed")
 
-    def handoff(self, conversation_id, plan, lead):
-        """D-058 steps 2–3; each step is independent so one failing call never blocks the rest."""
+    def handoff(self, conversation_id, plan, lead, inbox_id=""):
+        """D-058 steps 2–3; each step is independent so one failing call never blocks the rest.
+        The consultant joins the conversation's inbox first, so staff only belong to the pages
+        they actually got customers from (mmm_custom.staff_sync)."""
         from mmm_custom.engine import repo
 
         errors = []
@@ -109,6 +111,8 @@ class ChatwootEffects:
             errors.append({"type": "handoff_step_failed", "step": "list_teams", "detail": str(e)[:300]})
         if team_id:  # team before agent: Chatwoot keeps the agent when they belong to the team
             step("assign_team", self.bot.assign_team, conversation_id, team_id)
+        if plan.agent_id and inbox_id:
+            step("inbox_member", self.user.add_inbox_members, int(inbox_id), [plan.agent_id])
         if plan.agent_id:
             step("assign_agent", self.bot.assign_conversation, conversation_id, plan.agent_id)
         step("open", self.bot.toggle_status, conversation_id, "open")

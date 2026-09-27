@@ -157,7 +157,7 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
-    # Account administration (used by the demo seeding, mmm_custom.demo.chatwoot_seed).
+    # Account administration (used by the CRM → Chatwoot staff sync, mmm_custom.staff_sync).
 
     def list_inboxes(self) -> list[dict]:
         resp = requests.get(f"{self._base}/inboxes", headers=self._headers, timeout=REQUEST_TIMEOUT)
@@ -186,6 +186,23 @@ class ChatwootClient:
                              json={"user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
+
+    def update_team_members(self, team_id: int, user_ids: list[int]) -> list:
+        """Replace the team's members with exactly `user_ids`."""
+        resp = requests.patch(f"{self._base}/teams/{team_id}/team_members", headers=self._headers,
+                              json={"user_ids": user_ids}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_agent_bots(self) -> list[dict]:
+        resp = requests.get(f"{self._base}/agent_bots", headers=self._headers, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+
+    def set_agent_bot(self, inbox_id: int, bot_id: int) -> None:
+        resp = requests.post(f"{self._base}/inboxes/{inbox_id}/set_agent_bot", headers=self._headers,
+                             json={"agent_bot": bot_id}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
 
     def add_inbox_members(self, inbox_id: int, user_ids: list[int]) -> list:
         resp = requests.post(f"{self._base}/inbox_members", headers=self._headers,

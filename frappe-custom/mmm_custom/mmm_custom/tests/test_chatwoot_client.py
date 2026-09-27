@@ -233,6 +233,26 @@ class TestChatwootClientAdmin(unittest.TestCase):
         self.assertEqual(mock_requests.post.call_args[1]["json"], {"user_ids": [7, 9]})
 
     @patch("mmm_custom.chatwoot_client.requests")
+    def test_update_team_members_replaces_the_list(self, mock_requests):
+        self._resp(mock_requests, "patch", [])
+        self.client.update_team_members(3, [7])
+        self.assertTrue(mock_requests.patch.call_args[0][0].endswith("/teams/3/team_members"))
+        self.assertEqual(mock_requests.patch.call_args[1]["json"], {"user_ids": [7]})
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_list_agent_bots(self, mock_requests):
+        self._resp(mock_requests, "get", [{"id": 4}])
+        self.assertEqual(self.client.list_agent_bots(), [{"id": 4}])
+        self.assertTrue(mock_requests.get.call_args[0][0].endswith("/agent_bots"))
+
+    @patch("mmm_custom.chatwoot_client.requests")
+    def test_set_agent_bot(self, mock_requests):
+        self._resp(mock_requests, "post", None)
+        self.client.set_agent_bot(2, 4)
+        self.assertTrue(mock_requests.post.call_args[0][0].endswith("/inboxes/2/set_agent_bot"))
+        self.assertEqual(mock_requests.post.call_args[1]["json"], {"agent_bot": 4})
+
+    @patch("mmm_custom.chatwoot_client.requests")
     def test_add_inbox_members(self, mock_requests):
         self._resp(mock_requests, "post", [])
         self.client.add_inbox_members(2, [7])

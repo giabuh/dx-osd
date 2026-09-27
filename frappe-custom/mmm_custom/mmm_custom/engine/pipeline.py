@@ -211,7 +211,7 @@ def run_turn(event, repo, effects, render):
     if plan:
         state.consultant = plan.consultant_name
         try:
-            turn.reply.errors += effects.handoff(state.conversation_id, plan, state.lead)
+            turn.reply.errors += effects.handoff(state.conversation_id, plan, state.lead, state.inbox_id)
         except Exception as e:
             turn.reply.errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
     repo.save_state(state)

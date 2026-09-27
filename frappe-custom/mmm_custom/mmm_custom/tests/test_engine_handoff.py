@@ -149,6 +149,19 @@ class TestEffects(unittest.TestCase):
         bot.set_conversation_attributes.assert_called_once_with(5, {"bot_branch": "CN Dĩ An"})
         bot.send_private_note.assert_called_once_with(5, "note")
         owner.assert_called_once_with("L1", "mai@x")
+        user.add_inbox_members.assert_not_called()
+
+    def test_consultant_joins_the_inbox_before_assignment(self):
+        bot, user = MagicMock(), MagicMock()
+        calls = MagicMock()
+        calls.attach_mock(user.add_inbox_members, "join")
+        calls.attach_mock(bot.assign_conversation, "assign")
+        user.list_teams.return_value = []
+        plan = HandoffPlan({"name": "mai@x", "chatwoot_agent_id": 11}, "why", "CN Dĩ An")
+        errors = ChatwootEffects(bot, user).handoff(5, plan, "", "2")
+        self.assertEqual(errors, [])
+        self.assertEqual([c[0] for c in calls.mock_calls], ["join", "assign"])
+        user.add_inbox_members.assert_called_once_with(2, [11])
 
 
 class TestChatwootSetup(unittest.TestCase):
