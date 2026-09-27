@@ -60,7 +60,10 @@ def merge(slots, u, catalog):
                 entry.pop("value", None)  # D-029: a course outside the chosen group is dropped
     for key, candidates in u.ambiguous.items():
         if key not in u.fills:
-            out.setdefault(key, {})["candidates"] = list(candidates)
+            entry = out.setdefault(key, {})
+            if u.focus == key and entry.get("value") in candidates:
+                entry.pop("value", None)  # an explicit "not X, Y" must not leave X silently stored
+            entry["candidates"] = list(candidates)
             changed.append(key)
     new = []
     for key, fill in u.fills.items():

@@ -141,7 +141,7 @@ class TestJevTurn(unittest.TestCase):
         self.assertEqual(t.decision.type, "answer")
 
     def test_jev_answer_fills_a_slot_and_is_logged(self):
-        self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.93}})
+        self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.96}})
         t = self.turn("mình muốn học vẽ nhà nha bạn")
         self.assertEqual(self.repo.states["7"].slots["course"]["source"], "jev")
         self.assertEqual(t.decision.ask, "branch")

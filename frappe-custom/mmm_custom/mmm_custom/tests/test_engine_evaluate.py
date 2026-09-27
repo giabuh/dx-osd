@@ -57,6 +57,18 @@ class TestUtterances(unittest.TestCase):
         self.assertTrue({"no_diacritics", "abbreviation", "multi_slot", "multi_topic", "negation", "spam", "b2b",
                          "short_answer", "wants_human"} <= tags)
 
+    def test_gate_labels_reflect_explicit_requests_and_ambiguous_groups(self):
+        by_id = {item["id"]: item["expect"] for item in ITEMS}
+        self.assertIn("shifts", by_id["u037"]["skills"])
+        self.assertIn("register", by_id["u056"]["skills"])
+        self.assertIn("fee_quote", by_id["u057"]["skills"])
+        self.assertIn("skill:kids_courses", by_id["u005"]["skip"])
+        self.assertIn("skill:kids_courses", by_id["u022"]["skip"])
+        self.assertIn("parent:course", by_id["u017"]["skip"])
+        self.assertIn("parent:course", by_id["u056"]["skip"])
+        self.assertEqual(by_id["u088"]["parents"]["course"], "Tin học trẻ em")
+        self.assertIn("complaint", by_id["u061"]["skills"])
+
 
 class TestGrading(unittest.TestCase):
     def test_expected_answers(self):
@@ -74,10 +86,12 @@ class TestGrading(unittest.TestCase):
 
     def test_grade_bands(self):
         self.assertTrue(grade("skill:hotline", {"noul": 0.9}, False, CAT)["act_wrong"])
+        self.assertEqual(grade("skill:fee_quote", {"noul": 0.89}, False, CAT)["band"], "confirm")
         self.assertEqual(grade("skill:hotline", {"noul": 0.7}, False, CAT)["band"], "confirm")
         self.assertEqual(grade("slot:course", {"choice": NONE, "confidence": 0.99}, "VP-EXCEL", CAT)["band"], "low")
         row = grade("slot:course", {"choice": "VP-EXCEL", "confidence": 0.9}, "VP-EXCEL", CAT)
-        self.assertEqual((row["band"], row["correct"], row["act_wrong"]), ("act", True, False))
+        self.assertEqual((row["band"], row["correct"], row["act_wrong"]), ("confirm", True, False))
+        self.assertEqual(grade("slot:course", {"choice": "VP-EXCEL", "confidence": 0.95}, "VP-EXCEL", CAT)["band"], "act")
         self.assertEqual(grade("intent", {"choice": "price_inquiry", "confidence": 0.99}, "spam", CAT)["band"], "low")
 
     def test_gate_passes_only_without_critical_act_errors(self):

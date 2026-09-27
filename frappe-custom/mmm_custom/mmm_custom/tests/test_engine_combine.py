@@ -6,9 +6,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from engine_fixtures import demo_catalog, fill
 
 from mmm_custom.engine.combine import combine
+from mmm_custom.engine.decide import decide
 from mmm_custom.engine.jev_questions import NONE, build_questions
 from mmm_custom.engine.state import ConversationState
-from mmm_custom.engine.understand import Understanding
+from mmm_custom.engine.understand import Understanding, understand
 
 CAT = demo_catalog()
 NEW = ConversationState("1")
@@ -25,9 +26,9 @@ def run(answers, u=None, state=NEW):
 
 class TestSlots(unittest.TestCase):
     def test_act_band_fills_from_jev(self):
-        out = run({"slot:course": pick("VKT-REVIT", 0.93)})
-        self.assertEqual(out.fills["course"], {"value": "VKT-REVIT", "source": "jev", "confidence": 0.93})
-        self.assertIn({"slot": "course", "kind": "jev", "value": "VKT-REVIT", "confidence": 0.93}, out.matches)
+        out = run({"slot:course": pick("VKT-REVIT", 0.96)})
+        self.assertEqual(out.fills["course"], {"value": "VKT-REVIT", "source": "jev", "confidence": 0.96})
+        self.assertIn({"slot": "course", "kind": "jev", "value": "VKT-REVIT", "confidence": 0.96}, out.matches)
         self.assertEqual(out.confirm, {})
 
     def test_confirm_band_asks_to_confirm(self):
@@ -56,7 +57,7 @@ class TestSlots(unittest.TestCase):
 
     def test_jev_picks_among_ambiguous_candidates(self):
         u = Understanding(ambiguous={"course": ["VP-EXCEL", "VP-WORD"]})
-        out = run({"slot:course": pick("VP-WORD", 0.9)}, u)
+        out = run({"slot:course": pick("VP-WORD", 0.96)}, u)
         self.assertEqual((out.fills["course"]["value"], out.ambiguous), ("VP-WORD", {}))
 
     def test_answer_outside_the_question_is_ignored(self):
@@ -69,17 +70,28 @@ class TestSlots(unittest.TestCase):
         out = combine(u, {"slot:course": pick("VP-WORD", 0.99)}, {"slot:course": {"criteria": {"VP-WORD": ""}}}, NEW, CAT)
         self.assertEqual((out.fills["course"]["value"], out.confirm), ("VP-EXCEL", {}))
 
+    def test_explicit_correction_reopens_filled_course_even_without_jev(self):
+        state = ConversationState("1", slots={"course": fill("VP-EXCEL")}, turns=1)
+        u = understand("à không phải excel, word cơ", state, CAT)
+        self.assertEqual(u.focus, "course")
+        questions = build_questions(state, u, CAT)
+        self.assertIn("slot:course", questions)
+        fallback = decide(state, u, CAT)
+        self.assertEqual(fallback.slots["course"]["value"], "VP-WORD")
+        combined = combine(u, {"slot:course": pick("VP-WORD", 0.96)}, questions, state, CAT)
+        self.assertEqual(decide(state, combined, CAT).slots["course"]["value"], "VP-WORD")
+
     def test_partial_answers_only_touch_answered_questions(self):
-        out = run({"slot:branch": pick("CN Dĩ An", 0.9), "slot:course": "garbage", "parent:course": None})
+        out = run({"slot:branch": pick("CN Dĩ An", 0.96), "slot:course": "garbage", "parent:course": None})
         self.assertEqual(list(out.fills), ["branch"])
 
     def test_parent_mismatch_drops_child_keeps_parent(self):
-        out = run({"slot:course": pick("VP-EXCEL", 0.9), "parent:course": pick("Kế toán", 0.92)})
+        out = run({"slot:course": pick("VP-EXCEL", 0.96), "parent:course": pick("Kế toán", 0.96)})
         self.assertNotIn("course", out.fills)
         self.assertEqual(out.parents["course"], "Kế toán")
 
     def test_confident_parent_alone_is_kept(self):
-        out = run({"parent:branch": pick("Bình Dương", 0.9)})
+        out = run({"parent:branch": pick("Bình Dương", 0.96)})
         self.assertEqual(out.parents, {"branch": "Bình Dương"})
         self.assertEqual(run({"parent:branch": pick("Bình Dương", 0.6)}).parents, {})
 
@@ -93,7 +105,7 @@ class TestSlots(unittest.TestCase):
 
     def test_input_is_not_mutated(self):
         u = Understanding()
-        run({"slot:course": pick("VKT-REVIT", 0.93)}, u)
+        run({"slot:course": pick("VKT-REVIT", 0.96)}, u)
         self.assertEqual(u, Understanding())
 
 

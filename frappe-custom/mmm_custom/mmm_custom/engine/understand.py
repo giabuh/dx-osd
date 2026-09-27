@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from mmm_custom.engine.slot_types import REGISTRY, course_phrases
+from mmm_custom.engine.slot_types import REGISTRY, CatalogSlot, course_phrases
 from mmm_custom.engine.text import content_words, find_phrases, fold
 
 YES = frozenset({"dung", "dung roi", "dung a", "dung roi a", "phai", "phai a", "vang", "da", "da dung", "da phai",
@@ -89,6 +89,20 @@ def understand(text, state, catalog):
     for slot, handler in slots:
         if handler.late:
             handler.understand(slot, text or "", folded, pending == slot.key, catalog, u)
+    for slot, handler in slots:
+        old = (state.slots.get(slot.key) or {}).get("value")
+        if not old or old not in u.ambiguous.get(slot.key, ()) or not isinstance(handler, CatalogSlot):
+            continue
+        leaves, _ = handler.tables(slot, catalog)
+        if old not in leaves:
+            continue
+        span = find_phrases(folded, {old: leaves[old]}).get(old)
+        if span and folded[:span[0]].rstrip().endswith(("khong phai", "ko phai", "k phai", "khong dung", "sai")):
+            u.focus = slot.key  # explicit correction: reopen the stored value, even if Jev is unavailable
+            alternatives = [value for value in u.ambiguous[slot.key] if value != old]
+            if len(alternatives) == 1:
+                u.fills[slot.key] = {"value": alternatives[0], "source": "keyword", "confidence": 1.0}
+                u.ambiguous[slot.key] = alternatives  # Jev may cross-check, but cannot restore the rejected value
     u.unmatched = content_words(folded, u.spans)
     return u
 
