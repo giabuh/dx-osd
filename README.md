@@ -15,7 +15,7 @@ Two stacks: Chatwoot Community Edition and Frappe CRM, with our Frappe app `mmm_
 | **[D] Data** | Frappe CRM (`crm/`) + `mmm_custom` fields | Single source of truth for Lead/Contact/Deal; native Facebook Lead Ads sync; data-quality indicator per Lead |
 | **[I] Intelligence** | `mmm_custom` AI agents on [TypeSafe Jev](https://docs.typesafe.ai) (optional) | Read each conversation and act on their own when confident: intent and hotness, the customer's phone/email picked out of the chat (possible duplicates flagged), conversation labels, a suggested reply; every morning, follow-up Tasks for quiet Leads |
 
-Design rationale: [`docs/superpowers/specs/`](docs/superpowers/specs/) and [`docs/superpowers/plans/`](docs/superpowers/plans/); direction: [`ROADMAP.md`](ROADMAP.md).
+Design rationale: [`docs/superpowers/specs/`](docs/superpowers/specs/) and [`docs/superpowers/plans/`](docs/superpowers/plans/).
 
 ## Repository layout
 

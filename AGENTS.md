@@ -4,7 +4,6 @@ Shared guidance for every AI coding agent working in this repository — Claude 
 
 ## Working rules (all agents)
 
-- **Trace work to the roadmap.** New work belongs to a phase in `ROADMAP.md`; respect its guiding principles.
 - **Know which area you are in** (see the map below) and run that area's check before calling a change done. Quote the actual output — "should work" is not "works".
 - **`chatwoot/` and `crm/` are our own code.** Edit them directly wherever a change belongs; there is no upstream to stay compatible with.
 - **Never destroy shared state.** Do not run `docker compose down -v`, `docker volume rm`, or `docker system prune` on the `chatwoot` or `crm` projects — they hold the working dev data. To test from scratch, use a separate compose project (`docker compose -p <name>-verify ...`) and remove only that.
@@ -22,7 +21,7 @@ Shared guidance for every AI coding agent working in this repository — Claude 
 | [I] AI agents (optional) | `frappe-custom/mmm_custom/mmm_custom/intelligence.py`, `followup.py`, `engine/jev.py`, `engine/combine.py`, `engine/evaluate.py` | Unit tests pass; `bench execute mmm_custom.engine.evaluate.run` reports the gate; with `typesafe_api_key` set, the Playground with **Use Jev** shows Jev answers, and after handoff an incoming message on a Lead's conversation updates `ai_intent`/`ai_hotness` and labels the conversation |
 | Activepieces alternative (not deployed by default) | `activepieces/logic/`, `activepieces/flows/`, `docker/activepieces/` | `node --test activepieces/logic/*.test.mjs` passes. It duplicates the in-bench `mmm_custom` pipeline: never run both against the same Chatwoot/CRM (duplicate Leads) |
 | Deployment / ops | `docker/`, `docker/caddy/`, `scripts/` | Affected stack comes up with the documented commands; ports still bind `127.0.0.1` only |
-| Docs & planning | `ROADMAP.md`, `REPO.md`, `docs/` | Claims match the code and `git log` |
+| Docs & planning | `REPO.md`, `docs/` | Claims match the code and `git log` |
 
 ## What this repository is
 
@@ -34,7 +33,7 @@ DX-OSD stands on the shoulders of two mature, complete open-source products and 
 
 Full design rationale and every architectural decision is in **`docs/superpowers/specs/2026-09-22-facebook-integration-platform.md`** and **`docs/superpowers/plans/2026-09-24-foss-meta-integration.md`**.
 
-The product-level direction — vision, guiding principles, and milestone phases beyond this first pipeline — is in **`ROADMAP.md`**; new work should trace back to a phase there. Work on the education lead engine (AI chat answers, routing, lead lifecycle) starts at **`docs/superpowers/specs/2026-09-26-edu-lead-engine/README.md`**.
+There is no fixed product roadmap (removed 2026-09-27, D-094): new work is scoped by its own spec or plan under `docs/superpowers/`. Work on the education lead engine (AI chat answers, routing, lead lifecycle) starts at **`docs/superpowers/specs/2026-09-26-edu-lead-engine/README.md`**.
 
 `REPO.md` provides the full component matrix and FOSS technology evaluation summary.
 

@@ -9,9 +9,9 @@ customer is understood by an AI decision model (TypeSafe Jev), answered from rea
 the right branch and consultant, and followed through to enrolment — with every automated decision
 visible to managers and consultants.
 
-This spec is also the roadmap for that work: **10 clusters, 46 layers** (IDs `Cn.m`, D-047), built one layer at a time. It
-refines `ROADMAP.md` Phases 4–5 (sales automation, AI assistance) for the education vertical.
-Production/ops and multi-tenancy stay in `ROADMAP.md` Phases 1–2 (D-011).
+This spec is also the roadmap for that work: **10 clusters, 46 layers** (IDs `Cn.m`, D-047), built one layer at a time.
+It is a guide, not a fence: new capabilities may be added as layers when needed (D-094). Production/ops and
+multi-tenancy are out of this spec's scope and get their own specs when started.
 
 ## 2. How this spec is organised
 

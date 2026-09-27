@@ -8,4 +8,4 @@ labels: enhancement
 
 **Proposal**
 
-**Roadmap phase** — which phase in `ROADMAP.md` this belongs to
+**Related spec** — the spec or plan under `docs/superpowers/` this belongs to, if any
