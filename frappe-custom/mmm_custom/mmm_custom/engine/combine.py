@@ -36,6 +36,44 @@ def _choice(answers, questions, key):
         return None, 0.0
 
 
+def _noul(answers, questions, key):
+    answer = answers.get(key)
+    if key not in questions or not isinstance(answer, dict) or "noul" not in answer:
+        return None
+    try:
+        return float(answer["noul"])
+    except (TypeError, ValueError):
+        return None
+
+
+def _skills(u, answers, questions, catalog):
+    """Apply one Jev noul per skill; a keyword hit receives at least confirmation."""
+    act, confirm = float(catalog.settings["skill_act"]), float(catalog.settings["skill_confirm"])
+
+    def candidate(key):
+        return {"kind": "skill", "skill": key, "label": catalog.skills[key].title}
+
+    kept = []
+    for key in u.skills:
+        n = _noul(answers, questions, f"skill:{key}")
+        if n is None or n >= act:
+            kept.append(key)
+        else:
+            ask_confirm(u, candidate(key))
+    for key in catalog.skills:
+        if key in u.skills:
+            continue
+        n = _noul(answers, questions, f"skill:{key}")
+        if n is None:
+            continue
+        if n >= act:
+            kept.append(key)
+            u.matches.append({"skill": key, "kind": "jev", "confidence": round(n, 3)})
+        elif n >= confirm:
+            ask_confirm(u, candidate(key))
+    u.skills = kept
+
+
 def _slots(u, answers, questions, catalog):
     for slot in catalog.slots:
         choice, p = _choice(answers, questions, f"slot:{slot.key}")
@@ -79,4 +117,5 @@ def combine(u, answers, questions, state, catalog):
     answers = answers if isinstance(answers, dict) else {}
     _slots(out, answers, questions, catalog)
     _parents(out, answers, questions, catalog)
+    _skills(out, answers, questions, catalog)
     return out

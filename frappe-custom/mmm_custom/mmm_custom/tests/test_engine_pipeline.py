@@ -134,6 +134,12 @@ class TestJevTurn(unittest.TestCase):
         t = self.turn("alo")
         self.assertEqual((t.jev.status, self.repo.logs[0]["jev_status"]), ("disabled", "disabled"))
 
+    def test_two_topics_in_one_message_are_both_answered(self):
+        self.repo.jev = FakeJev({"skill:opening_hours": {"noul": 0.92}, "skill:hotline": {"noul": 0.9}})
+        t = self.turn("trung tâm nghỉ lúc nào, liên lạc bằng cách nào")
+        self.assertEqual(sorted(t.decision.skills), ["hotline", "opening_hours"])
+        self.assertEqual(t.decision.type, "answer")
+
     def test_jev_answer_fills_a_slot_and_is_logged(self):
         self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.93}})
         t = self.turn("mình muốn học vẽ nhà")

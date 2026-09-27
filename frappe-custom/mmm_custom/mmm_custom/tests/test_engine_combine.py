@@ -97,5 +97,35 @@ class TestSlots(unittest.TestCase):
         self.assertEqual(u, Understanding())
 
 
+def yes(n):
+    return {"noul": n}
+
+
+class TestSkills(unittest.TestCase):
+    def test_every_confident_skill_is_answered(self):
+        out = run({"skill:hotline": yes(0.93), "skill:opening_hours": yes(0.9), "skill:payment": yes(0.2)})
+        self.assertEqual(sorted(out.skills), ["hotline", "opening_hours"])
+        self.assertIn({"skill": "hotline", "kind": "jev", "confidence": 0.93}, out.matches)
+
+    def test_confirm_band_asks_about_the_skill(self):
+        out = run({"skill:fee_quote": yes(0.7)})
+        self.assertEqual((out.skills, out.confirm), ([], {"kind": "skill", "skill": "fee_quote", "label": "học phí"}))
+
+    def test_alias_match_is_kept_when_jev_agrees_or_is_silent(self):
+        self.assertEqual(run({"skill:hotline": yes(0.9)}, Understanding(skills=["hotline"])).skills, ["hotline"])
+        self.assertEqual(run({}, Understanding(skills=["hotline"])).skills, ["hotline"])
+
+    def test_alias_match_with_a_low_score_is_lifted_to_confirm(self):
+        out = run({"skill:hotline": yes(0.1)}, Understanding(skills=["hotline"]))
+        self.assertEqual((out.skills, out.confirm["skill"]), ([], "hotline"))
+
+    def test_a_slot_confirmation_wins_over_a_skill_confirmation(self):
+        out = run({"slot:course": pick("VKT-REVIT", 0.7), "skill:fee_quote": yes(0.7)})
+        self.assertEqual(out.confirm["kind"], "slot")
+
+    def test_malformed_noul_is_ignored(self):
+        self.assertEqual(run({"skill:hotline": {"noul": "yes"}, "skill:payment": {"choice": "x"}}).skills, [])
+
+
 if __name__ == "__main__":
     unittest.main()
