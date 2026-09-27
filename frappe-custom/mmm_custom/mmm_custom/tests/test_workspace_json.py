@@ -5,6 +5,7 @@ import unittest
 MODULE = Path(__file__).resolve().parent.parent / "mmm_custom"
 WORKSPACE = MODULE / "workspace" / "bot_sao_viet" / "bot_sao_viet.json"
 EXTERNAL = {"CRM Product", "CRM Lead"}
+FRAPPE_ICONS = {"education", "support", "crm", "customer", "dashboard", "tool", "setting", "users", "message", "chart"}
 
 
 class TestBotWorkspace(unittest.TestCase):
@@ -30,6 +31,9 @@ class TestBotWorkspace(unittest.TestCase):
 
     def test_only_managers_see_it(self):
         self.assertEqual({r["role"] for r in self.ws["roles"]}, {"System Manager", "Sales Manager"})
+
+    def test_icon_exists_in_frappe(self):
+        self.assertIn(self.ws["icon"], FRAPPE_ICONS)
 
 
 if __name__ == "__main__":

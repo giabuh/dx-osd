@@ -11,15 +11,13 @@ app_license = "mit"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "mmm_custom",
-# 		"logo": "/assets/mmm_custom/logo.png",
-# 		"title": "MMM Custom",
-# 		"route": "/mmm_custom",
-# 		"has_permission": "mmm_custom.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [{
+    "name": "mmm_custom",
+    "logo": "/assets/mmm_custom/images/bot.svg",
+    "title": "Bot Sao Việt",
+    "route": "/bot",
+    "has_permission": "mmm_custom.desk.can_open_bot",
+}]
 
 # Includes in <head>
 # ------------------
@@ -85,7 +83,7 @@ doctype_js = {"CRM Product": "public/js/crm_product.js"}
 
 after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
 # Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
-after_migrate = ["mmm_custom.setup.create_catalog_fields"]
+after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.desk.hide_unused_workspaces"]
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
 # clears the engine's cached catalog snapshot so the next customer message sees it.
@@ -279,4 +277,3 @@ scheduler_events = {
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-
