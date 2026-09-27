@@ -57,6 +57,12 @@ def detect_course_interest(text, catalog=None):
     return ", ".join(c.name for c in detect_courses(text, catalog)) or None
 
 
+def _lead_source(conversation):
+    """The channel's CRM Lead Source (D-100); "Messenger" until migrate has created the channel sources."""
+    source = source_name(channel_key(conversation))
+    return source if source and frappe.db.exists("CRM Lead Source", source) else "Messenger"
+
+
 def extract_message_text(conversation: dict, payload: dict) -> str:
     messages = conversation.get("messages") or payload.get("messages") or []
     texts = []
@@ -215,7 +221,7 @@ def chatwoot_sync():
                 "first_name": first_name,
                 "email": email,
                 "mobile_no": normalize_phone(phone),
-                "source": source_name(channel_key(conversation)) or "Messenger",  # D-100
+                "source": _lead_source(conversation),
                 "chatwoot_contact_id": str(contact_id) if contact_id is not None else None,
             }
             if course_interest:
