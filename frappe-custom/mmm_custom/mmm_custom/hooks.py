@@ -106,6 +106,9 @@ doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_updat
                           # Referral codes (D-103)
                           "before_insert": "mmm_custom.referral.set_code",
                           "validate": "mmm_custom.referral.resolve_referrer"}
+# Consultants see every Lead/Deal of their branch, not only their own (crm/permissions/org_hierarchy.py).
+crm_record_scope = ["mmm_custom.scope.record_scope"]
+
 # Landing page by role: managers on /crm/admin, everyone else on /crm (mmm_custom.desk.default_app_for).
 doc_events["User"] = {"on_update": "mmm_custom.desk.apply_user_default_app"}
 # Staff live in CRM; Chatwoot agents/teams follow (mmm_custom.staff_sync).
