@@ -59,9 +59,12 @@ def plan_handoff(state, decision, catalog, repo, render):
     course_slot = catalog.slot_for("course")
     group = ctx["course"].get("group") or ((decision.slots.get(course_slot.key) or {}).get("parent", "") if course_slot else "")
     plan.labels = [slug(x) for x in (group, branch) if x]
+    if decision.ai.get("hotness", {}).get("value") == "hot":
+        plan.labels.append("hot")
     plan.attributes = {f"bot_{key}": shown for key, shown in ctx["slots"].items()}
     answered = [catalog.skills[k].title for k in dict.fromkeys(state.answered + decision.skills) if k in catalog.skills]
     summary_ctx = {**ctx, "consultant": plan.consultant_ctx, "why": why, "reason": decision.reason,
+                   "ai": decision.ai,
                    "answered": answered, "next_step": next_step(ctx, repo, repo.today())}
     template = catalog.settings["summary_template"]
     try:

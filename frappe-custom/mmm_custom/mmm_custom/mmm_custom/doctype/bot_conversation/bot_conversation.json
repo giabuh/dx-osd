@@ -21,7 +21,8 @@
   "is_returning",
   "is_sandbox",
   "answered_skills",
-  "history"
+  "history",
+  "ai_signals"
  ],
  "fields": [
   {
@@ -121,6 +122,12 @@
    "fieldname": "history",
    "fieldtype": "JSON",
    "label": "Recent turns (Jev state)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ai_signals",
+   "fieldtype": "JSON",
+   "label": "Intent / hotness written to the Lead",
    "read_only": 1
   }
  ],

@@ -9,6 +9,7 @@ import copy
 
 from mmm_custom.engine.context import display
 from mmm_custom.engine.jev_questions import NONE
+from mmm_custom.intelligence import HOTNESS
 
 
 def slot_limits(slot, settings):
@@ -74,6 +75,23 @@ def _skills(u, answers, questions, catalog):
     u.skills = kept
 
 
+def _signals(u, answers, questions, catalog):
+    intent, p = _choice(answers, questions, "intent")
+    if intent:
+        u.intent = {"value": intent, "confidence": round(p, 3)}
+    hot = answers.get("hotness")
+    if "hotness" in questions and isinstance(hot, dict):
+        try:
+            score = float(hot.get("score"))
+            u.hotness = {"value": HOTNESS[min(max(round(score), 0), len(HOTNESS) - 1)], "score": round(score, 3),
+                         "confidence": round(float(hot.get("confidence") or 0), 3)}
+        except (TypeError, ValueError):
+            pass
+    n = _noul(answers, questions, "wants_human")
+    if n is not None:
+        u.wants_human = round(n, 3)
+
+
 def _slots(u, answers, questions, catalog):
     for slot in catalog.slots:
         choice, p = _choice(answers, questions, f"slot:{slot.key}")
@@ -118,4 +136,5 @@ def combine(u, answers, questions, state, catalog):
     _slots(out, answers, questions, catalog)
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)
+    _signals(out, answers, questions, catalog)
     return out

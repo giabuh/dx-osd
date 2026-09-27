@@ -29,6 +29,7 @@ class ConversationState:
     answered: list = field(default_factory=list)  # skill keys answered so far
     history: list = field(default_factory=list)  # last turns for Jev's state
     jev_calls: list = field(default_factory=list)  # epoch seconds of Jev calls in the last hour
+    ai: dict = field(default_factory=dict)  # last intent/hotness values written to the Lead
 
 
 def value(slots, key):

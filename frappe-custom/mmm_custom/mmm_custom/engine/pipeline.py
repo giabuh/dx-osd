@@ -115,19 +115,32 @@ def emit_events(effects, state, decision):
         effects.emit("handed_off", {**base, "reason": decision.handoff_reason, "consultant": state.consultant})
 
 
+def ai_fields(u, settings):
+    """Return confident intent and hotness values for the CRM Lead."""
+    floor, out = float(settings["handoff_noul"]), {}
+    if u.intent.get("confidence", 0) >= floor:
+        out["ai_intent"] = u.intent["value"]
+    if u.hotness.get("confidence", 0) >= floor:
+        out["ai_hotness"] = u.hotness["value"]
+    return out
+
+
 def write_lead(turn, effects, catalog):
-    """C2.4: write what the conversation learned to the CRM Lead (D-014, D-022)."""
+    """Write what the conversation learned, including confident Jev signals, to the CRM Lead."""
     state, decision = turn.state, turn.decision
     lead_slots = [k for k in decision.new_slots if catalog.slot(k) and catalog.slot(k).lead_field]
     wanted = not state.lead and any(catalog.skills[k].creates_lead for k in decision.skills)
-    if not (lead_slots or wanted):
+    ai = {k: v for k, v in ai_fields(turn.understanding, catalog.settings).items() if state.ai.get(k) != v}
+    if not (lead_slots or wanted or (ai and state.lead)):
         return
     fields, courses = lead_updates(state.slots, catalog)
+    fields.update(ai)
     try:
         state.lead = effects.save_lead(state, fields, courses, turn.event.contact) or state.lead
     except Exception as e:
         turn.reply.errors.append({"type": "lead_failed", "detail": str(e)[:300]})
         return
+    state.ai.update(ai)
     effects.emit("lead_updated", {"conversation_id": state.conversation_id, "lead": state.lead,
                                   "is_sandbox": state.is_sandbox, "fields": sorted(fields),
                                   "courses": [c.code for c in courses]})

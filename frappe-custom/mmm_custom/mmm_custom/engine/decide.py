@@ -12,10 +12,12 @@ from mmm_custom.engine.state import filled, value
 HANDOFF_REASONS = {
     "button": "Khách chọn gặp tư vấn viên",
     "skill": "Câu hỏi cần tư vấn viên xử lý",
+    "wants_human": "Khách muốn gặp tư vấn viên",
+    "hot": "Khách hot, sẵn sàng đăng ký",
     "required_filled": "Đã đủ thông tin bắt buộc",
     "stuck": "Bot chưa hiểu khách nhiều lượt liên tiếp",
 }
-IMMEDIATE = ("button", "skill")
+IMMEDIATE = ("button", "wants_human", "skill")
 
 
 @dataclass
@@ -32,6 +34,7 @@ class Decision:
     stuck_turns: int = 0
     reason: str = ""
     confirm: dict = field(default_factory=dict)
+    ai: dict = field(default_factory=dict)
 
 
 def slot_active(slot, slots):
@@ -104,10 +107,15 @@ def next_slot(slots, catalog, first=()):
 
 
 def handoff_reason(u, skills, slots, stuck, catalog):
+    floor = float(catalog.settings["handoff_noul"])
     if u.handoff:
         return "button"
+    if u.wants_human >= floor:
+        return "wants_human"
     if any(catalog.skills[k].action == "handoff" or catalog.skills[k].handoff_after for k in skills):
         return "skill"
+    if u.hotness.get("value") == "hot" and u.hotness.get("confidence", 0) >= floor:
+        return "hot"
     if required_filled(slots, catalog):
         return "required_filled"
     if stuck >= int(catalog.settings["max_stuck_turns"]):
@@ -127,7 +135,8 @@ def decide(state, u, catalog):
     greet = state.turns == 0 and not skills
     progress = bool(new or changed or skills or waiting or u.handoff or u.focus or u.confirm or u.rejected)
     stuck = 0 if progress or greet else state.stuck_turns + 1
-    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck)
+    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck,
+                  ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
     answered = ", ".join(catalog.skills[k].title for k in skills)
 
     if state.status == "handed_off":
