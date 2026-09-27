@@ -12,17 +12,19 @@
     <ErrorMessage :message="error" />
 
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-      <component
-        :is="card.open ? 'button' : 'div'"
+      <!-- a literal <button>: :is="'button'" would resolve to the global frappe-ui Button (h-7) -->
+      <button
         v-for="card in cards"
         :key="card.title"
-        class="overflow-hidden rounded text-left shadow"
+        type="button"
+        class="overflow-hidden rounded text-left shadow disabled:cursor-default"
         :class="card.open ? 'hover:shadow-md' : ''"
+        :disabled="!card.open"
         :title="card.open ? 'Mở danh sách khách này' : undefined"
         @click="card.open?.()"
       >
         <NumberChart :config="card" />
-      </component>
+      </button>
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -43,11 +45,12 @@
         </div>
       </div>
       <div class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
-        <component
-          :is="source.count ? 'button' : 'div'"
+        <button
           v-for="source in data?.sources || []"
           :key="source.key"
-          class="flex flex-col gap-1 rounded border border-outline-gray-1 p-3 text-left"
+          type="button"
+          :disabled="!source.count"
+          class="flex flex-col gap-1 rounded border border-outline-gray-1 p-3 text-left disabled:cursor-default"
           :class="[
             source.status === 'planned' ? 'bg-surface-gray-1' : '',
             source.count ? 'hover:bg-surface-gray-1' : '',
@@ -67,7 +70,7 @@
             {{ source.status === 'planned' ? '—' : source.count }}
           </div>
           <div class="text-p-sm text-ink-gray-5">{{ source.how }}</div>
-        </component>
+        </button>
       </div>
     </div>
 
