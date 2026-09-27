@@ -205,5 +205,19 @@
   "depends_on_slot": "",
   "depends_on_value": "",
   "lead_field": ""
+ },
+ {
+  "slot_key": "trial_class",
+  "label": "Buổi học thử",
+  "slot_type": "text",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 80,
+  "ask_on_demand": 1,
+  "ask_template": "{{ brand.you | capitalize }} muốn học thử buổi nào ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": ""
  }
 ]

@@ -39,6 +39,9 @@ class RecordingEffects:
     def mark_spam(self, conversation_id):
         self.calls.append(("mark_spam", {"conversation_id": conversation_id}))
 
+    def book_trial(self, state, booking, owner=""):
+        self.calls.append(("book_trial", {"lead": state.lead, "booking": booking, "owner": owner}))
+
 
 class ChatwootEffects:
     """Customer-facing calls use the Agent Bot token so Chatwoot marks them as the bot's own messages
@@ -63,6 +66,11 @@ class ChatwootEffects:
     def mark_spam(self, conversation_id):
         self.bot.add_labels(conversation_id, ["spam"])
         self.bot.toggle_status(conversation_id, "resolved")
+
+    def book_trial(self, state, booking, owner=""):
+        from mmm_custom.engine import repo
+
+        repo.create_trial_task(state.lead, booking, owner)
 
     def save_lead(self, state, fields, courses, contact):
         from mmm_custom.engine import repo

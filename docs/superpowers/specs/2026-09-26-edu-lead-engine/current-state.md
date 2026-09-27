@@ -28,7 +28,7 @@ for real customers until a later labelled gate passes.
 | `engine/cost_guard.py`, `evaluate.py`, `eval/utterances.json` | Per-conversation and daily budget checks; 104 labelled utterances and D-033 go-live gate | C4+ reads |
 | `engine/advisor.py` | Audience/age/group shortlist and bounded Jev composite ranking, with a data-only fallback | C4+ reads |
 | `engine/decide.py` | Pure `decide()` → answer / confirm / ask_slot / handoff / silent; wants-human and hot handoff, spam close, pending skill | C4+ reads |
-| `engine/context.py`, `render.py`, `actions.py`, `reply.py` | Template context, render guard + filters, action registry, advisor recommendations and combined replies | C6.3 `book_appointment` |
+| `engine/context.py`, `render.py`, `actions.py`, `reply.py` | Template context, render guard + filters, action registry (incl. `trial_offer`/`book_trial`, D-102; the Task is created by `pipeline.book_trials` → `repo.create_trial_task`), advisor recommendations and combined replies | C6.3 `book_appointment` |
 | `engine/lead.py`, `repo.py` | Slots ↔ Lead fields (`territory`, `products`, `learner_type`, `learner_age`, `preferred_shift`, `first_name`, `mobile_no`), returning-customer prefill; all database access (catalog cache cleared by `doc_events`) | — |
 | `engine/log.py`, `learning.py` | AI Decision Log rows + learning signals; daily retention purge; `consultant_corrected` on CRM Lead update | C9.2 review UI |
 | `engine/routing.py`, `handoff.py`, `chatwoot_setup.py` | Rule D pick (D-087: Lead owner → B2B consultants for a skill with `route: b2b` (D-099) → branch or Tổng đài → Team Lead if confidently hot → course-group specialist → least loaded), team, labels, `bot_*` conversation and contact attribute definitions, summary note | C4.1 CRM toggles |

@@ -15,11 +15,11 @@ class TestBuildCatalog(unittest.TestCase):
     def test_counts_match_demo_dataset(self):
         self.assertEqual((len(self.cat.groups), len(self.cat.courses), len(self.cat.areas), len(self.cat.branches)),
                          (9, 51, 4, 13))
-        self.assertEqual(len(self.cat.skills), 30)
+        self.assertEqual(len(self.cat.skills), 31)
 
     def test_slots_sorted_with_dependency(self):
         self.assertEqual([s.key for s in self.cat.slots],
-                         ["course", "branch", "learner", "goal", "level", "learner_age", "preferred_shift", "customer_name", "phone"])
+                         ["course", "branch", "learner", "goal", "level", "learner_age", "preferred_shift", "customer_name", "phone", "trial_class"])
         self.assertEqual(self.cat.slot("learner_age").depends_on, ("learner", "child"))
         self.assertEqual(self.cat.slot("learner").option("child").button, "Cho con em")
 

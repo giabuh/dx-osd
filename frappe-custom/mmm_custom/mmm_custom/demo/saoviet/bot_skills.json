@@ -202,13 +202,22 @@
    "course"
   ],
   "missing_policy": "ask",
-  "action_type": "answer_template",
-  "action_config": {},
+  "action_type": "trial_offer",
+  "action_config": {
+   "slot": "trial_class",
+   "skill": "trial_booked",
+   "limit": 3
+  },
   "templates": [
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi ạ, {{ brand.me }} xếp lịch cho {{ brand.you }} nhé?"
+    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi khóa {{ course.name }} ạ. Các buổi gần nhất:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn buổi phù hợp để {{ brand.me }} giữ chỗ nhé."
+   },
+   {
+    "variant_key": "none",
+    "when": "not schedules",
+    "template": "Dạ {{ brand.you }} được học thử miễn phí 1 buổi ạ. Khóa {{ course.name }} chưa có lịch mới, {{ brand.me }} chuyển tư vấn viên xếp buổi học thử riêng cho {{ brand.you }} nhé."
    }
   ],
   "follow_ups": [],
@@ -749,5 +758,36 @@
   "creates_lead": 0,
   "handoff_after": 0,
   "sort_order": 300
+ },
+ {
+  "skill_key": "trial_booked",
+  "title": "giữ chỗ học thử",
+  "jev_description": "Only when the customer has just picked one of the offered trial class dates",
+  "examples": "",
+  "aliases": "",
+  "parameters": [
+   "phone"
+  ],
+  "missing_policy": "ask",
+  "action_type": "book_trial",
+  "action_config": {
+   "slot": "trial_class"
+  },
+  "templates": [
+   {
+    "variant_key": "default",
+    "when": "",
+    "template": "Dạ {{ brand.me }} đã giữ chỗ học thử cho {{ brand.you }}: {{ trial }}. Tư vấn viên sẽ gọi xác nhận trước buổi học ạ."
+   },
+   {
+    "variant_key": "none",
+    "when": "not trial",
+    "template": "Dạ {{ brand.you }} muốn học thử buổi nào ạ?"
+   }
+  ],
+  "follow_ups": [],
+  "creates_lead": 1,
+  "handoff_after": 1,
+  "sort_order": 85
  }
 ]

@@ -300,5 +300,50 @@
     "source_campaign": "https://tinhocsaoviet.com/khoa-hoc/excel"
    }
   }
+ },
+ {
+  "id": "S16",
+  "title": "Khách xin học thử Excel và chọn buổi",
+  "why": "Bot đưa lịch học thử, khách bấm chọn, bot giữ chỗ và tạo việc cho tư vấn viên",
+  "setup": {
+   "schedules": [
+    {
+     "course": "VP-EXCEL",
+     "branch": "CN Bình Thạnh",
+     "date": "2030-10-08",
+     "shift": "Tối 18:00–20:00",
+     "weekdays": "T3, T5, T7",
+     "seats_left": 6
+    },
+    {
+     "course": "VP-EXCEL",
+     "branch": "CN Bình Thạnh",
+     "date": "2030-10-12",
+     "shift": "Sáng 8:00–10:00",
+     "weekdays": "T7, CN",
+     "seats_left": 4
+    }
+   ]
+  },
+  "messages": [
+   "cho mình học thử Excel ở Bình Thạnh",
+   {
+    "tap": 0
+   },
+   "0901234567"
+  ],
+  "expect": {
+   "handoff": true,
+   "consultant": {
+    "branch": "CN Bình Thạnh"
+   },
+   "trial_booked": true,
+   "slots": {
+    "trial_class": "Excel từ cơ bản đến nâng cao · Thứ 3, 08/10 · Tối 18:00–20:00 · CN Bình Thạnh"
+   },
+   "reply_has": [
+    "đã giữ chỗ học thử"
+   ]
+  }
  }
 ]

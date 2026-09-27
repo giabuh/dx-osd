@@ -20,6 +20,7 @@ from mmm_custom.engine.lead import lead_updates
 from mmm_custom.engine.log import log_row, signals
 from mmm_custom.engine.qualify import LABELS, NEW, lead_status
 from mmm_custom.engine.reply import compose
+from mmm_custom.engine.state import value
 from mmm_custom.engine.understand import understand
 from mmm_custom.sources import campaign_of, channel_key, source_name
 
@@ -168,6 +169,20 @@ def write_lead(turn, effects, catalog):
                                   "courses": [c.code for c in courses]})
 
 
+def book_trials(turn, effects, catalog, plan=None):
+    """A `book_trial` skill answered this turn (D-102): a CRM Task for whoever serves the Lead."""
+    state = turn.state
+    for key in turn.decision.skills:
+        skill = catalog.skills.get(key)
+        booking = value(state.slots, skill.config.get("slot", "trial_class")) if skill and skill.action == "book_trial" else ""
+        if not booking:
+            continue
+        try:
+            effects.book_trial(state, booking, plan.owner if plan else "")
+        except Exception as e:
+            turn.reply.errors.append({"type": "trial_failed", "detail": str(e)[:300]})
+
+
 def run_turn(event, repo, effects, render):
     catalog = repo.catalog()
     state = repo.load_state(event)
@@ -222,6 +237,7 @@ def run_turn(event, repo, effects, render):
             turn.reply.errors += effects.handoff(state.conversation_id, plan, state.lead, state.inbox_id)
         except Exception as e:
             turn.reply.errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
+    book_trials(turn, effects, catalog, plan)
     repo.save_state(state)
     emit_events(effects, state, turn.decision)
     try:

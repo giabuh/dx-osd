@@ -38,6 +38,8 @@ def apply_action(u, action):
     kind = action.get("type")
     if kind == "slot":
         u.fills[action["slot"]] = {"value": action["value"], "source": "button", "confidence": 1.0}
+        if action.get("skill"):  # e.g. a trial class tap also answers the booking skill (D-102)
+            u.skills.append(action["skill"])
     elif kind == "parent":
         u.parents[action["slot"]] = action["value"]
     elif kind == "skip":

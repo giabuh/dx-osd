@@ -96,6 +96,19 @@ class ScenarioRepo:
     def lead_owner(self, lead):
         return self.owner if lead == RETURNING_LEAD else self.base.lead_owner(lead)
 
+    def open_schedules(self, course, branch, shift, today, limit):
+        rows = (self.scenario.get("setup") or {}).get("schedules")
+        if rows is None:  # the site's (or fixture's) real classes
+            return self.base.open_schedules(course, branch, shift, today, limit)
+        rows = [{**r, "date": _date(r["date"])} for r in rows if r["course"] == course and (not branch or r["branch"] == branch)]
+        return rows[:limit]
+
+
+def _date(text):
+    from datetime import date
+
+    return date.fromisoformat(text)
+
 
 def _check(checks, name, expected, actual, ok=None):
     checks.append({"check": name, "expected": expected, "actual": actual,
@@ -159,6 +172,9 @@ def evaluate(scenario, transcript, effects, consultants, final):
     for phrase in expect.get("reply_lacks") or []:
         _check(checks, f"Bot không nói “{phrase}”", "không có", "có" if phrase.lower() in text else "không có",
                phrase.lower() not in text)
+    if "trial_booked" in expect:
+        booked = effects.of("book_trial")
+        _check(checks, "Giữ chỗ học thử (tạo việc CRM)", expect["trial_booked"], bool(booked))
     if expect.get("closed"):
         _check(checks, "Đóng hội thoại rác", True, bool(effects.of("mark_spam")))
     return checks
@@ -168,6 +184,9 @@ def run_scenario(scenario, base_repo, render):
     repo, effects = ScenarioRepo(base_repo, scenario), RecordingEffects()
     cid, transcript, final = f"scenario-{scenario['id']}", [], None
     for i, text in enumerate(scenario["messages"], 1):
+        if isinstance(text, dict):  # {"tap": n}: the customer taps the n-th button of the last reply
+            shown = transcript[-1]["buttons"] if transcript else []
+            text = shown[text["tap"]] if text["tap"] < len(shown) else ""
         before = len(effects.of("send"))
         event = Event("customer_message", cid, i, text, {"id": cid}, channel=scenario.get("channel", "facebook_messenger"),
                       campaign=scenario.get("campaign", ""))

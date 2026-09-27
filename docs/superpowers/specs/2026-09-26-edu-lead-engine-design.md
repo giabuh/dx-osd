@@ -181,7 +181,7 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 **C6 — No lead left behind** · milestone: no lead goes overdue unnoticed
 | C6.1 | Lead statuses for a training centre + lost reasons | S | ⬜ |
 | C6.2 | First-response SLA + manager alert (CRM SLA) | S | ⬜ |
-| C6.3 | Consultation/trial appointments + date/time understanding + reminders (D-042) | M | ⬜ |
+| C6.3 | Consultation/trial appointments + date/time understanding + reminders (D-042) — trial booking from class buttons in code (D-102); free-text dates and reminders not yet | M | 🔨 |
 | C6.4 | Course-aware re-engagement, 24h-window aware (upgrade `followup.py`) | M | ⬜ |
 | C6.5 | Unified lead score | M | ⬜ |
 
