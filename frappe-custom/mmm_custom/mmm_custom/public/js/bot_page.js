@@ -392,7 +392,7 @@
       const [data, failed] = await Promise.all([call("mmm_custom.lead_ads.list_sources"), call("mmm_custom.lead_ads.failures")]);
       leadAds = data;
       $("#source-rows").innerHTML = data.sources.map((s) => `<tr>
-        <td>${escapeHtml(s.page_name || "—")}</td><td><strong>${escapeHtml(s.form_name || "—")}</strong><br><small class="muted">${escapeHtml(s.name)}</small></td>
+        <td>${escapeHtml(s.page_name || "—")}</td><td><strong>${escapeHtml(s.form_name || "—")}</strong>${s.name !== s.form_name ? `<br><small class="muted">${escapeHtml(s.name)}</small>` : ""}</td>
         <td>${escapeHtml(FREQUENCY_LABELS[s.background_sync_frequency] || s.background_sync_frequency || "—")}</td>
         <td>${escapeHtml(displayTime(s.last_synced_at))}</td>
         <td>${s.failures ? `<span class="pill wait">${escapeHtml(s.failures)}</span>` : "0"}</td>
@@ -450,6 +450,7 @@
     form.source_name.value = source?.name || "";
     form.source_name.disabled = Boolean(source);
     form.enabled.checked = source ? Boolean(source.enabled) : true;
+    form.access_token.placeholder = source ? "Để trống = giữ token cũ" : "Dán access token của Page";
     form.background_sync_frequency.innerHTML = options(leadAds.frequencies, source?.background_sync_frequency || "Hourly", (f) => FREQUENCY_LABELS[f] || f);
     $("#source-editor").hidden = false;
     $("#source-editor").scrollIntoView({ behavior: "smooth", block: "start" });

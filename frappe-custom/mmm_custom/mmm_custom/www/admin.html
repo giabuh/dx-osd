@@ -107,6 +107,7 @@
     .spaced { margin-top: 18px; }
     .inline-row { display: flex; gap: 10px; }
     .inline-row input { flex: 1; }
+    .editor input[type="text"] { width: 100%; }
     table.narrow { min-width: 0; }
     #source-rows td:last-child { white-space: nowrap; }
     @media (max-width: 950px) { .cards { grid-template-columns: repeat(3, 1fr); } .chat-grid { grid-template-columns: 1fr; } }
@@ -146,7 +147,7 @@
         <div id="source-editor" class="panel editor" hidden><form id="source-form">
           <h3 id="source-title">Kết nối form</h3>
           <input type="hidden" name="original">
-          <label for="sr-token">Access token Facebook</label><div class="inline-row"><input id="sr-token" name="access_token" type="text" autocomplete="off" placeholder="Để trống khi sửa = giữ token cũ"><button id="load-pages" type="button" class="secondary">Tải Page</button></div>
+          <label for="sr-token">Access token Facebook</label><div class="inline-row"><input id="sr-token" name="access_token" type="text" autocomplete="off"><button id="load-pages" type="button" class="secondary">Tải Page</button></div>
           <div class="form-row"><div><label for="sr-page">Page</label><select id="sr-page" name="facebook_page"></select></div><div><label for="sr-form">Form</label><select id="sr-form" name="facebook_lead_form"></select></div></div>
           <div class="form-row"><div><label for="sr-name">Tên nguồn</label><input id="sr-name" name="source_name" type="text" placeholder="Để trống = tên form"></div><div><label for="sr-frequency">Tần suất đồng bộ</label><select id="sr-frequency" name="background_sync_frequency"></select></div></div>
           <label class="inline"><input name="enabled" type="checkbox" checked> Đang bật</label>
