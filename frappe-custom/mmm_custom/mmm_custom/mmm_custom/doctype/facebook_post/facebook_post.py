@@ -505,6 +505,21 @@ class FacebookPost(Document):
             self.save()
             frappe.db.commit()
 
+            # Create CRM notification for user & managers
+            try:
+                from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+                post_title = getattr(self, "title", None) or f"Bài đăng #{self.name}"
+                notify_crm_users(
+                    title="Đăng bài Facebook thành công",
+                    message=f'Bài viết "{post_title}" đã xuất bản lên Facebook Fanpage thành công! (ID: {post_id})',
+                    to_users=[self.owner, "Administrator"] if getattr(self, "owner", None) else ["Administrator"],
+                    notification_type="Marketing",
+                    reference_doctype="Facebook Post",
+                    reference_name=self.name,
+                )
+            except Exception:
+                pass
+
             frappe.msgprint(_("Đã đăng thành công lên Facebook! ID: {0}").format(post_id), alert=True)
             return {"status": "success", "post_id": post_id, "url": self.fb_post_url}
 
@@ -514,6 +529,21 @@ class FacebookPost(Document):
             self.error_message = error_msg
             self.save()
             frappe.db.commit()
+
+            try:
+                from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+                post_title = getattr(self, "title", None) or f"Bài đăng #{self.name}"
+                notify_crm_users(
+                    title="Đăng bài Facebook thất bại",
+                    message=f'Bài viết "{post_title}" đăng thất bại: {error_msg}',
+                    to_users=[self.owner, "Administrator"] if getattr(self, "owner", None) else ["Administrator"],
+                    notification_type="Marketing",
+                    reference_doctype="Facebook Post",
+                    reference_name=self.name,
+                )
+            except Exception:
+                pass
+
             frappe.throw(_("Đăng bài thất bại: {0}").format(error_msg))
 
 
