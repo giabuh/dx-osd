@@ -42,8 +42,9 @@ Visual walkthrough shared with the owner: "Một khách hàng, một hồ sơ" (
   hotness (`ai_hotness`), status, mobile, owner, modified.
 - Quick filters for Lead: name, status, branch, source, hotness (CRM Global Settings "Quick Filters").
 - Leads list accepts `?filters=<json>` once: it applies them as the user's list filters and drops the
-  query. `/crm/admin/customers` uses it: stat cards, funnel/branch/source items and staff rows open the
-  filtered list; lead rows open the Lead.
+  query. `/crm/admin/customers` uses it: stat cards, source cards and staff rows open the filtered list
+  (the "Đã ghi danh" card opens Deals); lead rows open the Lead. Chart bars are not links yet.
+- Hotness shows as a coloured badge (Nóng/Ấm/Lạnh) in the list; clicking it filters by it.
 
 ### B2 · Branch scope
 
@@ -59,7 +60,8 @@ Visual walkthrough shared with the owner: "Một khách hàng, một hồ sơ" (
   conversation's messages mapped to `{id, kind: customer|bot|staff|note, text, sender, at}`; activity and
   private notes are kept apart. `None` when the Lead has no conversation.
 - Lead page: a "Tin nhắn" tab and a "Nhắn tin" header button that opens it. Replaces the "Mở cuộc chat"
-  form script action (the tab links to Chatwoot too).
+  form script action, which migrate switches off (the tab links to Chatwoot too). Not yet: a per-row
+  "Nhắn tin" button on the Leads list, and the mobile Lead page.
 
 ### B4 · Answer from the CRM
 
