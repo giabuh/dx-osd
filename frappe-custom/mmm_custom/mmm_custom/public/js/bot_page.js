@@ -26,22 +26,36 @@
     });
     if (response.status === 401 || response.status === 403) throw new Error("Phiên đăng nhập đã hết hạn hoặc bạn không có quyền.");
     const data = await response.json();
-    if (!response.ok || data.exc) throw new Error(data._server_messages ? "Không tải được dữ liệu. Vui lòng thử lại." : `Lỗi máy chủ (${response.status}).`);
+    if (!response.ok || data.exc) throw new Error(serverMessage(data) || `Lỗi máy chủ (${response.status}).`);
     return data.message;
+  }
+
+  function serverMessage(data) {  // the text of frappe.throw, stripped of markup
+    try {
+      const first = JSON.parse(JSON.parse(data._server_messages)[0]).message;
+      const box = document.createElement("div");
+      box.innerHTML = first;
+      return box.textContent.trim();
+    } catch { return ""; }
   }
 
   function showError(target, error) {
     target.innerHTML = `<p class="error">${escapeHtml(error.message || error)}</p>`;
   }
 
+  const TABS = ["overview", "branches", "staff", "knowledge", "playground"];
+  const loaders = { knowledge: () => knowledgeLoaded || loadKnowledge(), branches: () => loadBranches(), staff: () => loadStaff() };
+
   function switchTab(name) {
-    document.querySelectorAll(".tabs button").forEach((button) => {
+    if (!TABS.includes(name)) name = "overview";
+    document.querySelectorAll(".side button[data-tab]").forEach((button) => {
       button.setAttribute("aria-selected", String(button.dataset.tab === name));
     });
     document.querySelectorAll(".pane").forEach((pane) => { pane.hidden = pane.id !== name; });
-    if (name === "knowledge" && !knowledgeLoaded) loadKnowledge();
+    loaders[name]?.();
   }
-  document.querySelectorAll(".tabs button").forEach((button) => button.addEventListener("click", () => switchTab(button.dataset.tab)));
+  document.querySelectorAll(".side button[data-tab]").forEach((button) => button.addEventListener("click", () => { location.hash = button.dataset.tab; }));
+  window.addEventListener("hashchange", () => switchTab(location.hash.slice(1)));
 
   async function loadOverview() {
     try {
@@ -167,5 +181,129 @@
       $("#inspector-content").replaceChildren();
     } catch (error) { bubble(`Lỗi: ${error.message}`, "bot"); }
   });
+
+  /* Branches and staff: CRM Territory and Consultant through mmm_custom.bot_admin. */
+  const LEVEL_LABELS = { "Consultant": "Tư vấn viên", "Team Lead": "Trưởng nhóm" };
+  let branchData = { areas: [], branches: [] };
+  let staffData = { staff: [], branches: [], levels: [], groups: [] };
+  const options = (items, selected, label = (x) => x) => items.map((item) => `<option value="${escapeHtml(item)}" ${item === selected ? "selected" : ""}>${escapeHtml(label(item))}</option>`).join("");
+
+  document.querySelectorAll("dialog [data-close]").forEach((button) => button.addEventListener("click", () => button.closest("dialog").close()));
+
+  async function loadBranches() {
+    $("#branch-rows").innerHTML = '<tr><td colspan="6" class="muted">Đang tải…</td></tr>';
+    try {
+      branchData = await call("mmm_custom.bot_admin.branches");
+      const byArea = new Map(branchData.areas.map((area) => [area, []]));
+      branchData.branches.forEach((branch) => byArea.get(branch.area)?.push(branch));
+      $("#branch-rows").innerHTML = [...byArea.entries()].map(([area, rows]) => `<tr class="area-row"><td colspan="6">${escapeHtml(area)} · ${rows.length} chi nhánh</td></tr>` +
+        (rows.map((b) => `<tr><td><strong>${escapeHtml(b.name)}</strong></td><td>${escapeHtml(b.branch_code || "—")}</td>
+          <td>${escapeHtml(b.address || "—")}</td><td>${escapeHtml(b.hotline || "—")}</td>
+          <td><button type="button" class="link-btn" data-staff-of="${escapeHtml(b.name)}">${b.staff} người</button></td>
+          <td><button type="button" class="secondary" data-edit-branch="${escapeHtml(b.name)}">Sửa</button></td></tr>`).join("") || '<tr><td colspan="6" class="muted">Chưa có chi nhánh.</td></tr>')).join("")
+        || '<tr><td colspan="6" class="muted">Chưa có khu vực nào. Bấm “Thêm chi nhánh” để tạo.</td></tr>';
+      $("#branch-rows").querySelectorAll("[data-edit-branch]").forEach((button) => button.addEventListener("click", () => openBranch(branchData.branches.find((b) => b.name === button.dataset.editBranch))));
+      $("#branch-rows").querySelectorAll("[data-staff-of]").forEach((button) => button.addEventListener("click", () => { staffFilter = button.dataset.staffOf; location.hash = "staff"; }));
+    } catch (error) { showError($("#branch-rows"), error); }
+  }
+
+  function openBranch(branch) {
+    const form = $("#branch-form");
+    form.reset();
+    $("#branch-error").textContent = "";
+    $("#branch-title").textContent = branch ? `Sửa ${branch.name}` : "Thêm chi nhánh";
+    form.original.value = branch?.name || "";
+    form.territory_name.value = branch?.name || "";
+    form.territory_name.disabled = Boolean(branch);
+    form.area.innerHTML = options(branchData.areas, branch?.area) + '<option value="__new">+ Khu vực mới…</option>';
+    ["button_label", "branch_code", "address", "hotline", "map_url", "aliases"].forEach((key) => { form[key].value = branch?.[key] || ""; });
+    $("#bf-new-area-wrap").hidden = form.area.value !== "__new";
+    $("#branch-dialog").showModal();
+  }
+  $("#bf-area").addEventListener("change", () => { $("#bf-new-area-wrap").hidden = $("#bf-area").value !== "__new"; });
+  $("#add-branch").addEventListener("click", () => openBranch(null));
+  $("#branch-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const data = Object.fromEntries(new FormData(form));
+    data.name = data.original;
+    delete data.original;
+    data.territory_name = form.territory_name.value;
+    if (data.area === "__new") { data.area = ""; } else { data.new_area = ""; }
+    try {
+      await call("mmm_custom.bot_admin.save_branch", data);
+      $("#branch-dialog").close();
+      loadBranches();
+    } catch (error) { $("#branch-error").textContent = error.message; }
+  });
+
+  let staffFilter = "";
+  let syncPoll = null;
+
+  async function loadStaff() {
+    try {
+      staffData = await call("mmm_custom.bot_admin.staff");
+      $("#staff-branch").innerHTML = '<option value="">Tất cả chi nhánh</option><option value="__none">Tổng đài / B2B (không chi nhánh)</option>' + options(staffData.branches, staffFilter);
+      if (staffFilter === "__none") $("#staff-branch").value = "__none";
+      renderStaff();
+    } catch (error) { showError($("#staff-rows"), error); }
+  }
+
+  function renderStaff() {
+    staffFilter = $("#staff-branch").value;
+    const query = $("#staff-search").value.trim().toLocaleLowerCase("vi");
+    const rows = staffData.staff.filter((s) => (!staffFilter || (staffFilter === "__none" ? !s.branch : s.branch === staffFilter))
+      && `${s.full_name} ${s.name}`.toLocaleLowerCase("vi").includes(query));
+    $("#staff-rows").innerHTML = rows.map((s) => `<tr>
+      <td><strong>${escapeHtml(s.full_name || s.name)}</strong><br><small class="muted">${escapeHtml(s.name)}</small></td>
+      <td>${escapeHtml(s.branch || (s.handles_b2b ? "Doanh nghiệp (B2B)" : "Tổng đài"))}</td>
+      <td>${escapeHtml(LEVEL_LABELS[s.level] || s.level || "—")}</td>
+      <td>${escapeHtml((s.specialties || []).join(", ") || "—")}</td>
+      <td>${s.active ? '<span class="pill ok">Đang làm</span>' : '<span class="pill off">Đã nghỉ</span>'}</td>
+      <td>${s.chatwoot_agent_id ? '<span class="pill ok">Đã đồng bộ</span>' : (s.active ? '<span class="pill wait">Đang đồng bộ…</span>' : "—")}</td>
+      <td><button type="button" class="secondary" data-edit-staff="${escapeHtml(s.name)}">Sửa</button></td></tr>`).join("")
+      || '<tr><td colspan="7" class="muted">Không có nhân viên phù hợp.</td></tr>';
+    $("#staff-rows").querySelectorAll("[data-edit-staff]").forEach((button) => button.addEventListener("click", () => openStaff(staffData.staff.find((s) => s.name === button.dataset.editStaff))));
+  }
+  $("#staff-search").addEventListener("input", renderStaff);
+  $("#staff-branch").addEventListener("change", renderStaff);
+
+  function openStaff(person) {
+    const form = $("#staff-form");
+    form.reset();
+    $("#staff-error").textContent = "";
+    $("#staff-title").textContent = person ? `Sửa ${person.full_name || person.name}` : "Thêm nhân viên";
+    form.is_new.value = person ? "0" : "1";
+    form.full_name.value = person?.full_name || "";
+    form.email.value = person?.name || "";
+    form.email.disabled = Boolean(person);
+    const branch = person ? (person.branch || "") : (staffFilter !== "__none" ? staffFilter : "");
+    form.branch.innerHTML = '<option value="">Không thuộc chi nhánh (Tổng đài / B2B)</option>' + options(staffData.branches, branch);
+    form.level.innerHTML = options(staffData.levels, person?.level || "Consultant", (level) => LEVEL_LABELS[level] || level);
+    $("#sf-groups").innerHTML = staffData.groups.map((group) => `<label><input type="checkbox" name="specialties" value="${escapeHtml(group)}" ${(person?.specialties || []).includes(group) ? "checked" : ""}> ${escapeHtml(group)}</label>`).join("");
+    form.handles_b2b.checked = Boolean(person?.handles_b2b);
+    form.active.checked = person ? Boolean(person.active) : true;
+    $("#staff-dialog").showModal();
+  }
+  $("#add-staff").addEventListener("click", () => openStaff(null));
+  $("#staff-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const data = {
+      is_new: form.is_new.value, email: form.email.value, full_name: form.full_name.value, branch: form.branch.value,
+      level: form.level.value, specialties: [...form.querySelectorAll('[name="specialties"]:checked')].map((box) => box.value),
+      handles_b2b: form.handles_b2b.checked ? 1 : 0, active: form.active.checked ? 1 : 0
+    };
+    try {
+      await call("mmm_custom.bot_admin.save_staff", data);
+      $("#staff-dialog").close();
+      $("#staff-notice").innerHTML = '<div class="notice">Đã lưu. Chatwoot sẽ cập nhật trong vài giây.</div>';
+      await loadStaff();
+      clearTimeout(syncPoll);
+      syncPoll = setTimeout(async () => { await loadStaff(); $("#staff-notice").replaceChildren(); }, 8000);
+    } catch (error) { $("#staff-error").textContent = error.message; }
+  });
+
   loadOverview();
+  switchTab(location.hash.slice(1));
 })();

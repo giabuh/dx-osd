@@ -49,7 +49,9 @@ for real customers until a later labelled gate passes.
 | `catalog_rules.py` | Pure validation rules + Select option constants (`SLOT_TYPES`, `ACTION_TYPES`, …) used by DocType controllers | C2 registries must use the same constants |
 | `mmm_custom/doctype/` | Bot Conversation adds `history`, `ai_signals`, `jev_calls`; AI Decision Log adds `jev_extra`; Bot Slot adds `ask_on_demand`; Lead Engine Settings adds Jev/cost/advisor sections; existing C1–C2 DocTypes and child tables remain | C4+ reads |
 | `demo/loader.py`, `demo/saoviet/*.json` | Idempotent Sao Việt demo loader (`bench execute mmm_custom.demo.loader.load`, optional `anchor`); `purge_demo()` | — |
-| `demo/chatwoot_seed.py` | Creates demo agents, 15 teams (13 branches + B2B + Tổng đài), inbox membership; writes `Consultant.chatwoot_agent_id` | Supersedes `scripts/seed-branch-agents.py` |
+| `staff_sync.py` | CRM → Chatwoot staff sync: an agent per Consultant, one team per branch (+ B2B, Tổng đài) holding exactly its active consultants, bot attached to every Facebook page inbox; writes `Consultant.chatwoot_agent_id`. Runs on Consultant save and every 10 min; handoff adds the consultant to the conversation's inbox (`engine/effects.py`) | Staff are managed in CRM only |
+| `bot_admin.py`, `www/bot.html`, `public/js/bot_page.js` | `/bot` is the single admin page (left menu): overview, branches (CRM Territory by area), staff (User + Consultant, synced to Chatwoot on save), course knowledge, playground, links to the remaining desk lists; reached from the "Bot Sao Việt" item in the `/crm` sidebar (`crm/frontend/.../AppSidebar.vue`, managers only) | Add admin screens here |
+| `demo/chatwoot_seed.py` | Runs `staff_sync.sync_all()` for the loaded demo consultants | Supersedes `scripts/seed-branch-agents.py` |
 
 ## Live demo data (crm.localhost, checked 2026-09-27)
 

@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"botsv00001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>TRÌNH DIỄN</b></span>\", \"col\": 12}}, {\"id\": \"botsv00002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tri thức bot\", \"col\": 3}}, {\"id\": \"botsv00003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Thử chat với bot\", \"col\": 3}}, {\"id\": \"botsv00004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Khách tiềm năng (CRM)\", \"col\": 3}}, {\"id\": \"botsv00005\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"botsv00006\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>DỮ LIỆU KHÓA HỌC</b></span>\", \"col\": 12}}, {\"id\": \"botsv00007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Khóa học\", \"col\": 3}}, {\"id\": \"botsv00008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Nhóm khóa học\", \"col\": 3}}, {\"id\": \"botsv00009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Lịch khai giảng\", \"col\": 3}}, {\"id\": \"botsv00010\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Khuyến mãi\", \"col\": 3}}, {\"id\": \"botsv00011\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tư vấn viên\", \"col\": 3}}, {\"id\": \"botsv00012\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"botsv00013\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>CẤU HÌNH BOT</b></span>\", \"col\": 12}}, {\"id\": \"botsv00014\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Kỹ năng trả lời\", \"col\": 3}}, {\"id\": \"botsv00015\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Thông tin cần hỏi\", \"col\": 3}}, {\"id\": \"botsv00016\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Cài đặt bot\", \"col\": 3}}, {\"id\": \"botsv00017\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"botsv00018\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>THEO DÕI</b></span>\", \"col\": 12}}, {\"id\": \"botsv00019\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Nhật ký quyết định AI\", \"col\": 3}}, {\"id\": \"botsv00020\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hội thoại bot\", \"col\": 3}}, {\"id\": \"botsv00021\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tín hiệu học\", \"col\": 3}}]",
+ "content": "[{\"id\": \"botsv00001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>TRÌNH DIỄN</b></span>\", \"col\": 12}}, {\"id\": \"botsv00030\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Trang quản trị bot\", \"col\": 3}}, {\"id\": \"botsv00002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tri thức bot\", \"col\": 3}}, {\"id\": \"botsv00003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Thử chat với bot\", \"col\": 3}}, {\"id\": \"botsv00004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Khách tiềm năng (CRM)\", \"col\": 3}}, {\"id\": \"botsv00005\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"botsv00006\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>DỮ LIỆU KHÓA HỌC</b></span>\", \"col\": 12}}, {\"id\": \"botsv00007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Khóa học\", \"col\": 3}}, {\"id\": \"botsv00008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Nhóm khóa học\", \"col\": 3}}, {\"id\": \"botsv00009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Lịch khai giảng\", \"col\": 3}}, {\"id\": \"botsv00010\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Khuyến mãi\", \"col\": 3}}, {\"id\": \"botsv00011\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tư vấn viên\", \"col\": 3}}, {\"id\": \"botsv00031\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Chi nhánh\", \"col\": 3}}, {\"id\": \"botsv00012\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"botsv00013\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>CẤU HÌNH BOT</b></span>\", \"col\": 12}}, {\"id\": \"botsv00014\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Kỹ năng trả lời\", \"col\": 3}}, {\"id\": \"botsv00015\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Thông tin cần hỏi\", \"col\": 3}}, {\"id\": \"botsv00016\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Cài đặt bot\", \"col\": 3}}, {\"id\": \"botsv00017\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"botsv00018\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>THEO DÕI</b></span>\", \"col\": 12}}, {\"id\": \"botsv00019\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Nhật ký quyết định AI\", \"col\": 3}}, {\"id\": \"botsv00020\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hội thoại bot\", \"col\": 3}}, {\"id\": \"botsv00021\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tín hiệu học\", \"col\": 3}}]",
  "creation": "2026-09-27 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,7 +13,7 @@
  "is_hidden": 0,
  "label": "Bot Sao Việt",
  "links": [],
- "modified": "2026-09-27 00:00:00.000000",
+ "modified": "2026-09-27 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Bot Sao Việt",
@@ -32,6 +32,12 @@
  ],
  "sequence_id": 2.0,
  "shortcuts": [
+  {
+   "color": "Blue",
+   "label": "Trang quản trị bot",
+   "type": "URL",
+   "url": "/bot"
+  },
   {
    "color": "Grey",
    "label": "Tri thức bot",
@@ -83,6 +89,13 @@
    "label": "Tư vấn viên",
    "type": "DocType",
    "link_to": "Consultant",
+   "doc_view": ""
+  },
+  {
+   "color": "Grey",
+   "label": "Chi nhánh",
+   "type": "DocType",
+   "link_to": "CRM Territory",
    "doc_view": ""
   },
   {

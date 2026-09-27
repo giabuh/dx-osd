@@ -10,21 +10,43 @@
     :root { color-scheme: light; font: 15px/1.5 system-ui, -apple-system, sans-serif; color: #1e293b; background: #f3f6fb; }
     * { box-sizing: border-box; }
     body { margin: 0; }
-    button, input { font: inherit; }
+    button, input, select, textarea { font: inherit; }
     button { cursor: pointer; }
     a { color: #1c529d; text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .shell { max-width: 1320px; margin: auto; padding: 0 24px 48px; }
-    header { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 24px 0 18px; }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .brand img { width: 44px; height: 44px; }
-    h1 { font-size: 24px; margin: 0; line-height: 1.2; }
-    .eyebrow { color: #64748b; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-    .header-links { display: flex; flex-wrap: wrap; gap: 12px 22px; }
-    .tabs { display: flex; gap: 8px; border-bottom: 1px solid #d9e1ed; margin-bottom: 24px; overflow-x: auto; scrollbar-width: none; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tabs button { border: 0; border-bottom: 3px solid transparent; background: none; color: #526178; padding: 12px 16px; white-space: nowrap; font-weight: 650; }
-    .tabs button[aria-selected="true"] { border-color: #2457a6; color: #194785; }
+    .shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+    .side { background: #fff; border-right: 1px solid #dce4ee; padding: 20px 14px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 18px; }
+    .brand img { width: 38px; height: 38px; }
+    h1 { font-size: 19px; margin: 0; line-height: 1.2; }
+    .eyebrow { color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-label { color: #8290a5; font-size: 11px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; margin: 18px 10px 6px; }
+    .side a, .side button { display: block; width: 100%; text-align: left; border: 0; background: none; color: #334155; padding: 8px 10px; border-radius: 8px; font-weight: 600; }
+    .side a { font-weight: 500; color: #475569; }
+    .side a:hover, .side button:hover { background: #f1f5fb; text-decoration: none; }
+    .side button[aria-selected="true"] { background: #e7effb; color: #194785; }
+    .content { padding: 28px 32px 48px; max-width: 1180px; width: 100%; }
+    label { display: block; font-size: 13px; font-weight: 650; color: #475569; margin: 12px 0 4px; }
+    select, textarea { font: inherit; border: 1px solid #cbd5e1; border-radius: 8px; padding: 9px 11px; background: #fff; width: 100%; }
+    dialog { border: 0; border-radius: 14px; padding: 22px; width: min(560px, calc(100vw - 32px)); box-shadow: 0 20px 60px #0f172a40; }
+    dialog::backdrop { background: #0f172a66; }
+    dialog input[type="text"], dialog input[type="email"] { width: 100%; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+    .checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+    .checks label { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; margin: 4px 0; }
+    label.inline { display: flex; align-items: center; gap: 6px; font-weight: 500; margin: 8px 0 0; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    .toolbar input, .toolbar select { width: auto; min-width: 200px; }
+    #staff table { min-width: 980px; }
+    #staff td:nth-child(n+5), #branches td:nth-child(5) { white-space: nowrap; }
+    .area-row td { background: #f6f9fd; color: #475569; font-weight: 700; font-size: 13px; }
+    .pill { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 650; }
+    .pill.ok { background: #e3f4ea; color: #23693f; }
+    .pill.wait { background: #fff4db; color: #8a5a00; }
+    .pill.off { background: #eef1f5; color: #64748b; }
+    .link-btn { border: 0; background: none; color: #1c529d; padding: 0; }
+    .notice { background: #eef5ff; border: 1px solid #c6daf5; color: #1c4f94; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
     .pane[hidden] { display: none; }
     h2 { font-size: 22px; margin: 0 0 5px; }
     h3 { font-size: 17px; margin: 0 0 12px; }
@@ -64,7 +86,7 @@
     .chips { display: flex; gap: 7px; flex-wrap: wrap; }
     .chips button { background: #eef5ff; border: 1px solid #bfd3f0; border-radius: 18px; padding: 5px 12px; color: #1c529d; }
     .chat-form { display: flex; gap: 9px; border-top: 1px solid #e5eaf1; padding-top: 14px; }
-    input[type="text"], input[type="search"] { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; background: #fff; min-width: 0; }
+    input[type="text"], input[type="search"], input[type="email"] { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; background: #fff; min-width: 0; }
     .chat-form input { flex: 1; }
     .primary { background: #2457a6; color: white; border: 0; border-radius: 8px; padding: 9px 17px; }
     .secondary { background: white; color: #2457a6; border: 1px solid #a9c2e7; border-radius: 8px; padding: 8px 13px; }
@@ -75,26 +97,68 @@
     .chat-grid pre { max-height: 180px; overflow: auto; }
     .error { color: #b23434; }
     @media (max-width: 950px) { .cards { grid-template-columns: repeat(3, 1fr); } .chat-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 650px) { .shell { padding: 0 14px 30px; } header { align-items: flex-start; flex-direction: column; } .cards { grid-template-columns: repeat(2, 1fr); } .knowledge-grid { grid-template-columns: 1fr; } .section-head { display: block; } .panel { padding: 14px; } }
+    @media (max-width: 800px) {
+      .shell { display: block; }
+      .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid #dce4ee; padding: 12px 16px 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; align-items: center; }
+      .side::-webkit-scrollbar { display: none; }
+      .side .brand, .side .nav-label, .side a { display: none; }
+      .side button { width: auto; white-space: nowrap; border-radius: 8px 8px 0 0; }
+      .content { padding: 20px 16px 30px; }
+    }
+    @media (max-width: 650px) { .cards { grid-template-columns: repeat(2, 1fr); } .knowledge-grid { grid-template-columns: 1fr; } .section-head { display: block; } .panel { padding: 14px; } .form-row { grid-template-columns: 1fr; } .toolbar input, .toolbar select { min-width: 0; flex: 1; } }
   </style>
 </head>
 <body>
   <div class="shell">
-    <header>
-      <div class="brand"><img src="/assets/mmm_custom/images/bot.svg" alt=""><div><div class="eyebrow">Quản trị bot</div><h1>Bot Sao Việt</h1></div></div>
-      <nav class="header-links" aria-label="Liên kết"><a href="/crm">Mở CRM</a><a href="{{ chatwoot_url | e }}" target="_blank" rel="noopener">Mở Chatwoot</a><a href="/app/bot-sao-việt">Quản trị nâng cao</a></nav>
-    </header>
-    <nav class="tabs" aria-label="Các mục">
+    <nav class="side" aria-label="Các mục">
+      <div class="brand"><img src="/assets/mmm_custom/images/bot.svg" alt=""><div><div class="eyebrow">Quản trị</div><h1>Bot Sao Việt</h1></div></div>
       <button type="button" data-tab="overview" aria-selected="true">Tổng quan</button>
+      <button type="button" data-tab="branches" aria-selected="false">Chi nhánh</button>
+      <button type="button" data-tab="staff" aria-selected="false">Nhân viên</button>
       <button type="button" data-tab="knowledge" aria-selected="false">Tri thức khóa học</button>
       <button type="button" data-tab="playground" aria-selected="false">Thử chat với bot</button>
+      <div class="nav-label">Dữ liệu khác</div>
+      <a href="/app/course-schedule">Lịch khai giảng</a>
+      <a href="/app/course-promotion">Khuyến mãi</a>
+      <a href="/app/bot-skill">Kỹ năng trả lời</a>
+      <a href="/app/bot-conversation">Hội thoại bot</a>
+      <a href="/app/lead-engine-settings">Cài đặt bot</a>
+      <div class="nav-label">Ứng dụng</div>
+      <a href="/crm">Mở CRM</a>
+      <a href="{{ chatwoot_url | e }}" target="_blank" rel="noopener">Mở Chatwoot ↗</a>
+      <a href="/app/bot-sao-việt">Quản trị nâng cao</a>
     </nav>
-    <main>
+    <main class="content">
       <section id="overview" class="pane"><div class="section-head"><div><h2>Tổng quan hôm nay</h2><span class="muted">Hoạt động của bot trên Messenger</span></div></div><div id="stats" class="cards"></div><div class="panel"><h3>Khách tiềm năng mới nhất</h3><div class="table-wrap"><table><thead><tr><th>Khách hàng</th><th>Điện thoại</th><th>Khóa học</th><th>Chi nhánh</th><th>Tư vấn viên</th><th>Thời gian</th></tr></thead><tbody id="latest-leads"></tbody></table></div></div></section>
       <section id="knowledge" class="pane" hidden><div class="section-head"><div><h2>Tri thức khóa học</h2><span class="muted">Dữ liệu bot dùng để trả lời khách</span></div></div><div class="knowledge-grid"><div class="panel course-list"><input id="course-search" type="search" placeholder="Tìm khóa học" aria-label="Tìm khóa học"><div id="courses"></div></div><div id="course-detail" class="panel detail muted">Chọn một khóa học để xem bot trả lời như thế nào.</div></div></section>
       <section id="playground" class="pane" hidden><div class="section-head"><div><h2>Thử chat với bot</h2><span class="muted">Cuộc trò chuyện thử không gửi tin nhắn hoặc tạo Lead</span></div><button id="reset-chat" class="secondary" type="button">Cuộc trò chuyện mới</button></div><div class="chat-grid"><div class="panel"><div class="chat-options"><span class="muted">Bạn đang đóng vai khách hàng</span><label><input id="use-jev" type="checkbox"> Dùng Jev</label></div><div id="chat-log" class="chat-log" aria-live="polite"></div><form id="chat-form" class="chat-form"><input id="chat-input" type="text" autocomplete="off" placeholder="Nhập tin nhắn của khách hàng…" maxlength="1000" required><button class="primary" type="submit">Gửi</button></form></div><div class="panel"><h3>Bot hiểu gì</h3><p class="muted">Gửi tin nhắn để xem từ khóa, Jev và lý do bot trả lời.</p><details id="inspector" open><summary>Chi tiết lượt chat</summary><div id="inspector-content"></div></details></div></div></section>
+      <section id="branches" class="pane" hidden><div class="section-head"><div><h2>Chi nhánh</h2><span class="muted">Bot hỏi khách theo khu vực → chi nhánh, rồi giao cho nhân viên của chi nhánh đó</span></div><button id="add-branch" class="primary" type="button">+ Thêm chi nhánh</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Chi nhánh</th><th>Mã</th><th>Địa chỉ</th><th>Hotline</th><th>Nhân viên</th><th></th></tr></thead><tbody id="branch-rows"></tbody></table></div></div></section>
+      <section id="staff" class="pane" hidden><div class="section-head"><div><h2>Nhân viên</h2><span class="muted">Lưu ở đây là tự đồng bộ sang Chatwoot: tài khoản, nhóm chi nhánh</span></div><button id="add-staff" class="primary" type="button">+ Thêm nhân viên</button></div><div id="staff-notice"></div><div class="toolbar"><input id="staff-search" type="search" placeholder="Tìm tên hoặc email" aria-label="Tìm nhân viên"><select id="staff-branch" aria-label="Lọc chi nhánh"></select></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Chi nhánh</th><th>Cấp bậc</th><th>Chuyên môn</th><th>Trạng thái</th><th>Chatwoot</th><th></th></tr></thead><tbody id="staff-rows"></tbody></table></div></div></section>
     </main>
   </div>
+  <dialog id="branch-dialog"><form id="branch-form" method="dialog">
+    <h3 id="branch-title">Thêm chi nhánh</h3>
+    <input type="hidden" name="original">
+    <label for="bf-territory">Tên chi nhánh</label><input id="bf-territory" name="territory_name" type="text" required placeholder="CN Dĩ An">
+    <div class="form-row"><div><label for="bf-area">Khu vực</label><select id="bf-area" name="area"></select></div><div id="bf-new-area-wrap" hidden><label for="bf-new-area">Tên khu vực mới</label><input id="bf-new-area" name="new_area" type="text" placeholder="Bình Dương"></div></div>
+    <div class="form-row"><div><label for="bf-button">Chữ trên nút bot</label><input id="bf-button" name="button_label" type="text" maxlength="20" placeholder="Dĩ An"></div><div><label for="bf-code">Mã chi nhánh</label><input id="bf-code" name="branch_code" type="text" placeholder="BD-DA"></div></div>
+    <label for="bf-address">Địa chỉ</label><textarea id="bf-address" name="address" rows="2"></textarea>
+    <div class="form-row"><div><label for="bf-hotline">Hotline</label><input id="bf-hotline" name="hotline" type="text"></div><div><label for="bf-map">Link Google Maps</label><input id="bf-map" name="map_url" type="text"></div></div>
+    <label for="bf-aliases">Khách hay gọi là (cách nhau dấu phẩy)</label><input id="bf-aliases" name="aliases" type="text" placeholder="Dĩ An, Di An">
+    <p id="branch-error" class="error"></p>
+    <div class="form-actions"><button type="button" class="secondary" data-close>Huỷ</button><button type="submit" class="primary">Lưu</button></div>
+  </form></dialog>
+  <dialog id="staff-dialog"><form id="staff-form" method="dialog">
+    <h3 id="staff-title">Thêm nhân viên</h3>
+    <input type="hidden" name="is_new">
+    <div class="form-row"><div><label for="sf-name">Họ tên</label><input id="sf-name" name="full_name" type="text" required></div><div><label for="sf-email">Email đăng nhập</label><input id="sf-email" name="email" type="email" required></div></div>
+    <div class="form-row"><div><label for="sf-branch">Chi nhánh</label><select id="sf-branch" name="branch"></select></div><div><label for="sf-level">Cấp bậc</label><select id="sf-level" name="level"></select></div></div>
+    <label>Chuyên môn (nhóm khóa học)</label><div id="sf-groups" class="checks"></div>
+    <label class="inline"><input name="handles_b2b" type="checkbox"> Chuyên khách doanh nghiệp (B2B)</label>
+    <label class="inline"><input name="active" type="checkbox" checked> Đang làm việc (bot được giao khách)</label>
+    <p id="staff-error" class="error"></p>
+    <div class="form-actions"><button type="button" class="secondary" data-close>Huỷ</button><button type="submit" class="primary">Lưu</button></div>
+  </form></dialog>
   <script src="/assets/mmm_custom/js/bot_page.js?v={{ asset_version }}"></script>
 </body>
 </html>

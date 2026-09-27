@@ -19,7 +19,7 @@ Update this table on every re-sync.
 Both stacks run the vendored source, so an edit in `chatwoot/` or `crm/` takes effect on the next build/start:
 
 - **Chatwoot** — image `dx-osd/chatwoot:local`, built from `chatwoot/docker/Dockerfile` (`docker/chatwoot/docker-compose.override.yaml`). Rebuild after changes: `up -d --build` (see AGENTS.md).
-- **Frappe CRM** — `crm/` is bind-mounted into the container at `/home/frappe/crm` and symlinked into the bench as `apps/crm` (`crm/docker/init.sh`). Python changes load on restart; frontend changes need `bench build --app crm`.
+- **Frappe CRM** — `crm/` is bind-mounted into the container at `/home/frappe/crm` and symlinked into the bench as `apps/crm` (`crm/docker/init.sh`). Python changes load on restart; frontend changes need `bench build --app crm`. A bench created before that symlink existed keeps a plain clone in `apps/crm`; check with `readlink -f apps/crm` and, if it is not `/home/frappe/crm`, move it aside, `ln -s /home/frappe/crm apps/crm`, `pip install -e apps/crm`, `bench build --app crm`, migrate and restart (done on the dev bench 2026-09-27; the old clone is at `/home/frappe/crm-upstream-bak`).
 
 ## Local edits inside vendored directories
 

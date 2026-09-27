@@ -4,7 +4,7 @@ import unittest
 
 MODULE = Path(__file__).resolve().parent.parent / "mmm_custom"
 WORKSPACE = MODULE / "workspace" / "bot_sao_viet" / "bot_sao_viet.json"
-EXTERNAL = {"CRM Product", "CRM Lead"}
+EXTERNAL = {"CRM Product", "CRM Lead", "CRM Territory"}
 FRAPPE_ICONS = {"education", "support", "crm", "customer", "dashboard", "tool", "setting", "users", "message", "chart"}
 
 
@@ -27,7 +27,7 @@ class TestBotWorkspace(unittest.TestCase):
                 self.assertIn(s["link_to"], pages, s["label"])
             else:
                 self.assertEqual(s["type"], "URL", s["label"])
-                self.assertTrue(s["url"].startswith("/crm"), s["label"])
+                self.assertTrue(s["url"].startswith(("/crm", "/bot")), s["label"])
 
     def test_name_label_and_title_match(self):
         # the desk routes a workspace by slug(name) but its sidebar link uses slug(title): they must be equal
