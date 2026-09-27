@@ -66,6 +66,11 @@ class TestDecideAndCompose(unittest.TestCase):
         self.assertEqual((d.type, d.faq, d.fallback), ("answer", self.FAQ, False))
         self.assertIn("VLOOKUP", d.reason)
 
+    def test_the_course_answer_replaces_generic_template_answers(self):
+        u = Understanding(faq=self.FAQ, skills=["beginner_ok", "fee_quote"])
+        d = decide(ConversationState("1", turns=1, slots=EXCEL), u, CAT)
+        self.assertEqual(d.skills, ["fee_quote"])
+
     def test_answered_after_handoff_too(self):
         state = ConversationState("1", turns=3, slots=EXCEL, status="handed_off")
         self.assertEqual(decide(state, Understanding(faq=self.FAQ), CAT).type, "answer")

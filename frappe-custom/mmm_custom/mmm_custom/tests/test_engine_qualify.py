@@ -27,9 +27,12 @@ class TestLeadStatus(unittest.TestCase):
     def test_course_alone_is_still_new(self):
         self.assertEqual(lead_status({"course": fill("VP-EXCEL")}, {}, CAT), NEW)
 
-    def test_hot_or_buying_customer_is_qualified(self):
+    def test_hot_customer_is_qualified(self):
         self.assertEqual(lead_status({}, {"ai_hotness": "hot"}, CAT), QUALIFIED)
-        self.assertEqual(lead_status({}, {"ai_intent": "purchase"}, CAT), QUALIFIED)
+
+    def test_a_purchase_intent_alone_is_not_enough(self):
+        # Jev reads "chưa biết gì thì học được không" as purchase: too noisy to qualify on (live check 2026-09-27)
+        self.assertEqual(lead_status({}, {"ai_intent": "purchase"}, CAT), NEW)
 
     def test_existing_student_or_spam_is_unqualified(self):
         self.assertEqual(lead_status({}, {"ai_intent": "support"}, CAT), UNQUALIFIED)

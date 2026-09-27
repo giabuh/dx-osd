@@ -146,6 +146,8 @@ def decide(state, u, catalog):
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
     faq = u.faq
+    if faq:  # the course's own answer beats a generic template answer to the same question (D-085)
+        skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     greet = state.turns == 0 and not skills and not faq
     progress = bool(new or changed or skills or waiting or faq or u.handoff or u.focus or u.confirm or u.rejected)
     stuck = 0 if progress or greet else state.stuck_turns + 1

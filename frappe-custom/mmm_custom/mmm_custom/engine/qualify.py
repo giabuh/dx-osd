@@ -1,5 +1,5 @@
 """Automatic lead qualification (D-083) — pure. The bot sorts its Leads into the standard CRM statuses:
-Qualified (tiềm năng) once it has a course and a phone, or the customer is hot / wants to buy;
+Qualified (tiềm năng) once it has a course and a phone, or Jev reads the customer as hot;
 Unqualified (không tiềm năng) when Jev reads an existing student's support request or spam. A Lead the
 bot marked Qualified is never downgraded by the bot, and a status a person set is left alone (repo)."""
 
@@ -18,7 +18,7 @@ def lead_status(slots, ai, catalog, previous=""):
     course = catalog.slot_for("course")
     phone = next((s for s in catalog.slots if s.type == "phone"), None)
     has_contact = bool(course and phone and filled(slots, course.key) and filled(slots, phone.key))
-    if has_contact or ai.get("ai_hotness") == "hot" or ai.get("ai_intent") == "purchase":
+    if has_contact or ai.get("ai_hotness") == "hot":  # a purchase intent alone proved too noisy
         return QUALIFIED
     if ai.get("ai_intent") in NOT_A_BUYER:
         return UNQUALIFIED
