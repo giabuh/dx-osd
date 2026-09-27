@@ -23,8 +23,8 @@
         "BODY": "Xác thực tài khoản của bạn và tạo hộp thư đến."
       },
       "AGENT": {
-        "TITLE": "Thêm đại lý",
-        "BODY": "Thêm đại lý vào hộp thư đến đã tạo."
+        "TITLE": "Thêm nhân viên",
+        "BODY": "Thêm nhân viên vào hộp thư đến đã tạo."
       },
       "FINISH": {
         "TITLE": "Voilà!",
@@ -623,9 +623,9 @@
       },
       "AGENTS": {
         "TITLE": "Nhà Cung Cấp",
-        "DESC": "Tại đây bạn có thể thêm các tác nhân để quản lý hộp thư đến mới tạo của mình. Chỉ những đại lý được chọn này mới có quyền truy cập vào hộp thư đến của bạn. Các nhân viên không thuộc hộp thư đến này sẽ không thể xem hoặc trả lời thư trong hộp thư đến này khi họ đăng nhập. <br> <b>PS:</b> Với tư cách là quản trị viên, nếu bạn cần quyền truy cập vào tất cả các hộp thư đến, bạn nên thêm mình làm đại lý cho tất cả các hộp thư đến mà bạn tạo.",
+        "DESC": "Tại đây bạn có thể thêm các tác nhân để quản lý hộp thư đến mới tạo của mình. Chỉ những nhân viên được chọn này mới có quyền truy cập vào hộp thư đến của bạn. Các nhân viên không thuộc hộp thư đến này sẽ không thể xem hoặc trả lời thư trong hộp thư đến này khi họ đăng nhập. <br> <b>PS:</b> Với tư cách là quản trị viên, nếu bạn cần quyền truy cập vào tất cả các hộp thư đến, bạn nên thêm mình làm nhân viên cho tất cả các hộp thư đến mà bạn tạo.",
         "VALIDATION_ERROR": "Add at least one agent to your new Inbox",
-        "PICK_AGENTS": "Chọn đại lý cho hộp thư đến"
+        "PICK_AGENTS": "Chọn nhân viên cho hộp thư đến"
       },
       "DETAILS": {
         "TITLE": "Chi tiết Hộp thư đến",
@@ -666,8 +666,8 @@
       "DESC": ""
     },
     "AGENTS": {
-      "BUTTON_TEXT": "Thêm các nhà cung cấp",
-      "ADD_AGENTS": "Thêm các nhà cung cấp vào hộp thư đến của bạn..."
+      "BUTTON_TEXT": "Thêm các nhân viên",
+      "ADD_AGENTS": "Thêm các nhân viên vào hộp thư đến của bạn..."
     },
     "FINISH": {
       "TITLE": "Hộp thư đến của bạn đã sẵn sàng!",
@@ -1001,7 +1001,7 @@
         "REQUIRE_LABEL": "Require identity validation for all conversations",
         "REQUIRE_DESCRIPTION": "When enabled, users must provide a valid identity token to start conversations. Requests without valid tokens will be rejected."
       },
-      "INBOX_AGENTS": "Nhà cung cấp",
+      "INBOX_AGENTS": "Nhân viên",
       "INBOX_AGENTS_SUB_TEXT": "Thêm hoặc xóa tác nhân khỏi hộp thư đến này",
       "AGENT_ASSIGNMENT": "Phân công cuộc trò chuyện",
       "AGENT_ASSIGNMENT_SUB_TEXT": "Cập nhật phân công cuộc trò chuyện",

@@ -1,19 +1,19 @@
 {
   "AGENT_MGMT": {
-    "HEADER": "Nhà cung cấp",
-    "HEADER_BTN_TXT": "Thêm nhà cung cấp / đại lý",
-    "LOADING": "Tải danh sách nhà cung cấp",
+    "HEADER": "Nhân viên",
+    "HEADER_BTN_TXT": "Thêm nhân viên",
+    "LOADING": "Tải danh sách nhân viên",
     "DESCRIPTION": "An agent is a member of your customer support team who can view and respond to user messages. The list below shows all the agents in your account.",
     "LEARN_MORE": "Learn about user roles",
     "AGENT_TYPES": {
       "ADMINISTRATOR": "Quản trị viên",
-      "AGENT": "Nhà cung cấp"
+      "AGENT": "Nhân viên"
     },
     "COUNT": "{n} agent | {n} agents",
     "LIST": {
       "404": "Không có tác nhân nào được liên kết với tài khoản này",
-      "TITLE": "Quản lý các đại lý trong nhóm của bạn",
-      "DESC": "Bạn có thể thêm / bớt đại lý vào / trong nhóm của mình.",
+      "TITLE": "Quản lý các nhân viên trong nhóm của bạn",
+      "DESC": "Bạn có thể thêm / bớt nhân viên vào / trong nhóm của mình.",
       "NAME": "Tên",
       "EMAIL": "EMAIL",
       "STATUS": "Trạng thái",
@@ -23,27 +23,27 @@
       "AVAILABLE_CUSTOM_ROLE": "Available custom role permissions"
     },
     "ADD": {
-      "TITLE": "Thêm đại lý vào nhóm của bạn",
+      "TITLE": "Thêm nhân viên vào nhóm của bạn",
       "DESC": "Bạn có thể thêm những người có thể xử lý hỗ trợ cho hộp thư đến của bạn.",
       "CANCEL_BUTTON_TEXT": "Huỷ",
       "FORM": {
         "NAME": {
-          "LABEL": "Tên nhà cung cấp",
-          "PLACEHOLDER": "Vui lòng nhập tên nhà cung cấp"
+          "LABEL": "Tên nhân viên",
+          "PLACEHOLDER": "Vui lòng nhập tên nhân viên"
         },
         "AGENT_TYPE": {
-          "LABEL": "Loại nhà cung cấp",
+          "LABEL": "Loại nhân viên",
           "PLACEHOLDER": "Vui lòng chọn loại",
-          "ERROR": "Loại nhà cung cấp là bắt buộc"
+          "ERROR": "Loại nhân viên là bắt buộc"
         },
         "EMAIL": {
           "LABEL": "Email",
           "PLACEHOLDER": "Vui lòng nhập email"
         },
-        "SUBMIT": "Thêm nhà cung cấp"
+        "SUBMIT": "Thêm nhân viên"
       },
       "API": {
-        "SUCCESS_MESSAGE": "Nhà cung cấp được thêm thành công",
+        "SUCCESS_MESSAGE": "Nhân viên được thêm thành công",
         "EXIST_MESSAGE": "Email đã được sử dung, vui lòng chọn email khác.",
         "ERROR_MESSAGE": "Không thể kết nối với Máy chủ Woot, Vui lòng thử lại sau"
       }
@@ -51,7 +51,7 @@
     "DELETE": {
       "BUTTON_TEXT": "Xoá",
       "API": {
-        "SUCCESS_MESSAGE": "Nhà cung cấp được xoá thành công",
+        "SUCCESS_MESSAGE": "Nhân viên được xoá thành công",
         "ERROR_MESSAGE": "Không thể kết nối với Máy chủ Woot, Vui lòng thử lại sau"
       },
       "CONFIRM": {
@@ -62,16 +62,16 @@
       }
     },
     "EDIT": {
-      "TITLE": "Chỉnh sửa nhà cung cấp",
+      "TITLE": "Chỉnh sửa nhân viên",
       "FORM": {
         "NAME": {
-          "LABEL": "Tên nhà cung cấp",
-          "PLACEHOLDER": "Vui lòng nhập tên nhà cung cấp"
+          "LABEL": "Tên nhân viên",
+          "PLACEHOLDER": "Vui lòng nhập tên nhân viên"
         },
         "AGENT_TYPE": {
-          "LABEL": "Loại nhà cung cấp",
+          "LABEL": "Loại nhân viên",
           "PLACEHOLDER": "Vui lòng chọn loại",
-          "ERROR": "Loại nhà cung cấp là bắt buộc"
+          "ERROR": "Loại nhân viên là bắt buộc"
         },
         "EMAIL": {
           "LABEL": "Emails",
@@ -82,18 +82,18 @@
           "PLACEHOLDER": "Please select an availability status",
           "ERROR": "Availability is required"
         },
-        "SUBMIT": "Chỉnh sửa nhà cung cấp"
+        "SUBMIT": "Chỉnh sửa nhân viên"
       },
       "BUTTON_TEXT": "Chỉnh sửa",
       "CANCEL_BUTTON_TEXT": "Huỷ",
       "API": {
-        "SUCCESS_MESSAGE": "Nhà cung cấp được cập nhật thành công",
+        "SUCCESS_MESSAGE": "Nhân viên được cập nhật thành công",
         "ERROR_MESSAGE": "Không thể kết nối với Máy chủ Woot, Vui lòng thử lại sau"
       },
       "PASSWORD_RESET": {
         "ADMIN_RESET_BUTTON": "Đặt lại mật khẩu",
-        "ADMIN_SUCCESS_MESSAGE": "Một email với hướng dẫn đặt lại mật khẩu đã được gửi đến đại lý",
-        "SUCCESS_MESSAGE": "Đặt lại mật khẩu đại lý thành công",
+        "ADMIN_SUCCESS_MESSAGE": "Một email với hướng dẫn đặt lại mật khẩu đã được gửi đến nhân viên",
+        "SUCCESS_MESSAGE": "Đặt lại mật khẩu nhân viên thành công",
         "ERROR_MESSAGE": "Không thể kết nối với Máy chủ Woot, Vui lòng thử lại sau"
       }
     },
@@ -113,7 +113,7 @@
       },
       "SEARCH": {
         "NO_RESULTS": {
-          "AGENT": "Không tìm thấy nhà cung cấp",
+          "AGENT": "Không tìm thấy nhân viên",
           "TEAM": "Không tìm thấy nhóm nào"
         },
         "PLACEHOLDER": {

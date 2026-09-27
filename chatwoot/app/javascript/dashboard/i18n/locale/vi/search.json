@@ -57,10 +57,10 @@
       "FILTER_MESSAGE": "Filter messages by:",
       "FROM": "Người gửi",
       "IN": "Hộp thư đến",
-      "AGENTS": "Nhà cung cấp",
+      "AGENTS": "Nhân viên",
       "CONTACTS": "Liên hệ",
       "INBOXES": "Hộp thư đến",
-      "NO_AGENTS": "Không tìm thấy nhà cung cấp",
+      "NO_AGENTS": "Không tìm thấy nhân viên",
       "NO_CONTACTS": "Start by searching to see results",
       "NO_INBOXES": "No inboxes found"
     }

@@ -163,7 +163,7 @@
       }
     },
     "MENTION": {
-      "AGENTS": "Nhà cung cấp",
+      "AGENTS": "Nhân viên",
       "TEAMS": "Nhóm"
     },
     "PICKER": {
@@ -187,7 +187,7 @@
           "ALL": "Tất cả"
         },
         "AVAILABILITY": "Khả dụng",
-        "ROLE": "Loại nhà cung cấp",
+        "ROLE": "Loại nhân viên",
         "AUTO_ASSIGN": "Auto assign",
         "ENABLED": "Bật",
         "DISABLED": "Không bật",
@@ -267,7 +267,7 @@
       "ENABLE_SIGN_TOOLTIP": "Bật chữ ký",
       "DISABLE_SIGN_TOOLTIP": "Tắt chữ ký",
       "MSG_INPUT": "Shift + enter cho dòng mới. Bắt đầu với '/' để chọn Câu trả lời soạn trước.",
-      "PRIVATE_MSG_INPUT": "Shift + enter cho dòng mới. Điều này sẽ chỉ hiển thị cho Đại lý",
+      "PRIVATE_MSG_INPUT": "Shift + enter cho dòng mới. Điều này sẽ chỉ hiển thị cho Nhân viên",
       "MESSAGING_RESTRICTED": "You cannot reply to this conversation",
       "MESSAGING_RESTRICTED_WHATSAPP": "You can only reply using a template message due to 24-hour message window restriction",
       "MESSAGING_RESTRICTED_API": "You can only reply using a template message due to message window restriction",

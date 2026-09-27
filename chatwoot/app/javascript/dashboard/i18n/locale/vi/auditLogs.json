@@ -21,7 +21,7 @@
       },
       "EVENT_TYPES": {
         "SIGN_IN_OUT": "Sign in / sign out",
-        "AGENTS": "Nhà cung cấp",
+        "AGENTS": "Nhân viên",
         "TEAMS": "Nhóm",
         "TEAM_MEMBERS": "Team members",
         "INBOX_MEMBERS": "Inbox collaborators",

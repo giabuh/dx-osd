@@ -150,12 +150,12 @@
     }
   },
   "AGENT_REPORTS": {
-    "HEADER": "Tổng quan đại lý",
+    "HEADER": "Tổng quan nhân viên",
     "DESCRIPTION": "Easily track agent performance with key metrics such as conversations, response times, resolution times, and resolved cases. Click an agent's name to learn more.",
     "LOADING_CHART": "Đang tải các biểu đồ dữ liệu...",
     "NO_ENOUGH_DATA": "Chúng tôi không nhận được đủ điểm dữ liệu để tạo báo cáo, Vui lòng thử lại sau.",
-    "DOWNLOAD_AGENT_REPORTS": "Tải xuống báo cáo đại lý",
-    "FILTER_DROPDOWN_LABEL": "Chọn đại lý",
+    "DOWNLOAD_AGENT_REPORTS": "Tải xuống báo cáo nhân viên",
+    "FILTER_DROPDOWN_LABEL": "Chọn nhân viên",
     "FILTERS": {
       "INPUT_PLACEHOLDER": {
         "AGENTS": "Tìm kiếm nhân viên"
@@ -463,7 +463,7 @@
         "RATINGS": "Search ratings"
       },
       "AGENTS": {
-        "LABEL": "Nhà cung cấp"
+        "LABEL": "Nhân viên"
       },
       "INBOXES": {
         "LABEL": "Hộp thư đến"
@@ -478,7 +478,7 @@
     "TABLE": {
       "HEADER": {
         "CONTACT_NAME": "Liên hệ",
-        "AGENT_NAME": "Nhà cung cấp",
+        "AGENT_NAME": "Nhân viên",
         "RATING": "Đánh giá",
         "FEEDBACK_TEXT": "Bình luận phản hồi",
         "CONVERSATION": "Cuộc hội thoại",
@@ -576,7 +576,7 @@
       "LOADING_MESSAGE": "Đang tải chỉ số tổng đài viên...",
       "NO_AGENTS": "Không có cuộc hội thoại nào của các tổng đài viên",
       "TABLE_HEADER": {
-        "AGENT": "Nhà cung cấp",
+        "AGENT": "Nhân viên",
         "OPEN": "Mở",
         "UNATTENDED": "Không giám sát",
         "STATUS": "Trạng thái"
@@ -632,7 +632,7 @@
       },
       "SLA": "SLA Policy",
       "INBOXES": "Hộp thư đến",
-      "AGENTS": "Nhà cung cấp",
+      "AGENTS": "Nhân viên",
       "LABELS": "Nhãn",
       "TEAMS": "Nhóm"
     },
@@ -655,14 +655,14 @@
       "HEADER": {
         "POLICY": "Policy",
         "CONVERSATION": "Cuộc hội thoại",
-        "AGENT": "Nhà cung cấp"
+        "AGENT": "Nhân viên"
       },
       "VIEW_DETAILS": "View Details"
     }
   },
   "SUMMARY_REPORTS": {
     "INBOX": "Hộp thư đến",
-    "AGENT": "Nhà cung cấp",
+    "AGENT": "Nhân viên",
     "TEAM": "Nhóm",
     "LABEL": "Nhãn",
     "AVG_RESOLUTION_TIME": "Avg. Resolution Time",
