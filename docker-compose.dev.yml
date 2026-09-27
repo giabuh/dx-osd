@@ -1,0 +1,89 @@
+# Dev-mode override for the unified stack. Root docker-compose.yml stays the production-like default.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile build build chatwoot-base
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml build chatwoot-rails chatwoot-vite
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Chatwoot: RAILS_ENV=development, ./chatwoot bind-mounted at /app, Vite dev server on 127.0.0.1:3036.
+# CRM: already dev (developer_mode=1, ./crm and ./frappe-custom/mmm_custom bind-mounted) - unchanged here.
+# Dev reuses the existing database (chatwoot_production) instead of an empty chatwoot_dev.
+# Existing data volumes (chatwoot_*, crm_*) are reused as-is; dev-only caches use chatwoot_dev_* volumes.
+
+services:
+  # Build-only: produces chatwoot:development, which the rails/vite Dockerfiles start FROM.
+  chatwoot-base:
+    profiles: ["build"]
+    image: chatwoot:development
+    build:
+      context: ./chatwoot
+      dockerfile: docker/Dockerfile
+      args:
+        BUNDLE_WITHOUT: ""
+        EXECJS_RUNTIME: "Node"
+        RAILS_ENV: "development"
+        RAILS_SERVE_STATIC_FILES: "false"
+
+  chatwoot-rails:
+    image: dx-osd/chatwoot-rails:dev
+    build:
+      context: ./chatwoot
+      dockerfile: docker/dockerfiles/rails.Dockerfile
+    depends_on:
+      - chatwoot-vite
+    environment:
+      - NODE_ENV=development
+      - RAILS_ENV=development
+      - POSTGRES_DATABASE=chatwoot_production
+      - VITE_DEV_SERVER_HOST=chatwoot-vite
+    volumes:
+      - ./chatwoot:/app:delegated
+      - chatwoot_dev_node_modules:/app/node_modules
+      - chatwoot_dev_packs:/app/public/packs
+      - chatwoot_dev_cache:/app/tmp/cache
+      - chatwoot_dev_bundle:/usr/local/bundle
+
+  chatwoot-sidekiq:
+    image: dx-osd/chatwoot-rails:dev
+    build: !reset null
+    pull_policy: never
+    environment:
+      - NODE_ENV=development
+      - RAILS_ENV=development
+      - POSTGRES_DATABASE=chatwoot_production
+    volumes:
+      - ./chatwoot:/app:delegated
+      - chatwoot_dev_node_modules:/app/node_modules
+      - chatwoot_dev_packs:/app/public/packs
+      - chatwoot_dev_cache:/app/tmp/cache
+      - chatwoot_dev_bundle:/usr/local/bundle
+
+  chatwoot-vite:
+    container_name: chatwoot-vite-1
+    image: dx-osd/chatwoot-vite:dev
+    build:
+      context: ./chatwoot
+      dockerfile: docker/dockerfiles/vite.Dockerfile
+    restart: always
+    env_file: ./chatwoot/.env
+    environment:
+      - NODE_ENV=development
+      - RAILS_ENV=development
+      - VITE_DEV_SERVER_HOST=0.0.0.0
+    entrypoint: docker/entrypoints/vite.sh
+    command: ["bin/vite", "dev"]
+    ports:
+      - "127.0.0.1:3036:3036"
+    volumes:
+      - ./chatwoot:/app:delegated
+      - chatwoot_dev_node_modules:/app/node_modules
+      - chatwoot_dev_packs:/app/public/packs
+      - chatwoot_dev_cache:/app/tmp/cache
+      - chatwoot_dev_bundle:/usr/local/bundle
+    networks:
+      - chatwoot_net
+
+volumes:
+  chatwoot_dev_node_modules:
+  chatwoot_dev_packs:
+  chatwoot_dev_cache:
+  chatwoot_dev_bundle:
