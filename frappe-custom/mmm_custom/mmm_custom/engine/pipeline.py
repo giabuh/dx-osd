@@ -10,6 +10,7 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.engine.combine import combine
+from mmm_custom.engine.cost_guard import allow_jev, recent_calls
 from mmm_custom.engine.decide import decide
 from mmm_custom.engine.handoff import plan_handoff
 from mmm_custom.engine.jev import JevResult
@@ -72,13 +73,15 @@ def parse_event(payload):
     return Event("ignore", cid)
 
 
-def understand_turn(text, state, catalog, jev):
-    """Always run keywords; use Jev when available and keep the keyword result on failure."""
+def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0):
+    """Always run keywords; call Jev only when available and within the cost guard."""
     u = understand(text, state, catalog)
     if jev is None:
         return u, JevResult("disabled")
-    if u.tapped:
-        return u, JevResult("skipped_cost_guard", error="button")
+    allowed, why = allow_jev(u, state, catalog, now, tokens_today, budget)
+    if not allowed:
+        return u, JevResult("skipped_cost_guard", error=why)
+    state.jev_calls = recent_calls(state.jev_calls, now) + [now]
     questions = build_questions(state, u, catalog)
     result = jev.ask(jev_state(text, state, catalog), questions)
     if result.status != "ok":
@@ -101,6 +104,8 @@ def apply_decision(state, decision, reply, event):
     state.history = (state.history + lines)[-MAX_HISTORY:]
     if decision.type == "handoff":
         state.status = "handed_off"
+    if decision.close:
+        state.status = "closed"
     state.last_message_id = max(state.last_message_id, event.message_id)
     state.turns += 1
 
@@ -153,7 +158,13 @@ def run_turn(event, repo, effects, render):
         return None  # redelivered webhook: this message was already answered
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),
                 state.status, state.turns, state.stuck_turns)
-    turn.understanding, turn.jev = understand_turn(event.text, state, catalog, repo.jev_client())
+    jev = repo.jev_client()
+    tokens, budget = repo.jev_budget() if jev else (0, 0)
+    turn.understanding, turn.jev = understand_turn(event.text, state, catalog, jev, repo.now(), tokens, budget)
+    if turn.jev.input_tokens:
+        repo.add_jev_tokens(turn.jev.input_tokens)
+    if turn.jev.error == "daily_budget":
+        repo.warn_budget()
     turn.decision = decide(state, turn.understanding, catalog)
     turn.reason = turn.decision.reason
 
@@ -175,6 +186,11 @@ def run_turn(event, repo, effects, render):
             turn.reply.errors.append({"type": "send_failed", "detail": str(e)[:300]})
 
     apply_decision(state, turn.decision, turn.reply, event)
+    if turn.decision.close:
+        try:
+            effects.mark_spam(state.conversation_id)
+        except Exception as e:
+            turn.reply.errors.append({"type": "spam_failed", "detail": str(e)[:300]})
     write_lead(turn, effects, catalog)
     if plan:
         state.consultant = plan.consultant_name

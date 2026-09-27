@@ -35,6 +35,7 @@ class Decision:
     reason: str = ""
     confirm: dict = field(default_factory=dict)
     ai: dict = field(default_factory=dict)
+    close: bool = False
 
 
 def slot_active(slot, slots):
@@ -129,6 +130,8 @@ def decide(state, u, catalog):
         return Decision("silent", **keep, reason="Hội thoại đã đóng")
     if state.consultant_replied:
         return Decision("silent", **keep, reason="Tư vấn viên đã nhắn khách, bot im lặng")
+    if u.spam and not state.lead:
+        return Decision("silent", **keep, close=True, reason=f"Tin nhắn rác ({u.spam:.2f}): bot dừng, không tạo Lead")
 
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)

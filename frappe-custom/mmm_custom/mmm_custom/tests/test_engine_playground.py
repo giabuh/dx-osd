@@ -18,7 +18,7 @@ class TestInspect(unittest.TestCase):
     def test_inspect_shows_the_jev_result(self):
         repo, fx = FakeRepo(CAT), RecordingEffects()
         repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.7}})
-        out = inspect(run_turn(Event("customer_message", "7", 5, "học vẽ nhà", {"id": 9}), repo, fx, render), fx)
+        out = inspect(run_turn(Event("customer_message", "7", 5, "học vẽ nhà nha bạn", {"id": 9}), repo, fx, render), fx)
         self.assertEqual((out["jev"]["status"], out["jev"]["input_tokens"]), ("ok", 120))
         self.assertEqual(out["understanding"]["confirm"]["value"], "VKT-REVIT")
 

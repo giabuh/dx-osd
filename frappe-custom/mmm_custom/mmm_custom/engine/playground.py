@@ -35,7 +35,7 @@ def inspect(turn, effects):
                           "confirm": u.confirm, "rejected": u.rejected, "intent": u.intent,
                           "hotness": u.hotness, "wants_human": u.wants_human, "spam": u.spam},
         "jev": turn.jev.log() if turn.jev else {"status": "disabled"},
-        "decision": {"type": d.type, "reason": turn.reason, "ask": d.ask, "skills": d.skills,
+        "decision": {"type": d.type, "reason": turn.reason, "ask": d.ask, "skills": d.skills, "close": d.close,
                      "pending_skill": d.pending_skill, "handoff_reason": d.handoff_reason, "stuck_turns": d.stuck_turns},
         "reply": {"messages": r.messages, "buttons": [b["title"] for b in r.buttons], "variants": r.variants,
                   "attachments": r.attachments, "errors": r.errors},

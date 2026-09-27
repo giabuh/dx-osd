@@ -79,6 +79,8 @@ def _signals(u, answers, questions, catalog):
     intent, p = _choice(answers, questions, "intent")
     if intent:
         u.intent = {"value": intent, "confidence": round(p, 3)}
+        if intent == "spam" and p >= float(catalog.settings["spam_threshold"]):
+            u.spam = round(p, 3)
     hot = answers.get("hotness")
     if "hotness" in questions and isinstance(hot, dict):
         try:

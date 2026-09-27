@@ -34,7 +34,11 @@
   "handoff_noul",
   "spam_threshold",
   "confirm_slot_template",
-  "confirm_skill_template"
+  "confirm_skill_template",
+  "cost_section",
+  "jev_calls_per_hour",
+  "jev_daily_token_budget",
+  "playground_daily_token_budget"
  ],
  "fields": [
   {
@@ -150,7 +154,11 @@
   {"fieldname": "handoff_noul", "fieldtype": "Float", "label": "Early handoff (wants human / hot) at", "description": "Default 0.70"},
   {"fieldname": "spam_threshold", "fieldtype": "Float", "label": "Spam: stop at", "description": "Default 0.80"},
   {"fieldname": "confirm_slot_template", "fieldtype": "Small Text", "label": "Confirm slot template"},
-  {"fieldname": "confirm_skill_template", "fieldtype": "Small Text", "label": "Confirm skill template"}
+  {"fieldname": "confirm_skill_template", "fieldtype": "Small Text", "label": "Confirm skill template"},
+  {"fieldname": "cost_section", "fieldtype": "Section Break", "label": "Jev cost guard"},
+  {"fieldname": "jev_calls_per_hour", "fieldtype": "Int", "label": "Jev calls per conversation per hour", "description": "Default 20"},
+  {"fieldname": "jev_daily_token_budget", "fieldtype": "Int", "label": "Daily input-token budget (customers)", "description": "0 = unlimited"},
+  {"fieldname": "playground_daily_token_budget", "fieldtype": "Int", "label": "Daily input-token budget (Playground)", "description": "0 = unlimited"}
  ],
  "issingle": 1,
  "links": [],

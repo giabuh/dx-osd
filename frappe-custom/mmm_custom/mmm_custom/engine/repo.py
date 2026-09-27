@@ -2,6 +2,7 @@
 Bot Conversation state. Verified against a running bench (the offline tests use FakeRepo)."""
 
 import json
+import time
 
 try:
     import frappe
@@ -211,6 +212,28 @@ class FrappeRepo:
 
         return jev_client(frappe.conf, self.catalog().settings, self.force_jev)
 
+    def now(self):
+        return time.time()
+
+    def _token_key(self):
+        return f"lead_engine_jev_tokens:{'playground' if self.sandbox else 'live'}:{self.today()}"
+
+    def jev_budget(self):
+        settings = self.catalog().settings
+        budget = settings["playground_daily_token_budget"] if self.sandbox else settings["jev_daily_token_budget"]
+        return int(frappe.cache().get(self._token_key()) or 0), int(budget or 0)
+
+    def add_jev_tokens(self, n):
+        cache, key = frappe.cache(), self._token_key()
+        cache.incrby(key, int(n))
+        cache.expire(key, 2 * 86400)
+
+    def warn_budget(self):
+        key = f"{self._token_key()}:warned"
+        if frappe.cache().set(key, 1, ex=2 * 86400, nx=True):
+            frappe.log_error(title="Lead engine: Jev daily token budget reached",
+                             message=f"{key}: the bot runs on keywords only until tomorrow. Raise the budget in Lead Engine Settings.")
+
     def load_state(self, event):
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": event.conversation_id})
         if not name:
@@ -224,7 +247,8 @@ class FrappeRepo:
             consultant=d.consultant or "", is_sandbox=bool(d.is_sandbox), is_returning=bool(d.is_returning),
             turns=d.turns or 0, answered=json.loads(d.answered_skills) if d.answered_skills else [],
             history=d.history if isinstance(d.history, list) else (json.loads(d.history) if d.history else []),
-            ai=_json(d.ai_signals))
+            ai=_json(d.ai_signals),
+            jev_calls=d.jev_calls if isinstance(d.jev_calls, list) else (json.loads(d.jev_calls) if d.jev_calls else []))
 
     def new_state(self, event):
         """A new conversation starts from what CRM already knows about the contact (D-022, D-070)."""
@@ -257,6 +281,7 @@ class FrappeRepo:
             "answered_skills": json.dumps(state.answered),
             "history": json.dumps(state.history, ensure_ascii=False),
             "ai_signals": json.dumps(state.ai, ensure_ascii=False),
+            "jev_calls": json.dumps(state.jev_calls),
         }
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": state.conversation_id})
         if name:

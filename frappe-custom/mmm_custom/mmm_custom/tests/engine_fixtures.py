@@ -55,9 +55,22 @@ class FakeRepo:
         self.logs, self.signals = [], []
         self.consultant_rows, self.load, self.owners = [], {}, {}
         self.jev = None
+        self.clock, self.tokens, self.budget, self.warnings = 1_800_000_000.0, 0, 0, 0
 
     def jev_client(self):
         return self.jev
+
+    def now(self):
+        return self.clock
+
+    def jev_budget(self):
+        return self.tokens, self.budget
+
+    def add_jev_tokens(self, n):
+        self.tokens += n
+
+    def warn_budget(self):
+        self.warnings += 1
 
     def catalog(self):
         return self._catalog

@@ -22,7 +22,8 @@
   "is_sandbox",
   "answered_skills",
   "history",
-  "ai_signals"
+  "ai_signals",
+  "jev_calls"
  ],
  "fields": [
   {
@@ -128,6 +129,12 @@
    "fieldname": "ai_signals",
    "fieldtype": "JSON",
    "label": "Intent / hotness written to the Lead",
+   "read_only": 1
+  },
+  {
+   "fieldname": "jev_calls",
+   "fieldtype": "JSON",
+   "label": "Jev calls in the last hour",
    "read_only": 1
   }
  ],

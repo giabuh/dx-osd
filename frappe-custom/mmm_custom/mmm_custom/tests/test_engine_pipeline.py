@@ -142,7 +142,7 @@ class TestJevTurn(unittest.TestCase):
 
     def test_jev_answer_fills_a_slot_and_is_logged(self):
         self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.93}})
-        t = self.turn("mình muốn học vẽ nhà")
+        t = self.turn("mình muốn học vẽ nhà nha bạn")
         self.assertEqual(self.repo.states["7"].slots["course"]["source"], "jev")
         self.assertEqual(t.decision.ask, "branch")
         log = self.repo.logs[0]
@@ -157,7 +157,7 @@ class TestJevTurn(unittest.TestCase):
 
     def test_confirm_no_asks_with_buttons_and_records_signal(self):
         self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.7}})
-        t1 = self.turn("mình muốn học vẽ nhà")
+        t1 = self.turn("mình muốn học vẽ nhà nha bạn")
         self.assertEqual(t1.decision.type, "confirm")
         self.assertEqual([b["title"] for b in t1.reply.buttons], ["Đúng ạ", "Không phải"])
         self.assertEqual(self.repo.states["7"].pending["confirm"]["value"], "VKT-REVIT")
@@ -170,7 +170,7 @@ class TestJevTurn(unittest.TestCase):
 
     def test_confirm_yes_fills(self):
         self.repo.jev = FakeJev({"slot:course": {"choice": "VKT-REVIT", "confidence": 0.7}})
-        self.turn("mình muốn học vẽ nhà")
+        self.turn("mình muốn học vẽ nhà nha bạn")
         self.turn("Đúng ạ", message_id=6)
         self.assertEqual(self.repo.states["7"].slots["course"]["value"], "VKT-REVIT")
 
