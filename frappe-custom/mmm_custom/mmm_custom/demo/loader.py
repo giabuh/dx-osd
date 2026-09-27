@@ -146,7 +146,7 @@ def load(anchor=None):
 		if "Sales User" not in [r.role for r in user.roles]:
 			user.add_roles("Sales User")
 		put("Consultant", {"user": p["email"]}, {
-			"branch": p["branch"] or None, "level": p["level"], "handles_b2b": p["handles_b2b"], "active": 1,
+			"branch": p["branch"] or None, "level": p["level"], "handles_b2b": p["handles_b2b"], "active": p.get("active", 1),
 			"specialties": [{"course_group": g} for g in p["specialties"]]})
 
 	for row in generate_schedules(data["courses"], branches, monday):
