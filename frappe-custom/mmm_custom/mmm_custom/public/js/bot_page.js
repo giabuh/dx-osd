@@ -111,6 +111,7 @@
         <h4>Nội dung học</h4>${list(course.syllabus)}
         <h4>Câu hỏi thường gặp</h4>${course.faqs?.length ? course.faqs.map((faq) => `<div class="faq"><strong>${escapeHtml(faq.question)}</strong><p>${escapeHtml(faq.error || faq.reply || "Chưa có câu trả lời.")}</p></div>`).join("") : '<p class="muted">Chưa có câu hỏi thường gặp.</p>'}
         <h4>Lớp sắp khai giảng (${escapeHtml(course.schedule_count || 0)})</h4>${list(schedules)}`;
+      if (window.matchMedia("(max-width: 650px)").matches) detail.scrollIntoView({ behavior: "smooth", block: "start" });  // one column: the detail sits below the list
     } catch (error) { showError(detail, error); }
   }
 
