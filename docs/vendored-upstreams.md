@@ -42,6 +42,9 @@ Every change we make inside a vendored directory is listed here, so it can be re
 | `crm/frontend/src/components/ListViews/LeadsListView.vue` | Add `<Badge>` rendering block for `data_quality` column | Renders a colored badge (like SLA Status) instead of plain text |
 | `chatwoot/app/models/channel/facebook_page.rb` | Add `validates :page_access_token, :user_access_token, length: { maximum: 4096 }` | Meta's current tokens exceed the 255-char string guard in `ApplicationRecord`, so saving a Facebook Page channel failed with "Page access token is too long" |
 | `chatwoot/app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | Remove the My Inbox, Mentions, Participating and Unattended sidebar entries; `HIDDEN_ITEMS` filters Folders, Teams, contact Active/Segments/Tagged With/Companies, Label/Inbox/Team/CSAT/SLA reports and the Templates, Labels, Custom Attributes, Conversation Workflow settings (routes stay) | Simpler inbox UI for consultants; Campaigns/Help Center etc. are hidden by account feature flags plus `INSTALLATION_NAME` ≠ "Chatwoot" (data, not code) |
+| `crm/crm/api/dashboard.py` | Append 6 EduFlow widget functions: `get_messenger_bot_leads`, `get_facebook_ads_leads`, `get_leads_with_phone`, `get_leads_by_course_interest`, `get_leads_by_branch`, `get_lead_trend_by_source` | Education-center dashboard metrics: source breakdown, course interest, branch distribution |
+| `crm/crm/fcrm/doctype/crm_dashboard/crm_dashboard.py` | Replace `default_manager_dashboard_layout()` JSON with EduFlow layout (10 widgets) | Default dashboard shows education-relevant KPIs instead of generic B2B sales pipeline |
+| `crm/frontend/src/components/Dashboard/AddChartModal.vue` | Add 6 new widgets to number/axis/donut chart lists | Makes EduFlow widgets available in the Add Chart modal |
 
 ## Re-sync procedure
 

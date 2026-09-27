@@ -106,15 +106,18 @@ jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.d
 
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
 # It does nothing unless the site config has typesafe_api_key.
+# Autopilot publisher: runs every 5 minutes to publish scheduled Facebook posts.
 scheduler_events = {
 	"cron": {
 		"0 8 * * *": ["mmm_custom.followup.run_daily"],
 		# Heals failed staff syncs and gives newly connected Facebook pages the bot.
 		"*/10 * * * *": ["mmm_custom.staff_sync.sync_all"],
+		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
 	},
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
 	"daily": ["mmm_custom.engine.log.purge_old_logs"],
 }
+
 
 # Uninstallation
 # ------------
@@ -184,24 +187,8 @@ scheduler_events = {
 
 # Scheduled Tasks
 # ---------------
+# (See scheduler_events defined above with 08:00 followup and */5 autopilot publisher)
 
-# scheduler_events = {
-# 	"all": [
-# 		"mmm_custom.tasks.all"
-# 	],
-# 	"daily": [
-# 		"mmm_custom.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"mmm_custom.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"mmm_custom.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"mmm_custom.tasks.monthly"
-# 	],
-# }
 
 # Testing
 # -------

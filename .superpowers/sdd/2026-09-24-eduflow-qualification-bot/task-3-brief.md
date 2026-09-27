@@ -1,0 +1,537 @@
+﻿### Task 3: Bot Webhook Endpoint + CRM Integration
+
+**Files:**
+- Create: `frappe-custom/mmm_custom/mmm_custom/bot_api.py`
+- Modify: `frappe-custom/mmm_custom/mmm_custom/setup.py` (add `branch` field)
+- Test: `frappe-custom/mmm_custom/mmm_custom/tests/test_bot_api.py`
+
+**Interfaces:**
+- Consumes:
+  - `bot_engine.transition(state, user_input, selected_courses) -> TransitionResult` from Task 1
+  - `ChatwootClient(base_url, api_token, account_id)` from Task 2
+  - `dedupe.find_matching_lead(email, phone)` and `dedupe.normalize_phone(phone)` from existing code
+- Produces: `agent_bot_webhook()` â€” Frappe whitelist endpoint at `mmm_custom.bot_api.agent_bot_webhook`
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `frappe-custom/mmm_custom/mmm_custom/tests/test_bot_api.py`:
+
+```python
+import hashlib
+import hmac
+import json
+import sys
+from pathlib import Path
+import time
+import unittest
+from unittest.mock import MagicMock, patch, call
+
+APP_DIR = Path(__file__).resolve().parent.parent.parent
+if str(APP_DIR) not in sys.path:
+    sys.path.insert(0, str(APP_DIR))
+
+if "requests" not in sys.modules:
+    sys.modules["requests"] = MagicMock()
+
+import mmm_custom.bot_api as bot_api_mod
+from mmm_custom.bot_api import agent_bot_webhook
+
+
+def compute_sig(secret: str, ts: str, body: bytes) -> str:
+    msg = f"{ts}.".encode("utf-8") + body
+    return "sha256=" + hmac.new(secret.encode("utf-8"), msg, hashlib.sha256).hexdigest()
+
+
+def make_message_created_payload(
+    content="hello",
+    message_type=0,
+    conversation_id=1,
+    contact_id=10,
+    contact_name="Test User",
+    custom_attributes=None,
+):
+    """Build a minimal Agent Bot webhook payload for message_created."""
+    return {
+        "event": "message_created",
+        "content_type": "text",
+        "content": content,
+        "message_type": message_type,
+        "conversation": {
+            "id": conversation_id,
+            "status": "pending",
+            "contact_inbox": {
+                "contact": {
+                    "id": contact_id,
+                    "name": contact_name,
+                    "email": "test@example.com",
+                    "phone_number": "0901234567",
+                    "custom_attributes": custom_attributes or {},
+                }
+            },
+        },
+        "sender": {"id": contact_id, "name": contact_name, "type": "contact"},
+    }
+
+
+class TestBotApiWebhook(unittest.TestCase):
+    def setUp(self):
+        self.secret = "bot_webhook_secret_test"
+        self.conf = {
+            "chatwoot_bot_webhook_secret": self.secret,
+            "chatwoot_bot_api_token": "mock_bot_token",
+            "chatwoot_bot_account_id": 1,
+            "chatwoot_base_url": "http://localhost:3000",
+        }
+        self.mock_frappe = MagicMock()
+        self.mock_frappe.conf = self.conf
+        self.mock_frappe.AuthenticationError = bot_api_mod.frappe.AuthenticationError
+        self.mock_frappe.throw = bot_api_mod.frappe.throw
+
+    def _setup_request(self, payload_dict, ts=None, sig=None):
+        body = json.dumps(payload_dict).encode("utf-8")
+        ts = ts or str(int(time.time()))
+        sig = sig or compute_sig(self.secret, ts, body)
+        mock_req = MagicMock()
+        mock_req.headers = {
+            "X-Chatwoot-Signature": sig,
+            "X-Chatwoot-Timestamp": ts,
+        }
+        mock_req.get_data.return_value = body
+        mock_req.data = body
+        self.mock_frappe.request = mock_req
+        return body
+
+    def test_invalid_hmac_rejected(self):
+        payload = make_message_created_payload()
+        self._setup_request(payload, sig="sha256=invalid")
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with self.assertRaises(self.mock_frappe.AuthenticationError):
+                agent_bot_webhook()
+
+    def test_outgoing_message_ignored(self):
+        payload = make_message_created_payload(message_type=1)
+        self._setup_request(payload)
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with patch.object(bot_api_mod, "ChatwootClient"):
+                result = agent_bot_webhook()
+                self.assertEqual(result["status"], "ignored")
+
+    def test_non_message_created_event_ignored(self):
+        payload = {"event": "conversation_resolved"}
+        self._setup_request(payload)
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            result = agent_bot_webhook()
+            self.assertEqual(result["status"], "ignored")
+
+    def test_greeting_sends_course_quick_replies(self):
+        payload = make_message_created_payload(content="xin chĂ o")
+        self._setup_request(payload)
+        mock_client = MagicMock()
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with patch.object(bot_api_mod, "ChatwootClient", return_value=mock_client):
+                result = agent_bot_webhook()
+                self.assertEqual(result["status"], "ok")
+                mock_client.send_quick_replies.assert_called_once()
+                call_args = mock_client.send_quick_replies.call_args
+                self.assertIn("EduFlow", call_args[0][1])
+                mock_client.update_contact.assert_called_once()
+
+    def test_completed_state_is_noop(self):
+        payload = make_message_created_payload(
+            content="any",
+            custom_attributes={"bot_state": "completed"},
+        )
+        self._setup_request(payload)
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with patch.object(bot_api_mod, "ChatwootClient") as MockClient:
+                result = agent_bot_webhook()
+                self.assertEqual(result["status"], "ignored")
+                MockClient.return_value.send_message.assert_not_called()
+                MockClient.return_value.send_quick_replies.assert_not_called()
+
+    def test_branch_selection_triggers_handoff(self):
+        payload = make_message_created_payload(
+            content="binh_thanh",
+            custom_attributes={
+                "bot_state": "await_branch",
+                "bot_courses": ["tieng_anh"],
+            },
+        )
+        self._setup_request(payload)
+        mock_client = MagicMock()
+        mock_client.list_agents.return_value = [
+            {"id": 1, "name": "Agent A", "custom_attributes": {"branch": "binh_thanh"}},
+            {"id": 2, "name": "Agent B", "custom_attributes": {"branch": "quan_1"}},
+        ]
+        mock_client.list_agent_conversations.return_value = []
+
+        self.mock_frappe.db.exists.return_value = False
+        mock_lead = MagicMock()
+        mock_lead.name = "CRM-LEAD-BOT-001"
+        mock_lead.insert.return_value = mock_lead
+        self.mock_frappe.get_doc.return_value = mock_lead
+
+        with patch.object(bot_api_mod, "frappe", self.mock_frappe):
+            with patch.object(bot_api_mod, "ChatwootClient", return_value=mock_client):
+                with patch("mmm_custom.bot_api.find_matching_lead", return_value=None):
+                    result = agent_bot_webhook()
+
+        self.assertEqual(result["status"], "ok")
+        mock_client.send_message.assert_called_once()  # confirmation message
+        mock_client.assign_conversation.assert_called_once_with(1, 1)  # agent 1 matches branch
+        mock_client.toggle_status.assert_called_once_with(1, "open")
+
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `python -m unittest frappe-custom/mmm_custom/mmm_custom/tests/test_bot_api.py -v`
+Expected: `ModuleNotFoundError: No module named 'mmm_custom.bot_api'`
+
+- [ ] **Step 3: Add `branch` custom field to setup.py**
+
+Modify `frappe-custom/mmm_custom/mmm_custom/setup.py` â€” add this block after the `course_interest` block (around line 36), before `frappe.db.commit()`:
+
+```python
+	if not frappe.db.exists("Custom Field", "CRM Lead-branch"):
+		frappe.get_doc({
+			"doctype": "Custom Field",
+			"dt": "CRM Lead",
+			"fieldname": "branch",
+			"label": "Branch",
+			"fieldtype": "Select",
+			"options": "\nCS1 BĂ¬nh Tháº¡nh\nCS2 Quáº­n 1\nCS3 Thá»§ Äá»©c",
+			"insert_after": "course_interest",
+		}).insert(ignore_permissions=True)
+		print("Custom field branch created")
+	else:
+		doc = frappe.get_doc("Custom Field", "CRM Lead-branch")
+		doc.options = "\nCS1 BĂ¬nh Tháº¡nh\nCS2 Quáº­n 1\nCS3 Thá»§ Äá»©c"
+		doc.save(ignore_permissions=True)
+		print("Custom field branch updated")
+```
+
+Also add `"Messenger Bot"` to the lead sources list:
+
+```python
+def create_lead_sources():
+	for source_name in ("Messenger", "Instagram", "Messenger Bot"):
+		frappe.get_doc({"doctype": "CRM Lead Source", "source_name": source_name}).insert(ignore_if_duplicate=True)
+	frappe.db.commit()
+	print("Lead sources created")
+```
+
+- [ ] **Step 4: Implement the bot webhook endpoint**
+
+Create `frappe-custom/mmm_custom/mmm_custom/bot_api.py`:
+
+```python
+"""Webhook endpoint for the Chatwoot Agent Bot.
+
+Receives Agent Bot webhook events from Chatwoot, runs the state machine,
+sends Quick Reply responses via Chatwoot API, and on completion creates/
+updates the CRM Lead and hands off to a human agent.
+"""
+
+import hashlib
+import hmac
+import json
+import logging
+import time
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+try:
+    import frappe
+except ImportError:
+    from unittest.mock import MagicMock
+
+    class AuthenticationError(Exception):
+        pass
+
+    frappe = MagicMock()
+
+    def _whitelist(*args, **kwargs):
+        def decorator(f):
+            return f
+        return decorator
+
+    def _throw(msg, exc=Exception, *args, **kwargs):
+        if isinstance(exc, type) and issubclass(exc, BaseException):
+            raise exc(msg)
+        raise Exception(msg)
+
+    frappe.whitelist = _whitelist
+    frappe.AuthenticationError = AuthenticationError
+    frappe.throw = _throw
+
+from mmm_custom.bot_engine import BRANCHES, COURSES, transition
+from mmm_custom.chatwoot_client import ChatwootClient
+from mmm_custom.dedupe import find_matching_lead, normalize_phone
+
+logger = logging.getLogger(__name__)
+
+
+def _verify_hmac(raw_body: bytes, secret: str, timestamp: str, signature: str):
+    """Validate HMAC-SHA256 signature and anti-replay timestamp."""
+    if not timestamp:
+        frappe.throw("Timestamp expired or missing", frappe.AuthenticationError)
+
+    try:
+        ts_val = float(timestamp)
+    except (ValueError, TypeError):
+        frappe.throw("Timestamp expired or missing", frappe.AuthenticationError)
+
+    if abs(time.time() - ts_val) > 300:
+        frappe.throw("Timestamp expired or missing", frappe.AuthenticationError)
+
+    hex_digest = hmac.new(
+        secret.encode("utf-8"),
+        f"{timestamp}.".encode("utf-8") + raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+    expected = "sha256=" + hex_digest
+
+    if not signature or not (
+        hmac.compare_digest(expected, signature)
+        or hmac.compare_digest(hex_digest, signature)
+    ):
+        frappe.throw("Invalid HMAC signature", frappe.AuthenticationError)
+
+
+def _find_best_agent(branch_key: str, client: ChatwootClient) -> int | None:
+    """Find the best-match agent by branch, round-robin by fewest open convos."""
+    try:
+        agents = client.list_agents()
+    except Exception:
+        logger.exception("Failed to list agents")
+        return None
+
+    # Filter by branch
+    branch_agents = [
+        a for a in agents
+        if (a.get("custom_attributes") or {}).get("branch") == branch_key
+    ]
+    candidates = branch_agents if branch_agents else agents
+
+    if not candidates:
+        return None
+
+    # Find agent with fewest open conversations
+    best_agent_id = None
+    min_convos = float("inf")
+    for agent in candidates:
+        try:
+            convos = client.list_agent_conversations(agent["id"], status="open")
+            count = len(convos)
+        except Exception:
+            count = 0
+        if count < min_convos:
+            min_convos = count
+            best_agent_id = agent["id"]
+
+    return best_agent_id
+
+
+def _create_or_update_lead(contact: dict, courses: list[str],
+                           branch_key: str, contact_id: int | None):
+    """Create or update a CRM Lead with bot-collected data."""
+    email = contact.get("email")
+    phone = contact.get("phone_number") or contact.get("phone")
+    raw_name = contact.get("name")
+    first_name = (
+        str(raw_name).strip() if raw_name and str(raw_name).strip()
+        else "EduFlow Student"
+    )
+
+    # Map course keys to display names
+    course_display = ", ".join(
+        COURSES.get(k, k) for k in courses
+    )
+    # Map branch key to display name
+    branch_display = BRANCHES.get(branch_key, branch_key)
+
+    custom_attrs = contact.get("custom_attributes") or {}
+    crm_lead_id = custom_attrs.get("crm_lead_id")
+
+    if crm_lead_id and frappe.db.exists("CRM Lead", crm_lead_id):
+        lead_name = crm_lead_id
+        frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_display)
+        frappe.db.set_value("CRM Lead", lead_name, "branch", branch_display)
+        if contact_id:
+            frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
+    else:
+        matched = find_matching_lead(email, phone)
+        if matched:
+            lead_name = matched.name if hasattr(matched, "name") else matched.get("name")
+            frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_display)
+            frappe.db.set_value("CRM Lead", lead_name, "branch", branch_display)
+            if contact_id:
+                frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
+        else:
+            lead = frappe.get_doc({
+                "doctype": "CRM Lead",
+                "first_name": first_name,
+                "email": email,
+                "mobile_no": normalize_phone(phone),
+                "source": "Messenger Bot",
+                "course_interest": course_display,
+                "branch": branch_display,
+                "chatwoot_contact_id": str(contact_id) if contact_id else None,
+            }).insert(ignore_permissions=True)
+            lead_name = lead.name
+
+    return lead_name
+
+
+@frappe.whitelist(allow_guest=True)
+def agent_bot_webhook():
+    """Receive Agent Bot webhook events from Chatwoot."""
+    req = frappe.request
+    ts = req.headers.get("X-Chatwoot-Timestamp") if hasattr(req, "headers") else None
+    sig = req.headers.get("X-Chatwoot-Signature", "") if hasattr(req, "headers") else ""
+
+    if hasattr(req, "get_data") and callable(req.get_data):
+        raw_body = req.get_data()
+    elif hasattr(req, "data"):
+        raw_body = req.data
+    else:
+        raw_body = b""
+
+    if isinstance(raw_body, str):
+        raw_body = raw_body.encode("utf-8")
+    elif not isinstance(raw_body, bytes):
+        raw_body = bytes(raw_body or b"")
+
+    conf = getattr(frappe, "conf", None)
+    secret = (
+        (conf.get("chatwoot_bot_webhook_secret") if conf else None)
+        or "dx_osd_bot_webhook_secret_2026"
+    )
+
+    _verify_hmac(raw_body, secret, ts, sig)
+
+    try:
+        payload = json.loads(raw_body.decode("utf-8"))
+    except Exception:
+        return {"status": "error", "message": "Invalid JSON body"}
+
+    if not isinstance(payload, dict):
+        return {"status": "error", "message": "Invalid JSON body"}
+
+    # Only process message_created events
+    if payload.get("event") != "message_created":
+        return {"status": "ignored", "event": payload.get("event")}
+
+    # Only process incoming messages (from customer, not bot/agent)
+    message_type = payload.get("message_type", -1)
+    if message_type != 0:
+        return {"status": "ignored", "reason": "outgoing_message"}
+
+    # Extract conversation and contact data
+    conversation = payload.get("conversation") or {}
+    contact_inbox = conversation.get("contact_inbox") or {}
+    contact = contact_inbox.get("contact") or payload.get("sender") or {}
+    contact_id = contact.get("id")
+    custom_attrs = contact.get("custom_attributes") or {}
+    conversation_id = conversation.get("id") or payload.get("conversation", {}).get("id")
+
+    if not conversation_id:
+        return {"status": "error", "message": "Missing conversation_id"}
+
+    # Read bot state from contact custom_attributes
+    bot_state = custom_attrs.get("bot_state")
+    bot_courses = custom_attrs.get("bot_courses") or []
+
+    # Get user input â€” Quick Reply value or plain text content
+    user_input = payload.get("content") or ""
+
+    # Run state machine
+    result = transition(bot_state, user_input, bot_courses)
+
+    if result is None:
+        return {"status": "ignored", "reason": "completed"}
+
+    # Initialize Chatwoot client
+    bot_token = (conf.get("chatwoot_bot_api_token") if conf else None) or ""
+    account_id = (conf.get("chatwoot_bot_account_id") if conf else None) or 1
+    base_url = (conf.get("chatwoot_base_url") if conf else None) or "http://host.docker.internal:3000"
+
+    client = ChatwootClient(base_url, bot_token, int(account_id))
+
+    # Send the bot's response message
+    try:
+        if result.quick_replies:
+            client.send_quick_replies(conversation_id, result.message, result.quick_replies)
+        else:
+            client.send_message(conversation_id, result.message)
+    except Exception:
+        logger.exception("Failed to send bot message")
+
+    # Update contact custom_attributes with new state
+    new_attrs = {
+        "bot_state": result.next_state,
+        "bot_courses": result.selected_courses,
+    }
+    if result.branch:
+        new_attrs["bot_branch"] = result.branch
+
+    try:
+        if contact_id:
+            client.update_contact(contact_id, new_attrs)
+    except Exception:
+        logger.exception("Failed to update contact attributes")
+
+    # Execute actions if any
+    if "update_lead" in result.actions:
+        try:
+            lead_name = _create_or_update_lead(
+                contact, result.selected_courses, result.branch, contact_id,
+            )
+            # Write back crm_lead_id to Chatwoot
+            if contact_id and lead_name:
+                try:
+                    client.update_contact(contact_id, {"crm_lead_id": lead_name})
+                except Exception:
+                    logger.exception("Failed to write crm_lead_id back to Chatwoot")
+        except Exception:
+            logger.exception("Failed to create/update CRM Lead")
+
+    if "assign_agent" in result.actions:
+        try:
+            agent_id = _find_best_agent(result.branch, client)
+            if agent_id:
+                client.assign_conversation(conversation_id, agent_id)
+        except Exception:
+            logger.exception("Failed to assign agent")
+
+    if "bot_handoff" in result.actions:
+        try:
+            client.toggle_status(conversation_id, "open")
+        except Exception:
+            logger.exception("Failed to toggle conversation status")
+
+    return {"status": "ok", "next_state": result.next_state}
+```
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+Run: `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests -v`
+Expected: All existing tests (23) + new tests PASS
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frappe-custom/mmm_custom/mmm_custom/bot_api.py frappe-custom/mmm_custom/mmm_custom/setup.py frappe-custom/mmm_custom/mmm_custom/tests/test_bot_api.py
+git commit -m "feat(bot): add webhook endpoint with CRM lead integration and agent assignment"
+```
+
+---
+
+
