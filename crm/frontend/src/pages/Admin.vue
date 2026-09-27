@@ -36,6 +36,8 @@
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import AdminOverview from '@/components/Admin/AdminOverview.vue'
+import AdminCustomers from '@/components/Admin/AdminCustomers.vue'
+import AdminScenarios from '@/components/Admin/AdminScenarios.vue'
 import AdminBranches from '@/components/Admin/AdminBranches.vue'
 import AdminStaff from '@/components/Admin/AdminStaff.vue'
 import AdminKnowledge from '@/components/Admin/AdminKnowledge.vue'
@@ -54,6 +56,12 @@ const tabs = [
     label: 'Tổng quan',
     icon: 'lucide-chart-column',
     component: markRaw(AdminOverview),
+  },
+  {
+    name: 'customers',
+    label: 'Khách hàng',
+    icon: 'lucide-users-round',
+    component: markRaw(AdminCustomers),
   },
   {
     name: 'branches',
@@ -78,6 +86,12 @@ const tabs = [
     label: 'Thử chat với bot',
     icon: 'lucide-message-circle',
     component: markRaw(AdminPlayground),
+  },
+  {
+    name: 'scenarios',
+    label: 'Kiểm tra kịch bản',
+    icon: 'lucide-list-checks',
+    component: markRaw(AdminScenarios),
   },
 ]
 

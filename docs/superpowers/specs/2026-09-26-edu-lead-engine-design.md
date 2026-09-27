@@ -172,7 +172,7 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C4.4 | B2B lead detection → B2B team (D-012) — in code (D-099), offline scenarios pass; live check pending | M | 🔨 |
 
 **C5 — Visibility** · milestone: managers and consultants see the automation
-| C5.1 | CRM dashboard: funnel + charts by course/branch/consultant | M | ⬜ |
+| C5.1 | CRM dashboard: funnel + charts by course/branch/consultant — `/crm/admin/customers` (D-101); live check pending | M | 🔨 |
 | C5.2 | Decision log browser page | S | ⬜ |
 | C5.3 | Chatwoot Dashboard App, read-only: what AI understood, why assigned | M | ⬜ |
 | C5.4 | Chatwoot Dashboard App, actions: matching schedules/fees, insert into reply | M | ⬜ |
