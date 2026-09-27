@@ -20,6 +20,20 @@
   "shifts": [
    "evening",
    "morning"
+  ],
+  "description": "<p>Khóa nhập môn cho người chưa quen máy tính: làm chủ Windows, gõ phím, quản lý thư mục, Internet, email và soạn thảo văn bản đơn giản. Học thực hành trên máy tại lớp, mỗi buổi đều có bài tập.</p>",
+  "syllabus": "Làm quen máy tính và Windows\nGõ phím 10 ngón, tiếng Việt Unikey\nQuản lý thư mục, tệp tin, USB\nInternet, Google, email, Zalo trên máy tính\nWord cơ bản: soạn và in văn bản",
+  "faqs": [
+   {
+    "question": "Người lớn tuổi, chưa từng dùng máy tính có học được không?",
+    "examples": "lớn tuổi rồi học nổi không\nchưa biết cầm chuột có học được không\nmẹ tôi 50 tuổi học được không",
+    "answer": "Dạ học được ạ. Khóa {{ course.name }} bắt đầu từ cách cầm chuột, bật tắt máy; giáo viên kèm từng bước, lớp nhỏ nên {{ brand.you }} yên tâm theo kịp ạ."
+   },
+   {
+    "question": "Học xong có làm được việc văn phòng không?",
+    "examples": "học xong đi làm được chưa\nhọc xong có soạn thảo văn bản được không",
+    "answer": "Dạ học xong {{ brand.you }} tự dùng máy tính, email và soạn văn bản cơ bản được ạ. Để làm văn phòng chuyên nghiệp, {{ brand.me }} gợi ý học tiếp {{ course.next_courses | join(', ') }} ạ."
+   }
   ]
  },
  {
@@ -65,6 +79,30 @@
   "shifts": [
    "evening",
    "morning"
+  ],
+  "description": "<p>Excel từ con số 0 đến thành thạo công việc: nhập liệu chuẩn, hàm tính toán, lọc – sắp xếp, biểu đồ và Pivot Table. Bài tập lấy từ tình huống thật ở phòng kế toán, nhân sự, bán hàng.</p>",
+  "syllabus": "Làm quen Excel, định dạng bảng tính\nHàm cơ bản: SUM, IF, COUNTIF, SUMIF\nHàm tra cứu: VLOOKUP, XLOOKUP, INDEX–MATCH\nLọc, sắp xếp, Data Validation\nBiểu đồ và Pivot Table\nIn ấn và bảo vệ file",
+  "faqs": [
+   {
+    "question": "Chưa biết gì về Excel có học được không?",
+    "examples": "mất gốc excel học được không\nchưa biết gì excel\nchưa dùng excel bao giờ",
+    "answer": "Dạ được ạ. Khóa {{ course.name }} học từ đầu, buổi đầu làm quen giao diện rồi mới lên hàm; {{ brand.you }} chỉ cần biết dùng máy tính cơ bản ạ."
+   },
+   {
+    "question": "Khóa này có học VLOOKUP và Pivot Table không?",
+    "examples": "có học vlookup không\ncó dạy pivot không\ncó học hàm dò tìm không",
+    "answer": "Dạ có ạ. Khóa có riêng buổi hàm tra cứu (VLOOKUP, XLOOKUP, INDEX–MATCH) và buổi Pivot Table, biểu đồ để làm báo cáo ạ."
+   },
+   {
+    "question": "Học Excel để làm kế toán, nhân sự có hợp không?",
+    "examples": "làm kế toán học excel này được không\ndân nhân sự học có hợp không\nhọc để làm báo cáo bán hàng",
+    "answer": "Dạ rất hợp ạ. Bài tập lấy từ bảng lương, công nợ, báo cáo bán hàng nên học xong {{ brand.you }} áp dụng ngay vào công việc ạ."
+   },
+   {
+    "question": "Có dùng Excel trên Macbook được không?",
+    "examples": "dùng macbook học được không\nmáy mac có học excel được không",
+    "answer": "Dạ được ạ. Giáo viên hướng dẫn cả phím tắt trên Mac; {{ brand.you }} mang Macbook đến lớp hoặc dùng máy của trung tâm đều được ạ."
+   }
   ]
  },
  {
@@ -87,6 +125,20 @@
   "shifts": [
    "evening",
    "morning"
+  ],
+  "description": "<p>Dành cho người đã dùng Excel hằng ngày muốn làm báo cáo nhanh và đẹp: hàm mảng động, Power Query gom dữ liệu, Pivot nâng cao và Dashboard tự cập nhật.</p>",
+  "syllabus": "Hàm nâng cao: FILTER, UNIQUE, SORT, LET\nPower Query gom và làm sạch dữ liệu\nPivot Table nâng cao, Slicer\nThiết kế Dashboard tự cập nhật\nDự án cuối khóa với dữ liệu công ty",
+  "faqs": [
+   {
+    "question": "Cần biết gì trước khi học Excel nâng cao?",
+    "examples": "cần biết gì trước\nđầu vào khóa nâng cao\nchưa vững excel học nâng cao được không",
+    "answer": "Dạ {{ brand.you }} cần dùng quen các hàm cơ bản như IF, VLOOKUP ạ. Nếu chưa vững, {{ brand.me }} gợi ý học khóa Excel từ cơ bản đến nâng cao trước ạ."
+   },
+   {
+    "question": "Có học Power Query và Dashboard không?",
+    "examples": "có học power query không\ncó làm dashboard không\nlàm báo cáo tự động",
+    "answer": "Dạ có ạ. Khóa có phần Power Query gom dữ liệu nhiều file và cuối khóa mỗi học viên tự làm một Dashboard tự cập nhật ạ."
+   }
   ]
  },
  {
@@ -193,6 +245,20 @@
   "shifts": [
    "evening",
    "morning"
+  ],
+  "description": "<p>Trọn bộ Word, Excel và PowerPoint cho người đi làm, học một lần đủ kỹ năng văn phòng. Tiết kiệm hơn học lẻ từng khóa.</p>",
+  "syllabus": "Word: soạn thảo, mục lục, trộn thư\nExcel: hàm, lọc, Pivot Table, biểu đồ\nPowerPoint: thiết kế slide, hiệu ứng, thuyết trình\nỨng dụng tổng hợp trong công việc",
+  "faqs": [
+   {
+    "question": "Học trọn gói có rẻ hơn học lẻ từng khóa không?",
+    "examples": "trọn gói có lợi hơn không\nhọc lẻ hay trọn gói\nso với học riêng từng khóa",
+    "answer": "Dạ có ạ. Gói {{ course.name }} gồm Word, Excel và PowerPoint, học phí thấp hơn tổng học lẻ ba khóa ạ."
+   },
+   {
+    "question": "Khóa trọn gói gồm những môn nào?",
+    "examples": "trọn gói gồm gì\ncó những môn nào\nhọc những phần mềm nào",
+    "answer": "Dạ gói gồm Word, Excel và PowerPoint, học lần lượt trong {{ course.duration }} ạ."
+   }
   ]
  },
  {
@@ -215,6 +281,20 @@
   "shifts": [
    "evening",
    "afternoon"
+  ],
+  "description": "<p>Photoshop cho người mới: chỉnh sửa, cắt ghép ảnh, làm ảnh sản phẩm bán hàng online và thiết kế banner, poster quảng cáo.</p>",
+  "syllabus": "Giao diện và công cụ cơ bản\nLayer, Mask, cắt ghép ảnh\nChỉnh màu, retouch da\nThiết kế banner, poster bán hàng\nXuất file cho in ấn và mạng xã hội",
+  "faqs": [
+   {
+    "question": "Không có năng khiếu vẽ có học Photoshop được không?",
+    "examples": "không biết vẽ học được không\nkhông có năng khiếu\nvẽ xấu có học được không",
+    "answer": "Dạ được ạ. Photoshop là chỉnh sửa và ghép ảnh, không cần vẽ tay; giáo viên có mẫu sẵn để {{ brand.you }} làm theo ạ."
+   },
+   {
+    "question": "Học xong có tự thiết kế ảnh bán hàng online được không?",
+    "examples": "làm ảnh sản phẩm bán hàng\nthiết kế banner shopee\nlàm poster quảng cáo",
+    "answer": "Dạ được ạ. Khóa có riêng phần làm ảnh sản phẩm và banner bán hàng cho Facebook, Shopee ạ."
+   }
   ]
  },
  {
@@ -557,6 +637,20 @@
   "shifts": [
    "evening",
    "morning"
+  ],
+  "description": "<p>Làm kế toán tổng hợp trên chứng từ thật của doanh nghiệp: hạch toán, lập sổ sách, báo cáo tài chính và quyết toán cuối năm. Giảng viên là kế toán trưởng đang làm việc.</p>",
+  "syllabus": "Hệ thống tài khoản và chứng từ\nHạch toán mua bán, kho, tiền lương\nKhấu hao tài sản cố định\nLập sổ sách và báo cáo tài chính\nQuyết toán cuối năm",
+  "faqs": [
+   {
+    "question": "Trái ngành có học kế toán tổng hợp được không?",
+    "examples": "trái ngành học được không\nkhông học kế toán ở trường\nchuyển nghề sang kế toán",
+    "answer": "Dạ được ạ, nhưng {{ brand.me }} khuyên học Nguyên lý kế toán cho người mới trước để nắm nền tảng rồi học khóa này sẽ nhanh hơn ạ."
+   },
+   {
+    "question": "Học trên chứng từ thật hay lý thuyết?",
+    "examples": "có thực hành không\nhọc lý thuyết hay thực tế\nlàm trên chứng từ thật không",
+    "answer": "Dạ học trên bộ chứng từ thật của doanh nghiệp, thực hành từ hạch toán đến lập báo cáo tài chính ạ."
+   }
   ]
  },
  {
@@ -747,6 +841,20 @@
   "shifts": [
    "morning",
    "afternoon"
+  ],
+  "description": "<p>Bé học tư duy lập trình bằng cách kéo thả khối lệnh để làm game và phim hoạt hình. Mỗi buổi bé hoàn thành một sản phẩm nhỏ mang về khoe bố mẹ.</p>",
+  "syllabus": "Làm quen Scratch và nhân vật\nChuyển động, âm thanh, hiệu ứng\nBiến, điều kiện, vòng lặp\nLàm game đơn giản\nDự án cuối khóa: game của riêng bé",
+  "faqs": [
+   {
+    "question": "Bé chưa biết đọc thạo có học được không?",
+    "examples": "bé chưa đọc giỏi\ncon chưa biết chữ nhiều\nbé lớp 1 học được không",
+    "answer": "Dạ Scratch dùng khối lệnh có hình và màu nên bé {{ course.min_age }} tuổi trở lên đọc chưa thạo vẫn học được ạ; giáo viên hướng dẫn từng bước ạ."
+   },
+   {
+    "question": "Học Scratch có ích gì cho bé?",
+    "examples": "học cái này để làm gì\ncó ích gì không\nhọc có giúp con học toán không",
+    "answer": "Dạ bé rèn tư duy logic, giải quyết vấn đề và sáng tạo qua việc tự làm game ạ; đây cũng là bước đệm để học tiếp {{ course.next_courses | join(', ') }} ạ."
+   }
   ]
  },
  {
@@ -791,6 +899,20 @@
   "shifts": [
    "morning",
    "afternoon"
+  ],
+  "description": "<p>Bé lắp ráp robot và lập trình cho robot di chuyển, né vật cản, phát sáng. Học qua chơi, phát triển tư duy STEM và kỹ năng làm việc nhóm.</p>",
+  "syllabus": "Làm quen bộ kit và cảm biến\nLắp ráp robot di chuyển\nLập trình kéo thả điều khiển robot\nRobot né vật cản, dò line\nThi đấu robot cuối khóa",
+  "faqs": [
+   {
+    "question": "Có phải mua bộ robot riêng không?",
+    "examples": "có phải mua robot không\nphí bộ kit\nmang robot về nhà được không",
+    "answer": "Dạ không cần ạ. Trung tâm có sẵn bộ kit cho bé học tại lớp, học phí đã gồm dụng cụ ạ."
+   },
+   {
+    "question": "Bé chưa học lập trình bao giờ có học Robotics được không?",
+    "examples": "con chưa học lập trình\nchưa học scratch có học robot được không",
+    "answer": "Dạ được ạ. Robotics cơ bản dạy lập trình kéo thả từ đầu, bé từ {{ course.min_age }} đến {{ course.max_age }} tuổi đều theo được ạ."
+   }
   ]
  },
  {

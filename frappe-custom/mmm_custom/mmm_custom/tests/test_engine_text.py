@@ -5,7 +5,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import engine_fixtures  # noqa: F401  (puts the app on sys.path)
 
-from mmm_custom.engine.text import content_words, find_phone, find_phrases, fold, normalize_vn_phone, slug
+from mmm_custom.engine.text import content_words, find_phone, find_phrases, fold, normalize_vn_phone, plain_text, slug
 
 
 class TestText(unittest.TestCase):
@@ -13,6 +13,10 @@ class TestText(unittest.TestCase):
         self.assertEqual(fold("Học phí Excel ở Dĩ An, Q.7?"), "hoc phi excel o di an q 7")
         self.assertEqual(fold("ĐỒ HỌA"), "do hoa")
         self.assertEqual(fold(None), "")
+
+    def test_plain_text_from_editor_html(self):
+        self.assertEqual(plain_text("<p>A&amp;B</p><ul><li>x</li><li>y</li></ul>"), "A&B x y")
+        self.assertEqual(plain_text(None), "")
 
     def test_find_phrases_whole_words_only(self):
         self.assertEqual(find_phrases("hoc excel", {"X": ["excel"]}), {"X": (4, 9)})

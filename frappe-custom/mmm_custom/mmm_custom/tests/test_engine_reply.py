@@ -33,6 +33,17 @@ class TestCompose(unittest.TestCase):
         self.assertEqual([b["title"] for b in r.buttons], ["TP.HCM", "Bình Dương", "Đồng Nai", "Vũng Tàu"])
         self.assertEqual(r.variants, [{"skill": "fee_quote", "variant": "default"}])
 
+    def test_course_content_answers_from_the_course_knowledge(self):
+        d = Decision("answer", slots={"course": fill("VP-EXCEL")}, skills=["course_content"])
+        r = self.compose(d)
+        self.assertEqual(r.variants, [{"skill": "course_content", "variant": "knowledge"}])
+        self.assertIn("Excel từ con số 0", r.messages[0])
+        self.assertIn("\n• Hàm tra cứu: VLOOKUP, XLOOKUP, INDEX–MATCH", r.messages[0])
+
+    def test_course_content_without_knowledge_keeps_the_short_answer(self):
+        d = Decision("answer", slots={"course": fill("VP-WORD")}, skills=["course_content"])
+        self.assertEqual(self.compose(d).variants, [{"skill": "course_content", "variant": "default"}])
+
     def test_schedule_variants(self):
         d = Decision("answer", slots={"course": fill("VP-EXCEL")}, skills=["schedule_lookup"])
         self.assertEqual(self.compose(d).variants[0]["variant"], "none")

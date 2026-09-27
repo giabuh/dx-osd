@@ -51,6 +51,23 @@ class TestBuildCatalog(unittest.TestCase):
         self.assertEqual(demo_catalog(max_skills_per_reply=2).settings["max_skills_per_reply"], 2)
         self.assertEqual(self.cat.settings["brand_name"], "Tin Học Sao Việt")
 
+    def test_course_knowledge(self):
+        cat = build_catalog({"courses": [{
+            "product_code": "X", "product_name": "Excel", "course_group": "VP",
+            "description": "<p>Học Excel <b>thực hành</b>&nbsp;từ đầu.</p><p>Có dự án.</p>",
+            "syllabus": "Hàm cơ bản\n\n  Pivot Table  ",
+            "faqs": [{"question": "Có cần biết Excel trước không?", "examples": "chua biet gi co hoc duoc khong\n",
+                      "answer": "Dạ không cần ạ."}]}]})
+        c = cat.courses["X"]
+        self.assertEqual(c.summary, "Học Excel thực hành từ đầu. Có dự án.")
+        self.assertEqual(c.syllabus, ("Hàm cơ bản", "Pivot Table"))
+        self.assertEqual(c.faqs[0].question, "Có cần biết Excel trước không?")
+        self.assertEqual((c.faqs[0].examples, c.faqs[0].answer), (("chua biet gi co hoc duoc khong",), "Dạ không cần ạ."))
+
+    def test_demo_courses_carry_knowledge(self):
+        c = self.cat.courses["VP-EXCEL"]
+        self.assertTrue(c.summary and c.syllabus and c.faqs)
+
     def test_inactive_rows_are_left_out(self):
         cat = build_catalog({"bot_slots": [
             {"slot_key": "a", "label": "A", "slot_type": "text", "active": 0},

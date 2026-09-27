@@ -79,6 +79,22 @@ class TestUpsert(unittest.TestCase):
         self.assertEqual(db.get("Course Group", name)["button_label"], "Kế toán")
 
 
+class TestCourseValues(unittest.TestCase):
+    BASE = {"product_code": "X", "product_name": "Excel", "button_label": "Excel", "course_group": "VP",
+            "audience": "", "min_age": 0, "max_age": 0, "standard_rate": 1, "duration_text": "", "certificate": "",
+            "offer": "all", "aliases": ""}
+
+    def test_knowledge_is_written_when_the_dataset_has_it(self):
+        faq = {"question": "Q", "examples": "q", "answer": "A"}
+        values = loader.course_values({**self.BASE, "description": "<p>D</p>", "syllabus": "a\nb", "faqs": [faq]})
+        self.assertEqual((values["description"], values["syllabus"], values["faqs"]), ("<p>D</p>", "a\nb", [faq]))
+        self.assertEqual(values["is_demo_data"], 1)
+
+    def test_courses_without_knowledge_keep_what_was_typed_in_the_crm(self):
+        values = loader.course_values(self.BASE)
+        self.assertFalse({"description", "syllabus", "faqs"} & set(values))
+
+
 class TestMapUrl(unittest.TestCase):
     def test_encodes_address(self):
         self.assertEqual(loader.map_url("21/8 Lê Trực"),

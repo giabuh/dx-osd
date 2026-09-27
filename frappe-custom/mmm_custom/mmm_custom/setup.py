@@ -185,6 +185,10 @@ CATALOG_FIELDS = {
 		{"fieldname": "aliases", "label": "Aliases", "fieldtype": "Small Text", "insert_after": "offer"},
 		{"fieldname": "next_courses", "label": "Next Courses", "fieldtype": "Table MultiSelect", "options": "Course Link", "insert_after": "aliases"},
 		{"fieldname": "is_demo_data", "label": "Demo Data", "fieldtype": "Check", "insert_after": "next_courses"},
+		# Course knowledge the bot answers from (D-084, D-085); the overview is the standard `description`.
+		{"fieldname": "knowledge_section", "label": "Bot Knowledge", "fieldtype": "Section Break", "insert_after": "description"},
+		{"fieldname": "syllabus", "label": "Syllabus", "fieldtype": "Small Text", "description": "One module per line", "insert_after": "knowledge_section"},
+		{"fieldname": "faqs", "label": "Course FAQs", "fieldtype": "Table", "options": "Course FAQ", "description": "Questions customers ask about this course; Jev picks the matching one and the bot sends its answer", "insert_after": "syllabus"},
 	],
 	# Bot Slot lead_field targets that are not standard CRM Lead fields.
 	"CRM Lead": [

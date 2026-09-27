@@ -20,6 +20,13 @@ WEEKDAY_INDEX = {"T2": 0, "T3": 1, "T4": 2, "T5": 3, "T6": 4, "T7": 5, "CN": 6}
 SHIFT_LABELS = {"morning": "Sáng 8:30–11:00", "afternoon": "Chiều 13:30–16:30", "evening": "Tối 17:00–21:00"}
 PRODUCT_FIELDS = ("product_name", "button_label", "course_group", "audience", "min_age", "max_age",
                   "standard_rate", "duration_text", "certificate", "offer", "aliases")
+KNOWLEDGE_FIELDS = ("description", "syllabus", "faqs")  # optional: absent keys keep what was typed in the CRM
+
+
+def course_values(c):
+	values = {k: c[k] for k in PRODUCT_FIELDS}
+	values.update({k: c[k] for k in KNOWLEDGE_FIELDS if k in c})
+	return {**values, "is_demo_data": 1}
 
 
 def load_dataset(root=DATA_DIR):
@@ -128,8 +135,7 @@ def load(anchor=None):
 		    {k: g[k] for k in ("button_label", "emoji", "sort_order", "aliases", "description")})
 
 	for c in data["courses"]:
-		put("CRM Product", {"product_code": c["product_code"]},
-		    {**{k: c[k] for k in PRODUCT_FIELDS}, "is_demo_data": 1})
+		put("CRM Product", {"product_code": c["product_code"]}, course_values(c))
 	for c in data["courses"]:  # second pass: every linked course now exists
 		put("CRM Product", {"product_code": c["product_code"]},
 		    {"next_courses": [{"course": n} for n in c["next_courses"]]})

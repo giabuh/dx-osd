@@ -69,7 +69,8 @@ class TestCatalogFields(unittest.TestCase):
     def test_product_fields(self):
         names = [f["fieldname"] for f in setup_mod.CATALOG_FIELDS["CRM Product"]]
         self.assertEqual(names, ["course_group", "button_label", "audience", "min_age", "max_age",
-                                 "duration_text", "certificate", "offer", "aliases", "next_courses", "is_demo_data"])
+                                 "duration_text", "certificate", "offer", "aliases", "next_courses", "is_demo_data",
+                                 "knowledge_section", "syllabus", "faqs"])
 
 
 if __name__ == "__main__":

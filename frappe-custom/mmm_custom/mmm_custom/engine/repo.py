@@ -50,11 +50,12 @@ def load_rows():
     """The whole engine catalog from the database, in the demo-dataset shape build_catalog expects."""
     products = frappe.get_all("CRM Product", filters={"disabled": 0, "course_group": ["is", "set"]}, fields=[
         "name", "product_code", "product_name", "button_label", "course_group", "standard_rate", "duration_text",
-        "audience", "min_age", "max_age", "certificate", "offer", "aliases", "image"])
+        "audience", "min_age", "max_age", "certificate", "offer", "aliases", "image", "description", "syllabus"])
     code_of = {p.name: p.product_code for p in products}
     nexts = _children("Course Link", "CRM Product", "next_courses", ["course"])
-    courses = [{**p, "next_courses": [code_of.get(n["course"], n["course"]) for n in nexts.get(p.name, [])]}
-               for p in products]
+    faqs = _children("Course FAQ", "CRM Product", "faqs", ["question", "examples", "answer"])
+    courses = [{**p, "next_courses": [code_of.get(n["course"], n["course"]) for n in nexts.get(p.name, [])],
+                "faqs": faqs.get(p.name, [])} for p in products]
     groups = frappe.get_all("Course Group", fields=["group_name", "button_label", "emoji", "sort_order", "aliases",
                                                     "description"], order_by="sort_order asc")
     slots = frappe.get_all("Bot Slot", filters={"active": 1}, fields=[

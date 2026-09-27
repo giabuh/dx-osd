@@ -548,6 +548,11 @@
   "action_config": {},
   "templates": [
    {
+    "variant_key": "knowledge",
+    "when": "course.summary or course.syllabus",
+    "template": "Dạ khóa {{ course.name }}{% if course.duration %} học trong {{ course.duration }}{% endif %} ạ. {{ course.summary }}{% if course.syllabus %}\nNội dung chính:{% for m in course.syllabus %}\n• {{ m }}{% endfor %}{% endif %}"
+   },
+   {
     "variant_key": "default",
     "when": "",
     "template": "Dạ {{ brand.me }} gửi {{ brand.you }} nội dung khóa {{ course.name }} ạ."

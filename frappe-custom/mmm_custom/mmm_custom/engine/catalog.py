@@ -7,6 +7,7 @@ tests build it offline from those files and `engine.repo` builds the same shape 
 from dataclasses import dataclass, field
 
 from mmm_custom.demo.loader import map_url
+from mmm_custom.engine.text import plain_text
 
 # Used when Lead Engine Settings leaves a field empty (Frappe stores unset Int as 0).
 DEFAULT_SETTINGS = {
@@ -25,6 +26,10 @@ DEFAULT_SETTINGS = {
 
 def _aliases(text):
     return tuple(a.strip() for a in (text or "").split(",") if a.strip())
+
+
+def _lines(text):
+    return tuple(line.strip() for line in (text or "").splitlines() if line.strip())
 
 
 @dataclass(frozen=True)
@@ -63,6 +68,13 @@ class Group:
 
 
 @dataclass(frozen=True)
+class CourseFaq:
+    question: str
+    answer: str
+    examples: tuple = ()
+
+
+@dataclass(frozen=True)
 class Course:
     code: str
     name: str
@@ -78,6 +90,9 @@ class Course:
     aliases: tuple = ()
     next_courses: tuple = ()
     image: str = ""
+    summary: str = ""   # the CRM description as plain text (D-084)
+    syllabus: tuple = ()
+    faqs: tuple = ()    # CourseFaq rows the bot answers with, picked by Jev (D-085)
 
 
 @dataclass(frozen=True)
@@ -182,7 +197,10 @@ def build_catalog(data):
         duration=c.get("duration_text") or "", audience=c.get("audience") or "",
         min_age=_int(c.get("min_age")), max_age=_int(c.get("max_age")), certificate=c.get("certificate") or "",
         offer=c.get("offer") or "all", aliases=_aliases(c.get("aliases")),
-        next_courses=tuple(c.get("next_courses") or ()), image=c.get("image") or "")
+        next_courses=tuple(c.get("next_courses") or ()), image=c.get("image") or "",
+        summary=plain_text(c.get("description")), syllabus=_lines(c.get("syllabus")),
+        faqs=tuple(CourseFaq(f["question"], f["answer"], _lines(f.get("examples")))
+                   for f in c.get("faqs") or () if f.get("question") and f.get("answer")))
         for c in data.get("courses") or [] if _active(c)}
     areas, branches = {}, {}
     for a in (data.get("areas") or {}).get("areas", []):
@@ -212,7 +230,7 @@ def build_catalog(data):
         creates_lead=bool(k.get("creates_lead", 1)), handoff_after=bool(k.get("handoff_after")),
         order=_int(k.get("sort_order")), media=k.get("media") or "",
         description=k.get("jev_description") or "",
-        examples=tuple(line.strip() for line in (k.get("examples") or "").splitlines() if line.strip()))
+        examples=_lines(k.get("examples")))
         for k in data.get("bot_skills") or [] if _active(k)}
     settings = dict(DEFAULT_SETTINGS)
     settings.update({k: v for k, v in (data.get("settings") or {}).items() if v not in (None, "", 0)})

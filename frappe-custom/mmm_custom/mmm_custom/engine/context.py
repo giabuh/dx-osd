@@ -20,6 +20,7 @@ def course_context(course, catalog):
     return {"code": course.code, "name": course.name, "group": course.group, "fee": course.fee,
             "duration": course.duration, "audience": course.audience, "min_age": course.min_age,
             "max_age": course.max_age, "certificate": course.certificate, "image": course.image,
+            "summary": course.summary, "syllabus": list(course.syllabus),
             "next_courses": [catalog.courses[c].name for c in course.next_courses if c in catalog.courses]}
 
 

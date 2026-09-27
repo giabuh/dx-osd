@@ -1,10 +1,12 @@
 """Text helpers for the keyword tier (D-028): Vietnamese diacritic folding, whole-word phrase search,
 Vietnamese phone numbers."""
 
+import html
 import re
 import unicodedata
 
 WORD_RE = re.compile(r"[a-z0-9]+")
+TAG_RE = re.compile(r"<[^>]+>")
 PHONE_RE = re.compile(r"(?:\+?84|0)(?:[\s.\-]?\d){8,10}")
 # Folded filler words ignored when collecting unmatched terms for learning signals (D-057).
 STOPWORDS = frozenset(
@@ -77,3 +79,8 @@ def find_phone(text):
 
 def slug(text):
     return fold(text).replace(" ", "-")
+
+
+def plain_text(markup):
+    """Text Editor HTML as one line of plain text for templates: "<p>A&amp;B</p>" → "A&B"."""
+    return " ".join(html.unescape(TAG_RE.sub(" ", markup or "")).split())
