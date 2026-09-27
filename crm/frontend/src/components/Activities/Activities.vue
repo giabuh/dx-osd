@@ -10,7 +10,9 @@
     :whatsappBox="whatsappBox"
     :modalRef="modalRef"
   />
-  <FadedScrollableDiv class="flex flex-col h-full overflow-y-auto">
+  <!-- Sao Việt: the Lead's Chatwoot conversation, read and answered here -->
+  <LeadChat v-if="title == 'Messages'" :lead="docname" />
+  <FadedScrollableDiv v-else class="flex flex-col h-full overflow-y-auto">
     <div
       v-if="all_activities?.loading"
       class="flex flex-1 flex-col items-center justify-center gap-3 text-2xl-medium text-ink-gray-4"
@@ -393,7 +395,7 @@
       :top="top"
     />
   </FadedScrollableDiv>
-  <div>
+  <div v-if="title != 'Messages'">
     <CommunicationArea
       v-if="['Emails', 'Comments', 'Activity'].includes(title)"
       ref="emailBox"
@@ -437,6 +439,7 @@
   />
 </template>
 <script setup>
+import LeadChat from '@/components/Activities/LeadChat.vue'
 import ActivityHeader from '@/components/Activities/ActivityHeader.vue'
 import EmailArea from '@/components/Activities/EmailArea.vue'
 import CommentArea from '@/components/Activities/CommentArea.vue'

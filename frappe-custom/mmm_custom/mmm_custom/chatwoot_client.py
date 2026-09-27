@@ -146,6 +146,13 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
+    def list_contact_conversations(self, contact_id: int) -> list[dict]:
+        """A contact's conversations (the newest first, as Chatwoot returns them)."""
+        resp = requests.get(f"{self._base}/contacts/{contact_id}/conversations", headers=self._headers,
+                            timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json().get("payload") or []
+
     def send_private_note(self, conversation_id: int, content: str) -> dict:
         """Post a note only agents can see."""
         resp = requests.post(

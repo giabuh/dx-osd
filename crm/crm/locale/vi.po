@@ -8992,3 +8992,7 @@ msgstr "Phân bố Lead theo Cơ sở"
 
 msgid "Distribution of leads across branches"
 msgstr "Số lượng khách hàng tiềm năng theo từng cơ sở"
+
+#. Sao Việt: Lead page tab with the customer's Chatwoot conversation
+msgid "Messages"
+msgstr "Tin nhắn"

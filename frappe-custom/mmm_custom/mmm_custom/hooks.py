@@ -91,7 +91,7 @@ after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.e
                  "mmm_custom.referral.backfill", "mmm_custom.setup.update_crm_fields_layout",
                  "mmm_custom.desk.hide_unused_workspaces",
                  "mmm_custom.desk.remove_old_bot_workspace", "mmm_custom.desk.ensure_bot_workspace_icon",
-                 "mmm_custom.desk.apply_default_apps", "mmm_custom.crm_links.ensure_lead_form_script",
+                 "mmm_custom.desk.apply_default_apps", "mmm_custom.crm_links.retire_lead_form_script",
                  "mmm_custom.lead_views.ensure_lead_quick_filters"]
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
