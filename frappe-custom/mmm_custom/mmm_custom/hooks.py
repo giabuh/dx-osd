@@ -119,6 +119,8 @@ doc_events["Consultant"] = {"on_update": "mmm_custom.staff_sync.enqueue_sync",
 jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.date_vi"]}
 
 # Other apps subscribe to engine events with their own `lead_engine_events` hook (see engine/events.py).
+# [I] The consultant a conversation is handed to finds a reply suggestion waiting (D-108).
+lead_engine_events = {"handed_off": ["mmm_custom.intelligence.on_handed_off"]}
 
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
 # It does nothing unless the site config has typesafe_api_key.

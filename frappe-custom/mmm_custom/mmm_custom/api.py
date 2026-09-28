@@ -38,7 +38,7 @@ from mmm_custom.dedupe import find_matching_lead, normalize_phone
 from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.engine.repo import add_products, load_catalog
 from mmm_custom.engine.understand import match_courses
-from mmm_custom.intelligence import enqueue_analysis
+from mmm_custom.intelligence import enqueue_analysis, enqueue_on_assignment
 from mmm_custom.sources import channel_key, source_name
 
 
@@ -139,6 +139,8 @@ def chatwoot_sync():
 
     if payload.get("event") == "message_created":
         return enqueue_analysis(payload)  # [I] layer; ignores everything unless an API key is set
+    if payload.get("event") == "conversation_updated":
+        return enqueue_on_assignment(payload)  # a staff member took the conversation: suggest a reply
 
     if payload.get("event") != "conversation_created":
         return {"status": "ignored", "event": payload.get("event")}

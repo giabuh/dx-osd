@@ -194,8 +194,69 @@ def bot_active(conversation_id) -> bool:
                                  {"conversation_id": str(conversation_id), "status": "active", "is_sandbox": 0}))
 
 
+def has_human_assignee(conversation: dict) -> bool:
+    """A staff member owns the conversation (assigned by a person, by themselves, or by the bot's handoff)."""
+    assignee = ((conversation or {}).get("meta") or {}).get("assignee") or {}
+    return bool(assignee.get("id")) and assignee.get("type", "user") == "user"
+
+
+def customer_waiting(conversation: dict) -> bool:
+    """The last message of the conversation came from the customer or the bot, not from a staff member."""
+    messages = (conversation or {}).get("messages") or []
+    if not messages:
+        return False
+    last = messages[-1]
+    return last.get("message_type") in (0, "incoming") or (last.get("sender") or {}).get("type") == "agent_bot"
+
+
+def assignment_trigger(payload: dict):
+    """conversation_updated → the conversation id when it was just assigned to a staff member while the
+    customer waits for an answer (D-108); otherwise None. Pure."""
+    changed = {}
+    for item in payload.get("changed_attributes") or []:
+        if isinstance(item, dict):
+            changed.update(item)
+    change = changed.get("assignee_id")
+    if not isinstance(change, dict):
+        return None
+    current = change.get("current_value")
+    if not current or current == change.get("previous_value"):
+        return None
+    if not has_human_assignee(payload) or not customer_waiting(payload):
+        return None
+    return payload.get("id")
+
+
+def _enqueue_suggestion(conversation_id, **kwargs):
+    frappe.enqueue("mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=conversation_id,
+                   suggest_reply=True, job_id=f"ai_suggest_{conversation_id}", deduplicate=True, **kwargs)
+
+
+def enqueue_on_assignment(payload: dict) -> dict:
+    """Called by the Chatwoot webhook for conversation_updated: a staff member took the conversation
+    (assigned it to themselves, or a manager did), so they get a reply suggestion right away."""
+    if not _conf().get("typesafe_api_key"):
+        return {"status": "ignored", "reason": "ai_disabled"}
+    conversation_id = assignment_trigger(payload)
+    if not conversation_id:
+        return {"status": "ignored", "reason": "not_assigned"}
+    if bot_active(conversation_id):
+        return {"status": "ignored", "reason": "bot_active"}
+    _enqueue_suggestion(conversation_id)
+    return {"status": "queued", "conversation_id": conversation_id}
+
+
+def on_handed_off(event: dict):
+    """lead_engine_events handler: the bot handed the conversation to a consultant, who gets a reply
+    suggestion as they open it. Runs after the turn commits, when the conversation is no longer active."""
+    if event.get("is_sandbox") or not event.get("conversation_id") or not _conf().get("typesafe_api_key"):
+        return
+    _enqueue_suggestion(int(event["conversation_id"]), enqueue_after_commit=True)
+
+
 def enqueue_analysis(payload: dict) -> dict:
-    """Called by the Chatwoot webhook for message_created: queue analysis of incoming messages."""
+    """Called by the Chatwoot webhook for message_created: queue analysis of incoming messages.
+    A reply suggestion is added only when a staff member owns the conversation (D-108)."""
     if not _conf().get("typesafe_api_key"):
         return {"status": "ignored", "reason": "ai_disabled"}
     if payload.get("message_type") not in ("incoming", 0) or payload.get("private"):
@@ -208,7 +269,8 @@ def enqueue_analysis(payload: dict) -> dict:
     frappe.enqueue(
         "mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=conversation["id"],
         # Pending = the agent bot is still qualifying the lead; a suggestion per Quick Reply click is noise.
-        suggest_reply=conversation.get("status") != "pending",
+        # Nobody assigned yet: the suggestion comes when someone takes the conversation (enqueue_on_assignment).
+        suggest_reply=conversation.get("status") != "pending" and has_human_assignee(conversation),
     )
     return {"status": "queued", "conversation_id": conversation["id"]}
 
