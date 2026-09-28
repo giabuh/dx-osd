@@ -133,7 +133,8 @@ scheduler_events = {
 		"*/15 * * * *": ["mmm_custom.quiz_reminders.run"],
 	},
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
-	"daily": ["mmm_custom.engine.log.purge_old_logs"],
+	# Connected Facebook pages: is each page token still accepted (channels tab shows the status).
+	"daily": ["mmm_custom.engine.log.purge_old_logs", "mmm_custom.channels.facebook.check_health"],
 }
 
 

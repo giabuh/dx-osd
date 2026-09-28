@@ -135,6 +135,8 @@ Rails.application.routes.draw do
               get :register_facebook_page
               post :facebook_pages
               post :reauthorize_page
+              post :connect_facebook_page
+              post :disconnect_facebook_page
             end
           end
           resources :canned_responses, only: [:index, :create, :update, :destroy]

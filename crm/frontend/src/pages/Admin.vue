@@ -43,6 +43,7 @@ import AdminStaff from '@/components/Admin/AdminStaff.vue'
 import AdminKnowledge from '@/components/Admin/AdminKnowledge.vue'
 import AdminPlayground from '@/components/Admin/AdminPlayground.vue'
 import AdminQuizzes from '@/components/Admin/AdminQuizzes.vue'
+import AdminChannels from '@/components/Admin/AdminChannels.vue'
 import { adminCall } from '@/components/Admin/adminApi'
 import { Breadcrumbs, Tabs, usePageMeta } from 'frappe-ui'
 import { computed, markRaw, onMounted, ref } from 'vue'
@@ -75,6 +76,12 @@ const tabs = [
     label: 'Nhân viên',
     icon: 'lucide-users',
     component: markRaw(AdminStaff),
+  },
+  {
+    name: 'channels',
+    label: 'Kênh kết nối',
+    icon: 'lucide-plug',
+    component: markRaw(AdminChannels),
   },
   {
     name: 'knowledge',

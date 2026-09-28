@@ -23,6 +23,38 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
     Rails.logger.error "Error in register_facebook_page: #{e.message}"
   end
 
+  # DX-OSD: the CRM admin (mmm_custom.channels.facebook) does the Facebook login itself and sends the page token
+  # it got. Idempotent: a page connected before keeps its inbox and conversations and only gets the new token.
+  def connect_facebook_page
+    return head :forbidden unless Current.account_user&.administrator?
+
+    channel = Current.account.facebook_pages.find_or_initialize_by(page_id: params.require(:page_id))
+    created = channel.new_record?
+    ActiveRecord::Base.transaction do
+      channel.update!(page_access_token: params.require(:page_access_token),
+                      user_access_token: params[:user_access_token].presence || params[:page_access_token])
+      @facebook_inbox = channel.inbox || Current.account.inboxes.create!(
+        name: params[:inbox_name].presence || "Facebook #{channel.page_id}", channel: channel
+      )
+    end
+    channel.subscribe unless created # a new channel subscribes in after_create_commit
+    channel.reauthorized!
+    sync_page_details(channel.page_access_token, channel)
+    set_avatar(@facebook_inbox, channel.page_id) if created
+    render :register_facebook_page
+  end
+
+  # DX-OSD: stop receiving a page's messages; the inbox and its conversations stay.
+  def disconnect_facebook_page
+    return head :forbidden unless Current.account_user&.administrator?
+
+    channel = Current.account.facebook_pages.find_by(page_id: params.require(:page_id))
+    return head :not_found unless channel
+
+    channel.unsubscribe
+    head :ok
+  end
+
   def facebook_pages
     pages = []
     fb_pages = fb_object.get_connections('me', 'accounts')

@@ -6,10 +6,21 @@ Configures Chatwoot with default EduFlow Academy account, admin credentials,
 and registers the webhook pointing to Frappe CRM. The webhook signing secret is
 generated once (kept on re-runs) and copied into the CRM site config, which has
 no built-in fallback secret.
+
+Facebook App: when FB_APP_ID / FB_APP_SECRET (or FACEBOOK_APP_ID / FACEBOOK_APP_SECRET) and FB_VERIFY_TOKEN
+are in the environment, .env or chatwoot/.env, they go into Chatwoot's app config and the CRM site config
+(facebook_app_id, facebook_app_secret), so managers can connect pages from /crm/admin/channels.
 """
 
+import os
 import subprocess
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+FACEBOOK_KEYS = {"FB_APP_ID": ("FB_APP_ID", "FACEBOOK_APP_ID"),
+                 "FB_APP_SECRET": ("FB_APP_SECRET", "FACEBOOK_APP_SECRET"),
+                 "FB_VERIFY_TOKEN": ("FB_VERIFY_TOKEN",)}
 
 RUBY_SCRIPT = """
 account = Account.first || Account.create!(name: 'EduFlow Academy')
@@ -52,7 +63,17 @@ end
 platform_app = PlatformApp.find_or_create_by!(name: 'EduFlow CRM')
 platform_token = platform_app.access_token&.token || platform_app.create_access_token.token
 
+# Facebook App (optional): lets Chatwoot verify Messenger webhooks and exchange tokens for connected pages.
+%w[FB_APP_ID FB_APP_SECRET FB_VERIFY_TOKEN].each do |key|
+  next if ENV[key].blank?
+  cfg = InstallationConfig.find_or_initialize_by(name: key)
+  cfg.value = ENV[key]
+  cfg.save!
+end
+fb_ready = %w[FB_APP_ID FB_APP_SECRET FB_VERIFY_TOKEN].all? { |key| InstallationConfig.find_by(name: key)&.value.present? }
+
 puts "SUCCESS"
+puts "FACEBOOK_APP: #{fb_ready ? 'configured' : 'missing FB_APP_ID / FB_APP_SECRET / FB_VERIFY_TOKEN'}"
 puts "ACCOUNT_ID: #{account.id}"
 puts "ACCOUNT_NAME: #{account.name}"
 puts "ADMIN_EMAIL: #{user.email}"
@@ -68,10 +89,31 @@ puts "INBOX_ID: #{inbox.id}"
 puts "INBOX_NAME: #{inbox.name}"
 """
 
+def read_env_file(path):
+    values = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            key, sep, value = line.strip().partition("=")
+            if sep and not key.startswith("#"):
+                values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def facebook_app():
+    """FB_APP_ID / FB_APP_SECRET / FB_VERIFY_TOKEN from the environment, then .env, then chatwoot/.env."""
+    sources = [dict(os.environ), read_env_file(ROOT / ".env"), read_env_file(ROOT / "chatwoot" / ".env")]
+    found = {}
+    for key, names in FACEBOOK_KEYS.items():
+        found[key] = next((src[n] for src in sources for n in names if src.get(n)), "")
+    return {k: v for k, v in found.items() if v}
+
+
 def main():
     print("Configuring Chatwoot Account, Admin, and Webhook...")
+    fb = facebook_app()
+    env_args = [arg for key, value in fb.items() for arg in ("-e", f"{key}={value}")]
     proc = subprocess.run(
-        ["docker", "exec", "-i", "chatwoot-rails-1", "bundle", "exec", "rails", "runner", "-"],
+        ["docker", "exec", *env_args, "-i", "chatwoot-rails-1", "bundle", "exec", "rails", "runner", "-"],
         input=RUBY_SCRIPT.encode("utf-8"),
         capture_output=True,
     )
@@ -91,13 +133,16 @@ def main():
         "chatwoot_api_url": "http://chatwoot-rails:3000",
         "chatwoot_platform_token": values["PLATFORM_TOKEN_VALUE"],
     }
+    if fb.get("FB_APP_ID") and fb.get("FB_APP_SECRET"):
+        site_config["facebook_app_id"] = fb["FB_APP_ID"]
+        site_config["facebook_app_secret"] = fb["FB_APP_SECRET"]
     for key, value in site_config.items():
         subprocess.run(
             ["docker", "exec", "-w", "/home/frappe/frappe-bench", "crm-frappe-1",
              "bench", "--site", "crm.localhost", "set-config", key, value],
             check=True, capture_output=True,
         )
-    print("CRM site config: chatwoot_webhook_secret, chatwoot_api_token, chatwoot_api_url, chatwoot_platform_token set")
+    print("CRM site config set: " + ", ".join(site_config))
 
 if __name__ == "__main__":
     main()
