@@ -33,6 +33,8 @@
   "leads_count",
   "last_analytics_sync",
   "ads_recommendation",
+  "section_break_comments",
+  "comments",
   "section_break_status",
   "error_message"
  ],
@@ -199,6 +201,17 @@
    "label": "Đề xuất chạy Ads (AI)",
    "options": "Not Evaluated\nRecommended\nReview\nNot Recommended",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_comments",
+   "fieldtype": "Section Break",
+   "label": "Bình luận Fanpage (Facebook Comments)"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Table",
+   "label": "Danh sách Bình luận",
+   "options": "Facebook Post Comment"
   },
   {
    "collapsible": 1,

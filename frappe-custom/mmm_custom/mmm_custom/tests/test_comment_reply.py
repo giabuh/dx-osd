@@ -136,6 +136,47 @@ class TestCommentReplySystem(unittest.TestCase):
         )
         mock_like.assert_called_once_with("c_1", "token_test")
 
+    def test_get_smart_quick_replies_rules(self):
+        """Test contextual quick reply generation and Facebook 20-character limit."""
+        replies_branch = cr.get_smart_quick_replies("Photoshop thực chiến", "có lớp tối ở Bình Thạnh không?")
+        self.assertTrue(len(replies_branch) >= 3)
+        for r in replies_branch:
+            self.assertLessEqual(len(r["title"]), 20, f"Title too long: {r['title']}")
+            self.assertEqual(r["content_type"], "text")
+
+        replies_course = cr.get_smart_quick_replies(None, "tư vấn giúp mình")
+        self.assertTrue(len(replies_course) >= 3)
+        for r in replies_course:
+            self.assertLessEqual(len(r["title"]), 20)
+
+    def test_detect_course_and_branch_matchers(self):
+        """Test heuristic detection of course and campus."""
+        self.assertEqual(cr.detect_course_from_text("mình muốn học pts thiết kế"), "Photoshop thực chiến")
+        self.assertEqual(cr.detect_course_from_text("lớp excel và luyện thi mos"), "Tin học văn phòng & Luyện thi MOS")
+        self.assertEqual(cr.detect_course_from_text("khóa python cơ bản"), "Lập trình Python thực chiến")
+        self.assertIsNone(cr.detect_course_from_text("xin chào ad"))
+
+        self.assertEqual(cr.detect_branch_from_text("mình ở gần cơ sở bình thạnh"), "CS1 Bình Thạnh")
+        self.assertEqual(cr.detect_branch_from_text("lớp quận 1 còn chỗ không"), "CS2 Quận 1")
+        self.assertEqual(cr.detect_branch_from_text("ở thủ đức học mấy giờ"), "CS3 Thủ Đức")
+        self.assertIsNone(cr.detect_branch_from_text("học phí bao nhiêu"))
+
+    def test_send_messenger_message_with_quick_replies(self):
+        """Test send_messenger_message correctly passes quick_replies array."""
+        with patch.object(cr.requests, "post") as mock_post:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {"recipient_id": "user_123", "message_id": "m_qr_1"}
+            mock_post.return_value = mock_resp
+
+            qr = [{"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1"}]
+            res = cr.send_messenger_message("page_test", "token_test", "user_123", "Chọn cơ sở:", quick_replies=qr)
+
+            self.assertIsNotNone(res)
+            self.assertEqual(res["message_id"], "m_qr_1")
+            kwargs = mock_post.call_args[1]
+            self.assertEqual(kwargs["json"]["message"]["quick_replies"], qr)
+
 
 if __name__ == "__main__":
     unittest.main()

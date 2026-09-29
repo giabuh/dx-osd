@@ -372,7 +372,75 @@ class TestFacebookPost(unittest.TestCase):
             self.assertIn("tips", res)
             self.assertIn("https://adsmanager.facebook.com/", res.get("ads_manager_url", ""))
 
+    def test_sync_comments_not_posted_skipped(self):
+        """Test sync_comments on unposted doc returns skipped status."""
+        doc = FacebookPost()
+        doc.status = "Draft"
+        res = doc.sync_comments(save=False)
+        self.assertEqual(res["status"], "skipped")
+
+    def test_sync_comments_success_with_sentiment(self):
+        """Test sync_comments pulls Graph API comments and classifies sentiment correctly."""
+        doc = FacebookPost()
+        doc.status = "Posted"
+        doc.fb_post_id = "123_456"
+        doc.comments = []
+        doc.set = lambda field, val: setattr(doc, field, val)
+        doc.append = lambda field, row: getattr(doc, field).append(row)
+        doc.save = MagicMock()
+
+        mock_comments_data = {
+            "data": [
+                {
+                    "id": "c_1",
+                    "from": {"name": "Nguyễn Văn A"},
+                    "message": "Cho mình xin học phí với ạ",
+                    "created_time": "2026-09-29T10:00:00+0000",
+                },
+                {
+                    "id": "c_2",
+                    "from": {"name": "Trần Thị B"},
+                    "message": "Tư vấn lớp photoshop cho người mới bắt đầu",
+                    "created_time": "2026-09-29T10:05:00+0000",
+                },
+                {
+                    "id": "c_3",
+                    "from": {"name": "Lê C"},
+                    "message": "Ảnh thiết kế đẹp quá ad ơi",
+                    "created_time": "2026-09-29T10:10:00+0000",
+                },
+                {
+                    "id": "c_4",
+                    "from": {"name": "Bot Spammer"},
+                    "message": "Check link bio nha mọi người",
+                    "created_time": "2026-09-29T10:15:00+0000",
+                },
+            ]
+        }
+
+        with patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.requests.get") as mock_get:
+            mock_resp = MagicMock()
+            mock_resp.ok = True
+            mock_resp.json.return_value = mock_comments_data
+            mock_get.return_value = mock_resp
+
+            with patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.os.getenv") as mock_env:
+                mock_env.side_effect = lambda k: "fake_token" if k == "FACEBOOK_PAGE_ACCESS_TOKEN" else "123"
+                res = doc.sync_comments(save=False)
+
+                self.assertEqual(res["status"], "success")
+                self.assertEqual(res["count"], 4)
+                self.assertEqual(doc.comments_count, 4)
+                self.assertEqual(len(doc.comments), 4)
+
+                # Verify sentiment classifications
+                self.assertEqual(doc.comments[0]["sentiment"], "Hỏi học phí / lịch")
+                self.assertEqual(doc.comments[1]["sentiment"], "Quan tâm khóa học")
+                self.assertEqual(doc.comments[2]["sentiment"], "Tích cực")
+                self.assertEqual(doc.comments[3]["sentiment"], "Spam / Khác")
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

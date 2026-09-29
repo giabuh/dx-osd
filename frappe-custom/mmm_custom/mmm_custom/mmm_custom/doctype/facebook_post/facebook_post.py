@@ -477,6 +477,12 @@ class FacebookPost(Document):
                 except Exception:
                     pass
 
+            # Synchronize comments child table
+            try:
+                self.sync_comments(save=False)
+            except Exception:
+                pass
+
             self.evaluate_ads_potential()
             self.last_analytics_sync = now_datetime()
             self.save()
@@ -499,6 +505,84 @@ class FacebookPost(Document):
             if hasattr(frappe, "log_error"):
                 frappe.log_error(f"Sync analytics failed for post {self.name}: {err_msg}", "Facebook Analytics Sync")
             frappe.throw(_("Đồng bộ số liệu thất bại: {0}").format(err_msg))
+
+    @frappe.whitelist()
+    def sync_comments(self, save=True):
+        """Fetch Facebook comments on this post and update child table 'comments'."""
+        if getattr(self, "status", None) != "Posted" or not getattr(self, "fb_post_id", None):
+            if save:
+                frappe.throw(_("Chỉ có thể đồng bộ bình luận cho bài viết đã xuất bản (status = Posted)."))
+            return {"status": "skipped", "count": 0}
+
+        page_id = os.getenv("FACEBOOK_PAGE_ID") or (frappe.conf.get("facebook_page_id") if hasattr(frappe, "conf") else None)
+        token = os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN") or (frappe.conf.get("facebook_page_access_token") if hasattr(frappe, "conf") else None)
+        if not token:
+            if save:
+                frappe.throw(_("Chưa cấu hình FACEBOOK_PAGE_ACCESS_TOKEN."))
+            return {"status": "no_token", "count": 0}
+
+        target_id = str(self.fb_post_id)
+        if "_" not in target_id and page_id:
+            target_id = f"{page_id}_{target_id}"
+
+        url = f"https://graph.facebook.com/v21.0/{target_id}/comments"
+        params = {
+            "fields": "id,from,message,created_time,like_count",
+            "limit": 50,
+            "access_token": token,
+        }
+        try:
+            resp = requests.get(url, params=params, timeout=20)
+            if not resp.ok:
+                if save:
+                    frappe.throw(_("Lỗi khi tải bình luận từ Facebook: {0}").format(resp.text[:200]))
+                return {"status": "error", "count": 0}
+
+            data = resp.json().get("data", [])
+            self.set("comments", [])
+            for item in data:
+                cid = item.get("id")
+                from_name = item.get("from", {}).get("name", "Khách Facebook")
+                msg = (item.get("message") or "").strip()
+                ctime_str = item.get("created_time")
+                formatted_time = None
+                if ctime_str:
+                    try:
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(ctime_str.replace("+0000", "+00:00"))
+                        formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                    except Exception:
+                        pass
+
+                lower = msg.lower()
+                if any(k in lower for k in ["học phí", "giá", "bao nhiêu", "chi phí", "tiền"]):
+                    sentiment = "Hỏi học phí / lịch"
+                elif any(k in lower for k in ["tư vấn", "khóa học", "học", "lớp", "đăng ký", "cho mình", "inbox"]):
+                    sentiment = "Quan tâm khóa học"
+                elif any(k in lower for k in ["hay", "đẹp", "tuyệt", "xịn", "like", "thích", "chất"]):
+                    sentiment = "Tích cực"
+                else:
+                    sentiment = "Spam / Khác"
+
+                self.append("comments", {
+                    "comment_id": cid,
+                    "from_name": from_name,
+                    "comment_message": msg,
+                    "comment_time": formatted_time,
+                    "sentiment": sentiment,
+                })
+
+            self.comments_count = len(self.comments)
+            if save:
+                self.save()
+                if hasattr(frappe.db, "commit"):
+                    frappe.db.commit()
+
+            return {"status": "success", "count": len(self.comments)}
+        except Exception as e:
+            if save:
+                frappe.throw(_("Đồng bộ bình luận thất bại: {0}").format(str(e)))
+            return {"status": "error", "message": str(e), "count": 0}
 
     def evaluate_ads_potential(self):
         """Evaluates organic engagement to advise whether this post is worth running Meta Ads."""

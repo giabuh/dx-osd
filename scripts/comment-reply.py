@@ -483,14 +483,63 @@ def get_recent_conversations(page_id: str, token: str, limit: int = 10) -> list:
     return resp.json().get("data", [])
 
 
-def send_messenger_message(page_id: str, token: str, recipient_id: str, message: str) -> dict | None:
-    """Send a Facebook Messenger message directly via Graph API."""
+def get_smart_quick_replies(course_context: str | None = None, message_text: str = "") -> list[dict]:
+    """Return contextual Quick Reply buttons for Facebook Messenger."""
+    lower = (message_text or "").lower()
+    # 1. Branch / Schedule inquiries
+    if any(k in lower for k in ["ở đâu", "cơ sở", "địa chỉ", "lịch học", "thời gian", "tối", "cuối tuần", "bình thạnh", "quận 1", "thủ đức"]):
+        return [
+            {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
+            {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
+            {"content_type": "text", "title": "📍 CS3 Thủ Đức", "payload": "CS3_THU_DUC"},
+            {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
+            {"content_type": "text", "title": "☀️ Lớp cuối tuần", "payload": "SHIFT_WEEKEND"},
+        ]
+    # 2. In Photoshop context
+    if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh"]):
+        return [
+            {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
+            {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
+            {"content_type": "text", "title": "📍 CS3 Thủ Đức", "payload": "CS3_THU_DUC"},
+            {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
+            {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
+        ]
+    # 3. Learning goals from scratch / work
+    if any(k in lower for k in ["từ số 0", "cơ bản", "mới bắt đầu", "đi làm"]):
+        return [
+            {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
+            {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
+            {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
+            {"content_type": "text", "title": "🎁 Ưu đãi 35%", "payload": "GET_DISCOUNT_35"},
+        ]
+    # 4. Default broad course selection
+    return [
+        {"content_type": "text", "title": "🎨 Khóa Photoshop", "payload": "COURSE_PHOTOSHOP"},
+        {"content_type": "text", "title": "📊 Tin học MOS", "payload": "COURSE_MOS"},
+        {"content_type": "text", "title": "💻 Lập trình Python", "payload": "COURSE_PYTHON"},
+        {"content_type": "text", "title": "📍 Chọn cơ sở học", "payload": "CHOOSE_BRANCH"},
+    ]
+
+
+def send_messenger_message(
+    page_id: str,
+    token: str,
+    recipient_id: str,
+    message: str,
+    quick_replies: list[dict] | None = None,
+    image_path: str | None = None,
+) -> dict | None:
+    """Send a Facebook Messenger message directly via Graph API with optional quick replies and image attachment."""
     url = f"https://graph.facebook.com/v21.0/{page_id}/messages"
     payload = {
         "recipient": {"id": recipient_id},
         "message": {"text": message},
         "messaging_type": "RESPONSE",
     }
+    if quick_replies:
+        payload["message"]["quick_replies"] = quick_replies
+
+    sent_res = None
     try:
         resp = requests.post(
             url,
@@ -499,12 +548,34 @@ def send_messenger_message(page_id: str, token: str, recipient_id: str, message:
             timeout=15,
         )
         if resp.status_code == 200:
-            return resp.json()
-        print(f"   ⚠️ Messenger Send API notice: {resp.status_code} {resp.text}")
-        return None
+            sent_res = resp.json()
+        else:
+            print(f"   ⚠️ Messenger Send API notice: {resp.status_code} {resp.text}")
     except requests.RequestException as e:
         print(f"   ⚠️ Messenger Send network error: {e}")
-        return None
+
+    # Optional image attachment upload
+    if image_path and os.path.exists(image_path):
+        try:
+            with open(image_path, "rb") as f:
+                files = {"filedata": (os.path.basename(image_path), f, "image/jpeg")}
+                data = {
+                    "recipient": json.dumps({"id": recipient_id}),
+                    "message": json.dumps({"attachment": {"type": "image", "payload": {}}}),
+                }
+                img_resp = requests.post(
+                    url,
+                    params={"access_token": token},
+                    data=data,
+                    files=files,
+                    timeout=20,
+                )
+                if img_resp.status_code == 200:
+                    print(f"   🖼️ Image attachment sent ({os.path.basename(image_path)})")
+        except Exception as img_err:
+            print(f"   ⚠️ Error sending image attachment: {img_err}")
+
+    return sent_res
 
 
 def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None, branch: str = None):
@@ -611,26 +682,49 @@ def process_messenger_conversations(
                 m_role = "EduFlow Academy" if m_is_page else m_sender.get("name", "Khách")
                 history.append(f"[{m_role}]: {m_text}")
 
+        # Detect course and branch context
+        full_thread_text = " ".join(history) + " " + msg_text
+        course_val = detect_course_from_text(full_thread_text)
+        branch_val = detect_branch_from_text(msg_text)
+
         # Generate intelligent contextual reply
         reply_text = generate_ai_conversation_reply(sender_name, history, msg_text)
+
+        # Smart quick reply buttons
+        smart_quick_replies = get_smart_quick_replies(course_val, msg_text)
+
+        # Check for relevant image voucher attachment (Photoshop voucher/infographic)
+        voucher_path = Path(__file__).resolve().parent / "assets" / "photoshop_voucher.jpg"
+        image_to_attach = None
+        if voucher_path.exists() and (course_val == "Photoshop thực chiến" or "photoshop" in full_thread_text.lower()):
+            if any(k in msg_text.lower() for k in ["học phí", "ưu đãi", "giá", "từ số 0", "thông tin", "ok"]):
+                image_to_attach = str(voucher_path)
 
         if dry_run:
             if verbose:
                 print(f"   🔍 [DRY RUN] Messenger Reply: \"{reply_text}\"")
+                print(f"   🔍 [DRY RUN] Quick replies: {[b['title'] for b in smart_quick_replies]}")
+                if image_to_attach:
+                    print(f"   🔍 [DRY RUN] Image attachment: {image_to_attach}")
             replied.add(msg_id)
             new_replies += 1
         else:
             try:
-                res = send_messenger_message(page_id, token, sender_id, reply_text)
+                res = send_messenger_message(
+                    page_id,
+                    token,
+                    sender_id,
+                    reply_text,
+                    quick_replies=smart_quick_replies,
+                    image_path=image_to_attach,
+                )
                 if res and verbose:
                     mid = res.get("message_id")
-                    print(f"   📩 Messenger reply sent to {sender_name} (Ref: {mid})")
+                    print(f"   📩 Messenger reply sent to {sender_name} (Ref: {mid}) with {len(smart_quick_replies)} quick buttons")
 
                 # Check for phone, branch, course and sync to CRM
                 phone_match = re.search(r"(0\d{9}|\+84\d{9})", msg_text)
                 phone_val = phone_match.group(1) if phone_match else None
-                course_val = detect_course_from_text(" ".join(history) + " " + msg_text)
-                branch_val = detect_branch_from_text(msg_text)
 
                 sync_to_frappe_crm(sender_name, phone=phone_val, course=course_val, branch=branch_val)
 

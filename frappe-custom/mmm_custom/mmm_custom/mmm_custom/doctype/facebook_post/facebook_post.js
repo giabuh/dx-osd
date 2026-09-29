@@ -221,6 +221,25 @@ frappe.ui.form.on("Facebook Post", {
 				});
 			}).addClass("btn-secondary");
 
+			frm.add_custom_button(__("Đồng bộ bình luận"), function () {
+				frappe.show_alert({ message: __("Đang tải danh sách bình luận từ Facebook..."), indicator: "blue" });
+				frm.call({
+					method: "sync_comments",
+					doc: frm.doc,
+					freeze: true,
+					freeze_message: __("Đang đồng bộ bình luận Facebook..."),
+					callback: function (r) {
+						if (r.message && r.message.status === "success") {
+							frm.reload_doc();
+							frappe.show_alert({
+								message: __(`Đã đồng bộ thành công ${r.message.count} bình luận từ Facebook!`),
+								indicator: "green"
+							});
+						}
+					}
+				});
+			}).addClass("btn-secondary");
+
 			frm.add_custom_button(__("Đăng thành bài mới"), function () {
 				if (!frm.doc.content) {
 					frappe.msgprint(__("Vui lòng nhập hoặc tạo nội dung bài viết trước khi đăng."));
