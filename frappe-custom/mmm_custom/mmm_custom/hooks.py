@@ -134,6 +134,8 @@ scheduler_events = {
 		# Level tests left half-way get one reminder (D-106).
 		"*/15 * * * *": ["mmm_custom.quiz_reminders.run"],
 	},
+	# Synchronize Facebook post metrics (likes, comments, shares, leads) every hour
+	"hourly": ["mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.sync_all_posted_analytics"],
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
 	# Connected Facebook pages: is each page token still accepted (channels tab shows the status).
 	"daily": ["mmm_custom.engine.log.purge_old_logs", "mmm_custom.channels.facebook.check_health"],

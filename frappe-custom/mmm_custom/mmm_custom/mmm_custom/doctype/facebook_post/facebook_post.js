@@ -4,7 +4,7 @@
 frappe.ui.form.on("Facebook Post", {
 	refresh: function (frm) {
 		// 1. Content Generation / Regeneration Button (ALWAYS AVAILABLE regardless of status)
-		let content_btn_label = frm.doc.content ? __("🔄 AI Viết lại nội dung") : __("🤖 AI Viết nội dung");
+		let content_btn_label = frm.doc.content ? __("AI viết lại nội dung") : __("AI viết nội dung");
 		frm.add_custom_button(content_btn_label, function () {
 			if (!frm.doc.course) {
 				frappe.msgprint(__("Vui lòng chọn Khóa học trước khi yêu cầu AI viết bài."));
@@ -26,7 +26,7 @@ frappe.ui.form.on("Facebook Post", {
 								frm.set_value("ai_feedback", feedback);
 							}
 							frappe.show_alert({
-								message: __("Đã tạo nội dung bài viết thành công! Bấm lại nút nếu bạn muốn gợi ý để AI sửa lại."),
+								message: __("Đã tạo nội dung bài viết thành công!"),
 								indicator: "green"
 							});
 						}
@@ -59,7 +59,7 @@ frappe.ui.form.on("Facebook Post", {
 		});
 
 		// 2. Banner Generation / Regeneration Button (ALWAYS AVAILABLE regardless of status)
-		let banner_btn_label = frm.doc.image ? __("🎨 Vẽ lại banner") : __("🎨 Tạo banner");
+		let banner_btn_label = frm.doc.image ? __("Tạo lại banner") : __("Tạo banner");
 		frm.add_custom_button(banner_btn_label, function () {
 			if (!frm.doc.course) {
 				frappe.msgprint(__("Vui lòng chọn Khóa học trước khi tạo banner."));
@@ -122,14 +122,14 @@ frappe.ui.form.on("Facebook Post", {
 
 		// Autopilot approval / recall actions
 		if (frm.doc.status === "Pending Approval") {
-			frm.add_custom_button(__("✅ Duyệt bài này"), function () {
+			frm.add_custom_button(__("Duyệt bài này"), function () {
 				frm.set_value("status", "Scheduled");
 				frm.save();
 			}).addClass("btn-primary");
 		}
 
 		if (frm.doc.status === "Scheduled") {
-			frm.add_custom_button(__("⏪ Thu hồi lịch đăng"), function () {
+			frm.add_custom_button(__("Thu hồi lịch đăng"), function () {
 				frappe.confirm(
 					__("Bạn có chắc muốn thu hồi lịch đăng bài viết này về trạng thái Chờ duyệt không?"),
 					function () {
@@ -157,7 +157,7 @@ frappe.ui.form.on("Facebook Post", {
 
 		// 3. Publishing and action buttons depending on status
 		if (frm.doc.status !== "Posted") {
-			frm.add_custom_button(__("🚀 Đăng ngay lên Fanpage"), function () {
+			frm.add_custom_button(__("Đăng ngay lên Fanpage"), function () {
 				if (!frm.doc.content) {
 					frappe.msgprint(__("Vui lòng nhập hoặc tạo nội dung bài viết trước khi đăng."));
 					return;
@@ -191,12 +191,33 @@ frappe.ui.form.on("Facebook Post", {
 		} else {
 			// When status is "Posted"
 			if (frm.doc.fb_post_url) {
-				frm.add_custom_button(__("🔗 Xem trên Facebook"), function () {
+				frm.add_custom_button(__("Xem trên Facebook"), function () {
 					window.open(frm.doc.fb_post_url, "_blank");
 				}).addClass("btn-info");
 			}
 
-			frm.add_custom_button(__("🚀 Đăng thành bài mới"), function () {
+			frm.add_custom_button(__("Cập nhật số liệu"), function () {
+				frappe.show_alert({ message: __("Đang lấy số liệu tương tác từ Facebook..."), indicator: "blue" });
+				frm.call({
+					method: "sync_analytics",
+					doc: frm.doc,
+					freeze: true,
+					freeze_message: __("Đang đồng bộ số liệu Facebook..."),
+					callback: function (r) {
+						if (r.message && r.message.status === "success") {
+							frm.reload_doc();
+							frappe.show_alert({
+								message: __(
+									`Đã cập nhật: ${r.message.likes} Thích, ${r.message.comments} Bình luận, ${r.message.shares} Chia sẻ, ${r.message.leads} Khách tiềm năng`
+								),
+								indicator: "green"
+							});
+						}
+					}
+				});
+			}).addClass("btn-secondary");
+
+			frm.add_custom_button(__("Đăng thành bài mới"), function () {
 				if (!frm.doc.content) {
 					frappe.msgprint(__("Vui lòng nhập hoặc tạo nội dung bài viết trước khi đăng."));
 					return;
@@ -228,7 +249,7 @@ frappe.ui.form.on("Facebook Post", {
 				);
 			}).addClass("btn-primary");
 
-			frm.add_custom_button(__("📝 Chuyển về Bản nháp"), function () {
+			frm.add_custom_button(__("Chuyển về Bản nháp"), function () {
 				frappe.confirm(
 					__("Bạn có muốn chuyển trạng thái bài viết này về 'Bản nháp' để tiếp tục chỉnh sửa hoặc lên lịch lại không?"),
 					function () {

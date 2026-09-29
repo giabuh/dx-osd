@@ -107,8 +107,11 @@ class TestFacebookPost(unittest.TestCase):
             prompt_text = sent_payload["contents"][0]["parts"][0]["text"]
             self.assertIn("Nhấn mạnh học bổng 50%", prompt_text)
 
-    def test_generate_banner_with_feedback(self):
+    @patch("mmm_custom.banner_generator.generate_hero_image")
+    @patch("mmm_custom.banner_generator.save_file")
+    def test_generate_banner_with_feedback(self, mock_save_file, mock_hero):
         """Test banner generation adapts to user feedback (custom promo or benefits)."""
+        mock_hero.return_value = Image.new("RGB", (1080, 1080), color=(10, 50, 100))
         doc = FacebookPost()
         doc.name = "test_fb_post_1"
         doc.course = "Bơi lội"
@@ -116,14 +119,13 @@ class TestFacebookPost(unittest.TestCase):
         doc.is_new = MagicMock(return_value=False)
         doc.save = MagicMock()
 
-        with patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.save_file") as mock_save_file:
-            mock_file = MagicMock()
-            mock_file.file_url = "/files/test_banner.jpg"
-            mock_save_file.return_value = mock_file
+        mock_file = MagicMock()
+        mock_file.file_url = "/files/test_banner.jpg"
+        mock_save_file.return_value = mock_file
 
-            res = doc.generate_banner(user_feedback="TẶNG BALO VÀ GIẢM 40%")
-            self.assertEqual(res["status"], "success")
-            self.assertEqual(doc.image, "/files/test_banner.jpg")
+        res = doc.generate_banner(user_feedback="TẶNG BALO VÀ GIẢM 40%")
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(doc.image, "/files/test_banner.jpg")
 
 
     @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.requests.post")
@@ -159,6 +161,112 @@ class TestFacebookPost(unittest.TestCase):
             self.assertIn("ANTI-CLICHÉ", prompt_text)
             self.assertIn("GÓC TIẾP CẬN", prompt_text)
             self.assertIn("HUMOR", prompt_text)
+
+    def test_sync_analytics_requires_posted_status(self):
+        """Test sync_analytics throws if post is not in Posted status."""
+        doc = FacebookPost()
+        doc.status = "Draft"
+        doc.fb_post_id = "12345"
+        with self.assertRaises(Exception):
+            doc.sync_analytics()
+
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.requests.get")
+    def test_sync_analytics_success(self, mock_get):
+        """Test sync_analytics successfully pulls metrics from Facebook Graph API."""
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "reactions": {"summary": {"total_count": 42}},
+            "comments": {"summary": {"total_count": 15}},
+            "shares": {"count": 8},
+        }
+        mock_get.return_value = mock_resp
+
+        doc = FacebookPost()
+        doc.status = "Posted"
+        doc.fb_post_id = "1334466483083776_122103569720760450"
+        doc.save = MagicMock()
+
+        with patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.os.getenv") as mock_env:
+            mock_env.return_value = "dummy_token"
+            res = doc.sync_analytics()
+            self.assertEqual(res["status"], "success")
+            self.assertEqual(doc.likes_count, 42)
+            self.assertEqual(doc.comments_count, 15)
+            self.assertEqual(doc.shares_count, 8)
+            self.assertIsNotNone(doc.last_analytics_sync)
+            doc.save.assert_called()
+
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.frappe.get_doc")
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.frappe.get_all")
+    def test_sync_all_posted_analytics(self, mock_get_all, mock_get_doc):
+        """Test sync_all_posted_analytics iterates posted posts and calls sync_analytics."""
+        from mmm_custom.mmm_custom.doctype.facebook_post.facebook_post import sync_all_posted_analytics
+        mock_get_all.return_value = ["FB-001", "FB-002"]
+        mock_doc1 = MagicMock()
+        mock_doc2 = MagicMock()
+        mock_get_doc.side_effect = [mock_doc1, mock_doc2]
+
+        result = sync_all_posted_analytics()
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["synced_count"], 2)
+        mock_doc1.sync_analytics.assert_called_once()
+        mock_doc2.sync_analytics.assert_called_once()
+
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.frappe.get_all")
+    def test_get_marketing_overview(self, mock_get_all):
+        """Test get_marketing_overview correctly calculates aggregates and top posts."""
+        from mmm_custom.mmm_custom.doctype.facebook_post.facebook_post import get_marketing_overview
+        mock_get_all.return_value = [
+            {
+                "name": "FB-01",
+                "title": "Post 1",
+                "course": "TE-ROBO",
+                "status": "Posted",
+                "likes_count": 10,
+                "comments_count": 5,
+                "shares_count": 2,
+                "reach_count": 100,
+                "leads_count": 3,
+            },
+            {
+                "name": "FB-02",
+                "title": "Post 2",
+                "course": "VP-EXCEL",
+                "status": "Scheduled",
+                "likes_count": 0,
+                "comments_count": 0,
+                "shares_count": 0,
+                "reach_count": 0,
+                "leads_count": 0,
+            },
+            {
+                "name": "FB-03",
+                "title": "Post 3",
+                "course": "DH-PTS",
+                "status": "Posted",
+                "likes_count": 50,
+                "comments_count": 20,
+                "shares_count": 5,
+                "reach_count": 500,
+                "leads_count": 8,
+            },
+        ]
+        result = get_marketing_overview()
+        self.assertEqual(result["status"], "success")
+        kpis = result["kpis"]
+        self.assertEqual(kpis["total_posts"], 3)
+        self.assertEqual(kpis["posted_count"], 2)
+        self.assertEqual(kpis["scheduled_count"], 1)
+        self.assertEqual(kpis["total_likes"], 60)
+        self.assertEqual(kpis["total_comments"], 25)
+        self.assertEqual(kpis["total_shares"], 7)
+        self.assertEqual(kpis["total_reach"], 600)
+        self.assertEqual(kpis["total_leads"], 11)
+        self.assertEqual(len(result["top_leads"]), 2)
+        self.assertEqual(result["top_leads"][0]["name"], "FB-03")
+        self.assertEqual(result["top_engagement"][0]["name"], "FB-03")
 
 
 if __name__ == "__main__":
