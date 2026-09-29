@@ -115,10 +115,19 @@ class TestEnqueue(unittest.TestCase):
                                                  {"conversation_id": "7", "status": "active", "is_sandbox": 0})
 
     def test_queues_incoming_messages(self):
+        conversation = {"id": 5, "status": "open", "meta": {"assignee": {"id": 3, "type": "user"}}}
         with patch.object(intel, "frappe", self.frappe):
-            result = intel.enqueue_analysis({"event": "message_created", "message_type": "incoming", "conversation": {"id": 5}})
+            result = intel.enqueue_analysis({"event": "message_created", "message_type": "incoming",
+                                             "conversation": conversation})
         self.assertEqual(result["status"], "queued")
         self.frappe.enqueue.assert_called_once_with("mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=5, suggest_reply=True)
+
+    def test_no_reply_suggestion_before_a_staff_member_takes_the_conversation(self):
+        # D-108: the suggestion comes when someone takes it (enqueue_on_assignment); intent/labels still run.
+        with patch.object(intel, "frappe", self.frappe):
+            result = intel.enqueue_analysis({"message_type": "incoming", "conversation": {"id": 5, "status": "open"}})
+        self.assertEqual(result["status"], "queued")
+        self.assertEqual(self.frappe.enqueue.call_args.kwargs["suggest_reply"], False)
 
     def test_no_reply_suggestion_while_the_bot_handles_the_conversation(self):
         # Pending = the agent bot is still qualifying; a note on every Quick Reply click is noise.
@@ -136,6 +145,82 @@ class TestEnqueue(unittest.TestCase):
         self.frappe.conf = {}
         with patch.object(intel, "frappe", self.frappe):
             self.assertEqual(intel.enqueue_analysis({"message_type": "incoming", "conversation": {"id": 5}})["reason"], "ai_disabled")
+        self.frappe.enqueue.assert_not_called()
+
+
+def assigned(current=3, previous=None, last=None, assignee_type="user", conversation_id=9):
+    return {"event": "conversation_updated", "id": conversation_id,
+            "changed_attributes": [{"assignee_id": {"previous_value": previous, "current_value": current}}],
+            "meta": {"assignee": {"id": current, "type": assignee_type} if current else None},
+            "messages": [last if last is not None else {"message_type": 0, "sender": {"type": "contact"}}]}
+
+
+class TestAssignmentTrigger(unittest.TestCase):
+    def test_taken_by_a_staff_member_while_the_customer_waits(self):
+        self.assertEqual(intel.assignment_trigger(assigned()), 9)
+        self.assertEqual(intel.assignment_trigger(assigned(current=4, previous=3)), 9)  # passed to a colleague
+        bot_spoke_last = {"message_type": 1, "sender": {"type": "agent_bot"}}
+        self.assertEqual(intel.assignment_trigger(assigned(last=bot_spoke_last)), 9)  # the bot's handoff message
+
+    def test_no_trigger(self):
+        self.assertIsNone(intel.assignment_trigger(assigned(current=None, previous=3)))  # unassigned
+        self.assertIsNone(intel.assignment_trigger(assigned(current=3, previous=3)))
+        self.assertIsNone(intel.assignment_trigger(assigned(assignee_type="agent_bot")))
+        staff_spoke_last = {"message_type": 1, "sender": {"type": "user"}}
+        self.assertIsNone(intel.assignment_trigger(assigned(last=staff_spoke_last)))
+        other_change = {**assigned(), "changed_attributes": [{"label_list": {"previous_value": [], "current_value": ["x"]}}]}
+        self.assertIsNone(intel.assignment_trigger(other_change))
+        self.assertIsNone(intel.assignment_trigger({**assigned(), "messages": []}))
+        self.assertIsNone(intel.assignment_trigger({"id": 9}))
+
+    def test_human_assignee(self):
+        self.assertTrue(intel.has_human_assignee({"meta": {"assignee": {"id": 1, "type": "user"}}}))
+        self.assertTrue(intel.has_human_assignee({"meta": {"assignee": {"id": 1}}}))
+        self.assertFalse(intel.has_human_assignee({"meta": {"assignee": {"id": 1, "type": "agent_bot"}}}))
+        self.assertFalse(intel.has_human_assignee({"meta": {"assignee": None}}))
+        self.assertFalse(intel.has_human_assignee({}))
+
+
+class TestEnqueueOnAssignment(unittest.TestCase):
+    def setUp(self):
+        self.frappe = MagicMock()
+        self.frappe.conf = {"typesafe_api_key": "k"}
+        self.frappe.db.exists.return_value = None
+
+    def test_queues_one_suggestion_per_conversation(self):
+        with patch.object(intel, "frappe", self.frappe):
+            self.assertEqual(intel.enqueue_on_assignment(assigned())["status"], "queued")
+        self.frappe.enqueue.assert_called_once_with(
+            "mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=9, suggest_reply=True,
+            job_id="ai_suggest_9", deduplicate=True)
+
+    def test_skips_while_the_bot_is_talking_without_a_key_or_trigger(self):
+        with patch.object(intel, "frappe", self.frappe):
+            self.assertEqual(intel.enqueue_on_assignment(assigned(current=None, previous=3))["reason"], "not_assigned")
+            self.frappe.db.exists.return_value = "7"
+            self.assertEqual(intel.enqueue_on_assignment(assigned())["reason"], "bot_active")
+            self.frappe.conf = {}
+            self.assertEqual(intel.enqueue_on_assignment(assigned())["reason"], "ai_disabled")
+        self.frappe.enqueue.assert_not_called()
+
+
+class TestOnHandedOff(unittest.TestCase):
+    def setUp(self):
+        self.frappe = MagicMock()
+        self.frappe.conf = {"typesafe_api_key": "k"}
+
+    def test_queues_after_the_turn_commits(self):
+        with patch.object(intel, "frappe", self.frappe):
+            intel.on_handed_off({"event": "handed_off", "conversation_id": "12", "is_sandbox": False})
+        self.frappe.enqueue.assert_called_once_with(
+            "mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=12, suggest_reply=True,
+            job_id="ai_suggest_12", deduplicate=True, enqueue_after_commit=True)
+
+    def test_skips_playground_and_sites_without_a_key(self):
+        with patch.object(intel, "frappe", self.frappe):
+            intel.on_handed_off({"conversation_id": "12", "is_sandbox": True})
+            self.frappe.conf = {}
+            intel.on_handed_off({"conversation_id": "12", "is_sandbox": False})
         self.frappe.enqueue.assert_not_called()
 
 

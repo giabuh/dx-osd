@@ -119,6 +119,8 @@ doc_events["Consultant"] = {"on_update": "mmm_custom.staff_sync.enqueue_sync",
 jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.date_vi"]}
 
 # Other apps subscribe to engine events with their own `lead_engine_events` hook (see engine/events.py).
+# [I] The consultant a conversation is handed to finds a reply suggestion waiting (D-108).
+lead_engine_events = {"handed_off": ["mmm_custom.intelligence.on_handed_off"]}
 
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
 # It does nothing unless the site config has typesafe_api_key.
@@ -129,9 +131,12 @@ scheduler_events = {
 		# Heals failed staff syncs and gives newly connected Facebook pages the bot.
 		"*/10 * * * *": ["mmm_custom.staff_sync.sync_all"],
 		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
+		# Level tests left half-way get one reminder (D-106).
+		"*/15 * * * *": ["mmm_custom.quiz_reminders.run"],
 	},
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
-	"daily": ["mmm_custom.engine.log.purge_old_logs"],
+	# Connected Facebook pages: is each page token still accepted (channels tab shows the status).
+	"daily": ["mmm_custom.engine.log.purge_old_logs", "mmm_custom.channels.facebook.check_health"],
 }
 
 

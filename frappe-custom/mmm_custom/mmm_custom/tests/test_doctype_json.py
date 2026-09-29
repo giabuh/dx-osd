@@ -19,7 +19,7 @@ class TestDocTypeJson(unittest.TestCase):
         self.doctypes = load_all()
 
     def test_expected_doctypes_present(self):
-        for name in ("Course Group", "Course Link", "Course Group Link", "Consultant", "Territory Link", "Course Schedule", "Course Promotion", "Bot Slot", "Bot Slot Option", "Bot Slot Link", "Bot Skill", "Bot Skill Template", "Bot Skill Follow Up", "Lead Engine Settings", "Bot Conversation", "AI Decision Log", "Bot Learning Signal", "Course FAQ"):
+        for name in ("Course Group", "Course Link", "Course Group Link", "Consultant", "Territory Link", "Course Schedule", "Course Promotion", "Bot Slot", "Bot Slot Option", "Bot Slot Link", "Bot Skill", "Bot Skill Template", "Bot Skill Follow Up", "Lead Engine Settings", "Bot Conversation", "AI Decision Log", "Bot Learning Signal", "Course FAQ", "Channel Connection"):
             self.assertIn(name, self.doctypes)
 
     def test_folder_names_and_module(self):

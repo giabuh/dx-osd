@@ -1,0 +1,150 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-28 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "provider",
+  "external_id",
+  "display_name",
+  "picture",
+  "column_break_status",
+  "status",
+  "branch",
+  "chatwoot_inbox_id",
+  "lead_forms",
+  "health_section",
+  "connected_by",
+  "connected_at",
+  "last_checked_at",
+  "token_expires_at",
+  "last_error"
+ ],
+ "fields": [
+  {
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "options": "Facebook\nInstagram\nZalo OA\nTikTok",
+   "default": "Facebook",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "external_id",
+   "fieldtype": "Data",
+   "label": "Page / Account ID",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "display_name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "picture",
+   "fieldtype": "Small Text",
+   "label": "Picture URL"
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Connected\nToken expired\nDisconnected\nError",
+   "default": "Connected",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "CRM Territory",
+   "in_standard_filter": 1,
+   "description": "Staff of this branch see every conversation of the page. Empty: the bot hands conversations over one by one."
+  },
+  {
+   "fieldname": "chatwoot_inbox_id",
+   "fieldtype": "Int",
+   "label": "Chatwoot Inbox ID"
+  },
+  {
+   "fieldname": "lead_forms",
+   "fieldtype": "Int",
+   "label": "Lead Ads Forms"
+  },
+  {
+   "fieldname": "health_section",
+   "fieldtype": "Section Break",
+   "label": "Health"
+  },
+  {
+   "fieldname": "connected_by",
+   "fieldtype": "Link",
+   "label": "Connected By",
+   "options": "User"
+  },
+  {
+   "fieldname": "connected_at",
+   "fieldtype": "Datetime",
+   "label": "Connected At"
+  },
+  {
+   "fieldname": "last_checked_at",
+   "fieldtype": "Datetime",
+   "label": "Last Checked At"
+  },
+  {
+   "fieldname": "token_expires_at",
+   "fieldtype": "Datetime",
+   "label": "Token Expires At",
+   "description": "Empty: the page token does not expire"
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last Error"
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-28 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Channel Connection",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "description": "One connected Facebook page (later Zalo OA, TikTok account): its Chatwoot inbox, branch and token health",
+ "title_field": "display_name",
+ "show_title_field_in_link": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

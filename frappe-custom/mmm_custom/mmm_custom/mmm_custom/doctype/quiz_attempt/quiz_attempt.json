@@ -1,0 +1,159 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-27 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "conversation",
+  "quiz",
+  "lead",
+  "status",
+  "is_sandbox",
+  "result_section",
+  "score",
+  "total",
+  "level",
+  "missed",
+  "phone_after",
+  "voucher_code",
+  "times_section",
+  "offered_at",
+  "started_at",
+  "finished_at",
+  "reminded_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "conversation",
+   "fieldtype": "Link",
+   "label": "Bot Conversation",
+   "options": "Bot Conversation",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "quiz",
+   "fieldtype": "Link",
+   "label": "Level Test",
+   "options": "Bot Skill",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "CRM Lead",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "offered\ndeclined\nstarted\ndone",
+   "default": "offered",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "done = finished the test; phone_after tells whether the phone followed"
+  },
+  {
+   "fieldname": "is_sandbox",
+   "fieldtype": "Check",
+   "label": "Is Sandbox",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "result_section",
+   "fieldtype": "Section Break",
+   "label": "Result"
+  },
+  {
+   "fieldname": "score",
+   "fieldtype": "Int",
+   "label": "Score",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "label": "Out Of"
+  },
+  {
+   "fieldname": "level",
+   "fieldtype": "Data",
+   "label": "Level"
+  },
+  {
+   "fieldname": "missed",
+   "fieldtype": "Small Text",
+   "label": "Missed Topics"
+  },
+  {
+   "fieldname": "phone_after",
+   "fieldtype": "Check",
+   "label": "Left a phone after the test"
+  },
+  {
+   "fieldname": "voucher_code",
+   "fieldtype": "Data",
+   "label": "Voucher Code"
+  },
+  {
+   "fieldname": "times_section",
+   "fieldtype": "Section Break",
+   "label": "Times"
+  },
+  {
+   "fieldname": "offered_at",
+   "fieldtype": "Datetime",
+   "label": "Offered At"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At"
+  },
+  {
+   "fieldname": "finished_at",
+   "fieldtype": "Datetime",
+   "label": "Finished At"
+  },
+  {
+   "fieldname": "reminded_at",
+   "fieldtype": "Datetime",
+   "label": "Reminded At"
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-27 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Quiz Attempt",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "description": "One level test per conversation: offered → started → done, then phone and voucher (D-106)",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

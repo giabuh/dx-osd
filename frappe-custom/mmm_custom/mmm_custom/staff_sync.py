@@ -2,7 +2,9 @@
 
 Every consultant becomes a Chatwoot agent, each branch a Chatwoot team holding exactly its active
 consultants (plus B2B and the central team), and every Facebook page inbox gets the lead-engine bot.
-Inbox membership is granted at handoff (engine.effects), so nobody is added to all pages up front.
+A page connected with a branch (Channel Connection.branch) gets that branch's consultants as inbox members;
+on other pages inbox membership is granted at handoff (engine.effects), so nobody is added to all pages up front.
+Membership is only ever added: a consultant handed a conversation from another branch keeps their access.
 Runs on Consultant save and every 10 minutes (hooks.py); every step is idempotent.
 
 Manual run: bench --site crm.localhost execute mmm_custom.staff_sync.sync_now
@@ -75,6 +77,25 @@ def sync_inboxes(client):
     return len(inboxes)
 
 
+def plan_branch_inboxes(connections, consultants, ids):
+    """Chatwoot inbox id → agent ids of the active consultants of the page's branch. Pure."""
+    plan = {}
+    for conn in connections:
+        if conn.get("status") != "Connected" or not conn.get("branch") or not conn.get("chatwoot_inbox_id"):
+            continue
+        agents = sorted(ids[c["email"]] for c in consultants
+                        if c.get("active", 1) and c.get("branch") == conn["branch"] and c["email"] in ids)
+        if agents:
+            plan.setdefault(int(conn["chatwoot_inbox_id"]), set()).update(agents)
+    return {inbox: sorted(agents) for inbox, agents in plan.items()}
+
+
+def sync_branch_inboxes(client, plan):
+    for inbox_id, agent_ids in plan.items():
+        client.add_inbox_members(inbox_id, agent_ids)
+    return len(plan)
+
+
 def sync(client, consultants, branches):
     ids = ensure_agents(client, consultants)
     teams = sync_teams(client, consultants, ids, branches)
@@ -98,6 +119,8 @@ def sync_all():
                                                 "chatwoot_agent_id", "chatwoot_access_token"])
     consultants = [{**r, "email": r.name} for r in rows]
     ids, counts = sync(client, consultants, frappe.get_all("CRM Territory", pluck="name"))
+    connections = frappe.get_all("Channel Connection", fields=["status", "branch", "chatwoot_inbox_id"])
+    counts["branch_inboxes"] = sync_branch_inboxes(client, plan_branch_inboxes(connections, consultants, ids))
     for r in rows:
         if r.name in ids and r.chatwoot_agent_id != ids[r.name]:
             frappe.db.set_value("Consultant", r.name, "chatwoot_agent_id", ids[r.name], update_modified=False)

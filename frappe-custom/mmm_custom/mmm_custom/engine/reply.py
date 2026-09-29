@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from mmm_custom.engine.actions import run_action
 from mmm_custom.engine.context import base_context, course_context
+from mmm_custom.engine import offers
 from mmm_custom.engine.jev_questions import COURSE_FAQ
 from mmm_custom.engine.render import RenderError, condition, render_text
 from mmm_custom.engine.slot_types import REGISTRY
@@ -113,6 +114,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
 
     if decision.greet:
         say(settings["greeting_template"], ctx, "greeting")
+    if decision.declined:
+        say(settings["quiz_decline_template"], ctx, "quiz_decline")
     if decision.fallback:
         say(settings["fallback_template"], ctx, "fallback")
 
@@ -127,7 +130,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
     for key in decision.skills:
         skill = catalog.skills[key]
         try:
-            out = run_action(skill, ctx, decision.slots, catalog, data, today, jev, jev_state)
+            action_ctx = {**ctx, "resumed": key == decision.resume, "unclear": key == decision.resume and decision.unclear}
+            out = run_action(skill, action_ctx, decision.slots, catalog, data, today, jev, jev_state)
         except Exception as e:
             reply.errors.append({"type": "action_error", "source": key, "detail": str(e)[:300]})
             out = {}
@@ -144,9 +148,12 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
             reply.variants.append({"skill": key, "variant": template.key})
         reply.hold = reply.hold or bool(out.get("_hold"))
         reply.attachments += out.get("_attachments", [])
-        action_buttons += out.get("_buttons", [])
+        action_buttons = out.get("_buttons") or action_buttons  # one set of buttons: the last answer that has some
         follow_ups += [{"title": f.title, "action": FOLLOW_UP_ACTIONS[f.target_type](f.target)}
                        for f in skill.follow_ups if f.target_type in FOLLOW_UP_ACTIONS]
+
+    if decision.voucher:  # level-test reward: syllabus of the recommended course, and a voucher code (D-106)
+        say(settings["quiz_voucher_template"], {**ctx, "voucher": decision.voucher}, "quiz_voucher")
 
     if decision.type == "handoff":
         say(settings["handoff_template"], ctx, "handoff")
@@ -159,15 +166,27 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         confirm_buttons = [{"title": CONFIRM_YES, "action": {"type": "confirm_yes", **c}},
                            {"title": CONFIRM_NO, "action": {"type": "confirm_no", **c}}]
 
+    offer_buttons = []
+    if decision.offer and not reply.ask and not reply.hold:
+        say(settings["quiz_offer_template"], {**ctx, "quiz": offers.offer_context(decision.offer, decision.slots, catalog)},
+            "quiz_offer")
+        offer_buttons = offers.buttons(decision.offer)
+
     ask_buttons = []
     ask_key = reply.ask or ("" if reply.hold else decision.ask)
     if ask_key:
         slot = catalog.slot(ask_key)
-        say(slot.ask_template, ctx, f"slot:{slot.key}")
+        template = slot.ask_template
+        if slot.type == "phone" and decision.phone_check and settings["phone_check_template"]:
+            template = settings["phone_check_template"]
+        elif slot.type == "phone" and settings["quiz_phone_template"] and (
+                decision.quiz_done or (decision.slots.get("placement") or {}).get("source") == "quiz"):  # earns the reward
+            template = settings["quiz_phone_template"]
+        say(template, {**ctx, "phone_suspect": decision.phone_check}, f"slot:{slot.key}")
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)
 
-    for group in (confirm_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
+    for group in (confirm_buttons, offer_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
         if group:
             add_buttons(reply, group)
             break

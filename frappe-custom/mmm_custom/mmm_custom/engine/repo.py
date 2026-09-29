@@ -289,7 +289,7 @@ class FrappeRepo:
             consultant=d.consultant or "", is_sandbox=bool(d.is_sandbox), is_returning=bool(d.is_returning),
             turns=d.turns or 0, answered=json.loads(d.answered_skills) if d.answered_skills else [],
             history=d.history if isinstance(d.history, list) else (json.loads(d.history) if d.history else []),
-            ai=_json(d.ai_signals),
+            ai=_json(d.ai_signals), offers=_json(d.get("quiz_offers")),
             jev_calls=d.jev_calls if isinstance(d.jev_calls, list) else (json.loads(d.jev_calls) if d.jev_calls else []))
 
     def new_state(self, event):
@@ -323,6 +323,7 @@ class FrappeRepo:
             "answered_skills": json.dumps(state.answered),
             "history": json.dumps(state.history, ensure_ascii=False),
             "ai_signals": json.dumps(state.ai, ensure_ascii=False),
+            "quiz_offers": json.dumps(state.offers),
             "jev_calls": json.dumps(state.jev_calls),
         }
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": state.conversation_id})
@@ -361,6 +362,20 @@ class FrappeRepo:
 
     def write_signal(self, row):
         frappe.get_doc({"doctype": "Bot Learning Signal", **row}).insert(ignore_permissions=True)
+
+    def save_quiz_attempt(self, state, change):
+        """One Quiz Attempt per (conversation, quiz), updated as the level test moves on (D-106)."""
+        now = frappe.utils.now_datetime()
+        values = {k: (now if k.endswith("_at") and v is True else v) for k, v in change.items() if k != "quiz"}
+        values.update(lead=state.lead or None, is_sandbox=int(state.is_sandbox))
+        name = frappe.db.get_value("Quiz Attempt", {"conversation": state.conversation_id, "quiz": change["quiz"]})
+        if name:
+            doc = frappe.get_doc("Quiz Attempt", name)
+            doc.update(values)
+            doc.save(ignore_permissions=True)
+        else:
+            frappe.get_doc({"doctype": "Quiz Attempt", "conversation": state.conversation_id, "quiz": change["quiz"],
+                            **values}).insert(ignore_permissions=True)
 
     def consultants(self):
         specialties = _children("Course Group Link", "Consultant", "specialties", ["course_group"])

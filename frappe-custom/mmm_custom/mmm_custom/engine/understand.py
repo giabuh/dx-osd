@@ -1,12 +1,16 @@
 """What a customer message says, as data for decide(): filled slots, chosen parents, skills."""
 
+import re
 from dataclasses import dataclass, field
 
+from mmm_custom.engine.reply_match import match_pending, yes_no
 from mmm_custom.engine.slot_types import REGISTRY, CatalogSlot, course_phrases
 from mmm_custom.engine.text import content_words, find_phrases, fold
 
 YES = frozenset({"dung", "dung roi", "dung a", "dung roi a", "phai", "phai a", "vang", "da", "da dung", "da phai",
                  "ok", "oke", "uh", "u", "chuan", "chinh xac"})
+OWN_CONTACT_RE = re.compile(r"\b(?:so|sdt|so dien thoai|so dt|zalo)\s+(?:cua\s+)?(?:toi|em|minh|anh|chi|nha minh)\s+la\b"
+                            r"|\b(?:toi|em|minh|anh|chi)\s+(?:gui|cho|de lai|xin gui)\s+(?:so|sdt)\b")
 NO = frozenset({"khong", "khong phai", "khong a", "khong phai a", "ko", "k", "sai", "sai roi", "khong dung"})
 
 
@@ -31,6 +35,10 @@ class Understanding:
     spam: float = 0.0
     has_number: bool = False                       # the message contains digits (ages, counts)
     faq: dict = field(default_factory=dict)        # {"course", "index", "confidence"}: a course FAQ to answer
+    level_unsure: float = 0.0                      # Jev: unsure of their level / basic vs advanced (D-106)
+    declined: str = ""                             # the level quiz the customer put off ("Để sau")
+    phone_suspect: str = ""                        # digits that look like a phone number with a digit missing
+    gives_contact: bool = False                    # "số điện thoại của tôi là …": the customer's number, not ours
 
 
 def apply_action(u, action):
@@ -59,6 +67,8 @@ def apply_action(u, action):
             u.focus = action["slot"]
     elif kind == "handoff":
         u.handoff = True
+    elif kind == "offer_decline":
+        u.declined = action["skill"]
 
 
 def _match_skills(folded, catalog, u):
@@ -72,7 +82,7 @@ def _match_skills(folded, catalog, u):
 def understand(text, state, catalog):
     """Keyword tier (D-028): exact button taps first, then folded aliases/regexes per slot type and skill."""
     u = Understanding()
-    action = (state.pending.get("options") or {}).get((text or "").strip())
+    action = (state.pending.get("options") or {}).get((text or "").strip()) or match_pending(text, state.pending)
     if action:
         u.tapped = True
         apply_action(u, action)
@@ -84,6 +94,9 @@ def understand(text, state, catalog):
         return u
     folded = fold(text)
     pending = state.pending.get("slot") or ""
+    if pending and yes_no(folded) is True:
+        u.focus = pending  # "ok" to "cho em xin số điện thoại": ask again gently, it is not a misunderstanding
+        return u
     slots = [(s, REGISTRY[s.type]) for s in catalog.slots
              if s.type in REGISTRY and (not s.on_demand or pending == s.key or REGISTRY[s.type].anywhere)]
     for slot, handler in slots:
@@ -107,6 +120,7 @@ def understand(text, state, catalog):
             if len(alternatives) == 1:
                 u.fills[slot.key] = {"value": alternatives[0], "source": "keyword", "confidence": 1.0}
                 u.ambiguous[slot.key] = alternatives  # Jev may cross-check, but cannot restore the rejected value
+    u.gives_contact = bool(OWN_CONTACT_RE.search(folded))
     u.unmatched = content_words(folded, u.spans)
     u.has_number = any(ch.isdigit() for ch in folded)
     return u

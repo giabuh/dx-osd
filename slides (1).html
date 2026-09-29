@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DX-OSD — Báo cáo Thuyết trình Cuộc thi OLP 2026 (10 Slides Chuẩn)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* CSS RESET & VARIABLES - LIGHT EXECUTIVE TECH THEME */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* Backgrounds */
+      --bg-body: #f8fafc;
+      --bg-viewport: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f8fafc;
+      --bg-card-hover: #ffffff;
+
+      /* Borders */
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --border-focus: #0284c7;
+
+      /* Typography Colors - High Contrast */
+      --text-main: #0f172a;       /* Slate 900 - cực kỳ sắc nét */
+      --text-body: #1e293b;       /* Slate 800 - dễ đọc */
+      --text-muted: #334155;      /* Slate 700 - phụ trợ rõ ràng */
+      --text-dim: #64748b;        /* Slate 500 - nhãn phụ */
+
+      /* Vibrant Accents Optimized for Light Background */
+      --cyan: #0284c7;           /* Sky 600 */
+      --cyan-subtle: #e0f2fe;
+      --blue: #2563eb;           /* Blue 600 */
+      --purple: #7c3aed;         /* Violet 600 */
+      --purple-subtle: #f3e8ff;
+      --emerald: #059669;        /* Emerald 600 */
+      --emerald-subtle: #ecfdf5;
+      --amber: #d97706;          /* Amber 600 */
+      --amber-subtle: #fef3c7;
+      --rose: #e11d48;           /* Rose 600 */
+      --rose-subtle: #ffe4e6;
+
+      /* Fonts */
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-body);
+      font-family: var(--font-body);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* BACKGROUND TECH GRID (LIGHT & ELEGANT) */
+    .bg-grid-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.08) 0%, transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(5, 150, 105, 0.05) 0%, transparent 45%),
+        linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      z-index: 1;
+    }
+
+    /* TOP PROGRESS BAR */
+    .progress-bar-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: #e2e8f0;
+      z-index: 100;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 10%;
+      background: linear-gradient(90deg, #0284c7, #2563eb, #7c3aed);
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* SLIDE STAGE (16:9 VIEWPORT) */
+    .presentation-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px 68px 24px;
+      z-index: 2;
+    }
+
+    .slide-viewport {
+      position: relative;
+      width: min(100%, calc((100vh - 84px) * 16 / 9));
+      aspect-ratio: 16 / 9;
+      background: var(--bg-viewport);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      box-shadow:
+        0 20px 45px -10px rgba(15, 23, 42, 0.1),
+        0 0 0 1px rgba(15, 23, 42, 0.04);
+      overflow: hidden;
+    }
+
+    /* SLIDE ELEMENTS */
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 36px 52px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.98) translateY(12px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      background: #ffffff;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+      z-index: 10;
+    }
+
+    /* HEADER OF SLIDE */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      border-bottom: 1.5px solid var(--border-subtle);
+      padding-bottom: 14px;
+    }
+
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--cyan-subtle);
+      color: var(--cyan);
+      border: 1px solid #bae6fd;
+      margin-bottom: 6px;
+    }
+
+    .slide-title {
+      font-family: var(--font-heading);
+      font-size: 1.88rem;
+      font-weight: 800;
+      line-height: 1.25;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: -0.015em;
+    }
+
+    .slide-subtitle {
+      font-size: 0.96rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .slide-number-badge {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--cyan);
+      padding: 6px 14px;
+      background: var(--bg-card-subtle);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 8px;
+    }
+
+    /* SLIDE BODY CONTAINER */
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* CARD SYSTEM (LIGHT ELEGANT SHADOWS) */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 18px 20px;
+      position: relative;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+    }
+    .card:hover {
+      border-color: var(--border-strong);
+      box-shadow: 0 10px 20px -3px rgba(15, 23, 42, 0.08);
+      transform: translateY(-2px);
+    }
+    .card.glow-cyan:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 10px 25px -4px rgba(2, 132, 199, 0.15);
+    }
+    .card.glow-purple:hover {
+      border-color: #c084fc;
+      box-shadow: 0 10px 25px -4px rgba(124, 58, 237, 0.15);
+    }
+
+    /* GRID LAYOUTS */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* TYPOGRAPHY HELPERS */
+    .highlight-cyan { color: #0284c7; font-weight: 700; }
+    .highlight-blue { color: #2563eb; font-weight: 700; }
+    .highlight-purple { color: #7c3aed; font-weight: 700; }
+    .highlight-emerald { color: #059669; font-weight: 700; }
+    .highlight-amber { color: #d97706; font-weight: 700; }
+    .highlight-rose { color: #e11d48; font-weight: 700; }
+
+    /* BADGE PILLS - HIGH CONTRAST LIGHT MODE */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .pill-rose { background: var(--rose-subtle); color: #be123c; border-color: #fecdd3; }
+    .pill-amber { background: var(--amber-subtle); color: #b45309; border-color: #fde68a; }
+    .pill-cyan { background: var(--cyan-subtle); color: #0369a1; border-color: #bae6fd; }
+    .pill-emerald { background: var(--emerald-subtle); color: #047857; border-color: #a7f3d0; }
+    .pill-purple { background: var(--purple-subtle); color: #6d28d9; border-color: #ddd6fe; }
+
+    /* FOOTER CONTROLS TOOLBAR (LIGHT FROSTED) */
+    .controls-toolbar {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px solid #cbd5e1;
+      border-radius: 9999px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      z-index: 50;
+      transition: opacity 0.3s;
+    }
+
+    .btn-control {
+      background: transparent;
+      border: none;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .btn-control:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      transform: scale(1.05);
+    }
+    .btn-control:active {
+      transform: scale(0.95);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      padding: 4px 12px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .timer-badge {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--cyan-subtle);
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .timer-badge.warning { color: #b45309; background: var(--amber-subtle); border-color: #fde68a; }
+    .timer-badge.danger { color: #be123c; background: var(--rose-subtle); border-color: #fecdd3; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* QUICK DEMO JUMP BUTTON */
+    .quick-demo-btn {
+      position: fixed;
+      top: 16px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      cursor: pointer;
+      z-index: 60;
+      backdrop-filter: blur(8px);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+    }
+    .quick-demo-btn:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+      transform: translateY(-1px);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+    }
+
+    /* SPEAKER NOTES DRAWER (LIGHT ELEGANT) */
+    .notes-drawer {
+      position: fixed;
+      bottom: 74px;
+      right: 24px;
+      width: 460px;
+      max-height: 290px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 18px 22px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+      backdrop-filter: blur(20px);
+      z-index: 90;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      animation: slideUp 0.2s ease-out;
+    }
+    .notes-drawer.open { display: flex; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .notes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+    .notes-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+    }
+    .notes-body {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #1e293b;
+    }
+    .notes-body p { margin-bottom: 8px; }
+    .notes-body p:last-child { margin-bottom: 0; }
+
+    /* OVERVIEW GRID MODAL (LIGHT THEME) */
+    .overview-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(241, 245, 249, 0.94);
+      backdrop-filter: blur(16px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .overview-modal.open { display: flex; }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+    }
+    .overview-card {
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+    }
+    .overview-card:hover {
+      border-color: #0284c7;
+      box-shadow: 0 10px 20px rgba(2, 132, 199, 0.2);
+      transform: translateY(-4px);
+    }
+    .overview-card.active {
+      border-color: #0284c7;
+      background: #f0f9ff;
+    }
+    .overview-num {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #0284c7;
+    }
+    .overview-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.35;
+    }
+
+    /* SLIDE 1: COVER SPECIFICS */
+    .slide-cover {
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 24px 44px;
+      background: radial-gradient(circle at center, #ffffff 40%, #f8fafc 100%);
+    }
+    .cover-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 20px;
+      background: var(--cyan-subtle);
+      border: 1.5px solid #bae6fd;
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #0369a1;
+      margin-bottom: 18px;
+    }
+    .cover-title {
+      font-family: var(--font-heading);
+      font-size: 3.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+    .cover-title span {
+      background: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cover-desc {
+      font-size: 1.25rem;
+      color: #334155;
+      max-width: 860px;
+      line-height: 1.55;
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+    .cover-meta-grid {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    .cover-meta-item {
+      padding: 12px 20px;
+      background: #ffffff;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      font-size: 0.88rem;
+      text-align: left;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+    }
+    .cover-meta-label {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .cover-meta-val {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* SLIDE 8: DEMO HIGHLIGHT SPECIFIC (LIGHT HIGH IMPACT) */
+    .slide-demo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      position: relative;
+    }
+    .demo-huge-title {
+      font-family: var(--font-heading);
+      font-size: 8rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 15px 30px rgba(2, 132, 199, 0.25));
+      margin-bottom: 12px;
+      animation: pulseScale 3s ease-in-out infinite alternate;
+    }
+    @keyframes pulseScale {
+      from { transform: scale(1); filter: drop-shadow(0 15px 30px rgba(2, 132, 199, 0.2)); }
+      to { transform: scale(1.02); filter: drop-shadow(0 20px 40px rgba(124, 58, 237, 0.35)); }
+    }
+    .demo-subtext {
+      font-size: 1.4rem;
+      color: #334155;
+      font-weight: 600;
+      max-width: 720px;
+      margin-bottom: 28px;
+      letter-spacing: -0.01em;
+    }
+    .demo-scenario-pills {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .demo-btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 9999px;
+      text-decoration: none;
+      box-shadow: 0 10px 25px -4px rgba(37, 99, 235, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.25s ease;
+    }
+    .demo-btn-action:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.5);
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+    }
+
+    /* CODE & WORKFLOW SNIPPET BOX */
+    .flow-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      line-height: 1.55;
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* SVG ICONS INLINE STYLING */
+    .icon {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .icon-lg {
+      width: 26px;
+      height: 26px;
+      stroke-width: 2.2;
+    }
+
+    /* IMAGE SLOTS AND STORY LAYOUT: REVISED ORIGINAL TEN-SLIDE DECK */
+    .slide-content{min-height:0;justify-content:flex-start}.story-card{background:#fff;border:1.5px solid var(--border-subtle);border-radius:12px;padding:13px 16px;box-shadow:0 5px 14px #0f172a0a;min-height:0}.story-card>span{display:block;font:800 .68rem var(--font-mono);letter-spacing:.08em;color:var(--cyan);margin-bottom:6px}.story-card h3{font-size:1.02rem;line-height:1.3;color:var(--text-main);margin:0 0 5px}.story-card p{font-size:.81rem;color:var(--text-muted);line-height:1.45;margin:0}.story-callout{background:#e0f2fe;border:1px solid #bae6fd;border-radius:10px;padding:10px 15px;margin-top:12px;font-size:.82rem;line-height:1.45;color:#1e293b}.pain-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;min-height:0;flex:1}.pain-grid>div{display:grid;grid-template-rows:45% 55%;min-height:0}.pain-grid .story-card{border-radius:0 0 12px 12px;padding:11px}.pain-grid .story-card h3{font-size:.89rem}.pain-grid .story-card p{font-size:.75rem}.pain-grid .image-slot{border-radius:12px 12px 0 0}.hpdi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.hpdi-grid .story-card{min-height:140px}.horizontal-image{height:130px;margin-top:12px}.two-column-story{display:grid;grid-template-columns:1.1fr .9fr;gap:15px;flex:1;min-height:0}.story-stack{display:flex;flex-direction:column;gap:10px;min-height:0}.story-stack>.story-card,.story-stack>.medium-image{flex:1;min-height:0}.tall-image{min-height:0}.medium-image{min-height:0}.image-slot{position:relative;overflow:hidden;width:100%;height:100%;border-radius:12px;border:2px dashed #8fb7c9;background:linear-gradient(135deg,#eefaff,#e8e5ff)}.image-slot.photo{background:linear-gradient(135deg,#fce6e7,#e5f3ed)}.image-slot.screenshot{background:linear-gradient(135deg,#e8effb,#ecf2f8)}.image-slot img{width:100%;height:100%;object-fit:cover;display:none}.image-slot.has-image img{display:block}.image-slot.has-image .image-fallback{display:none}.image-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:16px;text-align:center;gap:6px;color:#31546b}.image-fallback span{font:800 .7rem var(--font-mono);letter-spacing:.12em;color:#2563eb}.image-fallback strong{font-size:.9rem;line-height:1.35;max-width:95%}.cover-visual{width:min(720px,90%);height:145px;margin:0 auto 12px}.slide-cover .cover-desc{font-size:1.05rem;margin-bottom:14px}.slide-cover .cover-badge{margin-bottom:9px}.slide-cover .cover-title{margin-bottom:5px}.slide-cover .cover-meta-grid{margin-top:3px}.slide-cover .cover-meta-item{max-width:240px;padding:9px 12px;font-size:.75rem}.demo-image-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(690px,95%);height:160px;margin:0 0 16px}.demo-image-row>div{min-height:0}.slide-demo-container .demo-huge-title{font-size:4.8rem;margin-bottom:2px}.slide-demo-container .demo-subtext{font-size:1.1rem;margin-bottom:12px}.slide-demo-container .demo-scenario-pills{margin-bottom:12px}.slide-demo-container .demo-btn-action{font-size:.76rem;padding:9px 18px;margin:0 4px}.demo-warning{font-size:.65rem;color:#64748b;margin-top:8px}.closing-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:15px;flex:1;min-height:0}.closing-line{text-align:center;font-size:1.08rem;font-weight:800;color:var(--cyan);margin-top:10px}.closing-thanks{text-align:center;font:.8rem var(--font-mono);color:var(--text-muted);margin-top:4px}@media(max-width:1050px){.story-card{padding:9px}.story-card h3{font-size:.82rem}.story-card p{font-size:.67rem}.pain-grid .story-card p{font-size:.6rem}.image-fallback strong{font-size:.72rem}.story-callout{font-size:.7rem}.slide-demo-container .demo-image-row{height:115px}}
+
+    /* Responsive presentation sizing: preserve readable text and full UI screenshots. */
+    .presentation-container { padding: 12px 18px 70px; min-height: 0; }
+    .slide-viewport { width: min(100%, 1560px); height: 100%; aspect-ratio: auto; }
+    .slide { padding: clamp(18px, 2.4vw, 34px); }
+    .slide-header { margin-bottom: 12px; padding-bottom: 10px; gap: 20px; }
+    .slide-title { font-size: clamp(1.65rem, 2.15vw, 2.25rem); line-height: 1.16; }
+    .slide-subtitle { font-size: clamp(.95rem, 1.1vw, 1.12rem); line-height: 1.35; }
+    .slide-tag { font-size: .82rem; }
+    .slide-content { min-height: 0; }
+    .story-card { padding: 14px 17px; }
+    .slide[data-slide="10"] .story-card { padding: 12px 16px; }
+    .story-card > span { font-size: .78rem; }
+    .story-card h3, .pain-grid .story-card h3 { font-size: clamp(1rem, 1.18vw, 1.22rem); line-height: 1.25; }
+    .story-card p, .pain-grid .story-card p { font-size: clamp(.88rem, 1vw, 1.03rem); line-height: 1.36; }
+    .story-callout { font-size: clamp(.9rem, 1vw, 1.04rem); margin-top: 10px; }
+    .pain-grid { gap: 14px; }
+    .pain-grid > div { grid-template-rows: 52% 48%; }
+    .pain-grid .story-card { padding: 12px 13px; }
+    .hpdi-grid { gap: 14px; }
+    .hpdi-grid .story-card { min-height: 0; }
+    .horizontal-image { height: clamp(155px, 23vh, 220px); margin-top: 14px; }
+    .two-column-story { grid-template-columns: .86fr 1.14fr; gap: 18px; }
+    .closing-grid { grid-template-columns: .86fr 1.14fr; gap: 18px; }
+    .story-stack { gap: 12px; }
+    .image-slot { border: 1px solid #cbd5e1; background: #f8fafc; }
+    .image-slot img { display: none; width: 100%; height: 100%; object-position: center; }
+    .image-slot.photo img { object-fit: cover; }
+    .image-slot.screenshot img, .image-slot.diagram img { object-fit: contain; }
+    .image-slot.has-image img { display: block; }
+    .cover-visual { width: min(900px, 95%); height: clamp(170px, 31vh, 265px); }
+    .slide-cover .cover-desc { font-size: clamp(1.05rem, 1.4vw, 1.36rem); }
+    .slide-cover .cover-meta-item { max-width: 270px; font-size: .88rem; }
+    .demo-image-row { width: min(1020px, 98%); height: clamp(170px, 29vh, 250px); }
+    .slide-demo-container .demo-huge-title { font-size: clamp(4.5rem, 6.2vw, 6rem); }
+    .slide-demo-container .demo-subtext { font-size: clamp(1.05rem, 1.35vw, 1.28rem); }
+    .slide-demo-container .demo-btn-action { font-size: .9rem; padding: 11px 21px; }
+    .pill { font-size: .82rem; }
+
+    /* Editable diagrams and UI examples for slides 3, 4, 5 and 9. */
+    .code-panel {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      background: #f3f7ff;
+      color: var(--text-main);
+    }
+    .code-panel small { font-size: .78rem; }
+    .hpdi-flow {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 13px;
+      padding: 20px 25px;
+    }
+    .hpdi-flow-track {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 27px;
+      align-items: center;
+    }
+    .hpdi-flow-node { position: relative; display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .hpdi-flow-node:not(:last-child)::after {
+      content: '➜'; position: absolute; right: -23px; top: 50%; transform: translateY(-50%);
+      color: #4f46e5; font-size: 1.65rem; font-weight: 800;
+    }
+    .hpdi-letter {
+      display: grid; place-items: center; flex: 0 0 46px; height: 46px; border-radius: 11px;
+      color: white; background: var(--cyan); font: 800 1.65rem var(--font-heading);
+    }
+    .hpdi-flow-node:nth-child(2) .hpdi-letter { background: #4f21e8; }
+    .hpdi-flow-node:nth-child(3) .hpdi-letter { background: #00a777; }
+    .hpdi-flow-node:nth-child(4) .hpdi-letter { background: #9313dc; }
+    .hpdi-flow-node strong { display: block; font-size: clamp(.94rem, 1.5vw, 1.35rem); line-height: 1.16; }
+    .hpdi-flow-node small { display: block; margin-top: 4px; color: #475569; line-height: 1.2; }
+    .hpdi-flow-caption { text-align: center; color: #334155; font-size: .93rem; font-weight: 700; }
+
+    .architecture-diagram {
+      height: 100%; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+      justify-content: space-between;
+    }
+    .architecture-diagram > h3 { text-align: center; font-size: clamp(1.2rem, 1.7vw, 1.62rem); line-height: 1.2; }
+    .arch-inputs, .arch-clusters, .arch-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .arch-source, .arch-service, .arch-footer > div {
+      border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; padding: 10px 13px;
+    }
+    .arch-source { text-align: center; font-size: .9rem; font-weight: 700; }
+    .arch-source.chat { color: #0369a1; background: #e0f2fe; border-color: #bae6fd; }
+    .arch-source.form { color: #047857; background: #dcfce7; border-color: #a7f3d0; }
+    .arch-clusters { flex: 1; min-height: 0; }
+    .arch-cluster { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .arch-cluster > h4 { color: #4f21e8; text-align: center; font-size: 1rem; }
+    .arch-cluster.crm > h4 { color: #047857; }
+    .arch-service { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+    .arch-service strong { font-size: clamp(.95rem, 1.15vw, 1.13rem); }
+    .arch-service span { color: #475569; font-size: .83rem; line-height: 1.28; }
+    .arch-cluster.chat .arch-service { border-color: #bfdbfe; }
+    .arch-cluster.crm .arch-service { border-color: #a7f3d0; }
+    .arch-webhook { text-align: center; color: #4f21e8; font: 700 .82rem var(--font-mono); }
+    .arch-footer > div { text-align: center; color: #475569; font-size: .82rem; font-weight: 700; }
+    .arch-footer > div:last-child { color: #7e22ce; background: #faf5ff; border-color: #e9d5ff; }
+
+    .ui-example { height: 100%; display: flex; flex-direction: column; background: #f3f7ff; }
+    .ui-example-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px;
+      color: #fff; background: #4f21e8; font-weight: 800; font-size: .96rem; }
+    .ui-example.crm .ui-example-header { background: #008563; }
+    .ui-example-header span { color: #3730a3; background: #fff; border-radius: 99px; padding: 2px 8px; font-size: .62rem; }
+    .ui-example.crm .ui-example-header span { color: #047857; }
+    .ui-example-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; }
+    .ui-example-body h4 { font-size: .86rem; line-height: 1.15; }
+    .ui-example-columns { flex: 1; display: grid; grid-template-columns: 1.65fr .9fr; gap: 7px; min-height: 0; }
+    .ui-example-main, .ui-example-side { border: 1px solid #dbe4f0; border-radius: 9px; padding: 6px; background: #fff; }
+    .ui-example-main { display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+    .chat-line { width: fit-content; max-width: 95%; padding: 4px 7px; border-radius: 8px; background: #e8eef9;
+      font-size: clamp(.7rem, .82vw, .82rem); font-weight: 700; line-height: 1.15; }
+    .chat-line.bot { margin-left: 12%; background: #dbeafe; color: #1d4ed8; }
+    .ui-example-side { background: #eff6ff; }
+    .ui-example-side strong, .ui-example-side span { display: block; font-size: .73rem; line-height: 1.24; }
+    .ui-example-side strong { color: #1d4ed8; margin-bottom: 3px; }
+    .ui-example-side em { display: block; margin-top: 4px; padding: 4px; border: 1px solid #bfdbfe; border-radius: 7px;
+      background: white; color: #1d4ed8; font-style: normal; font-weight: 700; font-size: .69rem; }
+    .ui-example.crm .ui-example-side { background: #dcfce7; }
+    .ui-example.crm .ui-example-side strong { color: #047857; }
+    .ui-example.crm .ui-example-side em { color: #047857; border-color: #a7f3d0; }
+    .lead-fields { display: grid; grid-template-columns: auto 1fr; gap: 3px 6px; align-content: center; font-size: .72rem; }
+    .lead-fields dt { color: #64748b; }
+    .lead-fields dd { font-weight: 700; }
+
+    .terminal-panel { height: 100%; padding: 10px 15px; background: #0f172a; color: #cbd5e1; font-family: var(--font-mono); }
+    .terminal-dots { display: flex; gap: 7px; margin-bottom: 8px; }
+    .terminal-dots i { width: 9px; height: 9px; border-radius: 50%; background: #fb7185; }
+    .terminal-dots i:nth-child(2) { background: #fbbf24; }
+    .terminal-dots i:nth-child(3) { background: #34d399; }
+    .terminal-panel code { display: block; overflow-wrap: anywhere; color: #7dd3fc; font-size: .76rem; line-height: 1.3; }
+    .terminal-result { margin-top: 10px; font-size: .95rem; }
+    .terminal-ok { margin-top: 8px; padding: 6px 9px; border-radius: 8px; background: #064e3b; color: #a7f3d0;
+      font: 800 1.5rem var(--font-heading); }
+    .license-panel { height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 7px 12px; }
+    .license-panel h3 { font-size: .92rem; margin-bottom: 5px; }
+    .license-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+    .license-grid div { min-width: 0; padding: 4px 7px; border: 1px solid #cbd5e1; background: white; border-radius: 8px; }
+    .license-grid strong, .license-grid span { display: block; overflow-wrap: anywhere; font-size: .66rem; line-height: 1.15; }
+    .license-grid span { margin-top: 2px; color: #2563eb; font-weight: 700; }
+    .license-audit { margin-top: 5px; color: #475569; font: 600 .62rem var(--font-mono); line-height: 1.25; overflow-wrap: anywhere; }
+
+    @media (max-width: 900px), (max-height: 640px) {
+      body { height: auto; min-height: 100dvh; overflow: auto; }
+      .presentation-container { height: auto; min-height: 100dvh; padding: 65px 12px 84px; }
+      .slide-viewport { height: auto; min-height: calc(100dvh - 150px); overflow: visible; }
+      .slide { display: none; position: relative; inset: auto; height: auto; min-height: calc(100dvh - 150px); transform: none; }
+      .slide.active { display: flex; transform: none; }
+      .slide-content { flex: none; }
+      .two-column-story, .closing-grid { grid-template-columns: 1fr; }
+      .story-stack > .story-card { flex: none; }
+      .story-stack > .medium-image { flex: none; height: 230px; }
+      .tall-image { min-height: 320px; }
+      .hpdi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pain-grid > div { grid-template-rows: 190px auto; }
+      .horizontal-image { height: 200px; }
+      .architecture-diagram { min-height: 490px; }
+      .hpdi-flow { min-height: 200px; }
+      .cover-visual { flex: none; height: 240px; }
+      .demo-image-row { height: 250px; }
+      .notes-drawer { max-width: calc(100vw - 24px); right: 12px; }
+    }
+    @media (max-width: 600px) {
+      .slide { padding: 20px 16px; }
+      .slide-header { align-items: flex-start; }
+      .slide-number-badge { white-space: nowrap; padding: 5px 7px; font-size: .7rem; }
+      .slide-title { font-size: 1.55rem; }
+      .pain-grid, .hpdi-grid { grid-template-columns: 1fr; }
+      .pain-grid > div { grid-template-rows: 220px auto; }
+      .cover-meta-grid { flex-direction: column; width: 100%; gap: 8px; }
+      .slide-cover .cover-meta-item { max-width: none; }
+      .cover-visual { width: 100%; height: 185px; }
+      .cover-title { font-size: 3.1rem; }
+      .slide-demo-container .demo-image-row { grid-template-columns: 1fr; height: auto; width: 100%; }
+      .demo-image-row > div { height: 210px; }
+      .demo-scenario-pills { flex-wrap: wrap; justify-content: center; }
+      .controls-toolbar { gap: 3px; padding: 5px 8px; max-width: calc(100vw - 12px); }
+      .btn-control { width: 30px; height: 30px; flex: none; }
+      .slide-counter { min-width: 65px; padding: 4px; font-size: .7rem; }
+      .timer-badge { padding: 4px; font-size: .68rem; }
+      .quick-demo-btn { right: 12px; top: 12px; }
+      .overview-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .overview-modal { padding: 14px; overflow: auto; }
+      .horizontal-image { height: auto; }
+      .hpdi-flow-track { grid-template-columns: 1fr; gap: 11px; }
+      .hpdi-flow-node:not(:last-child)::after { content: '↓'; right: 6px; top: auto; bottom: -19px; transform: none; font-size: 1.2rem; }
+      .hpdi-flow { padding: 18px; }
+      .arch-inputs, .arch-clusters, .arch-footer { gap: 7px; }
+      .architecture-diagram { padding: 12px; }
+      .arch-source, .arch-service, .arch-footer > div { padding: 7px; }
+      .arch-service span, .arch-footer > div { font-size: .7rem; }
+      .ui-example-columns { grid-template-columns: 1.3fr 1fr; gap: 5px; }
+      .ui-example-body { padding: 7px; }
+      .chat-line, .ui-example-side strong, .ui-example-side span, .lead-fields { font-size: .7rem; }
+      .license-panel { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tech Grid Background -->
+  <div class="bg-grid-overlay"></div>
+
+  <!-- Progress Bar Top -->
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progressBar"></div>
+  </div>
+
+  <!-- Quick Demo Button Top Right -->
+  <button class="quick-demo-btn" onclick="goToSlide(8)" title="Chuyển ngay tới Slide Demo (Slide 8)">
+    <span class="status-dot"></span>
+    <span>LIVE DEMO</span>
+    <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+
+  <!-- Presentation Viewport Container -->
+  <main class="presentation-container">
+    <div class="slide-viewport" id="viewport">
+
+      <!-- ==========================================
+           SLIDE 1: TRANG TIÊU ĐỀ & ĐẶT VẤN ĐỀ
+      =========================================== -->
+      <section class="slide slide-cover active" data-slide="1"><div class="cover-badge">CUỘC THI PHẦN MỀM NGUỒN MỞ · OLP 2026</div>
+<h1 class="cover-title">DX-<span>OSD</span></h1>
+<p class="cover-desc">Nền tảng tiếp nhận khách hàng đa kênh và hội tụ dữ liệu vào Frappe CRM cho doanh nghiệp vừa và nhỏ.</p>
+<div class="cover-visual"><div class="image-slot photo" data-image="assets/01-cover-before-after.png"><div class="image-fallback"><span>ẢNH 01 · LỖI TẢI</span><strong>Trước: khách chờ phản hồi · Sau: được tư vấn đúng lúc</strong></div></div></div>
+<div class="cover-meta-grid"><div class="cover-meta-item"><div class="cover-meta-label">Bài toán</div><div class="cover-meta-val">Khách đến từ nhiều kênh, thông tin bị rời rạc</div></div><div class="cover-meta-item"><div class="cover-meta-label">Lõi sản phẩm</div><div class="cover-meta-val">Chatwoot + Frappe CRM</div></div><div class="cover-meta-item"><div class="cover-meta-label">Đội thực hiện</div><div class="cover-meta-val">Nhóm DX-OSD · HUTECH</div></div></div></section>
+
+      <!-- ==========================================
+           SLIDE 2: PAINPOINT & LÝ DO CHỌN ĐỀ TÀI (Trọng tâm 1)
+      =========================================== -->
+      <section class="slide " data-slide="2"><header class="slide-header"><div><div class="slide-tag">01 · BÀI TOÁN THỰC TẾ</div><h2 class="slide-title">Khách đã tìm đến. Vì sao doanh nghiệp vẫn bỏ lỡ?</h2><p class="slide-subtitle">Bốn điểm đứt gãy thường xuất hiện giữa quảng cáo, hộp thư, CRM và nhân viên tư vấn.</p></div><div class="slide-number-badge">02 / 10</div></header><div class="slide-content"><div class="pain-grid">
+<div><div class="image-slot photo" data-image="assets/02-lead-ad-parent-v2.png"><div class="image-fallback"><span>ẢNH 02 · LỖI TẢI</span><strong>Form và tin nhắn tách rời, khách chờ phản hồi</strong></div></div><div class="story-card"><span>NỖI ĐAU 01</span><h3>Lead và tin nhắn tách nhau</h3><p>Một khách điền form rồi nhắn Messenger, nhưng nhân viên phải tự ghép hai cuộc tiếp xúc.</p></div></div>
+<div><div class="image-slot photo" data-image="assets/03-overloaded-inbox-v2.png"><div class="image-fallback"><span>ẢNH 03 · LỖI TẢI</span><strong>Tin nhắn dồn dập, nhân viên mất bối cảnh</strong></div></div><div class="story-card"><span>NỖI ĐAU 02</span><h3>Phản hồi thiếu bối cảnh</h3><p>Tin nhắn đến liên tục; người nhận không biết khách đã hỏi gì hoặc quan tâm khóa nào.</p></div></div>
+<div><div class="image-slot photo" data-image="assets/04-duplicate-call-v2.png"><div class="image-fallback"><span>ẢNH 04 · LỖI TẢI</span><strong>Hai nhân viên cùng gọi, khách bực bội</strong></div></div><div class="story-card"><span>NỖI ĐAU 03</span><h3>Hồ sơ dễ bị trùng</h3><p>Số điện thoại hoặc email xuất hiện ở nhiều kênh, dẫn đến chăm sóc chồng chéo.</p></div></div>
+<div><div class="image-slot photo" data-image="assets/05-lost-handoff-v2.png"><div class="image-fallback"><span>ẢNH 05 · LỖI TẢI</span><strong>Bot hứa bàn giao nhưng không ai tiếp nhận</strong></div></div><div class="story-card"><span>NỖI ĐAU 04</span><h3>Bàn giao bị đứt đoạn</h3><p>Bot thu thập thông tin nhưng đội tư vấn không có một tóm tắt để tiếp tục.</p></div></div>
+</div><div class="story-callout"><b>Lý do chọn đề tài:</b> Giải quyết đoạn đường thường bị bỏ quên: từ lúc khách thể hiện quan tâm đến lúc đúng người nhận được đủ ngữ cảnh để tư vấn.</div></div></section>
+
+      <!-- ==========================================
+           SLIDE 3: TRÌNH BÀY HPDI CỦA SẢN PHẨM (Trọng tâm 2)
+      =========================================== -->
+      <section class="slide " data-slide="3"><header class="slide-header"><div><div class="slide-tag">02 · GIẢI PHÁP & CHỨC NĂNG</div><h2 class="slide-title">HPDI: mỗi lớp có một trách nhiệm rõ ràng</h2><p class="slide-subtitle">Human xử lý hội thoại; Process điều phối; Data giữ hồ sơ; Intelligence hỗ trợ khi được bật.</p></div><div class="slide-number-badge">03 / 10</div></header><div class="slide-content"><div class="hpdi-grid">
+<div class="story-card"><span>H · HUMAN</span><h3>Chatwoot Community</h3><p>Hộp thư Messenger, Instagram và web chat; tư vấn viên đọc, phản hồi và nhận cuộc hội thoại.</p></div>
+<div class="story-card"><span>P · PROCESS</span><h3>Lớp tích hợp trong CRM</h3><p>Webhook, bot hỏi nhu cầu, lọc trùng và bàn giao chạy trong Frappe bench.</p></div>
+<div class="story-card"><span>D · DATA</span><h3>Frappe CRM</h3><p>Nguồn dữ liệu cho Lead, người phụ trách, nguồn đến và bước chăm sóc.</p></div>
+<div class="story-card"><span>I · INTELLIGENCE</span><h3>Jev tùy chọn</h3><p>Khi có API key, phân loại ý định và gợi ý nội bộ theo ngưỡng tin cậy.</p></div>
+</div><div class="horizontal-image"><div class="code-panel hpdi-flow" aria-label="Bốn lớp Human, Process, Data và Intelligence">
+  <div class="hpdi-flow-track">
+    <div class="hpdi-flow-node"><span class="hpdi-letter">H</span><div><strong>Chatwoot</strong><small>Hộp thư + tư vấn viên</small></div></div>
+    <div class="hpdi-flow-node"><span class="hpdi-letter">P</span><div><strong>mmm_custom</strong><small>Webhook + bot + lọc trùng</small></div></div>
+    <div class="hpdi-flow-node"><span class="hpdi-letter">D</span><div><strong>Frappe CRM</strong><small>Lead + lịch sử + phụ trách</small></div></div>
+    <div class="hpdi-flow-node"><span class="hpdi-letter">I</span><div><strong>Jev tùy chọn</strong><small>Phân tích + gợi ý nội bộ</small></div></div>
+  </div>
+  <p class="hpdi-flow-caption">Luồng chính: tiếp nhận → xử lý → lưu hồ sơ · Jev hỗ trợ khi được cấu hình</p>
+</div></div><div class="story-callout"><b>Ranh giới quan trọng:</b> Chatwoot là nơi trao đổi; CRM giữ hồ sơ. AI không phải điều kiện để luồng tiếp nhận cơ bản hoạt động.</div></div></section>
+
+      <!-- ==========================================
+           SLIDE 4: BẢN ĐỒ CÔNG NGHỆ NGUỒN MỞ (2-STACK MODEL)
+      =========================================== -->
+      <section class="slide " data-slide="4"><header class="slide-header"><div><div class="slide-tag">03 · CÔNG NGHỆ SỬ DỤNG</div><h2 class="slide-title">Kiến trúc hai cụm, dễ kiểm tra và phát triển</h2><p class="slide-subtitle">Chatwoot và Frappe CRM là hai cụm chính; lớp tích hợp nội bộ nằm ngay trong CRM bench.</p></div><div class="slide-number-badge">04 / 10</div></header><div class="slide-content"><div class="two-column-story"><div class="story-stack">
+<div class="story-card"><span>CỤM 01 · GIAO TIẾP</span><h3>Chatwoot CE</h3><p>Quản lý hội thoại đa kênh, agent và inbox. Mã nguồn Chatwoot Community trong repo được vendored.</p></div>
+<div class="story-card"><span>CỤM 02 · QUẢN TRỊ</span><h3>Frappe CRM và lớp tích hợp</h3><p>CRM lưu Lead; app Python xử lý tích hợp trực tiếp thay cho middleware bắt buộc trong luồng mặc định.</p></div>
+<div class="story-card"><span>HẠ TẦNG</span><h3>Docker Compose + Caddy</h3><p>Cấu hình triển khai được mô tả trong repo. Cổng ứng dụng bind localhost; Caddy là lối vào công khai khi cấu hình tên miền.</p></div>
+</div><div class="tall-image"><div class="code-panel architecture-diagram" aria-label="Sơ đồ Chatwoot và Frappe CRM">
+  <h3>HAI CỤM · MỘT HỒ SƠ KHÁCH HÀNG</h3>
+  <div class="arch-inputs"><div class="arch-source chat">Messenger / Instagram → hội thoại</div><div class="arch-source form">Meta Lead Ads → đồng bộ form</div></div>
+  <div class="arch-clusters">
+    <div class="arch-cluster chat"><h4>CỤM 1 · CHATWOOT CE</h4><div class="arch-service"><strong>Hộp thư đa kênh</strong><span>Hội thoại, nhân viên, đội tư vấn</span></div><div class="arch-webhook">Webhook → CRM · API ← CRM</div><div class="arch-service"><strong>Hiển thị bot / bàn giao</strong><span>Tư vấn viên thấy toàn bộ ngữ cảnh</span></div></div>
+    <div class="arch-cluster crm"><h4>CỤM 2 · FRAPPE BENCH</h4><div class="arch-service"><strong>mmm_custom</strong><span>Webhook · lọc trùng · bot · phân công</span></div><div class="arch-webhook">↓ Xử lý trong bench</div><div class="arch-service"><strong>Frappe CRM</strong><span>Lead / Contact / lịch sử / người phụ trách</span></div></div>
+  </div>
+  <div class="arch-footer"><div>Docker Compose · Caddy khi công khai</div><div>Jev tùy chọn · gợi ý nội bộ</div></div>
+</div></div></div><div class="story-callout"><b>Lợi thế phát triển:</b> giữ ranh giới giữa hộp thư và dữ liệu, có thể thay đổi bot, quy tắc chia lead và từng kênh vào mà không viết lại CRM.</div></div></section>
+
+      <!-- ==========================================
+           SLIDE 5: 3 LUỒNG NGHIỆP VỤ HỘI TỤ DỮ LIỆU
+      =========================================== -->
+      <section class="slide " data-slide="5"><header class="slide-header"><div><div class="slide-tag">02 · CÁC CHỨC NĂNG CHÍNH</div><h2 class="slide-title">Từ điểm chạm đến một hồ sơ có thể hành động</h2><p class="slide-subtitle">Hai đường vào chính: biểu mẫu Meta Lead Ads và hội thoại Messenger/Instagram qua Chatwoot.</p></div><div class="slide-number-badge">05 / 10</div></header><div class="slide-content"><div class="two-column-story"><div class="story-stack">
+<div class="story-card"><span>LUỒNG A · FORM</span><h3>Meta Lead Ads vào CRM</h3><p>Thông tin biểu mẫu được đồng bộ để nhân viên theo dõi nguồn và liên hệ.</p></div>
+<div class="story-card"><span>LUỒNG B · CHAT</span><h3>Chatwoot webhook vào CRM</h3><p>Cuộc hội thoại tạo hoặc cập nhật Lead; liên kết được ghi trở lại để các lần trao đổi sau nhận ra khách.</p></div>
+<div class="story-card"><span>LUỒNG C · CHĂM SÓC</span><h3>Bot hỏi, nhân viên tiếp nhận</h3><p>Bot lấy nhu cầu còn thiếu; hệ thống chọn người hoặc đội và ghi tóm tắt riêng trước khi bàn giao.</p></div>
+</div><div class="story-stack"><div class="medium-image"><div class="code-panel ui-example" aria-label="Minh họa cuộc hội thoại Chatwoot">
+  <div class="ui-example-header">CHATWOOT <span>BẢN MINH HỌA</span></div>
+  <div class="ui-example-body"><h4>Hội thoại #PH-001 · Messenger</h4><div class="ui-example-columns"><div class="ui-example-main"><div class="chat-line">Phụ huynh: Bé 9 tuổi muốn học Robotics, còn lớp không?</div><div class="chat-line bot">Bot: Bé có thể bắt đầu với Robotics cơ bản. Gia đình muốn học tại cơ sở nào ạ?</div><div class="chat-line">Phụ huynh: Bình Thạnh nhé.</div></div><div class="ui-example-side"><strong>NGỮ CẢNH ĐÃ GHI</strong><span>Khóa: Robotics cơ bản</span><span>Cơ sở: Bình Thạnh</span><em>Bước tiếp theo: bàn giao tư vấn viên</em></div></div></div>
+</div></div><div class="medium-image"><div class="code-panel ui-example crm" aria-label="Minh họa Lead trong Frappe CRM">
+  <div class="ui-example-header">FRAPPE CRM <span>BẢN MINH HỌA</span></div>
+  <div class="ui-example-body"><h4>Hồ sơ Lead · #PH-001</h4><div class="ui-example-columns"><div class="ui-example-main"><strong>PHỤ HUYNH A</strong><dl class="lead-fields"><dt>Nguồn</dt><dd>Messenger / Chatwoot</dd><dt>Khóa quan tâm</dt><dd>Robotics cơ bản</dd><dt>Cơ sở</dt><dd>CN Bình Thạnh</dd><dt>Mã liên kết</dt><dd>#PH-001</dd></dl></div><div class="ui-example-side"><strong>HÀNH ĐỘNG TIẾP THEO</strong><span>Người phụ trách:</span><span><b>Tư vấn viên A</b></span><em>Bé 9 tuổi · Robotics · Cơ sở Bình Thạnh</em></div></div></div>
+</div></div></div></div><div class="story-callout"><b>Kịch bản minh họa:</b> một phụ huynh hỏi khóa học, bot xác định khóa và cơ sở, tư vấn viên nhận cùng ngữ cảnh. Khi demo, mở dữ liệu thực trong hệ thống.</div></div></section>
+
+      <!-- ==========================================
+           SLIDE 6: KỶ LUẬT KỸ THUẬT: 3-TIER DEDUP & AN TOÀN WEBHOOK
+      =========================================== -->
+      <section class="slide " data-slide="6"><header class="slide-header"><div><div class="slide-tag">02 · LỌC TRÙNG & BẢO VỆ WEBHOOK</div><h2 class="slide-title">Giảm trùng để không gọi lại cùng một khách nhiều lần</h2><p class="slide-subtitle">Webhook phải được xác thực; hồ sơ cũ được tìm trước khi tạo mới.</p></div><div class="slide-number-badge">06 / 10</div></header><div class="slide-content"><div class="two-column-story"><div class="story-stack">
+<div class="story-card"><span>BƯỚC 01 · LIÊN KẾT</span><h3>crm_lead_id và Chatwoot contact ID</h3><p>Ưu tiên định danh đã biết giữa hội thoại và CRM.</p></div>
+<div class="story-card"><span>BƯỚC 02 · ĐỐI CHIẾU</span><h3>Số điện thoại và email</h3><p>Chuẩn hóa số điện thoại Việt Nam và tìm Lead khớp trước khi tạo hồ sơ mới.</p></div>
+<div class="story-card"><span>BƯỚC 03 · BẢO VỆ</span><h3>HMAC-SHA256 + timestamp</h3><p>Webhook từ Chatwoot được kiểm tra chữ ký và cửa sổ thời gian 300 giây.</p></div>
+</div><div class="story-stack"><div class="medium-image"><div class="image-slot photo" data-image="assets/10-duplicate-before.jpg"><div class="image-fallback"><span>ẢNH 10 · LỖI TẢI</span><strong>Trước: hai nhân viên cùng gọi một khách</strong></div></div></div><div class="medium-image"><div class="image-slot photo" data-image="assets/11-single-record-after.png"><div class="image-fallback"><span>ẢNH 11 · LỖI TẢI</span><strong>Sau: một người xem trọn lịch sử khách hàng</strong></div></div></div></div></div><div class="story-callout"><b>Giới hạn cần nói rõ:</b> lọc trùng làm giảm trường hợp lặp khi có tín hiệu khớp; dữ liệu thiếu hoặc nhập sai vẫn cần con người kiểm tra.</div></div></section>
+
+      <!-- ==========================================
+           SLIDE 7: QUẢN TRỊ AN TOÀN AI & HUMAN-IN-THE-LOOP
+      =========================================== -->
+      <section class="slide " data-slide="7"><header class="slide-header"><div><div class="slide-tag">04 · AI & TỰ ĐỘNG HÓA</div><h2 class="slide-title">Tự động hóa tiếp nhận; AI gợi ý có kiểm soát</h2><p class="slide-subtitle">Webhook và bot tự động tiếp nhận, hỏi nhu cầu và bàn giao; Jev hỗ trợ phân loại khi được bật.</p></div><div class="slide-number-badge">07 / 10</div></header><div class="slide-content"><div class="two-column-story"><div class="story-stack">
+<div class="story-card"><span>BOT THEO QUY TẮC</span><h3>Hỏi đúng phần còn thiếu</h3><p>Catalog khóa học, câu hỏi và chi nhánh định hướng đối thoại; bot không hỏi lại thông tin đã ghi.</p></div>
+<div class="story-card"><span>BÀN GIAO CÓ NGỮ CẢNH</span><h3>Đúng người, đúng bước tiếp theo</h3><p>Khách yêu cầu gặp người, nhu cầu đủ rõ hoặc bot bế tắc: hệ thống chuyển cho đội tư vấn cùng bản tóm tắt.</p></div>
+<div class="story-card"><span>JEV TÙY CHỌN</span><h3>Đọc tín hiệu khi đủ tin cậy</h3><p>Ý định, mức quan tâm và gợi ý mẫu trả lời có thể thành ghi chú nội bộ; cần API key và kiểm chứng trên hội thoại thực.</p></div>
+</div><div class="story-stack"><div class="medium-image"><div class="image-slot screenshot" data-image="assets/12-bot-conversation.png"><div class="image-fallback"><span>ẢNH 12 · LỖI TẢI</span><strong>Ảnh giao diện bot hỏi nhu cầu và nhận câu trả lời</strong></div></div></div><div class="medium-image"><div class="image-slot photo" data-image="assets/13-human-handoff.png"><div class="image-fallback"><span>ẢNH 13 · LỖI TẢI</span><strong>Cảm xúc: tư vấn viên tiếp quản, khách được lắng nghe</strong></div></div></div></div></div><div class="story-callout"><b>Nguyên tắc thiết kế:</b> khi nhân viên đã trả lời, bot im lặng; luồng AI phân tích không tự gửi văn bản sinh tự do cho khách.</div></div></section>
+
+      <!-- ==========================================
+           SLIDE 8: TRANG DEMO (Trọng tâm 3: Hiện chữ DEMO to nổi bật)
+      =========================================== -->
+      <section class="slide " data-slide="8"><div class="slide-demo-container"><div class="cover-badge">07 · DEMO TRỰC TIẾP</div><h1 class="demo-huge-title">DEMO</h1><p class="demo-subtext">Một tin nhắn đến Chatwoot. Một Lead xuất hiện trong CRM. Một tư vấn viên tiếp nhận với đủ bối cảnh.</p><div class="demo-image-row"><div><div class="image-slot screenshot" data-image="assets/14-demo-chatwoot.png"><div class="image-fallback"><span>ẢNH 14 · LỖI TẢI</span><strong>Giao diện bot đang xử lý cuộc chat</strong></div></div></div><div><div class="image-slot screenshot" data-image="assets/15-demo-crm.png"><div class="image-fallback"><span>ẢNH 15 · LỖI TẢI</span><strong>Giao diện danh sách Lead trong CRM</strong></div></div></div></div><div class="demo-scenario-pills"><span class="pill pill-cyan">01 · Gửi tin nhắn</span><span class="pill pill-purple">02 · Bot hỏi nhu cầu</span><span class="pill pill-emerald">03 · Kiểm tra CRM</span><span class="pill pill-amber">04 · Bàn giao</span></div><div class="demo-actions"><a href="http://127.0.0.1:3000" target="_blank" rel="noopener" class="demo-btn-action">MỞ CHATWOOT</a><a href="http://127.0.0.1:8000" target="_blank" rel="noopener" class="demo-btn-action">MỞ FRAPPE CRM</a></div><p class="demo-warning">Liên kết localhost chỉ hoạt động trên máy đang chạy stack DX-OSD.</p></div></section>
+
+      <!-- ==========================================
+           SLIDE 9: KIỂM THỬ THỰC ĐỊA & AUDIT FOSS COMPLIANCE
+      =========================================== -->
+      <section class="slide " data-slide="9"><header class="slide-header"><div><div class="slide-tag">08 · KIỂM THỬ & BẢN QUYỀN</div><h2 class="slide-title">Mã nguồn mở có thể đọc, chạy thử và kiểm tra</h2><p class="slide-subtitle">Kết quả unit test được lấy từ lần chạy hiện tại; các tệp giấy phép có trong repo.</p></div><div class="slide-number-badge">09 / 10</div></header><div class="slide-content"><div class="two-column-story"><div class="story-stack"><div class="medium-image"><div class="code-panel terminal-panel" aria-label="Kết quả chạy unit test">
+  <div class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+  <code>$ python -m unittest discover<br>-s frappe-custom/mmm_custom/mmm_custom/tests -q</code>
+  <p class="terminal-result">Ran 542 tests</p><div class="terminal-ok">OK</div>
+</div></div><div class="story-card"><span>KIỂM THỬ</span><h3>Unit tests và bài thử tích hợp</h3><p>Repo có test cho webhook, dedup, bot, AI tùy chọn, đồng bộ và kịch bản nhận Lead. Lần kiểm tra hiện tại: 542 unit tests đạt; khi trình chiếu cần chạy lại để xác nhận.</p></div></div><div class="story-stack"><div class="medium-image"><div class="code-panel license-panel" aria-label="Các tệp giấy phép trong repo">
+  <h3>License files in the repository</h3><div class="license-grid">
+    <div><strong>LICENSE</strong><span>DX-OSD · AGPL-3.0</span></div>
+    <div><strong>chatwoot/LICENSE</strong><span>Community · MIT Expat</span></div>
+    <div><strong>crm/LICENSE</strong><span>Frappe CRM · AGPL-3.0</span></div>
+    <div><strong>frappe-custom/mmm_custom/license.txt</strong><span>Integration app · MIT</span></div>
+  </div><p class="license-audit">THIRD_PARTY_LICENSES.md<br>docs/foss-compliance-report.md</p>
+</div></div><div class="story-card"><span>TUÂN THỦ</span><h3>Giấy phép minh bạch</h3><p>Repo AGPL-3.0; Chatwoot Community MIT; lớp tích hợp tự phát triển MIT. THIRD_PARTY_LICENSES và báo cáo audit liệt kê các thành phần.</p></div></div></div><div class="story-callout"><b>Tính thực tế:</b> có thể triển khai từ source bằng Docker Compose. Hạ tầng, quản trị vận hành và dịch vụ AI tùy chọn vẫn có chi phí.</div></div></section>
+
+      <!-- ==========================================
+           SLIDE 10: TIÊU CHÍ CUỘC THI 100 ĐIỂM & KẾT LUẬN
+      =========================================== -->
+      <section class="slide " data-slide="10"><header class="slide-header"><div><div class="slide-tag">05 · GIÁ TRỊ & KHẢ NĂNG ỨNG DỤNG</div><h2 class="slide-title">Một hồ sơ khách hàng xuyên suốt quy trình tư vấn</h2><p class="slide-subtitle">Giá trị hiện có cho trung tâm giáo dục và cách đưa DX-OSD vào vận hành.</p></div><div class="slide-number-badge">10 / 10</div></header><div class="slide-content"><div class="closing-grid"><div class="story-stack">
+<div class="story-card"><span>GIÁ TRỊ HIỆN CÓ</span><h3>Giữ ngữ cảnh, giảm chăm sóc chồng chéo</h3><p>Form Lead Ads và hội thoại cùng vào CRM; nhân viên thấy nhu cầu, lịch sử và người phụ trách trước khi tư vấn.</p></div>
+<div class="story-card"><span>KHẢ NĂNG ỨNG DỤNG</span><h3>Đưa vào quy trình tư vấn hiện có</h3><p>Marketing nhận Lead Ads; tư vấn viên xử lý chat trong Chatwoot; CRM giữ hồ sơ. Có thể tự triển khai bằng Docker Compose.</p></div>
+<div class="story-card"><span>MỞ RỘNG · CẦN KIỂM CHỨNG</span><h3>Khép vòng marketing</h3><p>Repo có mã tạo và duyệt bài Facebook; cần thử trên Page thật và đo kết quả trước khi mở rộng.</p></div>
+</div><div class="story-stack"><div class="medium-image"><div class="image-slot photo" data-image="assets/18-team-outcome.png"><div class="image-fallback"><span>ẢNH 18 · LỖI TẢI</span><strong>Đội tư vấn nhẹ nhõm vì không còn mất dấu khách</strong></div></div></div><div class="medium-image"><div class="image-slot photo" data-image="assets/19-parent-happy.png"><div class="image-fallback"><span>ẢNH 19 · LỖI TẢI</span><strong>Phụ huynh hài lòng khi được tư vấn rõ ràng</strong></div></div></div></div></div><div class="closing-line">DX-OSD: một đường đi rõ ràng từ sự quan tâm của khách đến hành động của doanh nghiệp.</div><p class="closing-thanks">XIN CẢM ƠN HỘI ĐỒNG GIÁM KHẢO</p></div></section>
+
+    </div>
+  </main>
+
+  <!-- Bottom Floating Navigation Toolbar -->
+  <nav class="controls-toolbar" aria-label="Slide Navigation Controls">
+    <button class="btn-control" onclick="prevSlide()" title="Slide Trước (Phím Mũi tên Trái / H)">
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+
+    <div class="slide-counter" id="slideIndicator">01 / 10</div>
+
+    <button class="btn-control" onclick="nextSlide()" title="Slide Sau (Phím Mũi tên Phải / Phím Cách / L)">
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <div style="width: 1px; height: 18px; background: #cbd5e1; margin: 0 4px;"></div>
+
+    <!-- Presentation Timer -->
+    <div class="timer-badge" id="timerBadge" onclick="toggleTimer()" title="Bấm để Tạm dừng/Bắt đầu Đếm giờ (Mục tiêu: 7 phút OLP)">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="timerText">00:00 / 07:00</span>
+    </div>
+
+    <!-- Speaker Notes Toggle -->
+    <button class="btn-control" onclick="toggleNotes()" title="Bật/Tắt Lời thoại Thuyết trình (Phím N hoặc S)">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </button>
+
+    <!-- Overview Grid Toggle -->
+    <button class="btn-control" onclick="toggleOverview()" title="Xem Tổng quan 10 Slides (Phím O)">
+      <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    </button>
+
+    <!-- Fullscreen Toggle -->
+    <button class="btn-control" onclick="toggleFullscreen()" title="Toàn Màn hình (Phím F)">
+      <svg class="icon" viewBox="0 0 24 24" id="fullscreenIcon"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+    </button>
+  </nav>
+
+  <!-- Speaker Notes Drawer Modal -->
+  <aside class="notes-drawer" id="notesDrawer">
+    <div class="notes-header">
+      <div class="notes-title">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        SPEAKER SCRIPT (LỜI THOẠI)
+      </div>
+      <span class="pill pill-cyan" id="noteDurationBadge">30s</span>
+    </div>
+    <div class="notes-body" id="noteContent">
+      <!-- Injected dynamically via JS based on current slide -->
+    </div>
+  </aside>
+
+  <!-- Overview Grid Modal -->
+  <div class="overview-modal" id="overviewModal" onclick="if(event.target === this) toggleOverview()">
+    <div class="overview-grid" id="overviewGrid">
+      <!-- 10 miniature cards generated by JS -->
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // State management
+    const TOTAL_SLIDES = 10;
+    let currentSlide = 1;
+
+    // Speaker script database for each slide (matching the 7-minute OLP pitch for DX-OSD)
+    const speakerNotes = {
+      1: { duration: "30s", text: "<p><strong>Lời thoại (30s):</strong> Mở bằng câu hỏi: khi một phụ huynh điền biểu mẫu rồi nhắn tin, doanh nghiệp có nhận ra đó là cùng một người không? DX-OSD nối hộp thư Chatwoot với hồ sơ Frappe CRM để nhân viên tiếp nhận có bối cảnh.</p>" },
+      2: { duration: "45s", text: "<p><strong>Lời thoại (45s):</strong> Kể một tình huống minh họa, không nêu tỷ lệ thất thoát chưa đo: phụ huynh để lại thông tin từ quảng cáo, tiếp tục hỏi trên Messenger, rồi bị hai nhân viên gọi trùng. Bốn nỗi đau là tách kênh, thiếu bối cảnh, trùng dữ liệu và đứt bàn giao.</p>" },
+      3: { duration: "45s", text: "<p><strong>Lời thoại (45s):</strong> Giải thích HPDI từ góc nhìn vận hành. Human là Chatwoot, Process là lớp tích hợp nội bộ, Data là Frappe CRM, Intelligence là Jev tùy chọn. Luồng tiếp nhận cốt lõi vẫn chạy khi không có AI key.</p>" },
+      4: { duration: "40s", text: "<p><strong>Lời thoại (40s):</strong> Repo triển khai hai cụm chính: Chatwoot Community và Frappe CRM. Lớp tích hợp nội bộ chạy trong Frappe bench, xử lý webhook và bot. Docker Compose khởi động các dịch vụ; Caddy hỗ trợ đưa ra tên miền khi cấu hình. Điểm mạnh là có thể phát triển từng lớp.</p>" },
+      5: { duration: "45s", text: "<p><strong>Lời thoại (45s):</strong> Cho hội đồng thấy hai đường vào: Meta Lead Ads đồng bộ biểu mẫu vào CRM, còn Chatwoot đưa hội thoại Messenger và Instagram qua webhook. Hai khung HTML là kịch bản minh họa cùng mã khách, chưa phải dữ liệu demo thực tế. Khi demo, thay bằng hội thoại và Lead thật của cùng một khách.</p>" },
+      6: { duration: "45s", text: "<p><strong>Lời thoại (45s):</strong> Theo code api.py, webhook kiểm tra chữ ký HMAC và timestamp 300 giây. Khi nhận conversation, hệ thống tìm liên kết Lead hoặc Contact đã biết, rồi đối chiếu email và số điện thoại. Nói giảm trùng, không nói loại bỏ hoàn toàn.</p>" },
+      7: { duration: "40s", text: "<p><strong>Lời thoại (40s):</strong> Bot dùng quy tắc và dữ liệu khóa học để hỏi phù hợp. Nếu khách muốn gặp người, đủ thông tin hoặc bot không hiểu, nó bàn giao. Lớp Jev tùy chọn hỗ trợ phân loại ý định và ghi chú riêng theo ngưỡng tin cậy, không tự gửi câu trả lời AI tự do từ luồng phân tích.</p>" },
+      8: { duration: "60s", text: "<p><strong>Lời thoại (60s):</strong> Demo: gửi tin nhắn ở Chatwoot, xem bot hỏi nhu cầu, mở Frappe CRM để thấy Lead và người phụ trách. Nếu stack hoặc Meta chưa sẵn, dùng hai ảnh chụp dự phòng và nói rõ đó là ảnh ghi lại.</p>" },
+      9: { duration: "40s", text: "<p><strong>Lời thoại (40s):</strong> Trình chiếu kết quả test đúng với lần chạy cuối. Chỉ ra các file LICENSE, THIRD_PARTY_LICENSES và báo cáo FOSS; repo AGPL-3.0, lớp tích hợp tự phát triển MIT, Chatwoot Community MIT. Không đánh đồng không phí bản quyền với không có chi phí vận hành.</p>" },
+      10: { duration: "40s", text: "<p><strong>Lời thoại (40s):</strong> Chốt bằng giá trị hiện có: một trung tâm giáo dục có thể nối form quảng cáo và hội thoại với hồ sơ CRM để tư vấn viên thấy đủ ngữ cảnh và tránh chăm sóc chồng chéo khi có tín hiệu khớp. Marketing, tư vấn và CRM dùng những màn hình đang có; triển khai từ source bằng Docker Compose. Mã tạo và duyệt bài Facebook là hướng mở rộng cần cấu hình Meta và đo hiệu quả thực tế, chưa phải kết quả doanh thu đã chứng minh.</p>" }
+    };
+
+    const slideTitles = [
+      "Trang tiêu đề & đặt vấn đề",
+      "Bối cảnh & bốn nỗi đau",
+      "Mô hình HPDI của DX-OSD",
+      "Kiến trúc hai cụm nguồn mở",
+      "Ba luồng hội tụ Lead",
+      "Lọc trùng & bảo vệ webhook",
+      "AI tùy chọn & bàn giao",
+      "DEMO hệ thống",
+      "Kiểm thử & giấy phép nguồn mở",
+      "Tác động & lộ trình phát triển"
+    ];
+
+    // Navigation functions
+    function goToSlide(slideNum) {
+      if (slideNum < 1 || slideNum > TOTAL_SLIDES) return;
+      currentSlide = slideNum;
+      updateUI();
+    }
+
+    function nextSlide() {
+      if (currentSlide < TOTAL_SLIDES) {
+        currentSlide++;
+        updateUI();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      // Update active slide class
+      const slides = document.querySelectorAll('.slide');
+      slides.forEach((s) => {
+        const num = parseInt(s.getAttribute('data-slide'), 10);
+        if (num === currentSlide) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+
+      // Update progress bar
+      const progressPercent = (currentSlide / TOTAL_SLIDES) * 100;
+      document.getElementById('progressBar').style.width = progressPercent + '%';
+
+      // Update counter
+      const paddedCurrent = currentSlide < 10 ? '0' + currentSlide : currentSlide;
+      const paddedTotal = TOTAL_SLIDES < 10 ? '0' + TOTAL_SLIDES : TOTAL_SLIDES;
+      document.getElementById('slideIndicator').textContent = `${paddedCurrent} / ${paddedTotal}`;
+
+      // Update speaker notes content
+      const note = speakerNotes[currentSlide];
+      if (note) {
+        document.getElementById('noteDurationBadge').textContent = note.duration;
+        document.getElementById('noteContent').innerHTML = note.text;
+      }
+
+      // Update overview active card if modal open
+      updateOverviewSelection();
+    }
+
+    // Timer logic (7 minutes competition clock)
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    function toggleTimer() {
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+      } else {
+        isTimerRunning = true;
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          renderTimer();
+        }, 1000);
+      }
+    }
+
+    function renderTimer() {
+      const mins = Math.floor(timerSeconds / 60);
+      const secs = timerSeconds % 60;
+      const paddedMins = mins < 10 ? '0' + mins : mins;
+      const paddedSecs = secs < 10 ? '0' + secs : secs;
+
+      const badge = document.getElementById('timerBadge');
+      document.getElementById('timerText').textContent = `${paddedMins}:${paddedSecs} / 07:00`;
+
+      // Warning states for 7m pitch
+      if (timerSeconds >= 390) { // 6m30s
+        badge.classList.remove('warning');
+        badge.classList.add('danger');
+      } else if (timerSeconds >= 300) { // 5m00s
+        badge.classList.add('warning');
+      } else {
+        badge.classList.remove('warning', 'danger');
+      }
+    }
+
+    // Toggle Speaker Notes Drawer
+    function toggleNotes() {
+      const drawer = document.getElementById('notesDrawer');
+      drawer.classList.toggle('open');
+    }
+
+    // Fullscreen Toggle
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    // Overview Grid Modal
+    function buildOverviewGrid() {
+      const grid = document.getElementById('overviewGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= TOTAL_SLIDES; i++) {
+        const card = document.createElement('div');
+        card.className = `overview-card ${i === currentSlide ? 'active' : ''}`;
+        card.onclick = () => {
+          goToSlide(i);
+          toggleOverview();
+        };
+        const numPadded = i < 10 ? '0' + i : i;
+        card.innerHTML = `
+          <div class="overview-num">SLIDE ${numPadded}</div>
+          <div class="overview-name">${slideTitles[i - 1]}</div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    function updateOverviewSelection() {
+      const cards = document.querySelectorAll('.overview-card');
+      cards.forEach((card, idx) => {
+        if (idx + 1 === currentSlide) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+    }
+
+    function toggleOverview() {
+      const modal = document.getElementById('overviewModal');
+      modal.classList.toggle('open');
+      if (modal.classList.contains('open')) {
+        updateOverviewSelection();
+      }
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      // Don't trigger if user is typing in an input
+      if (['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) return;
+
+      switch(e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case ' ': // Spacebar
+        case 'PageDown':
+        case 'l':
+        case 'L':
+          e.preventDefault();
+          nextSlide();
+          break;
+
+        case 'ArrowLeft':
+        case 'ArrowUp':
+        case 'PageUp':
+        case 'h':
+        case 'H':
+          e.preventDefault();
+          prevSlide();
+          break;
+
+        case 'Home':
+          e.preventDefault();
+          goToSlide(1);
+          break;
+
+        case 'End':
+          e.preventDefault();
+          goToSlide(TOTAL_SLIDES);
+          break;
+
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+
+        case 'n':
+        case 'N':
+        case 's':
+        case 'S':
+          e.preventDefault();
+          toggleNotes();
+          break;
+
+        case 'o':
+        case 'O':
+          e.preventDefault();
+          toggleOverview();
+          break;
+
+        case 'Escape':
+          document.getElementById('overviewModal').classList.remove('open');
+          document.getElementById('notesDrawer').classList.remove('open');
+          break;
+
+        case '1': case '2': case '3': case '4': case '5':
+        case '6': case '7': case '8': case '9':
+          goToSlide(parseInt(e.key, 10));
+          break;
+
+        case '0':
+          goToSlide(10);
+          break;
+      }
+    });
+
+    // Touch Swipe Support for Tablet / Mobile Presenter
+    let touchStartX = 0;
+    let touchEndX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+      const diff = touchEndX - touchStartX;
+      if (Math.abs(diff) > 50) {
+        if (diff < 0) nextSlide();
+        else prevSlide();
+      }
+    }
+
+
+    // Images live beside this HTML in assets/ so they load consistently across browsers.
+    document.querySelectorAll('.image-slot[data-image]').forEach(slot => {
+      const img = document.createElement('img');
+      img.alt = slot.querySelector('.image-fallback strong')?.textContent || 'Ảnh minh họa';
+      img.onload = () => slot.classList.add('has-image');
+      img.onerror = () => slot.classList.remove('has-image');
+      img.src = slot.dataset.image;
+      slot.prepend(img);
+    });
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      buildOverviewGrid();
+      updateUI();
+      // Auto-start presentation timer
+      toggleTimer();
+    });
+  </script>
+</body>
+</html>

@@ -81,6 +81,66 @@ RSpec.describe 'Callbacks API', type: :request do
     end
   end
 
+  describe 'POST /api/v1/accounts/{account.id}/callbacks/connect_facebook_page' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+    let(:agent) { create(:user, account: account, role: :agent) }
+    let(:url) { "/api/v1/accounts/#{account.id}/callbacks/connect_facebook_page" }
+
+    before { allow(Avatar::AvatarFromUrlJob).to receive(:perform_later) }
+
+    it 'refuses agents' do
+      post url, headers: agent.create_new_auth_token, params: { page_id: '42', page_access_token: 'tok' }, as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'creates the channel and its inbox for a new page' do
+      post url, headers: admin.create_new_auth_token,
+                params: { page_id: '42', page_access_token: 'page-tok', user_access_token: 'user-tok', inbox_name: 'Page 42' },
+                as: :json
+
+      expect(response).to have_http_status(:success)
+      channel = account.facebook_pages.find_by!(page_id: '42')
+      expect(channel.page_access_token).to eq('page-tok')
+      expect(channel.user_access_token).to eq('user-tok')
+      expect(channel.inbox.name).to eq('Page 42')
+      expect(response.parsed_body['id']).to eq(channel.inbox.id)
+    end
+
+    it 'keeps the inbox of a page connected before and only renews its token' do
+      expect do
+        post url, headers: admin.create_new_auth_token,
+                  params: { page_id: facebook_page.page_id, page_access_token: 'new-tok' }, as: :json
+      end.not_to change(Inbox, :count)
+
+      expect(response).to have_http_status(:success)
+      expect(facebook_page.reload.page_access_token).to eq('new-tok')
+      expect(response.parsed_body['id']).to eq(inbox.id)
+      expect(Facebook::Messenger::Subscriptions).to have_received(:subscribe)
+    end
+  end
+
+  describe 'POST /api/v1/accounts/{account.id}/callbacks/disconnect_facebook_page' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+    let(:url) { "/api/v1/accounts/#{account.id}/callbacks/disconnect_facebook_page" }
+
+    it 'unsubscribes the page and keeps its inbox' do
+      allow(Facebook::Messenger::Subscriptions).to receive(:unsubscribe).and_return(true)
+
+      post url, headers: admin.create_new_auth_token, params: { page_id: facebook_page.page_id }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(Facebook::Messenger::Subscriptions).to have_received(:unsubscribe)
+      expect(inbox.reload).to be_present
+    end
+
+    it 'returns not found for an unknown page' do
+      post url, headers: admin.create_new_auth_token, params: { page_id: 'nope' }, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe 'POST /api/v1/accounts/{account.id}/callbacks/facebook_pages' do
     context 'when it is an unauthenticated user' do
       it 'returns unauthorized' do
