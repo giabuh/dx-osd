@@ -699,6 +699,22 @@ def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None
         pass
 
 
+def is_facebook_system_message(text: str) -> bool:
+    """Check if message is an automated Facebook system event/label rather than a real conversational reply."""
+    if not text:
+        return True
+    lower = text.lower().strip()
+    system_prefixes = [
+        "đã thêm nhãn tự động",
+        "đã đặt giai đoạn",
+        "automated label added",
+        "đã gỡ nhãn",
+        "đã thay đổi nhãn",
+        "bạn đang phản hồi bình luận của người dùng",
+    ]
+    return any(p in lower for p in system_prefixes)
+
+
 def process_messenger_conversations(
     page_id: str,
     token: str,
@@ -747,7 +763,7 @@ def process_messenger_conversations(
         if msg_id in replied:
             continue
 
-        # Check if page has already sent a meaningful text reply AFTER this customer message
+        # Check if page has already sent a meaningful conversational text reply AFTER this customer message
         has_page_text_reply = False
         for m in messages:
             if m.get("id") == msg_id:
@@ -755,9 +771,10 @@ def process_messenger_conversations(
             m_sender = m.get("from", {})
             m_sender_id = m_sender.get("id")
             m_text = m.get("message", "").strip()
-            if (m_sender_id == page_id or m_sender.get("email", "").startswith(page_id)) and m_text:
-                has_page_text_reply = True
-                break
+            if (m_sender_id == page_id or m_sender.get("email", "").startswith(page_id)):
+                if m_text and not is_facebook_system_message(m_text):
+                    has_page_text_reply = True
+                    break
 
         if has_page_text_reply:
             replied.add(msg_id)
