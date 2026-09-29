@@ -338,10 +338,7 @@ def detect_branch_from_text(text: str) -> str | None:
 
 # ── Conversational Messenger Reply Generator ───────────────────────
 def generate_ai_conversation_reply(customer_name: str, history: list[str], latest_msg: str) -> str:
-    """Generate a highly contextual, natural, consultative Messenger response using Gemini/9Router or heuristics."""
-    gemini_key = os.getenv("GEMINI_API_KEY")
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
-
+    """Generate a highly contextual, natural, consultative Messenger response using 9Router/Gemini or smart heuristics."""
     history_str = "\n".join(history[-6:])
     prompt = (
         f"Bạn là Chuyên viên Tư vấn Tuyển sinh Cao cấp của Học viện EduFlow Academy (Việt Nam).\n"
@@ -349,21 +346,54 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
         f"Lịch sử trò chuyện gần nhất:\n{history_str}\n\n"
         f"Tin nhắn mới nhất của {customer_name}: \"{latest_msg}\"\n\n"
         f"Kiến thức đào tạo EduFlow:\n"
-        f"1. Photoshop Thực chiến: 12 buổi (6 tuần), thực hành 100% trên máy. Làm chủ công cụ, cắt ghép, chỉnh màu ảnh chân dung & sản phẩm, thiết kế banner/poster/cover mạng xã hội bán hàng & truyền thông. Lớp tối 2-4-6 hoặc T7-CN. Học bổng hỗ trợ 35% học phí + tặng 50GB Plugin & Font bản quyền.\n"
-        f"2. Tin học văn phòng & MOS: Thành thạo Excel/Word/PowerPoint, làm chủ hàm nâng cao (VLOOKUP, INDEX/MATCH, Pivot Table), tự động hóa báo cáo, cam kết chuẩn đầu ra MOS quốc tế.\n"
-        f"3. Lập trình Python & Web: Cho người mới bắt đầu từ con số 0 đến tự xây dựng phần mềm, tự động hóa và phân tích dữ liệu.\n"
-        f"4. Cơ sở: CS1 Bình Thạnh (Điện Biên Phủ), CS2 Quận 1 (Nguyễn Thị Minh Khai), CS3 Thủ Đức (Võ Văn Ngân).\n"
-        f"5. Học phí chung: Dao động 2.500.000đ - 3.800.000đ, đang ưu đãi giảm 35% còn ~1.950.000đ - 2.500.000đ tùy khóa.\n\n"
+        f"1. Photoshop Thực chiến: 12 buổi (6 tuần), thực hành 100% trên máy tính. Học từ con số 0 đến tự làm banner, poster, chỉnh ảnh chuyên nghiệp. Học bổng hỗ trợ 35% học phí + tặng 50GB tài nguyên thiết kế.\n"
+        f"2. Tin học văn phòng & MOS: Excel/Word/PowerPoint từ căn bản đến nâng cao, cam kết chuẩn đầu ra MOS quốc tế.\n"
+        f"3. Lập trình Python & Web: Dành cho người mới bắt đầu từ số 0 đến tự xây dựng phần mềm và phân tích dữ liệu.\n"
+        f"4. Cơ sở đào tạo:\n"
+        f"   - CS1: Điện Biên Phủ, Q. Bình Thạnh (gần ngã tư Hàng Xanh)\n"
+        f"   - CS2: Nguyễn Thị Minh Khai, Q.1\n"
+        f"   - CS3: Võ Văn Ngân, TP. Thủ Đức\n"
+        f"5. Lịch học các cơ sở:\n"
+        f"   - Lớp tối 2-4-6 (18h30 - 20h30)\n"
+        f"   - Lớp cuối tuần (Sáng Thứ 7 & Chủ Nhật: 9h00 - 11h30)\n"
+        f"6. Học phí: Ưu đãi 35% chỉ còn ~1.950.000đ - 2.500.000đ tùy khóa.\n\n"
         f"QUY TẮC PHẢN HỒI (RẤT QUAN TRỌNG ĐỂ KHÔNG BỊ SƯỢNG):\n"
-        f"1. Tuyệt đối KHÔNG chào hỏi robot, KHÔNG gửi menu cứng nhắc khi đang trong cuộc trò chuyện.\n"
-        f"2. Đọc kỹ ngữ cảnh lịch sử chat: Khách đang bàn về môn nào (vd: Photoshop) thì tiếp tục tư vấn đúng môn đó.\n"
-        f"3. Nếu khách nói 'ok', 'dạ', 'vâng' sau khi bên mình vừa đề nghị gửi thông tin: Hãy tóm tắt ngay các điểm nổi bật của khóa học đó và khéo léo hỏi khách muốn học tối hay cuối tuần / gần cơ sở nào để giữ chỗ học thử.\n"
-        f"4. Nếu khách hỏi học phí: Báo mức học phí ưu đãi rõ ràng, giải thích chất lượng thực hành thực chiến 100%, rồi hỏi lịch học thuận tiện của khách.\n"
-        f"5. Nếu khách cho SĐT: Cảm ơn chân thành, xác nhận lại SĐT và thông báo chuyên viên tuyển sinh của cơ sở tương ứng sẽ gọi điện xác nhận và gửi vé học thử miễn phí.\n"
-        f"6. Giọng văn: Ấm áp, lịch sự, xưng 'em', gọi khách là 'anh/chị' hoặc 'anh/chị {customer_name}'. Có emoji tự nhiên. Dưới 80 từ.\n"
-        f"7. KHÔNG dùng markdown tiêu đề (không ##, ###, **). Chỉ trả về đúng nội dung câu tin nhắn gửi khách."
+        f"1. Nếu khách vừa chọn cơ sở (vd: CS1 Bình Thạnh): Hãy nhiệt tình xác nhận cơ sở đã chọn, sau đó giới thiệu 2 khung giờ học (Tối 2-4-6 hoặc Sáng T7-CN) và hỏi khách tiện học giờ nào hơn.\n"
+        f"2. Nếu khách vừa chọn ca học/giờ học (vd: Tối 2-4-6 hay Cuối tuần): Xác nhận ca học, và xin phép xin Số Điện Thoại (SĐT) để chuyên viên hỗ trợ giữ chỗ ưu đãi học bổng 35% và gửi vé học thử miễn phí.\n"
+        f"3. Nếu khách cho SĐT: Cảm ơn chân thành, xác nhận lại SĐT và thông báo chuyên viên tuyển sinh của cơ sở sẽ gọi điện tư vấn và xếp lớp ngay.\n"
+        f"4. Tuyệt đối KHÔNG gửi menu cứng nhắc, KHÔNG lặp lại giới thiệu chung nếu khách đã chọn bước tiếp theo.\n"
+        f"5. Giọng văn: Ấm áp, lịch sự, xưng 'em', gọi khách là 'anh/chị' hoặc 'anh/chị {customer_name}'. Ngắn gọn dưới 60 từ. Không dùng markdown (** hay ##)."
     )
 
+    # 1. Try 9Router (local fast proxy)
+    nine_router_key = os.getenv("NINE_ROUTER_API_KEY")
+    nine_router_base = os.getenv("NINE_ROUTER_BASE_URL", "http://localhost:20128/v1")
+    nine_router_model = os.getenv("NINE_ROUTER_MODEL", "ag/gemini-3.7-flash-low")
+    if nine_router_key:
+        try:
+            resp = requests.post(
+                f"{nine_router_base}/chat/completions",
+                json={
+                    "model": nine_router_model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 200,
+                    "stream": False,
+                },
+                headers={"Authorization": f"Bearer {nine_router_key}"},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"].strip()
+                text = text.replace("**", "").replace("##", "")
+                if text:
+                    return text
+        except Exception:
+            pass
+
+    # 2. Try direct Gemini API
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     if gemini_key:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={gemini_key}"
@@ -378,11 +408,14 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
                 if candidates:
                     text = candidates[0]["content"]["parts"][0]["text"].strip()
                     text = text.replace("**", "").replace("##", "")
-                    return text
+                    if text:
+                        return text
         except Exception:
             pass
 
     # ── Contextual Heuristic Engine (100% natural, non-stiff fallback) ──
+    lower = latest_msg.lower()
+
     # 1. Phone number detected
     phone_match = re.search(r"(0\d{9}|\+84\d{9})", latest_msg)
     if phone_match:
@@ -392,11 +425,25 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
             f"Chuyên viên tư vấn EduFlow sẽ liên hệ qua điện thoại để hỗ trợ xếp lớp và gửi vé học thử miễn phí cho mình ngay nhé! ✨"
         )
 
-    full_context = " ".join(history) + " " + latest_msg
-    course_context = detect_course_from_text(full_context)
-    lower = latest_msg.lower()
+    # 2. Branch chosen (e.g. CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức)
+    branch_val = detect_branch_from_text(latest_msg)
+    if branch_val:
+        return (
+            f"Dạ tuyệt vời ạ, cơ sở {branch_val} phòng máy thực hành cấu hình cao rất mới và thuận tiện đi lại luôn anh/chị {customer_name} ơi! ✨\n\n"
+            f"Hiện tại cơ sở đang có 2 ca học cho khóa mới:\n"
+            f"• Lớp tối 2-4-6: 18h30 - 20h30\n"
+            f"• Lớp cuối tuần: Sáng Thứ 7 & Chủ Nhật (9h00 - 11h30)\n\n"
+            f"Mình thấy khung giờ nào thuận tiện hơn để em hỗ trợ giữ chỗ ưu đãi học bổng 35% cho mình nhé? ⏰"
+        )
 
-    # 2. Tuition / Price inquiry
+    # 3. Schedule chosen (e.g. Tối 2-4-6, Cuối tuần)
+    if any(k in lower for k in ["tối 2-4-6", "2-4-6", "tối 3-5-7", "cuối tuần", "thứ 7", "chủ nhật", "t7", "cn"]):
+        return (
+            f"Dạ em đã ghi nhận lịch học dự kiến của anh/chị {customer_name} rồi ạ! 🌟\n\n"
+            f"Để hoàn tất giữ suất học bổng ưu đãi 35% học phí và nhận vé tham gia buổi học thử 1-1 miễn phí, anh/chị nhắn em xin Số Điện Thoại (SĐT) để chuyên viên hỗ trợ làm hồ sơ cho mình nhé! 📱"
+        )
+
+    # 4. Tuition / Price inquiry
     if any(k in lower for k in ["học phí", "giá", "bao nhiêu", "chi phí", "tiền"]):
         return (
             f"Dạ học phí các khóa tại EduFlow dao động từ 2.500.000đ - 3.800.000đ tùy nội dung đào tạo ạ.\n\n"
@@ -404,7 +451,7 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
             f"Anh/chị {customer_name} đang quan tâm lớp học vào buổi tối hay cuối tuần để em báo mức ưu đãi chi tiết và giữ chỗ cho mình nhé! ✨"
         )
 
-    # 3. Branch / Location inquiry
+    # 5. Branch / Location general inquiry
     if any(k in lower for k in ["ở đâu", "địa chỉ", "cơ sở", "chi nhánh"]):
         return (
             f"Dạ EduFlow có 3 cơ sở đào tạo với phòng máy thực hành cấu hình cao tại TP.HCM ạ:\n"
@@ -414,7 +461,7 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
             f"Các cơ sở đều có lớp tối (18h30 - 20h30) và cuối tuần. Mình tiện học ở cơ sở nào để em hỗ trợ giữ lịch học thử cho mình nhé! 🏢"
         )
 
-    # 4. Schedule inquiry
+    # 6. Schedule general inquiry
     if any(k in lower for k in ["buổi tối", "tối", "cuối tuần", "lịch học", "thời gian", "mấy giờ"]):
         return (
             f"Dạ EduFlow có lịch học linh hoạt rất thuận tiện cho người đi làm và sinh viên ạ:\n"
@@ -423,7 +470,10 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
             f"Khung giờ nào thuận tiện nhất cho anh/chị {customer_name} ạ? Nhắn em xin SĐT để chuyên viên xếp lớp phù hợp nhất cho mình nhé! ⏰"
         )
 
-    # 5. User said "ok", "dạ", "vâng", "tư vấn", or acknowledging previous course mention
+    full_context = " ".join(history) + " " + latest_msg
+    course_context = detect_course_from_text(full_context)
+
+    # 7. User said "ok", "dạ", "vâng", "tư vấn", or acknowledging previous course mention
     if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh"]):
         return (
             f"Dạ em gửi anh/chị {customer_name} thông tin khóa học Photoshop Thực chiến tại EduFlow ạ:\n\n"
@@ -457,7 +507,7 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
             f"🎁 Đang có học bổng hỗ trợ 35% học phí tuần này. Anh/chị {customer_name} đang tìm hiểu học để phục vụ công việc hay mục tiêu gì để em tư vấn kỹ hơn nhé! 💻"
         )
 
-    # 6. General welcoming response
+    # 8. General welcoming response
     return (
         f"Dạ em chào anh/chị {customer_name}! EduFlow Academy có các chương trình đào tạo thực chiến nổi bật:\n"
         f"1. Thiết kế đồ họa / Photoshop (cắt ghép, chỉnh màu, thiết kế banner/poster quảng cáo)\n"
@@ -486,32 +536,33 @@ def get_recent_conversations(page_id: str, token: str, limit: int = 10) -> list:
 def get_smart_quick_replies(course_context: str | None = None, message_text: str = "") -> list[dict]:
     """Return contextual Quick Reply buttons for Facebook Messenger."""
     lower = (message_text or "").lower()
-    # 1. Branch / Schedule inquiries
-    if any(k in lower for k in ["ở đâu", "cơ sở", "địa chỉ", "lịch học", "thời gian", "tối", "cuối tuần", "bình thạnh", "quận 1", "thủ đức"]):
+
+    # 1. Customer just chose or mentioned a branch -> suggest schedule shifts
+    if any(k in lower for k in ["bình thạnh", "quận 1", "q1", "thủ đức", "cs1", "cs2", "cs3"]):
         return [
-            {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
-            {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
-            {"content_type": "text", "title": "📍 CS3 Thủ Đức", "payload": "CS3_THU_DUC"},
             {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
-            {"content_type": "text", "title": "☀️ Lớp cuối tuần", "payload": "SHIFT_WEEKEND"},
+            {"content_type": "text", "title": "☀️ Lớp sáng T7 - CN", "payload": "SHIFT_WEEKEND"},
+            {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
+            {"content_type": "text", "title": "📞 Nhận tư vấn 1-1", "payload": "CONSULT_1_1"},
         ]
-    # 2. In Photoshop context
-    if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh"]):
+
+    # 2. Customer just chose or mentioned a schedule -> ask for phone or discount reservation
+    if any(k in lower for k in ["tối", "cuối tuần", "2-4-6", "3-5-7", "t7", "cn", "sáng"]):
+        return [
+            {"content_type": "text", "title": "📱 Gửi số điện thoại", "payload": "SEND_PHONE"},
+            {"content_type": "text", "title": "🎁 Giữ ưu đãi 35%", "payload": "HOLD_DISCOUNT_35"},
+            {"content_type": "text", "title": "📍 Chọn lại cơ sở", "payload": "CHOOSE_BRANCH"},
+        ]
+
+    # 3. In Photoshop context or learning from scratch -> suggest branches
+    if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh", "từ số 0", "cơ bản", "mới bắt đầu", "đi làm"]):
         return [
             {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
             {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
             {"content_type": "text", "title": "📍 CS3 Thủ Đức", "payload": "CS3_THU_DUC"},
-            {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
             {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
         ]
-    # 3. Learning goals from scratch / work
-    if any(k in lower for k in ["từ số 0", "cơ bản", "mới bắt đầu", "đi làm"]):
-        return [
-            {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
-            {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
-            {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
-            {"content_type": "text", "title": "🎁 Ưu đãi 35%", "payload": "GET_DISCOUNT_35"},
-        ]
+
     # 4. Default broad course selection
     return [
         {"content_type": "text", "title": "🎨 Khóa Photoshop", "payload": "COURSE_PHOTOSHOP"},
@@ -639,23 +690,46 @@ def process_messenger_conversations(
         if not messages:
             continue
 
-        latest_msg = messages[0]
-        msg_id = latest_msg.get("id")
-        sender = latest_msg.get("from", {})
+        # Find the latest customer message
+        customer_msg = None
+        for m in messages:
+            m_sender = m.get("from", {})
+            m_sender_id = m_sender.get("id")
+            if m_sender_id and m_sender_id != page_id and not m_sender.get("email", "").startswith(page_id):
+                customer_msg = m
+                break
+
+        if not customer_msg:
+            continue
+
+        msg_id = customer_msg.get("id")
+        sender = customer_msg.get("from", {})
         sender_id = sender.get("id")
         sender_name = sender.get("name", "Bạn")
-        msg_text = latest_msg.get("message", "").strip()
-
-        # If latest message is from the page itself, no action needed
-        if sender_id == page_id:
-            continue
+        msg_text = customer_msg.get("message", "").strip()
 
         # If already replied to this message ID, skip
         if msg_id in replied:
             continue
 
+        # Check if page has already sent a meaningful text reply AFTER this customer message
+        has_page_text_reply = False
+        for m in messages:
+            if m.get("id") == msg_id:
+                break
+            m_sender = m.get("from", {})
+            m_sender_id = m_sender.get("id")
+            m_text = m.get("message", "").strip()
+            if (m_sender_id == page_id or m_sender.get("email", "").startswith(page_id)) and m_text:
+                has_page_text_reply = True
+                break
+
+        if has_page_text_reply:
+            replied.add(msg_id)
+            continue
+
         # Check message age: ignore messages older than 24 hours (Facebook messaging window limit)
-        created_time_str = latest_msg.get("created_time", "")
+        created_time_str = customer_msg.get("created_time", "")
         if created_time_str:
             try:
                 dt = datetime.fromisoformat(created_time_str.replace("+0000", "+00:00"))
@@ -693,12 +767,8 @@ def process_messenger_conversations(
         # Smart quick reply buttons
         smart_quick_replies = get_smart_quick_replies(course_val, msg_text)
 
-        # Check for relevant image voucher attachment (Photoshop voucher/infographic)
-        voucher_path = Path(__file__).resolve().parent / "assets" / "photoshop_voucher.jpg"
+        # Keep conversation clean and consultative - do not send unsolicited images
         image_to_attach = None
-        if voucher_path.exists() and (course_val == "Photoshop thực chiến" or "photoshop" in full_thread_text.lower()):
-            if any(k in msg_text.lower() for k in ["học phí", "ưu đãi", "giá", "từ số 0", "thông tin", "ok"]):
-                image_to_attach = str(voucher_path)
 
         if dry_run:
             if verbose:
