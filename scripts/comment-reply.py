@@ -678,7 +678,7 @@ def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None
         lead_name = res.stdout.strip().replace('"', '')
 
         if lead_name and lead_name != "None":
-            update_fields = {}
+            update_fields = {"converted": 0}
             if course:
                 update_fields["course_interest"] = course
             if branch:
@@ -687,14 +687,36 @@ def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None
                 update_fields["mobile_no"] = phone
                 update_fields["status"] = "Qualified"
 
-            if update_fields:
-                cmd_update = [
-                    "docker", "exec", "crm-frappe-1",
-                    "bench", "--site", "crm.localhost", "execute",
-                    "frappe.client.set_value",
-                    "--kwargs", json.dumps({"doctype": "CRM Lead", "name": lead_name, "fieldname": update_fields}),
-                ]
-                subprocess.run(cmd_update, capture_output=True, text=True, timeout=8)
+            cmd_update = [
+                "docker", "exec", "crm-frappe-1",
+                "bench", "--site", "crm.localhost", "execute",
+                "frappe.client.set_value",
+                "--kwargs", json.dumps({"doctype": "CRM Lead", "name": lead_name, "fieldname": update_fields}),
+            ]
+            subprocess.run(cmd_update, capture_output=True, text=True, timeout=8)
+        else:
+            # Create new CRM Lead if not yet created
+            doc = {
+                "doctype": "CRM Lead",
+                "lead_name": customer_name,
+                "first_name": customer_name,
+                "status": "Qualified" if phone else "New",
+                "source": "Messenger Bot",
+                "converted": 0,
+            }
+            if phone:
+                doc["mobile_no"] = phone
+            if course:
+                doc["course_interest"] = course
+            if branch:
+                doc["branch"] = branch
+            cmd_insert = [
+                "docker", "exec", "crm-frappe-1",
+                "bench", "--site", "crm.localhost", "execute",
+                "frappe.client.insert",
+                "--kwargs", json.dumps({"doc": doc}),
+            ]
+            subprocess.run(cmd_insert, capture_output=True, text=True, timeout=8)
     except Exception:
         pass
 
