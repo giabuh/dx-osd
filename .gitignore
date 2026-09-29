@@ -1,6 +1,7 @@
 docker/**/.env
 .env
 .replied_comments.json
+.replied_messenger.json
 scripts/seed-shared-accounts/credentials.local.json
 __pycache__/
 *.pyc

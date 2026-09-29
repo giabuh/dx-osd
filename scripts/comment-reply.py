@@ -1,38 +1,39 @@
 #!/usr/bin/env python3
 """
-EduFlow Comment Auto-Reply & Messenger Private Reply System.
+EduFlow Comment Auto-Reply & Conversational Messenger Agent.
 
-Automatically responds to comments on Facebook Page posts:
-1. Public Comment Reply: Acknowledges the comment, likes it, and notifies the commenter that
-   details have been sent to their Messenger inbox.
-2. Private Message (Messenger Private Reply): Delivers a personalized consultation message
-   directly into the commenter's Facebook Messenger inbox using the Messenger Platform API
-   (POST /{page-id}/messages with recipient={"comment_id": comment_id}).
-3. When the user replies in Messenger, they seamlessly enter the Chatwoot EduFlow qualification flow
-   (course → branch → phone → CRM Lead creation & staff assignment).
+Comprehensive Facebook Page interaction automation:
+1. Public Comment Reply: Acknowledges post comments with polite, personalized replies & likes.
+2. Messenger Private Reply: Sends tailored consultation directly to commenter's Messenger inbox.
+3. Conversational Messenger Agent: Actively monitors Messenger conversations and replies to customer
+   messages in real time with natural, non-stiff consultative responses (Photoshop, Python, MOS Excel,
+   branches, schedules, incentives, and lead qualification into Frappe CRM).
 
 Features:
 - AI-powered personalized public & private replies via Gemini / 9Router (fallback to templates)
-- Real-time continuous monitoring with --watch flag
-- Scans recent posts for unreplied comments
-- Tracks replied comments to avoid duplicates (.replied_comments.json)
-- Graceful handling of Facebook 1-reply-per-comment policy (error code 10900)
+- Real-time continuous monitoring with --watch flag for BOTH post comments and Messenger chats
+- Scans recent posts for unreplied comments & recent conversations for unreplied messages
+- Tracks replied comments (.replied_comments.json) and messages (.replied_messenger.json)
+- Automatic qualification & sync into Frappe CRM (CRM Lead, course_interest, mobile_no, branch)
 
 Usage:
-    python scripts/comment-reply.py              # Process all unreplied comments once
+    python scripts/comment-reply.py              # Process unreplied comments & chats once
     python scripts/comment-reply.py --watch      # Run continuously in background (every 10s)
     python scripts/comment-reply.py --dry-run    # Preview without replying
-    python scripts/comment-reply.py --post-id ID # Process specific post only
-    python scripts/comment-reply.py --no-private # Only reply publicly on the comment
-    python scripts/comment-reply.py --private-only # Only send private Messenger message
+    python scripts/comment-reply.py --no-private # Only reply publicly on comments
+    python scripts/comment-reply.py --no-messenger # Only handle comments, skip Messenger chats
+    python scripts/comment-reply.py --messenger-only # Only monitor & reply to Messenger chats
 
 Environment: reads from .env in project root
 """
 
 import argparse
+from datetime import datetime, timezone
 import json
 import os
 import random
+import re
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -70,8 +71,9 @@ PRIVATE_REPLY_TEMPLATES = [
     "Dạ em chào {name}! Em gửi thông tin khóa học và ưu đãi học phí tuần này qua tin nhắn cho mình ạ. Mình tiện học vào buổi tối hay cuối tuần để em sắp xếp lớp phù hợp cho mình nhé! ✨",
 ]
 
-# File to track replied comments (avoid duplicates)
+# Files to track replied comments & messages (avoid duplicates)
 REPLIED_FILE = Path(__file__).resolve().parent.parent / ".replied_comments.json"
+REPLIED_MESSENGER_FILE = Path(__file__).resolve().parent.parent / ".replied_messenger.json"
 
 
 def load_replied_comments() -> set:
@@ -89,6 +91,23 @@ def save_replied_comments(replied: set):
     """Save replied comment IDs. Keep last 1000 to prevent unbounded growth."""
     data = list(replied)[-1000:]
     REPLIED_FILE.write_text(json.dumps(data), encoding="utf-8")
+
+
+def load_replied_messenger() -> set:
+    """Load set of already-replied Messenger message IDs."""
+    if REPLIED_MESSENGER_FILE.exists():
+        try:
+            data = json.loads(REPLIED_MESSENGER_FILE.read_text(encoding="utf-8"))
+            return set(data)
+        except (json.JSONDecodeError, KeyError):
+            return set()
+    return set()
+
+
+def save_replied_messenger(replied: set):
+    """Save replied Messenger message IDs. Keep last 1000."""
+    data = list(replied)[-1000:]
+    REPLIED_MESSENGER_FILE.write_text(json.dumps(data), encoding="utf-8")
 
 
 def get_recent_posts(page_id: str, token: str, limit: int = 5) -> list:
@@ -290,6 +309,343 @@ def generate_ai_private_reply(commenter_name: str, comment_text: str, post_conte
     return None
 
 
+# ── Course & Branch Knowledge Matchers ─────────────────────────────
+def detect_course_from_text(text: str) -> str | None:
+    """Detect coarse course interest from conversation text."""
+    lower = text.lower()
+    if any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh", "thiết kế"]):
+        return "Photoshop thực chiến"
+    if any(k in lower for k in ["mos", "excel", "tin học", "văn phòng", "word", "powerpoint"]):
+        return "Tin học văn phòng & Luyện thi MOS"
+    if any(k in lower for k in ["python", "lập trình", "code"]):
+        return "Lập trình Python thực chiến"
+    if any(k in lower for k in ["robot", "stem"]):
+        return "Robotics & STEM"
+    return None
+
+
+def detect_branch_from_text(text: str) -> str | None:
+    """Detect branch preference from message text."""
+    lower = text.lower()
+    if any(k in lower for k in ["bình thạnh", "cs1", "điện biên phủ"]):
+        return "CS1 Bình Thạnh"
+    if any(k in lower for k in ["quận 1", "q1", "q.1", "nguyễn thị minh khai", "cs2"]):
+        return "CS2 Quận 1"
+    if any(k in lower for k in ["thủ đức", "tp thủ đức", "tp. thủ đức", "võ văn ngân", "cs3"]):
+        return "CS3 Thủ Đức"
+    return None
+
+
+# ── Conversational Messenger Reply Generator ───────────────────────
+def generate_ai_conversation_reply(customer_name: str, history: list[str], latest_msg: str) -> str:
+    """Generate a highly contextual, natural, consultative Messenger response using Gemini/9Router or heuristics."""
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    gemini_model = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+
+    history_str = "\n".join(history[-6:])
+    prompt = (
+        f"Bạn là Chuyên viên Tư vấn Tuyển sinh Cao cấp của Học viện EduFlow Academy (Việt Nam).\n"
+        f"Nhiệm vụ: Phản hồi tin nhắn Messenger của học viên '{customer_name}' một cách tự nhiên, lễ phép, thông minh, chuyên nghiệp và KHÔNG BỊ SƯỢNG.\n\n"
+        f"Lịch sử trò chuyện gần nhất:\n{history_str}\n\n"
+        f"Tin nhắn mới nhất của {customer_name}: \"{latest_msg}\"\n\n"
+        f"Kiến thức đào tạo EduFlow:\n"
+        f"1. Photoshop Thực chiến: 12 buổi (6 tuần), thực hành 100% trên máy. Làm chủ công cụ, cắt ghép, chỉnh màu ảnh chân dung & sản phẩm, thiết kế banner/poster/cover mạng xã hội bán hàng & truyền thông. Lớp tối 2-4-6 hoặc T7-CN. Học bổng hỗ trợ 35% học phí + tặng 50GB Plugin & Font bản quyền.\n"
+        f"2. Tin học văn phòng & MOS: Thành thạo Excel/Word/PowerPoint, làm chủ hàm nâng cao (VLOOKUP, INDEX/MATCH, Pivot Table), tự động hóa báo cáo, cam kết chuẩn đầu ra MOS quốc tế.\n"
+        f"3. Lập trình Python & Web: Cho người mới bắt đầu từ con số 0 đến tự xây dựng phần mềm, tự động hóa và phân tích dữ liệu.\n"
+        f"4. Cơ sở: CS1 Bình Thạnh (Điện Biên Phủ), CS2 Quận 1 (Nguyễn Thị Minh Khai), CS3 Thủ Đức (Võ Văn Ngân).\n"
+        f"5. Học phí chung: Dao động 2.500.000đ - 3.800.000đ, đang ưu đãi giảm 35% còn ~1.950.000đ - 2.500.000đ tùy khóa.\n\n"
+        f"QUY TẮC PHẢN HỒI (RẤT QUAN TRỌNG ĐỂ KHÔNG BỊ SƯỢNG):\n"
+        f"1. Tuyệt đối KHÔNG chào hỏi robot, KHÔNG gửi menu cứng nhắc khi đang trong cuộc trò chuyện.\n"
+        f"2. Đọc kỹ ngữ cảnh lịch sử chat: Khách đang bàn về môn nào (vd: Photoshop) thì tiếp tục tư vấn đúng môn đó.\n"
+        f"3. Nếu khách nói 'ok', 'dạ', 'vâng' sau khi bên mình vừa đề nghị gửi thông tin: Hãy tóm tắt ngay các điểm nổi bật của khóa học đó và khéo léo hỏi khách muốn học tối hay cuối tuần / gần cơ sở nào để giữ chỗ học thử.\n"
+        f"4. Nếu khách hỏi học phí: Báo mức học phí ưu đãi rõ ràng, giải thích chất lượng thực hành thực chiến 100%, rồi hỏi lịch học thuận tiện của khách.\n"
+        f"5. Nếu khách cho SĐT: Cảm ơn chân thành, xác nhận lại SĐT và thông báo chuyên viên tuyển sinh của cơ sở tương ứng sẽ gọi điện xác nhận và gửi vé học thử miễn phí.\n"
+        f"6. Giọng văn: Ấm áp, lịch sự, xưng 'em', gọi khách là 'anh/chị' hoặc 'anh/chị {customer_name}'. Có emoji tự nhiên. Dưới 80 từ.\n"
+        f"7. KHÔNG dùng markdown tiêu đề (không ##, ###, **). Chỉ trả về đúng nội dung câu tin nhắn gửi khách."
+    )
+
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={gemini_key}"
+            resp = requests.post(
+                url,
+                json={"contents": [{"parts": [{"text": prompt}]}]},
+                timeout=6,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    text = candidates[0]["content"]["parts"][0]["text"].strip()
+                    text = text.replace("**", "").replace("##", "")
+                    return text
+        except Exception:
+            pass
+
+    # ── Contextual Heuristic Engine (100% natural, non-stiff fallback) ──
+    # 1. Phone number detected
+    phone_match = re.search(r"(0\d{9}|\+84\d{9})", latest_msg)
+    if phone_match:
+        phone = phone_match.group(1)
+        return (
+            f"Dạ em cảm ơn anh/chị {customer_name} ạ! Em đã ghi nhận SĐT {phone} của mình rồi. "
+            f"Chuyên viên tư vấn EduFlow sẽ liên hệ qua điện thoại để hỗ trợ xếp lớp và gửi vé học thử miễn phí cho mình ngay nhé! ✨"
+        )
+
+    full_context = " ".join(history) + " " + latest_msg
+    course_context = detect_course_from_text(full_context)
+    lower = latest_msg.lower()
+
+    # 2. Tuition / Price inquiry
+    if any(k in lower for k in ["học phí", "giá", "bao nhiêu", "chi phí", "tiền"]):
+        return (
+            f"Dạ học phí các khóa tại EduFlow dao động từ 2.500.000đ - 3.800.000đ tùy nội dung đào tạo ạ.\n\n"
+            f"🎁 Đặc biệt trong tuần này, EduFlow đang có Học bổng ưu đãi 35% học phí và tặng kèm buổi học thử 1-1 miễn phí.\n\n"
+            f"Anh/chị {customer_name} đang quan tâm lớp học vào buổi tối hay cuối tuần để em báo mức ưu đãi chi tiết và giữ chỗ cho mình nhé! ✨"
+        )
+
+    # 3. Branch / Location inquiry
+    if any(k in lower for k in ["ở đâu", "địa chỉ", "cơ sở", "chi nhánh"]):
+        return (
+            f"Dạ EduFlow có 3 cơ sở đào tạo với phòng máy thực hành cấu hình cao tại TP.HCM ạ:\n"
+            f"📍 CS1: Điện Biên Phủ, P.25, Q. Bình Thạnh\n"
+            f"📍 CS2: Nguyễn Thị Minh Khai, P. Bến Nghé, Q.1\n"
+            f"📍 CS3: Võ Văn Ngân, P. Linh Chiểu, TP. Thủ Đức\n\n"
+            f"Các cơ sở đều có lớp tối (18h30 - 20h30) và cuối tuần. Mình tiện học ở cơ sở nào để em hỗ trợ giữ lịch học thử cho mình nhé! 🏢"
+        )
+
+    # 4. Schedule inquiry
+    if any(k in lower for k in ["buổi tối", "tối", "cuối tuần", "lịch học", "thời gian", "mấy giờ"]):
+        return (
+            f"Dạ EduFlow có lịch học linh hoạt rất thuận tiện cho người đi làm và sinh viên ạ:\n"
+            f"• Lớp tối: 18h30 - 20h30 (Thứ 2-4-6 hoặc Thứ 3-5-7).\n"
+            f"• Lớp cuối tuần: Sáng Thứ 7 & Chủ Nhật.\n\n"
+            f"Khung giờ nào thuận tiện nhất cho anh/chị {customer_name} ạ? Nhắn em xin SĐT để chuyên viên xếp lớp phù hợp nhất cho mình nhé! ⏰"
+        )
+
+    # 5. User said "ok", "dạ", "vâng", "tư vấn", or acknowledging previous course mention
+    if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh"]):
+        return (
+            f"Dạ em gửi anh/chị {customer_name} thông tin khóa học Photoshop Thực chiến tại EduFlow ạ:\n\n"
+            f"📚 Điểm nổi bật khóa học:\n"
+            f"• Đi từ cơ bản đến nâng cao: Làm chủ công cụ, cắt ghép, chỉnh màu ảnh chân dung & sản phẩm.\n"
+            f"• Thực hành thiết kế ấn phẩm thực tế: Banner, poster, cover Facebook truyền thông bán hàng.\n"
+            f"• Thời lượng: 12 buổi (6 tuần) - thực hành 100% trên máy tính.\n"
+            f"• Lịch học linh hoạt: Lớp tối 2-4-6 hoặc lớp cuối tuần (T7 - CN).\n\n"
+            f"🎁 Ưu đãi tuần này: Giảm 35% học phí + tặng kèm kho 50GB Plugin & Font chữ thiết kế bản quyền.\n\n"
+            f"Dạ mình tiện học tại cơ sở nào (Bình Thạnh, Quận 1 hay Thủ Đức) và muốn học tối hay cuối tuần để em hỗ trợ xếp lịch cho mình nhé! ✨"
+        )
+
+    if course_context == "Tin học văn phòng & Luyện thi MOS":
+        return (
+            f"Dạ em gửi anh/chị {customer_name} thông tin khóa Tin học văn phòng & Luyện thi MOS tại EduFlow ạ:\n\n"
+            f"📚 Điểm nổi bật:\n"
+            f"• Thành thạo Excel/Word/PowerPoint từ căn bản đến nâng cao.\n"
+            f"• Làm chủ hàm nâng cao (VLOOKUP, INDEX/MATCH), Pivot Table & tự động hóa báo cáo doanh nghiệp.\n"
+            f"• Cam kết chuẩn đầu ra đỗ chứng chỉ MOS quốc tế.\n"
+            f"• Lịch học: Lớp tối 2-4-6 hoặc cuối tuần.\n\n"
+            f"🎁 Ưu đãi: Giảm 35% học phí trong tuần này. Mình tiện học ở cơ sở Bình Thạnh, Q.1 hay Thủ Đức để em gửi lịch học thử cho mình nhé! 🌟"
+        )
+
+    if course_context == "Lập trình Python thực chiến":
+        return (
+            f"Dạ em gửi anh/chị {customer_name} lộ trình Lập trình Python Thực chiến tại EduFlow ạ:\n\n"
+            f"📚 Điểm nổi bật:\n"
+            f"• Dành cho người mới bắt đầu từ con số 0, không cần có nền tảng trước.\n"
+            f"• Xây dựng tư duy logic, lập trình ứng dụng, xử lý dữ liệu và tự động hóa công việc.\n"
+            f"• Thời lượng 8-10 tuần, giảng viên cầm tay chỉ việc 1-1.\n\n"
+            f"🎁 Đang có học bổng hỗ trợ 35% học phí tuần này. Anh/chị {customer_name} đang tìm hiểu học để phục vụ công việc hay mục tiêu gì để em tư vấn kỹ hơn nhé! 💻"
+        )
+
+    # 6. General welcoming response
+    return (
+        f"Dạ em chào anh/chị {customer_name}! EduFlow Academy có các chương trình đào tạo thực chiến nổi bật:\n"
+        f"1. Thiết kế đồ họa / Photoshop (cắt ghép, chỉnh màu, thiết kế banner/poster quảng cáo)\n"
+        f"2. Tin học văn phòng & Luyện thi MOS (Word, Excel, PowerPoint chuyên nghiệp)\n"
+        f"3. Lập trình Python & Tự động hóa từ cơ bản\n\n"
+        f"Anh/chị đang quan tâm đến bộ môn nào để em gửi thông tin chi tiết và ưu đãi học bổng 35% cho mình nhé! 🎓"
+    )
+
+
+def get_recent_conversations(page_id: str, token: str, limit: int = 10) -> list:
+    """Fetch recent Messenger conversations with messages and participants."""
+    url = f"https://graph.facebook.com/v21.0/{page_id}/conversations"
+    resp = requests.get(
+        url,
+        params={
+            "access_token": token,
+            "fields": "id,updated_time,unread_count,participants,messages{id,created_time,from,message}",
+            "limit": limit,
+        },
+        timeout=15,
+    )
+    resp.raise_for_status()
+    return resp.json().get("data", [])
+
+
+def send_messenger_message(page_id: str, token: str, recipient_id: str, message: str) -> dict | None:
+    """Send a Facebook Messenger message directly via Graph API."""
+    url = f"https://graph.facebook.com/v21.0/{page_id}/messages"
+    payload = {
+        "recipient": {"id": recipient_id},
+        "message": {"text": message},
+        "messaging_type": "RESPONSE",
+    }
+    try:
+        resp = requests.post(
+            url,
+            params={"access_token": token},
+            json=payload,
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            return resp.json()
+        print(f"   ⚠️ Messenger Send API notice: {resp.status_code} {resp.text}")
+        return None
+    except requests.RequestException as e:
+        print(f"   ⚠️ Messenger Send network error: {e}")
+        return None
+
+
+def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None, branch: str = None):
+    """Sync qualified lead info to Frappe CRM."""
+    try:
+        # Check if lead exists
+        cmd = [
+            "docker", "exec", "crm-frappe-1",
+            "bench", "--site", "crm.localhost", "execute",
+            "frappe.db.get_value",
+            "--args", json.dumps(["CRM Lead", {"lead_name": customer_name}, "name"]),
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
+        lead_name = res.stdout.strip().replace('"', '')
+
+        if lead_name and lead_name != "None":
+            update_fields = {}
+            if course:
+                update_fields["course_interest"] = course
+            if branch:
+                update_fields["branch"] = branch
+            if phone:
+                update_fields["mobile_no"] = phone
+                update_fields["status"] = "Qualified"
+
+            if update_fields:
+                cmd_update = [
+                    "docker", "exec", "crm-frappe-1",
+                    "bench", "--site", "crm.localhost", "execute",
+                    "frappe.client.set_value",
+                    "--kwargs", json.dumps({"doctype": "CRM Lead", "name": lead_name, "fieldname": update_fields}),
+                ]
+                subprocess.run(cmd_update, capture_output=True, text=True, timeout=8)
+    except Exception:
+        pass
+
+
+def process_messenger_conversations(
+    page_id: str,
+    token: str,
+    limit: int = 10,
+    dry_run: bool = False,
+    verbose: bool = True,
+) -> int:
+    """Scan Messenger conversations, detect incoming customer messages, and reply intelligently."""
+    replied = load_replied_messenger()
+    new_replies = 0
+
+    try:
+        conversations = get_recent_conversations(page_id, token, limit=limit)
+    except requests.RequestException as e:
+        if verbose:
+            print(f"⚠️ Error fetching Messenger conversations: {e}")
+        return 0
+
+    now_utc = datetime.now(timezone.utc)
+
+    for conv in conversations:
+        conv_id = conv["id"]
+        messages = conv.get("messages", {}).get("data", [])
+        if not messages:
+            continue
+
+        latest_msg = messages[0]
+        msg_id = latest_msg.get("id")
+        sender = latest_msg.get("from", {})
+        sender_id = sender.get("id")
+        sender_name = sender.get("name", "Bạn")
+        msg_text = latest_msg.get("message", "").strip()
+
+        # If latest message is from the page itself, no action needed
+        if sender_id == page_id:
+            continue
+
+        # If already replied to this message ID, skip
+        if msg_id in replied:
+            continue
+
+        # Check message age: ignore messages older than 24 hours (Facebook messaging window limit)
+        created_time_str = latest_msg.get("created_time", "")
+        if created_time_str:
+            try:
+                dt = datetime.fromisoformat(created_time_str.replace("+0000", "+00:00"))
+                age_seconds = (now_utc - dt).total_seconds()
+                if age_seconds > 86400:  # > 24 hours
+                    replied.add(msg_id)
+                    continue
+            except Exception:
+                pass
+
+        if not msg_text:
+            continue
+
+        if verbose:
+            print(f"💬 [Messenger] New message from {sender_name}: \"{msg_text}\" (Conv: {conv_id})")
+
+        # Format history of last 6 messages
+        history = []
+        for m in reversed(messages[:6]):
+            m_sender = m.get("from", {})
+            m_is_page = (m_sender.get("id") == page_id)
+            m_text = m.get("message", "").strip()
+            if m_text:
+                m_role = "EduFlow Academy" if m_is_page else m_sender.get("name", "Khách")
+                history.append(f"[{m_role}]: {m_text}")
+
+        # Generate intelligent contextual reply
+        reply_text = generate_ai_conversation_reply(sender_name, history, msg_text)
+
+        if dry_run:
+            if verbose:
+                print(f"   🔍 [DRY RUN] Messenger Reply: \"{reply_text}\"")
+            replied.add(msg_id)
+            new_replies += 1
+        else:
+            try:
+                res = send_messenger_message(page_id, token, sender_id, reply_text)
+                if res and verbose:
+                    mid = res.get("message_id")
+                    print(f"   📩 Messenger reply sent to {sender_name} (Ref: {mid})")
+
+                # Check for phone, branch, course and sync to CRM
+                phone_match = re.search(r"(0\d{9}|\+84\d{9})", msg_text)
+                phone_val = phone_match.group(1) if phone_match else None
+                course_val = detect_course_from_text(" ".join(history) + " " + msg_text)
+                branch_val = detect_branch_from_text(msg_text)
+
+                sync_to_frappe_crm(sender_name, phone=phone_val, course=course_val, branch=branch_val)
+
+                replied.add(msg_id)
+                new_replies += 1
+            except Exception as e:
+                if verbose:
+                    print(f"   ❌ Messenger reply error: {e}")
+
+    if not dry_run and new_replies > 0:
+        save_replied_messenger(replied)
+
+    return new_replies
+
+
 def process_comments(
     page_id: str,
     token: str,
@@ -387,14 +743,16 @@ def process_comments(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="EduFlow Comment Auto-Reply & Messenger Private Reply")
+    parser = argparse.ArgumentParser(description="EduFlow Comment Auto-Reply & Conversational Messenger Agent")
     parser.add_argument("--watch", action="store_true", help="Run continuously in background loop")
     parser.add_argument("--interval", type=int, default=10, help="Poll interval in seconds for --watch mode (default: 10)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without replying")
     parser.add_argument("--post-id", help="Process specific post ID only")
-    parser.add_argument("--limit", type=int, default=5, help="Number of recent posts to check (default: 5)")
-    parser.add_argument("--no-private", action="store_true", help="Only reply publicly, do not send private Messenger message")
-    parser.add_argument("--private-only", action="store_true", help="Only send private Messenger message, do not reply publicly")
+    parser.add_argument("--limit", type=int, default=5, help="Number of recent posts/conversations to check (default: 5)")
+    parser.add_argument("--no-private", action="store_true", help="Only reply publicly on comments, do not send private Messenger message")
+    parser.add_argument("--private-only", action="store_true", help="Only send private Messenger message, do not reply publicly on comments")
+    parser.add_argument("--no-messenger", action="store_true", help="Only handle post comments, skip Messenger chat monitoring")
+    parser.add_argument("--messenger-only", action="store_true", help="Only monitor and reply to Messenger chats")
     args = parser.parse_args()
 
     # Load environment
@@ -408,52 +766,60 @@ def main():
         print("❌ Missing FACEBOOK_PAGE_ID or FACEBOOK_PAGE_ACCESS_TOKEN in .env")
         sys.exit(1)
 
-    print(f"🤖 EduFlow Comment & Private Reply System active for Page {page_id}")
+    print(f"🤖 EduFlow Omnichannel Marketing & Messenger Agent active for Page {page_id}")
     has_gemini = bool(os.getenv("GEMINI_API_KEY"))
     has_9router = bool(os.getenv("NINE_ROUTER_API_KEY"))
-    engine = "Gemini AI" if has_gemini else ("9Router AI" if has_9router else "Templates")
+    engine = "Gemini AI" if has_gemini else ("9Router AI" if has_9router else "Context Heuristics")
     print(f"🧠 Intelligence Engine: {engine}")
-    if args.no_private:
-        print("ℹ️ Mode: Public Comment Replies ONLY")
-    elif args.private_only:
-        print("ℹ️ Mode: Private Messenger Messages ONLY")
+
+    if args.messenger_only:
+        print("💬 Mode: Messenger Conversations ONLY")
+    elif args.no_messenger:
+        print("📝 Mode: Post Comments ONLY")
     else:
-        print("🚀 Mode: DUAL (Public Comment Reply + Private Messenger Message)")
+        print("🚀 Mode: DUAL (Post Comments + Messenger Conversations)")
+
+    def run_tick():
+        c_count = 0
+        m_count = 0
+        if not args.messenger_only:
+            c_count = process_comments(
+                page_id,
+                token,
+                limit=args.limit,
+                post_id=args.post_id,
+                dry_run=args.dry_run,
+                verbose=True,
+                no_private=args.no_private,
+                private_only=args.private_only,
+            )
+        if not args.no_messenger:
+            m_count = process_messenger_conversations(
+                page_id,
+                token,
+                limit=args.limit,
+                dry_run=args.dry_run,
+                verbose=True,
+            )
+        return c_count, m_count
 
     if args.watch:
-        print(f"👀 Watching for new comments every {args.interval}s (Ctrl+C to stop)...")
+        print(f"👀 Watching for new comments & messages every {args.interval}s (Ctrl+C to stop)...")
         while True:
             try:
-                process_comments(
-                    page_id,
-                    token,
-                    limit=args.limit,
-                    post_id=args.post_id,
-                    dry_run=args.dry_run,
-                    verbose=True,
-                    no_private=args.no_private,
-                    private_only=args.private_only,
-                )
+                run_tick()
                 time.sleep(args.interval)
             except KeyboardInterrupt:
-                print("\n🛑 Stopped comment auto-reply.")
+                print("\n🛑 Stopped agent.")
                 break
             except Exception as e:
                 print(f"⚠️ Polling loop error: {e}")
                 time.sleep(args.interval)
     else:
-        count = process_comments(
-            page_id,
-            token,
-            limit=args.limit,
-            post_id=args.post_id,
-            dry_run=args.dry_run,
-            verbose=True,
-            no_private=args.no_private,
-            private_only=args.private_only,
-        )
-        print(f"\n{'🔍 DRY RUN' if args.dry_run else '✅ Done'}: {count} processed")
+        c, m = run_tick()
+        print(f"\n{'🔍 DRY RUN' if args.dry_run else '✅ Done'}: {c} comments, {m} messages processed")
 
 
 if __name__ == "__main__":
     main()
+
