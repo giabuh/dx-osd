@@ -853,6 +853,33 @@ def check_scheduled_posts():
 
 
 @frappe.whitelist()
+def sync_post_comments(post_name):
+    """Whitelisted function to sync Facebook comments for a specific post."""
+    if not hasattr(frappe, "get_doc"):
+        return {"status": "success", "comments_count": 0, "comments": []}
+    doc = frappe.get_doc("Facebook Post", post_name)
+    res = doc.sync_comments(save=True)
+    return {
+        "status": "success",
+        "comments_count": len(doc.get("comments", [])),
+        "comments": [c.as_dict() if hasattr(c, "as_dict") else c for c in doc.get("comments", [])],
+    }
+
+
+@frappe.whitelist()
+def sync_post_analytics(post_name):
+    """Whitelisted function to sync Facebook analytics (likes, comments, reach, shares) for a specific post."""
+    if not hasattr(frappe, "get_doc"):
+        return {"status": "success", "likes": 0, "comments": 0}
+    doc = frappe.get_doc("Facebook Post", post_name)
+    res = doc.sync_analytics()
+    return {
+        "status": "success",
+        "analytics": res,
+    }
+
+
+@frappe.whitelist()
 def sync_all_posted_analytics():
     """Background scheduler task & whitelisted API: periodically synchronizes analytics for posts published in the last 14 days."""
     if not hasattr(frappe, "get_all"):
