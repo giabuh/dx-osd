@@ -578,9 +578,9 @@
     </Dialog>
 
     <!-- MODAL 3: XEM & SỬA BÀI VIẾT (EDIT & AI REWRITE & COMMENTS) -->
-    <Dialog v-model:open="showEditModal" :size="'3xl'">
+    <Dialog v-model:open="showEditModal" :size="'4xl'">
       <template #body>
-        <div class="bg-surface-elevation-1 flex flex-col max-h-[85vh] -m-4 sm:-m-6 overflow-hidden rounded-xl" v-if="editingPost">
+        <div class="bg-surface-elevation-1 flex flex-col max-h-[85vh] overflow-hidden rounded-xl" v-if="editingPost">
           <!-- Fixed Top Header -->
           <div class="px-5 pt-4 pb-3 border-b border-outline-gray-2 shrink-0 bg-surface-elevation-1">
             <div class="flex items-center justify-between mb-3">
@@ -658,19 +658,20 @@
           <!-- Scrollable Middle Body -->
           <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
             <!-- TAB 1: NỘI DUNG & THIẾT LẬP -->
-            <div v-show="activeModalTab === 'content'" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <!-- Left Column: Properties & Schedule & Banner -->
-              <div class="space-y-3">
+            <div v-show="activeModalTab === 'content'" class="space-y-4 text-xs">
+              <!-- Top Metadata & Scheduling Card -->
+              <div class="p-3.5 rounded-xl border border-outline-gray-2 bg-surface-gray-1 space-y-2.5">
                 <div>
-                  <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Tiêu đề') }}</label>
+                  <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Tiêu đề bài viết') }}</label>
                   <input
                     v-model="editingPost.title"
                     type="text"
                     class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    placeholder="Tiêu đề bài viết..."
                   />
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <div>
                     <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Khóa học') }}</label>
                     <select
@@ -682,6 +683,7 @@
                       </option>
                     </select>
                   </div>
+
                   <div>
                     <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Thứ trong tuần') }}</label>
                     <select
@@ -697,9 +699,7 @@
                       <option value="Chủ Nhật">Chủ Nhật</option>
                     </select>
                   </div>
-                </div>
 
-                <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Thời gian đăng') }}</label>
                     <input
@@ -709,6 +709,7 @@
                       class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
+
                   <div>
                     <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Trạng thái') }}</label>
                     <select
@@ -724,46 +725,62 @@
                     </select>
                   </div>
                 </div>
+              </div>
 
-                <!-- Content Adjustment Panel -->
-                <div class="p-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 space-y-2">
-                  <div class="flex items-center gap-1.5 font-medium text-xs text-ink-gray-7">
-                    <LucideEdit class="size-3.5 text-ink-gray-6" />
-                    <span>{{ __('Gợi ý điều chỉnh cho AI') }}</span>
+              <!-- Balanced 2-Column Split: Content & Banner -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Left Column: Caption & AI Feedback Adjustment -->
+                <div class="space-y-3 flex flex-col justify-between">
+                  <div>
+                    <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Nội dung bài viết (Caption)') }}</label>
+                    <textarea
+                      v-model="editingPost.content"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-3 text-xs font-sans leading-relaxed focus:ring-1 focus:ring-blue-500 focus:outline-none h-[220px] resize-y"
+                      placeholder="Nhập nội dung bài viết..."
+                    />
                   </div>
-                  <input
-                    v-model="editingPost.ai_feedback"
-                    type="text"
-                    class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                    placeholder="Ví dụ: Thêm ưu đãi giảm 500k, viết ngắn gọn hơn..."
-                  />
-                  <div class="flex items-center gap-2">
-                    <Button
-                      variant="subtle"
-                      size="sm"
-                      :iconLeft="LucideRefreshCcw"
-                      :loading="rewritingContent"
-                      @click="handleAiRewriteContent"
-                    >
-                      {{ __('Viết lại nội dung') }}
-                    </Button>
-                    <Button
-                      variant="subtle"
-                      size="sm"
-                      :iconLeft="LucideImage"
-                      :loading="generatingBanner"
-                      @click="handleAiGenerateBanner"
-                    >
-                      {{ __('Tạo lại banner') }}
-                    </Button>
+
+                  <!-- Content Adjustment Panel -->
+                  <div class="p-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 space-y-2">
+                    <div class="flex items-center gap-1.5 font-medium text-xs text-ink-gray-7">
+                      <LucideEdit class="size-3.5 text-ink-gray-6" />
+                      <span>{{ __('Gợi ý điều chỉnh cho AI') }}</span>
+                    </div>
+                    <input
+                      v-model="editingPost.ai_feedback"
+                      type="text"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Ví dụ: Thêm ưu đãi giảm 500k, viết ngắn gọn hơn..."
+                    />
+                    <div class="flex items-center gap-2">
+                      <Button
+                        variant="subtle"
+                        size="sm"
+                        :iconLeft="LucideRefreshCcw"
+                        :loading="rewritingContent"
+                        @click="handleAiRewriteContent"
+                      >
+                        {{ __('Viết lại nội dung') }}
+                      </Button>
+                      <Button
+                        variant="subtle"
+                        size="sm"
+                        :iconLeft="LucideImage"
+                        :loading="generatingBanner"
+                        @click="handleAiGenerateBanner"
+                      >
+                        {{ __('Tạo lại banner') }}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Attached Banner preview (Full View & Click to Zoom) -->
-                <div v-if="editingPost.image" class="space-y-1.5">
+                <!-- Right Column: Banner Display & Actions -->
+                <div class="space-y-2 flex flex-col">
                   <div class="flex items-center justify-between">
-                    <label class="font-medium text-ink-gray-8">{{ __('Banner đính kèm') }}</label>
+                    <label class="font-medium text-ink-gray-8">{{ __('Banner bài viết') }}</label>
                     <button
+                      v-if="editingPost.image"
                       type="button"
                       class="text-[11px] text-blue-500 hover:underline flex items-center gap-1 font-medium"
                       @click="openImagePreview(editingPost.image)"
@@ -772,32 +789,40 @@
                       {{ __('Xem kích thước gốc') }}
                     </button>
                   </div>
+
                   <div
-                    class="rounded-xl overflow-hidden border border-outline-gray-2 bg-surface-gray-2 flex items-center justify-center p-1.5 cursor-pointer hover:border-blue-400 transition-colors group relative"
-                    @click="openImagePreview(editingPost.image)"
-                    title="Bấm để xem ảnh phóng to"
+                    class="flex-1 min-h-[300px] rounded-xl overflow-hidden border border-outline-gray-2 bg-surface-gray-2 flex items-center justify-center p-2 cursor-pointer hover:border-blue-400 transition-colors group relative"
+                    @click="editingPost.image && openImagePreview(editingPost.image)"
+                    :title="editingPost.image ? 'Bấm để xem ảnh phóng to' : ''"
                   >
-                    <img
-                      :src="editingPost.image"
-                      class="w-full h-auto max-h-72 object-contain rounded-lg"
-                      alt="Banner Facebook"
-                    />
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1.5 rounded-xl">
-                      <LucideExternalLink class="size-4" />
-                      <span>{{ __('Bấm để phóng to') }}</span>
-                    </div>
+                    <template v-if="editingPost.image">
+                      <img
+                        :src="editingPost.image"
+                        class="w-full h-auto max-h-[320px] object-contain rounded-lg mx-auto"
+                        alt="Banner Facebook"
+                      />
+                      <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1.5 rounded-xl">
+                        <LucideExternalLink class="size-4" />
+                        <span>{{ __('Bấm để xem ảnh phóng to') }}</span>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="text-center py-12 text-ink-gray-5">
+                        <LucideImage class="size-10 mx-auto text-ink-gray-4 mb-2" />
+                        <p class="text-xs">{{ __('Chưa có banner đính kèm') }}</p>
+                        <Button
+                          variant="subtle"
+                          size="sm"
+                          class="mt-2"
+                          :loading="generatingBanner"
+                          @click.stop="handleAiGenerateBanner"
+                        >
+                          {{ __('Tạo banner bằng AI') }}
+                        </Button>
+                      </div>
+                    </template>
                   </div>
                 </div>
-              </div>
-
-              <!-- Right Column: Content Caption -->
-              <div class="space-y-2 flex flex-col h-full">
-                <label class="block font-medium text-ink-gray-8">{{ __('Nội dung bài viết (Caption)') }}</label>
-                <textarea
-                  v-model="editingPost.content"
-                  class="flex-1 w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-3 text-xs font-sans leading-relaxed focus:ring-1 focus:ring-blue-500 focus:outline-none min-h-[350px] resize-y"
-                  placeholder="Nhập nội dung bài viết..."
-                />
               </div>
             </div>
 
@@ -1108,7 +1133,7 @@
     </Dialog>
 
     <!-- IMAGE PREVIEW MODAL -->
-    <Dialog v-model:open="showImageModal" :size="'3xl'">
+    <Dialog v-model:open="showImageModal" :size="'4xl'">
       <template #body>
         <div class="p-4 bg-surface-elevation-1 flex flex-col items-center">
           <div class="w-full flex justify-end mb-2">
