@@ -18,7 +18,8 @@ frappe.listview_settings["Facebook Post"] = {
 		"image",
 		"content",
 		"fb_post_url",
-		"fb_post_id"
+		"fb_post_id",
+		"ads_recommendation"
 	],
 	get_indicator: function (doc) {
 		if (doc.status === "Draft") {
@@ -626,10 +627,13 @@ function render_kpi_summary_bar(listview) {
 
 			let current_filters = (listview.filter_area && listview.filter_area.get()) || [];
 			let active_status = "";
+			let active_ads = "";
 			for (let f of current_filters) {
 				if (f[1] === "status") {
 					active_status = f[3];
-					break;
+				}
+				if (f[1] === "ads_recommendation") {
+					active_ads = f[3];
 				}
 			}
 
@@ -668,9 +672,12 @@ function render_kpi_summary_bar(listview) {
 			<!-- Quick Status Filter Bar -->
 			<div class="facebook-status-filter-pills" style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 10px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 8px;">
 				<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-					<span style="font-size: 12px; font-weight: 600; color: #4B5563; margin-right: 4px;">Lọc trạng thái:</span>
-					<button class="btn btn-xs filter-pill ${!active_status ? 'btn-primary' : 'btn-default'}" data-status="" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
+					<span style="font-size: 12px; font-weight: 600; color: #4B5563; margin-right: 4px;">Lọc nhanh:</span>
+					<button class="btn btn-xs filter-pill ${!active_status && !active_ads ? 'btn-primary' : 'btn-default'}" data-status="" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
 						Tất cả (${kpis.total_posts || 0})
+					</button>
+					<button class="btn btn-xs filter-pill ${active_ads === 'Recommended' ? 'btn-primary' : 'btn-default'}" data-ads-filter="Recommended" style="font-weight: 600; border-radius: 14px; padding: 3px 12px; border-color: #F59E0B; ${active_ads === 'Recommended' ? 'background: #D97706; color: white;' : 'background: #FFFBEB; color: #B45309;'}">
+						🔥 Khuyên chạy Ads (${kpis.recommended_ads_count || 0})
 					</button>
 					<button class="btn btn-xs filter-pill ${active_status === 'Posted' ? 'btn-primary' : 'btn-default'}" data-status="Posted" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
 						Đã đăng (${kpis.posted_count || 0})
@@ -696,14 +703,28 @@ function render_kpi_summary_bar(listview) {
 				open_marketing_overview_modal(listview);
 			});
 
-			container.find('.filter-pill').on('click', function () {
+			container.find('.filter-pill[data-status]').on('click', function () {
 				let target = $(this).attr('data-status');
 				if (listview.filter_area) {
+					listview.filter_area.remove("ads_recommendation");
 					listview.filter_area.remove("status");
 					if (target) {
 						listview.filter_area.add([["Facebook Post", "status", "=", target]]);
 					} else {
 						listview.refresh();
+					}
+				}
+			});
+
+			container.find('.filter-pill[data-ads-filter]').on('click', function () {
+				let target = $(this).attr('data-ads-filter');
+				if (listview.filter_area) {
+					listview.filter_area.remove("status");
+					listview.filter_area.remove("ads_recommendation");
+					if (active_ads === target) {
+						listview.refresh();
+					} else {
+						listview.filter_area.add([["Facebook Post", "ads_recommendation", "=", target]]);
 					}
 				}
 			});
@@ -759,6 +780,11 @@ function enhance_list_rows(listview) {
 						<a href="${form_link}" style="font-weight: 600; font-size: 13.5px; color: #111827; text-decoration: none;" class="ellipsis" title="${frappe.utils.escape_html(raw_title)}">
 							${frappe.utils.escape_html(raw_title)}
 						</a>
+						${doc.ads_recommendation === 'Recommended' ? `
+							<span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;" title="${__('Bài viết có tương tác tự nhiên cao, AI khuyên nên chạy Meta Ads')}">
+								🔥 Khuyên chạy Ads
+							</span>
+						` : ''}
 					</div>
 					${snippet ? `<div style="font-size: 12px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 440px; margin-top: 2px;" title="${frappe.utils.escape_html(clean_content)}">
 						${frappe.utils.escape_html(snippet)}
@@ -835,7 +861,7 @@ function open_marketing_overview_modal(listview) {
 						<td style="padding: 10px 8px; font-weight: 700; font-size: 13px; text-align: center; width: 44px; color: #4B5563;">${idx + 1}</td>
 						<td style="padding: 10px 8px;">
 							<div style="font-weight: 600; color: #111827; font-size: 13px;">${frappe.utils.escape_html(p.title || 'Bài viết #' + p.name)}</div>
-							<div style="font-size: 11px; color: #6B7280;">Khóa học: <span class="badge badge-light" style="font-weight: 600;">${p.course || 'Chung'}</span> • ${p.day_of_week || ''}</div>
+							<div style="font-size: 11px; color: #6B7280;">Khóa học: <span class="badge badge-light" style="font-weight: 600;">${p.course || 'Chung'}</span> • ${p.day_of_week || ''} ${p.ads_recommendation === 'Recommended' ? '<span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 10px; margin-left: 4px;">🔥 Khuyên Ads</span>' : ''}</div>
 						</td>
 						<td style="padding: 10px 8px; text-align: center;">
 							<span class="badge" style="background: #E6F4EA; color: #137333; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px;">
@@ -861,7 +887,7 @@ function open_marketing_overview_modal(listview) {
 						<td style="padding: 10px 8px; font-weight: 700; font-size: 13px; text-align: center; width: 44px; color: #4B5563;">${idx + 1}</td>
 						<td style="padding: 10px 8px;">
 							<div style="font-weight: 600; color: #111827; font-size: 13px;">${frappe.utils.escape_html(p.title || 'Bài viết #' + p.name)}</div>
-							<div style="font-size: 11px; color: #6B7280;">Khóa học: <span class="badge badge-light" style="font-weight: 600;">${p.course || 'Chung'}</span></div>
+							<div style="font-size: 11px; color: #6B7280;">Khóa học: <span class="badge badge-light" style="font-weight: 600;">${p.course || 'Chung'}</span> ${p.ads_recommendation === 'Recommended' ? '<span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 10px; margin-left: 4px;">🔥 Khuyên Ads</span>' : ''}</div>
 						</td>
 						<td style="padding: 10px 8px; text-align: center;">
 							<span style="font-weight: 600; color: #111827; font-size: 13px;">${p.likes_count || 0}</span>
@@ -882,7 +908,7 @@ function open_marketing_overview_modal(listview) {
 			let modalHtml = `
 				<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
 					<!-- Quick Metric Strip -->
-					<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
+					<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;">
 						<div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; text-align: center;">
 							<div style="font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase;">Tổng bài viết</div>
 							<div style="font-size: 20px; font-weight: 700; color: #111827; margin-top: 2px;">${kpis.total_posts || 0}</div>
@@ -896,12 +922,17 @@ function open_marketing_overview_modal(listview) {
 						<div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; text-align: center;">
 							<div style="font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase;">Bình luận</div>
 							<div style="font-size: 20px; font-weight: 700; color: #111827; margin-top: 2px;">${(kpis.total_comments || 0).toLocaleString()}</div>
-							<div style="font-size: 11px; color: #6B7280;">Bình luận & phản hồi</div>
+							<div style="font-size: 11px; color: #6B7280;">Bình luận</div>
 						</div>
 						<div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; text-align: center;">
 							<div style="font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase;">CRM Leads</div>
 							<div style="font-size: 20px; font-weight: 700; color: #059669; margin-top: 2px;">${kpis.total_leads || 0}</div>
-							<div style="font-size: 11px; color: #6B7280;">Khách chuyển đổi</div>
+							<div style="font-size: 11px; color: #6B7280;">Khách tiềm năng</div>
+						</div>
+						<div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px; padding: 12px; text-align: center;">
+							<div style="font-size: 11px; color: #92400E; font-weight: 600; text-transform: uppercase;">Khuyên chạy Ads</div>
+							<div style="font-size: 20px; font-weight: 700; color: #D97706; margin-top: 2px;">${kpis.recommended_ads_count || 0}</div>
+							<div style="font-size: 11px; color: #B45309;">Bài tiềm năng cao</div>
 						</div>
 					</div>
 

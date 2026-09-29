@@ -195,6 +195,8 @@ class TestFacebookPost(unittest.TestCase):
             self.assertEqual(doc.likes_count, 42)
             self.assertEqual(doc.comments_count, 15)
             self.assertEqual(doc.shares_count, 8)
+            self.assertEqual(doc.ads_recommendation, "Recommended")
+            self.assertEqual(res["ads_recommendation"], "Recommended")
             self.assertIsNotNone(doc.last_analytics_sync)
             doc.save.assert_called()
 
@@ -267,6 +269,108 @@ class TestFacebookPost(unittest.TestCase):
         self.assertEqual(len(result["top_leads"]), 2)
         self.assertEqual(result["top_leads"][0]["name"], "FB-03")
         self.assertEqual(result["top_engagement"][0]["name"], "FB-03")
+
+    def test_evaluate_ads_potential_scoring(self):
+        """Test evaluate_ads_potential computes scores and assigns recommendations."""
+        doc = FacebookPost()
+
+        # Test Recommended by leads
+        doc.likes_count = 0
+        doc.comments_count = 0
+        doc.shares_count = 0
+        doc.leads_count = 1
+        res = doc.evaluate_ads_potential()
+        self.assertEqual(res["recommendation"], "Recommended")
+        self.assertEqual(doc.ads_recommendation, "Recommended")
+        self.assertEqual(res["score"], 10)
+
+        # Test Recommended by comments >= 2
+        doc.leads_count = 0
+        doc.comments_count = 2
+        res = doc.evaluate_ads_potential()
+        self.assertEqual(res["recommendation"], "Recommended")
+        self.assertEqual(doc.ads_recommendation, "Recommended")
+        self.assertEqual(res["score"], 6)
+
+        # Test Recommended by total score >= 5
+        doc.comments_count = 1
+        doc.likes_count = 2
+        # score = 2*1 + 1*3 = 5
+        res = doc.evaluate_ads_potential()
+        self.assertEqual(res["recommendation"], "Recommended")
+        self.assertEqual(res["score"], 5)
+
+        # Test Review for score 1..4
+        doc.comments_count = 0
+        doc.likes_count = 1
+        # score = 1
+        res = doc.evaluate_ads_potential()
+        self.assertEqual(res["recommendation"], "Review")
+        self.assertEqual(doc.ads_recommendation, "Review")
+        self.assertEqual(res["score"], 1)
+
+        # Test Not Recommended for score 0
+        doc.likes_count = 0
+        res = doc.evaluate_ads_potential()
+        self.assertEqual(res["recommendation"], "Not Recommended")
+        self.assertEqual(doc.ads_recommendation, "Not Recommended")
+        self.assertEqual(res["score"], 0)
+
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.requests.post")
+    def test_get_ai_ads_advice_with_gemini(self, mock_post):
+        """Test get_ai_ads_advice parses Gemini advice response into structured output."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": '{\n"rationale": "Tương tác ban đầu tích cực với 2 bình luận hỏi khóa học.",\n"target_audience": {"age": "25-45 tuổi", "location": "TP.HCM", "interests": "Tiếng Anh giao tiếp", "gender": "Tất cả"},\n"budget_plan": {"daily_budget": "150.000đ/ngày", "duration": "5 ngày", "objective": "Tin nhắn Messenger", "expected_cpl": "30.000đ/lead"},\n"tips": ["Bật nút Gửi tin nhắn", "Chạy test 3 ngày"]\n}'
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+        mock_post.return_value = mock_resp
+
+        doc = FacebookPost()
+        doc.course = "Tiếng Anh"
+        doc.title = "Tiếng Anh cho người đi làm"
+        doc.likes_count = 5
+        doc.comments_count = 2
+        doc.save = MagicMock()
+
+        with patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.os.getenv") as mock_env:
+            mock_env.side_effect = lambda k, default=None: "dummy_key" if k == "GEMINI_API_KEY" else default
+            res = doc.get_ai_ads_advice()
+            self.assertEqual(res["status"], "success")
+            self.assertEqual(res["recommendation"], "Recommended")
+            self.assertIn("target_audience", res)
+            self.assertEqual(res["target_audience"]["age"], "25-45 tuổi")
+            self.assertEqual(res["budget_plan"]["daily_budget"], "150.000đ/ngày")
+            self.assertTrue(len(res["tips"]) >= 2)
+
+    def test_get_ai_ads_advice_fallback_heuristic(self):
+        """Test get_ai_ads_advice provides heuristic structured advice even without AI API."""
+        doc = FacebookPost()
+        doc.course = "Tiếng Anh"
+        doc.title = "Tiếng Anh giao tiếp"
+        doc.likes_count = 10
+        doc.comments_count = 3
+        doc.save = MagicMock()
+
+        with patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.os.getenv") as mock_env:
+            mock_env.return_value = None  # No API key
+            res = doc.get_ai_ads_advice()
+            self.assertEqual(res["status"], "success")
+            self.assertEqual(res["recommendation"], "Recommended")
+            self.assertIn("target_audience", res)
+            self.assertIn("budget_plan", res)
+            self.assertIn("tips", res)
+            self.assertIn("https://adsmanager.facebook.com/", res.get("ads_manager_url", ""))
 
 
 if __name__ == "__main__":
