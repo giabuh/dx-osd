@@ -339,6 +339,32 @@ def detect_branch_from_text(text: str) -> str | None:
 # ── Conversational Messenger Reply Generator ───────────────────────
 def generate_ai_conversation_reply(customer_name: str, history: list[str], latest_msg: str) -> str:
     """Generate a highly contextual, natural, consultative Messenger response using 9Router/Gemini or smart heuristics."""
+    phone_match = re.search(r"(0\d{9}|\+84\d{9})", latest_msg)
+    lower = latest_msg.lower()
+
+    # 1. Deterministic phone number detection (actual digits provided)
+    if phone_match:
+        phone = phone_match.group(1)
+        return (
+            f"Dạ em cảm ơn anh/chị {customer_name} nhiều ạ! Em đã lưu Số Điện Thoại {phone} của mình rồi ạ. "
+            f"Chuyên viên tuyển sinh của EduFlow sẽ sớm liên hệ qua SĐT để hỗ trợ xếp lớp và gửi vé mời học thử miễn phí cho mình nhé! "
+            f"Chúc anh/chị một ngày thật vui vẻ ạ! ✨"
+        )
+
+    # 2. User clicked "gửi số điện thoại" or mentioned phone without digits
+    if any(k in lower for k in ["gửi số điện thoại", "sđt", "sdt", "số điện thoại", "cho sdt", "gửi sdt"]):
+        return (
+            f"Dạ anh/chị {customer_name} nhắn giúp em các chữ số điện thoại (ví dụ: 090xxxxxxx) trực tiếp vào ô chat này nhé ạ! "
+            f"Để em lưu hồ sơ và chuyển chuyên viên hỗ trợ xếp lớp cho mình ngay ạ. 📞"
+        )
+
+    # 3. Thank you / Goodbye / Concluding message
+    if any(k in lower for k in ["cảm ơn", "cam on", "thank", "tks", "bye", "tạm biệt", "ok em", "chúc em", "tuyệt vời"]):
+        return (
+            f"Dạ không có chi ạ! Chúc anh/chị {customer_name} một ngày thật nhiều niềm vui và học tập hiệu quả nhé! "
+            f"Nếu cần hỗ trợ thêm thông tin gì, anh/chị cứ nhắn lại cho em bất cứ lúc nào nha! 🌟"
+        )
+
     history_str = "\n".join(history[-6:])
     prompt = (
         f"Bạn là Chuyên viên Tư vấn Tuyển sinh Cao cấp của Học viện EduFlow Academy (Việt Nam).\n"
@@ -359,10 +385,9 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
         f"6. Học phí: Ưu đãi 35% chỉ còn ~1.950.000đ - 2.500.000đ tùy khóa.\n\n"
         f"QUY TẮC PHẢN HỒI (RẤT QUAN TRỌNG ĐỂ KHÔNG BỊ SƯỢNG):\n"
         f"1. Nếu khách vừa chọn cơ sở (vd: CS1 Bình Thạnh): Hãy nhiệt tình xác nhận cơ sở đã chọn, sau đó giới thiệu 2 khung giờ học (Tối 2-4-6 hoặc Sáng T7-CN) và hỏi khách tiện học giờ nào hơn.\n"
-        f"2. Nếu khách vừa chọn ca học/giờ học (vd: Tối 2-4-6 hay Cuối tuần): Xác nhận ca học, và xin phép xin Số Điện Thoại (SĐT) để chuyên viên hỗ trợ giữ chỗ ưu đãi học bổng 35% và gửi vé học thử miễn phí.\n"
-        f"3. Nếu khách cho SĐT: Cảm ơn chân thành, xác nhận lại SĐT và thông báo chuyên viên tuyển sinh của cơ sở sẽ gọi điện tư vấn và xếp lớp ngay.\n"
-        f"4. Tuyệt đối KHÔNG gửi menu cứng nhắc, KHÔNG lặp lại giới thiệu chung nếu khách đã chọn bước tiếp theo.\n"
-        f"5. Giọng văn: Ấm áp, lịch sự, xưng 'em', gọi khách là 'anh/chị' hoặc 'anh/chị {customer_name}'. Ngắn gọn dưới 60 từ. Không dùng markdown (** hay ##)."
+        f"2. Nếu khách vừa chọn ca học/giờ học (vd: Tối 2-4-6 hay Cuối tuần): Xác nhận ca học, và xin phép xin Số Điện Thoại (SĐT) trực tiếp vào ô chat để chuyên viên hỗ trợ giữ chỗ ưu đãi học bổng 35% và gửi vé học thử miễn phí.\n"
+        f"3. Tuyệt đối KHÔNG gửi menu cứng nhắc, KHÔNG lặp lại giới thiệu chung nếu khách đã chọn bước tiếp theo.\n"
+        f"4. Giọng văn: Ấm áp, lịch sự, xưng 'em', gọi khách là 'anh/chị' hoặc 'anh/chị {customer_name}'. Ngắn gọn dưới 60 từ. Không dùng markdown (** hay ##)."
     )
 
     # 1. Try 9Router (local fast proxy)
@@ -414,17 +439,6 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
             pass
 
     # ── Contextual Heuristic Engine (100% natural, non-stiff fallback) ──
-    lower = latest_msg.lower()
-
-    # 1. Phone number detected
-    phone_match = re.search(r"(0\d{9}|\+84\d{9})", latest_msg)
-    if phone_match:
-        phone = phone_match.group(1)
-        return (
-            f"Dạ em cảm ơn anh/chị {customer_name} ạ! Em đã ghi nhận SĐT {phone} của mình rồi. "
-            f"Chuyên viên tư vấn EduFlow sẽ liên hệ qua điện thoại để hỗ trợ xếp lớp và gửi vé học thử miễn phí cho mình ngay nhé! ✨"
-        )
-
     # 2. Branch chosen (e.g. CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức)
     branch_val = detect_branch_from_text(latest_msg)
     if branch_val:
@@ -440,7 +454,7 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
     if any(k in lower for k in ["tối 2-4-6", "2-4-6", "tối 3-5-7", "cuối tuần", "thứ 7", "chủ nhật", "t7", "cn"]):
         return (
             f"Dạ em đã ghi nhận lịch học dự kiến của anh/chị {customer_name} rồi ạ! 🌟\n\n"
-            f"Để hoàn tất giữ suất học bổng ưu đãi 35% học phí và nhận vé tham gia buổi học thử 1-1 miễn phí, anh/chị nhắn em xin Số Điện Thoại (SĐT) để chuyên viên hỗ trợ làm hồ sơ cho mình nhé! 📱"
+            f"Để hoàn tất giữ suất học bổng ưu đãi 35% học phí và nhận vé tham gia buổi học thử 1-1 miễn phí, anh/chị nhắn em xin Số Điện Thoại (SĐT) trực tiếp vào ô chat để chuyên viên hỗ trợ làm hồ sơ cho mình nhé! 📱"
         )
 
     # 4. Tuition / Price inquiry
@@ -533,11 +547,31 @@ def get_recent_conversations(page_id: str, token: str, limit: int = 10) -> list:
     return resp.json().get("data", [])
 
 
-def get_smart_quick_replies(course_context: str | None = None, message_text: str = "") -> list[dict]:
+def get_smart_quick_replies(
+    course_context: str | None = None,
+    message_text: str = "",
+    history: list[str] | None = None,
+    has_phone: bool = False,
+) -> list[dict]:
     """Return contextual Quick Reply buttons for Facebook Messenger."""
     lower = (message_text or "").lower()
 
-    # 1. Customer just chose or mentioned a branch -> suggest schedule shifts
+    # 1. Concluded / phone provided / thank you -> NO buttons (completely clean chat)
+    if has_phone or re.search(r"(0\d{9}|\+84\d{9})", message_text):
+        return []
+
+    if any(k in lower for k in ["cảm ơn", "cam on", "thank", "tks", "bye", "tạm biệt", "ok em", "chúc em", "tuyệt vời"]):
+        return []
+
+    # 2. Asking for phone number (waiting for digits from customer) -> NO buttons (leave text bar clean)
+    if any(k in lower for k in ["gửi số điện thoại", "sđt", "sdt", "số điện thoại", "cho sdt", "gửi sdt"]):
+        return []
+
+    # 3. Schedule chosen -> bot asks for phone number -> NO buttons (leave text bar clean)
+    if any(k in lower for k in ["tối", "cuối tuần", "2-4-6", "3-5-7", "t7", "cn", "sáng"]):
+        return []
+
+    # 4. Customer just chose or mentioned a branch -> suggest schedule shifts
     if any(k in lower for k in ["bình thạnh", "quận 1", "q1", "thủ đức", "cs1", "cs2", "cs3"]):
         return [
             {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
@@ -546,15 +580,7 @@ def get_smart_quick_replies(course_context: str | None = None, message_text: str
             {"content_type": "text", "title": "📞 Nhận tư vấn 1-1", "payload": "CONSULT_1_1"},
         ]
 
-    # 2. Customer just chose or mentioned a schedule -> ask for phone or discount reservation
-    if any(k in lower for k in ["tối", "cuối tuần", "2-4-6", "3-5-7", "t7", "cn", "sáng"]):
-        return [
-            {"content_type": "text", "title": "📱 Gửi số điện thoại", "payload": "SEND_PHONE"},
-            {"content_type": "text", "title": "🎁 Giữ ưu đãi 35%", "payload": "HOLD_DISCOUNT_35"},
-            {"content_type": "text", "title": "📍 Chọn lại cơ sở", "payload": "CHOOSE_BRANCH"},
-        ]
-
-    # 3. In Photoshop context or learning from scratch -> suggest branches
+    # 5. In Photoshop context or learning from scratch -> suggest branches
     if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh", "từ số 0", "cơ bản", "mới bắt đầu", "đi làm"]):
         return [
             {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
@@ -563,7 +589,16 @@ def get_smart_quick_replies(course_context: str | None = None, message_text: str
             {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
         ]
 
-    # 4. Default broad course selection
+    # 6. If course context is already established, don't show generic course menu
+    if course_context:
+        return [
+            {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
+            {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
+            {"content_type": "text", "title": "📍 CS3 Thủ Đức", "payload": "CS3_THU_DUC"},
+            {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
+        ]
+
+    # 7. Default broad course selection only at very start
     return [
         {"content_type": "text", "title": "🎨 Khóa Photoshop", "payload": "COURSE_PHOTOSHOP"},
         {"content_type": "text", "title": "📊 Tin học MOS", "payload": "COURSE_MOS"},
@@ -762,10 +797,21 @@ def process_messenger_conversations(
         branch_val = detect_branch_from_text(msg_text)
 
         # Generate intelligent contextual reply
+        # Detect phone number in current message or thread
+        phone_match = re.search(r"(0\d{9}|\+84\d{9})", msg_text)
+        phone_val = phone_match.group(1) if phone_match else None
+        has_phone_in_thread = bool(phone_match or re.search(r"(0\d{9}|\+84\d{9})", full_thread_text))
+
+        # Generate intelligent contextual reply
         reply_text = generate_ai_conversation_reply(sender_name, history, msg_text)
 
-        # Smart quick reply buttons
-        smart_quick_replies = get_smart_quick_replies(course_val, msg_text)
+        # Smart quick reply buttons (will be empty [] when phone provided, asking for phone, or concluded)
+        smart_quick_replies = get_smart_quick_replies(
+            course_context=course_val,
+            message_text=msg_text,
+            history=history,
+            has_phone=has_phone_in_thread,
+        )
 
         # Keep conversation clean and consultative - do not send unsolicited images
         image_to_attach = None
@@ -790,12 +836,10 @@ def process_messenger_conversations(
                 )
                 if res and verbose:
                     mid = res.get("message_id")
-                    print(f"   📩 Messenger reply sent to {sender_name} (Ref: {mid}) with {len(smart_quick_replies)} quick buttons")
+                    btn_info = f" with {len(smart_quick_replies)} quick buttons" if smart_quick_replies else " (clean conclusion, no buttons)"
+                    print(f"   📩 Messenger reply sent to {sender_name} (Ref: {mid}){btn_info}")
 
                 # Check for phone, branch, course and sync to CRM
-                phone_match = re.search(r"(0\d{9}|\+84\d{9})", msg_text)
-                phone_val = phone_match.group(1) if phone_match else None
-
                 sync_to_frappe_crm(sender_name, phone=phone_val, course=course_val, branch=branch_val)
 
                 replied.add(msg_id)

@@ -138,16 +138,43 @@ class TestCommentReplySystem(unittest.TestCase):
 
     def test_get_smart_quick_replies_rules(self):
         """Test contextual quick reply generation and Facebook 20-character limit."""
-        replies_branch = cr.get_smart_quick_replies("Photoshop thực chiến", "có lớp tối ở Bình Thạnh không?")
+        replies_branch = cr.get_smart_quick_replies("Photoshop thực chiến", "mình muốn học ở Bình Thạnh")
         self.assertTrue(len(replies_branch) >= 3)
         for r in replies_branch:
             self.assertLessEqual(len(r["title"]), 20, f"Title too long: {r['title']}")
             self.assertEqual(r["content_type"], "text")
 
+        # Initial conversation without course -> offers course choices
         replies_course = cr.get_smart_quick_replies(None, "tư vấn giúp mình")
         self.assertTrue(len(replies_course) >= 3)
         for r in replies_course:
             self.assertLessEqual(len(r["title"]), 20)
+
+        # Phone provided -> must return NO buttons (clean conclusion)
+        self.assertEqual(cr.get_smart_quick_replies("Photoshop", "0901234567"), [])
+        self.assertEqual(cr.get_smart_quick_replies("Photoshop", "đây là số mình", has_phone=True), [])
+
+        # Thank you / Goodbye -> must return NO buttons
+        self.assertEqual(cr.get_smart_quick_replies("Photoshop", "cảm ơn em nhiều nha"), [])
+
+        # Asking for phone / customer clicked send phone -> NO buttons (clean typing input)
+        self.assertEqual(cr.get_smart_quick_replies("Photoshop", "gửi số điện thoại"), [])
+        self.assertEqual(cr.get_smart_quick_replies("Photoshop", "lớp tối 2-4-6"), [])
+
+    def test_phone_number_handling(self):
+        """Test asking for real digits vs acknowledging valid phone."""
+        # Clicked phone button or said "gửi số điện thoại" without digits
+        ask_digits = cr.generate_ai_conversation_reply("Thành", [], "gửi số điện thoại")
+        self.assertIn("chữ số điện thoại", ask_digits)
+
+        # Provided actual phone digits
+        ack_phone = cr.generate_ai_conversation_reply("Thành", [], "SĐT mình là 0912345678 nhé")
+        self.assertIn("0912345678", ack_phone)
+        self.assertIn("liên hệ", ack_phone)
+
+        # Concluding thanks
+        ack_thanks = cr.generate_ai_conversation_reply("Thành", [], "Cảm ơn em")
+        self.assertIn("Chúc", ack_thanks)
 
     def test_detect_course_and_branch_matchers(self):
         """Test heuristic detection of course and campus."""
