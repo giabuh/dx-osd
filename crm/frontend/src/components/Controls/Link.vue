@@ -141,7 +141,9 @@ const options = createResource({
   transform: (data) => {
     let allData = data.map((option) => {
       return {
-        label: option.label || option.value,
+        label: isTranslatable(props.doctype)
+          ? __(option.label || option.value)
+          : option.label || option.value,
         value: option.value,
         description: stripHtml(option.description),
       }

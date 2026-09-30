@@ -9227,3 +9227,6 @@ msgstr "Dùng nút Ghi danh để đăng ký"
 
 msgid "Courses & Classes"
 msgstr "Khóa học & Lớp"
+
+msgid "Please provide a reason for marking this {0} as lost"
+msgstr "Vui lòng nhập lý do đóng {0} này"

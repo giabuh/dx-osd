@@ -112,7 +112,11 @@ const fields = createResource({
       data
         .filter((f) => f.hidden == 0 && f.read_only == 0)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        .map(({ description, ...f }) => ({ ...f, value: f.fieldname }))
+        .map(({ description, ...f }) => ({
+          ...f,
+          label: __(f.label),
+          value: f.fieldname,
+        }))
     )
   },
 })
