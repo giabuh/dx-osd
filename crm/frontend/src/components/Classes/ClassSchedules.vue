@@ -23,7 +23,6 @@
           type="select"
           label="Khóa học"
           :options="courseFilter"
-          @change="load"
         />
       </div>
       <div class="w-48">
@@ -32,7 +31,6 @@
           type="select"
           label="Chi nhánh"
           :options="branchFilter"
-          @change="load"
         />
       </div>
       <div class="w-36">
@@ -41,17 +39,19 @@
           type="select"
           label="Trạng thái"
           :options="statusFilter"
-          @change="load"
         />
       </div>
       <FormControl
         v-model="filters.include_past"
         type="checkbox"
         label="Cả lớp đã qua"
-        @change="load"
       />
     </div>
     <ErrorMessage :message="error" />
+    <p v-if="total > rows.length" class="text-p-sm text-ink-amber-3">
+      Đang hiện {{ rows.length }}/{{ total }} lớp sớm nhất. Chọn khóa học hoặc
+      chi nhánh để xem đủ.
+    </p>
     <ListView
       :columns="columns"
       :rows="rows"
@@ -103,7 +103,7 @@
 import ClassDialog from './ClassDialog.vue'
 import { adminCall } from '@/components/Admin/adminApi'
 import { Badge, ErrorMessage, FormControl, ListView } from 'frappe-ui'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 const options = reactive({
   can_edit: false,
@@ -120,6 +120,7 @@ const filters = reactive({
   include_past: false,
 })
 const rows = ref([])
+const total = ref(0)
 const error = ref('')
 const showDialog = ref(false)
 const selected = ref(null)
@@ -163,10 +164,12 @@ const statusFilter = computed(() => [
 
 async function load() {
   try {
-    rows.value = await adminCall('mmm_custom.classes.schedules', {
+    const data = await adminCall('mmm_custom.classes.schedules', {
       ...filters,
       include_past: filters.include_past ? 1 : 0,
     })
+    rows.value = data.rows
+    total.value = data.total
     error.value = ''
   } catch (e) {
     error.value = e.message
@@ -178,6 +181,9 @@ function edit(row) {
   selected.value = row
   showDialog.value = true
 }
+
+// Any filter change reloads (the select emits `change` before its model is updated, so watch the model)
+watch(filters, load)
 
 onMounted(async () => {
   try {

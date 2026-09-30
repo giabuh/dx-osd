@@ -26,6 +26,7 @@
             v-model="form.start_date"
             type="date"
             label="Ngày khai giảng"
+            placeholder="Chọn ngày"
           />
           <FormControl
             v-model="form.shift"
@@ -100,8 +101,16 @@ const branchOptions = computed(() => [
 const shiftOptions = computed(() =>
   props.options.shifts.map((v) => ({ label: v, value: v })),
 )
+const STATUS_LABELS = {
+  Open: 'Đang mở',
+  Full: 'Đã đủ',
+  Started: 'Đã khai giảng',
+}
 const statusOptions = computed(() =>
-  props.options.statuses.map((v) => ({ label: v, value: v })),
+  props.options.statuses.map((v) => ({
+    label: STATUS_LABELS[v] || v,
+    value: v,
+  })),
 )
 const error = ref('')
 const saving = ref(false)

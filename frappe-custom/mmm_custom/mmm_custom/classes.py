@@ -69,13 +69,15 @@ def context():
 
 @whitelist()
 def schedules(course="", branch="", status="", include_past=0):
-    """Classes, soonest first, with the seats held (deposit / enrolled) and the registrations still pending."""
+    """Classes, soonest first (the first MAX_ROWS of `total`), with the seats held (deposit / enrolled) and the
+    registrations still pending."""
     frappe.has_permission("Course Schedule", "read", throw=True)
     from mmm_custom.enrolment import seats_taken
 
     filters = {k: v for k, v in (("course", course), ("branch", branch), ("status", status)) if v}
     if not int(include_past or 0):
         filters["start_date"] = [">=", frappe.utils.getdate()]
+    total = frappe.db.count("Course Schedule", filters)
     rows = frappe.get_all("Course Schedule", filters=filters, fields=["name", "title", *FIELDS],
                           order_by="start_date asc", limit=MAX_ROWS)
     names = [r.name for r in rows]
@@ -85,7 +87,8 @@ def schedules(course="", branch="", status="", include_past=0):
     course_names = {c.name: c.product_name for c in frappe.get_all("CRM Product", fields=["name", "product_name"])}
     taken = seats_taken(names)
     pending = {r.course_schedule: r.n for r in waiting}
-    return [row_view(dict(r), course_names, taken, pending) for r in rows]
+    return {"total": total, "limit": MAX_ROWS,
+            "rows": [row_view(dict(r), course_names, taken, pending) for r in rows]}
 
 
 @whitelist(methods=["POST"])
