@@ -93,7 +93,10 @@ def _catalog_questions(slot, state, u, catalog):
     out = {}
     if not parent and not candidates:
         out[f"parent:{slot.key}"] = _choice(f"Which {parent_what} does the customer mean in this Vietnamese chat?", parents)
-    out[f"slot:{slot.key}"] = _choice(f"Which {what} does the customer mean in this Vietnamese chat?", leaves)
+    hint = (" Choose a course only when the chat names that course or one of its own aliases; a field of study "
+            "alone (\"tin học văn phòng\", \"đồ họa\") is a course group, not a course: choose none."
+            if slot.source == "course" else "")
+    out[f"slot:{slot.key}"] = _choice(f"Which {what} does the customer mean in this Vietnamese chat?{hint}", leaves)
     return out
 
 
@@ -144,7 +147,8 @@ def build_questions(state, u, catalog, skills=True, text=""):
     if options and not u.tapped:  # a typed answer the keyword tier could not tie to a button (D-107)
         q[REPLY_TO_BOT] = _choice("The bot's last message offered these buttons. Which one does the customer's latest "
                                   "message choose, in their own words (agreeing, refusing, a date, an answer)? "
-                                  "Choose none when they ask or say something else.",
+                                  "A message that picks one and also asks something else still picks it. Choose none "
+                                  "when it picks none of them.",
                                   {str(i): title for i, title in enumerate(options)})
     if enrol_flow.is_open(state, catalog):  # the bot is registering the customer: does the message follow? (D-121)
         q[enrol_flow.STEP] = _choice("The bot is registering the customer for a course: it asked them to pick a class, "
