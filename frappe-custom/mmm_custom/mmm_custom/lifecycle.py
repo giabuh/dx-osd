@@ -39,6 +39,16 @@ DEAL_LABELS = {s[0]: s[1] for s in DEAL_STATUSES}
 OPEN_LEAD = (NEW, QUALIFIED, CONTACTED, TRIAL_BOOKED, NURTURE)  # still in play: not registered, not lost
 LOST_LEAD = (UNQUALIFIED, JUNK)
 
+# How far along the journey a status is; Nurture sits with Contacted (a consultant parked a consulted Lead)
+RANK = {NEW: 0, QUALIFIED: 1, CONTACTED: 2, NURTURE: 2, TRIAL_BOOKED: 3, CONVERTED: 4}
+QUALIFIED_ON = tuple(s for s, r in RANK.items() if r >= RANK[QUALIFIED])  # list filter for "đủ thông tin trở lên"
+
+
+def reached(status, stage, converted=False):
+    """Has a Lead in `status` got at least to `stage`? A converted Lead has reached every stage."""
+    return bool(converted) or RANK.get(status, -1) >= RANK[stage]
+
+
 EXISTING_STUDENT, SPAM, OTHER = "Existing Student", "Spam", "Other"
 POSTPONED = "Postponed"
 # (reason, Vietnamese description); upstream reasons are kept and translated in vi.po

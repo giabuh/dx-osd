@@ -10,13 +10,11 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.desk import can_open_bot
-from mmm_custom.engine.qualify import QUALIFIED
+from mmm_custom.lifecycle import CONVERTED, LABELS, QUALIFIED, TRIAL_BOOKED, reached
 from mmm_custom.sources import BY_KEY, CHANNELS, UNKNOWN, channel_of_source
 
 PERIODS = (7, 30, 90, 365)
 HOTNESS = (("hot", "Nóng"), ("warm", "Ấm"), ("cold", "Lạnh"), ("", "Chưa rõ"))
-STATUS_LABELS = {"New": "Mới", "Contacted": "Đã liên hệ", "Nurture": "Đang chăm sóc", "Qualified": "Tiềm năng",
-                 "Unqualified": "Không tiềm năng", "Junk": "Rác"}
 NO_GROUP, NO_BRANCH = "Chưa rõ khóa", "Chưa rõ chi nhánh"
 
 
@@ -31,7 +29,7 @@ def build(leads, groups_by_lead, consultants, reasons, latest=15):
     converted, ai_hotness, creation); groups_by_lead: {lead: [course group, ...]}; consultants: Consultant rows
     (user, full_name, branch, level, handles_b2b); reasons: {lead: why the bot assigned it}."""
     people = {c["user"]: c for c in consultants}
-    qualified = lambda r: r.get("status") == QUALIFIED or r.get("converted")
+    qualified = lambda r: reached(r.get("status"), QUALIFIED, r.get("converted"))  # D-116: or any later step
     channel = {r["name"]: channel_of_source(r.get("source") or "") for r in leads}
 
     by_channel = Counter(channel.values())
@@ -60,11 +58,12 @@ def build(leads, groups_by_lead, consultants, reasons, latest=15):
     b2b = sum(1 for r in leads if people.get(r.get("lead_owner"), {}).get("handles_b2b"))
     totals = {"leads": len(leads), "with_phone": sum(1 for r in leads if r.get("mobile_no")),
               "qualified": sum(1 for r in leads if qualified(r)), "assigned": sum(1 for r in leads if r.get("lead_owner")),
+              "trial": sum(1 for r in leads if reached(r.get("status"), TRIAL_BOOKED, r.get("converted"))),
               "converted": sum(1 for r in leads if r.get("converted")),
               "hot": sum(1 for r in leads if r.get("ai_hotness") == "hot"), "b2b": b2b}
     funnel = [{"stage": "Lead mới", "count": totals["leads"]}, {"stage": "Có số điện thoại", "count": totals["with_phone"]},
-              {"stage": "Tiềm năng", "count": totals["qualified"]}, {"stage": "Đã giao tư vấn", "count": totals["assigned"]},
-              {"stage": "Ghi danh", "count": totals["converted"]}]
+              {"stage": LABELS[QUALIFIED], "count": totals["qualified"]}, {"stage": "Đã giao tư vấn", "count": totals["assigned"]},
+              {"stage": "Hẹn học thử", "count": totals["trial"]}, {"stage": LABELS[CONVERTED], "count": totals["converted"]}]
 
     hot_labels = dict(HOTNESS)
     newest = sorted(leads, key=lambda r: str(r.get("creation") or ""), reverse=True)[:latest]
@@ -83,7 +82,7 @@ def build(leads, groups_by_lead, consultants, reasons, latest=15):
             "groups": ", ".join(groups_by_lead.get(r["name"]) or []) or "—",
             "territory": r.get("territory") or "—",
             "owner": people.get(r.get("lead_owner"), {}).get("full_name") or r.get("lead_owner") or "—",
-            "status": "Ghi danh" if r.get("converted") else STATUS_LABELS.get(r.get("status"), r.get("status") or "—"),
+            "status": LABELS[CONVERTED] if r.get("converted") else LABELS.get(r.get("status"), r.get("status") or "—"),
             "hotness": hot_labels.get(r.get("ai_hotness") or "", "Chưa rõ"),
             "why": reasons.get(r["name"], ""), "creation": r.get("creation"),
         } for r in newest],
@@ -91,7 +90,7 @@ def build(leads, groups_by_lead, consultants, reasons, latest=15):
 
 
 def handoff_why(reason):
-    """The routing part of a logged handoff reason: "Đã đủ thông tin · CN Q7 · ít khách nhất · Lead: tiềm năng" →
+    """The routing part of a logged handoff reason: "Đã đủ thông tin · CN Q7 · ít khách nhất · Lead: Đủ thông tin" →
     "CN Q7 · ít khách nhất"."""
     parts = [p.strip() for p in (reason or "").split("·")]
     return " · ".join(p for p in parts[1:] if p and not p.startswith("Lead:"))

@@ -8,7 +8,7 @@ from mmm_custom import hooks
 from mmm_custom.lifecycle import (
     BOT_REASON, CONTACTED, CONVERTED, DEAL_STATUSES, EXISTING_STUDENT, JUNK, LABELS, LEAD_STATUSES, NEW, NURTURE,
     OTHER, PENDING_PAYMENT, QUALIFIED, SPAM, TRIAL_BOOKED, UNQUALIFIED, auto_update, can_auto_move, deal_rows,
-    lead_rows, plan_statuses, reason_for_lost)
+    lead_rows, plan_statuses, reached, reason_for_lost)
 
 
 class TestStatuses(unittest.TestCase):
@@ -78,6 +78,15 @@ class TestAutoMoves(unittest.TestCase):
         self.assertEqual(auto_update(UNQUALIFIED, QUALIFIED, EXISTING_STUDENT),
                          {"status": QUALIFIED, "lost_reason": ""})
         self.assertEqual(auto_update(NEW, QUALIFIED), {"status": QUALIFIED})
+
+
+class TestReached(unittest.TestCase):
+    def test_later_steps_have_reached_earlier_ones(self):
+        self.assertTrue(reached(TRIAL_BOOKED, QUALIFIED))
+        self.assertTrue(reached(NURTURE, CONTACTED))
+        self.assertFalse(reached(NEW, QUALIFIED))
+        self.assertFalse(reached(UNQUALIFIED, QUALIFIED))
+        self.assertTrue(reached(QUALIFIED, CONVERTED, converted=1))  # converted before D-116
 
 
 class TestMigrationPlan(unittest.TestCase):

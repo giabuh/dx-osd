@@ -6,7 +6,7 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.desk import can_open_bot
-from mmm_custom.engine.qualify import QUALIFIED, UNQUALIFIED
+from mmm_custom.lifecycle import QUALIFIED, UNQUALIFIED, reached
 
 BOT_SOURCE = "Messenger Bot"
 
@@ -18,7 +18,7 @@ def summarize(leads, handoffs, coverages, today, bot_leads=frozenset()):
     day = str(today)[:10]
     bot_leads = [row for row in leads if row.get("source") == BOT_SOURCE or row.get("name") in bot_leads]
     is_today = lambda value: str(value or "")[:10] == day
-    qualified = [row for row in bot_leads if row.get("status") == QUALIFIED]
+    qualified = [row for row in bot_leads if reached(row.get("status"), QUALIFIED)]  # or a later step (D-116)
     latest = sorted(qualified, key=lambda row: str(row.get("creation") or ""), reverse=True)[:10]
     return {
         "new_today": sum(is_today(row.get("creation")) for row in bot_leads),
