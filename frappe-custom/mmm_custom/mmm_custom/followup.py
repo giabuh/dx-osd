@@ -191,9 +191,10 @@ def plan_followups(now: datetime | None = None) -> dict:
         suffix = f" (lần {rule['n']})" if kind == "nurture" else ""
         _create_task(lead, kind, why, now, suffix)
         results.append({"lead": lead["name"], "action": "task_created", "choice": kind})
-    for deal in frappe.get_all("CRM Deal", filters={"status": PENDING_PAYMENT}, order_by="modified asc",
-                               fields=["name", "lead_name", "deal_owner", "status", "modified", "payment_due_date"],
-                               limit=int(cfg["max_leads"])):
+    deals = frappe.get_all("CRM Deal", filters={"status": PENDING_PAYMENT}, order_by="modified asc",
+                           fields=["name", "lead_name", "deal_owner", "status", "modified", "payment_due_date"],
+                           limit=int(cfg["max_leads"])) if frappe.get_meta("CRM Deal").has_field("payment_due_date") else []
+    for deal in deals:
         rule = payment_task(deal, now, cfg, _tasks(deal["name"], "CRM Deal"))
         if rule:
             _create_task(deal, rule["kind"], rule["why"], now, doctype="CRM Deal")

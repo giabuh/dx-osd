@@ -17,20 +17,31 @@ export function parseLinkFilters(linkFilters, doc = null) {
   return doc ? resolveLinkFilters(filters, doc) : filters
 }
 
+const EVAL_DOC = /^eval:\s*doc\.(\w+)$/
+
 /**
- * Fill filter values written as "eval:doc.<field>" from the document being edited, e.g. a Deal's class
- * `{"course": "eval:doc.enrol_course"}`; a filter whose field is still empty is dropped (nothing to narrow by).
+ * Fill filter values written as "eval: doc.<field>" (Frappe's dynamic link filter) from the document being
+ * edited, e.g. a Deal's class `[["Course Schedule", "course", "=", "eval: doc.enrol_course"]]`, in list or
+ * object form; a condition whose field is still empty is dropped (nothing to narrow by yet).
  */
 export function resolveLinkFilters(filters, doc) {
-  if (!filters || Array.isArray(filters)) return filters
+  const resolve = (value) => {
+    const m = typeof value === 'string' && value.match(EVAL_DOC)
+    return m ? { dynamic: true, value: doc?.[m[1]] } : { dynamic: false, value }
+  }
+  if (!filters) return filters
+  if (Array.isArray(filters)) {
+    return filters.flatMap((cond) => {
+      if (!Array.isArray(cond) || !cond.length) return [cond]
+      const r = resolve(cond[cond.length - 1])
+      if (!r.dynamic) return [cond]
+      return r.value ? [[...cond.slice(0, -1), r.value]] : []
+    })
+  }
   const out = {}
   for (const [key, value] of Object.entries(filters)) {
-    if (typeof value === 'string' && value.startsWith('eval:doc.')) {
-      const resolved = doc?.[value.slice('eval:doc.'.length)]
-      if (resolved) out[key] = resolved
-    } else {
-      out[key] = value
-    }
+    const r = resolve(value)
+    if (!r.dynamic || r.value) out[key] = r.value
   }
   return out
 }

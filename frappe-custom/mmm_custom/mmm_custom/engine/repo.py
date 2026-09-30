@@ -188,11 +188,16 @@ def ensure_lead(contact, source="", courses=()):
         doc.mobile_no = phone
     _append_products(doc, courses)
     doc.flags.lead_engine = True
-    if name:
-        doc.save(ignore_permissions=True)
-    else:
+    if not name:
         doc.insert(ignore_permissions=True)
-    return doc.name, not name
+        return doc.name, True
+    try:
+        doc.save(ignore_permissions=True)
+    except Exception:  # an old Lead that no longer validates must not lose the webhook: the link is what matters
+        frappe.log_error(title="ensure_lead: Lead not updated", message=f"CRM Lead {name}")
+        if contact_id and not frappe.db.get_value("CRM Lead", name, "chatwoot_contact_id"):
+            frappe.db.set_value("CRM Lead", name, "chatwoot_contact_id", contact_id)
+    return name, False
 
 
 def save_lead(state, fields, courses, contact):

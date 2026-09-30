@@ -27,6 +27,7 @@ def run(contact, found=None, courses=(), claimed=True, doc=None):
     frappe.get_doc.return_value = doc
     frappe.new_doc.return_value = doc
     frappe.cache().set.return_value = claimed
+    frappe.db.get_value.return_value = None
     with patch.object(repo, "frappe", frappe), patch.object(repo, "find_lead", side_effect=found or [None]) as find, \
             patch.object(repo.time, "sleep") as sleep:
         out = repo.ensure_lead(contact, "Facebook Messenger", list(courses))
@@ -34,6 +35,17 @@ def run(contact, found=None, courses=(), claimed=True, doc=None):
 
 
 class TestEnsureLead(unittest.TestCase):
+    def test_a_lead_that_no_longer_validates_still_gets_linked(self):
+        class Broken(Lead):
+            def save(self, **kw):
+                raise ValueError("Please specify a reason for losing the lead.")
+
+        doc = Broken(chatwoot_contact_id="")
+        (name, created), _, frappe, _, _ = run({"id": 5, "name": "Lan"}, found=["CRM-LEAD-1"], doc=doc)
+        self.assertEqual((name, created), ("CRM-LEAD-1", False))
+        frappe.log_error.assert_called_once()
+        frappe.db.set_value.assert_called_once_with("CRM Lead", "CRM-LEAD-1", "chatwoot_contact_id", "5")
+
     def test_existing_lead_is_linked_named_and_given_the_course(self):
         doc = Lead(first_name="Khách Messenger", mobile_no="")
         (name, created), doc, frappe, _, _ = run({"id": 456, "name": "Trần Văn B", "phone_number": "0912345678"},
@@ -61,7 +73,7 @@ class TestEnsureLead(unittest.TestCase):
 
     def test_the_second_of_two_simultaneous_events_waits_and_finds_the_lead(self):
         (name, created), _, frappe, find, sleep = run({"id": 9, "name": "Lan"}, found=[None, "CRM-LEAD-7"], claimed=False)
-        self.assertEqual((name, created), ("CRM-LEAD-1", False))  # FakeLead's name: the found Lead was loaded
+        self.assertEqual((name, created), ("CRM-LEAD-7", False))
         frappe.get_doc.assert_called_once_with("CRM Lead", "CRM-LEAD-7")
         sleep.assert_called_once()
         self.assertEqual(find.call_count, 2)

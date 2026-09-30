@@ -99,6 +99,13 @@ class TestHooksOnADeal(unittest.TestCase):
         lead.update.assert_called_once_with({"status": "Nurture", "converted": 0})
         lead.save.assert_called_once()
 
+    def test_a_new_registration_tells_chatwoot_the_lead_is_registered(self):
+        frappe = MagicMock()
+        with patch.object(enrolment, "frappe", frappe):
+            enrolment.after_insert(self.deal(lead="CRM-LEAD-1"))
+        self.assertEqual(frappe.enqueue.call_args.args[0], "mmm_custom.lifecycle.push_status")
+        self.assertEqual(frappe.enqueue.call_args.kwargs["lead"], "CRM-LEAD-1")
+
     def test_other_cancellations_leave_the_lead(self):
         frappe = MagicMock()
         doc = self.deal(status="Lost", lost_reason="Pricing", lead="CRM-LEAD-1")
@@ -130,6 +137,7 @@ class TestPage(unittest.TestCase):
 
     def test_hooks(self):
         self.assertEqual(hooks.doc_events["CRM Deal"]["validate"], "mmm_custom.enrolment.validate")
+        self.assertEqual(hooks.doc_events["CRM Deal"]["after_insert"], "mmm_custom.enrolment.after_insert")
         self.assertIn("mmm_custom.enrolment.update_deal_layouts", hooks.after_migrate)
 
 

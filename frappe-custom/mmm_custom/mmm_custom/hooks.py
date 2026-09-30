@@ -121,6 +121,7 @@ doc_events["CRM Lead"] = {"on_update": ["mmm_custom.engine.learning.on_lead_upda
 # The registration record (D-117): course, class, fee after promotion, deposit; a postponed one returns to nurturing.
 doc_events["CRM Deal"] = {"before_insert": "mmm_custom.enrolment.before_insert",
                           "validate": "mmm_custom.enrolment.validate",
+                          "after_insert": "mmm_custom.enrolment.after_insert",
                           "on_update": "mmm_custom.enrolment.on_update"}
 # Consultants see every Lead/Deal of their branch, not only their own (crm/permissions/org_hierarchy.py).
 crm_record_scope = ["mmm_custom.scope.record_scope"]

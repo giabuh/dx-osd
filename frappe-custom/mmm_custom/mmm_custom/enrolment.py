@@ -130,6 +130,13 @@ def validate(doc, method=None):
     doc.status = next_status(doc.status, doc.get("deposit_amount"), doc.get("paid_amount"))
 
 
+def after_insert(doc, method=None):
+    """convert_to_deal marks the Lead Converted with db_set (no Lead hooks): the Chatwoot contact learns it here."""
+    if doc.get("lead"):
+        frappe.enqueue("mmm_custom.lifecycle.push_status", queue="short", enqueue_after_commit=True,
+                       job_id=f"lead_status_{doc.lead}", deduplicate=True, lead=doc.lead)
+
+
 def on_update(doc, method=None):
     """Cancelled as Postponed: the customer is not lost, the Lead goes back to nurturing (D-117)."""
     if not doc.get("lead") or not doc.has_value_changed("status"):

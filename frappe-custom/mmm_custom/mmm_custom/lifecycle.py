@@ -206,8 +206,8 @@ def migrate():
             continue
         try:
             frappe.delete_doc("CRM Deal Status", status, ignore_permissions=True)
-        except frappe.LinkExistsError:
-            pass  # still referenced somewhere: harmless, it is simply not offered as a stage
+        except Exception:  # still referenced somewhere: harmless, it only stays offered as a stage
+            frappe.log_error(title="Lifecycle: old deal status kept", message=status)
     frappe.clear_cache(doctype="CRM Lead")
     frappe.clear_cache(doctype="CRM Deal")
     frappe.db.commit()
