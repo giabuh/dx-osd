@@ -78,20 +78,42 @@ def _short_date(day):
     return f"{weekday} {day:%d/%m}"
 
 
+def _class_buttons(schedules, slot, skill, label, value_of):
+    """One button per class: a tap fills `slot` with `value_of(class)` and answers `skill`."""
+    return [{"title": label(s)[:20],
+             "action": {"type": "slot", "slot": slot, "value": value_of(s), "skill": skill}} for s in schedules]
+
+
+def _day_shift(s):
+    return f"{_short_date(s['date'])} {str(s.get('shift') or '').split(' ')[0]}".strip()
+
+
 @action("trial_offer")
 def trial_offer(a):
     """Free trial (D-102): the next open classes of the course as buttons; a tap fills the slot named in
     `action_config.slot` with a readable booking and answers the skill `action_config.skill`."""
     cfg, course = a.skill.config, a.ctx["course"]
     schedules = find_schedules(a.data, a.ctx, a.today, int(cfg.get("limit", 3))) if course else []
-    buttons = []
-    for s in schedules:
-        shift = str(s.get("shift") or "").split(" ")[0]
-        booking = " · ".join(x for x in (course["name"], date_vi(s["date"]), str(s.get("shift") or ""), s.get("branch") or "") if x)
-        buttons.append({"title": f"{_short_date(s['date'])} {shift}".strip()[:20],
-                        "action": {"type": "slot", "slot": cfg.get("slot", "trial_class"), "value": booking,
-                                   "skill": cfg.get("skill", "")}})
-    return {"schedules": schedules, "_buttons": buttons}
+
+    def booking(s):
+        return " · ".join(x for x in (course["name"], date_vi(s["date"]), str(s.get("shift") or ""), s.get("branch") or "") if x)
+
+    return {"schedules": schedules,
+            "_buttons": _class_buttons(schedules, cfg.get("slot", "trial_class"), cfg.get("skill", ""), _day_shift, booking)}
+
+
+@action("enrol")
+def enrol(a):
+    """Registration (D-118): the next open classes of the course as buttons; a tap fills `action_config.slot` with the
+    class title and answers this skill again. The draft registration is made by the pipeline (effects)."""
+    cfg, course = a.skill.config, a.ctx["course"]
+    slot = cfg.get("slot", "enrol_class")
+    chosen = value(a.slots, slot)
+    if chosen:
+        return {"enrol_class": chosen}
+    schedules = find_schedules(a.data, a.ctx, a.today, int(cfg.get("limit", 3))) if course else []
+    return {"schedules": schedules,
+            "_buttons": _class_buttons(schedules, slot, a.skill.key, _day_shift, lambda s: s.get("title") or "")}
 
 
 @action("book_trial")

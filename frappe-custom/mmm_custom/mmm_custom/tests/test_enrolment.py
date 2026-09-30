@@ -22,7 +22,7 @@ finally:
 
 from mmm_custom import enrolment, hooks
 from mmm_custom.enrolment import (
-    DEAL_DEFAULTS, RETIRED_FIELDS, compute, lead_after_deal_change, next_status, promotion_discount, schedule_title)
+    DEAL_DEFAULTS, RETIRED_FIELDS, compute, draft_plan, lead_after_deal_change, next_status, promotion_discount, schedule_title)
 
 
 class TestFee(unittest.TestCase):
@@ -87,6 +87,74 @@ class TestLeadAfterDealChange(unittest.TestCase):
     def test_another_live_registration_keeps_the_lead_registered(self):
         self.assertEqual(lead_after_deal_change("Pending Payment", "Lost", "Postponed", True), {})
         self.assertEqual(lead_after_deal_change("Pending Payment", "Lost", "Other", True), {})
+
+
+class TestDraftPlan(unittest.TestCase):
+    def test_a_customer_with_a_course_and_no_registration_gets_a_draft(self):
+        self.assertEqual(draft_plan("Ongoing", None, "VP-EXCEL"), "create")
+        self.assertEqual(draft_plan("Won", None, "VP-EXCEL"), "create")  # an existing student adding a course
+
+    def test_nothing_without_a_course_or_for_a_lost_lead(self):
+        self.assertEqual(draft_plan("Ongoing", None, ""), "")
+        self.assertEqual(draft_plan("Lost", None, "VP-EXCEL"), "")
+
+    def test_a_live_registration_is_never_doubled(self):
+        for status in ("Awaiting Confirmation", "Pending Payment", "Deposit Paid"):
+            self.assertEqual(draft_plan("Ongoing", {"status": status, "course_schedule": "abc"}, "VP-EXCEL", "x"), "")
+
+    def test_a_class_chosen_later_goes_on_the_draft(self):
+        live = {"status": "Awaiting Confirmation", "course_schedule": None}
+        self.assertEqual(draft_plan("Ongoing", live, "VP-EXCEL", "abc"), "set_class")
+        self.assertEqual(draft_plan("Ongoing", live, "VP-EXCEL", ""), "")
+
+
+class TestCreateDraft(unittest.TestCase):
+    def frappe(self, live=None, task_exists=False, status_type="Ongoing"):
+        frappe = MagicMock()
+        frappe.get_cached_value.return_value = status_type
+        frappe.get_all.return_value = live or []
+        frappe.db.exists.return_value = task_exists
+        frappe.db.get_value.return_value = "sched-1"
+        lead = frappe.get_doc.return_value
+        lead.status, lead.lead_name, lead.lead_owner = "Contacted", "Lan", "mai@x.vn"
+        lead.create_deal.return_value = "CRM-DEAL-1"
+        return frappe, lead
+
+    def run_it(self, frappe, *args, **kw):
+        with patch.object(enrolment, "frappe", frappe):
+            return enrolment.create_draft(*args, **kw)
+
+    def test_creates_the_draft_and_a_task_and_leaves_the_lead(self):
+        frappe, lead = self.frappe()
+        self.assertEqual(self.run_it(frappe, "CRM-LEAD-1", "VP-EXCEL", "T", "", "bot"), "CRM-DEAL-1")
+        self.assertEqual(lead.create_deal.call_args.args[2],
+                         {"status": "Awaiting Confirmation", "enrol_course": "VP-EXCEL", "course_schedule": "sched-1"})
+        lead.db_set.assert_not_called()
+        task = frappe.get_doc.call_args_list[-1].args[0]
+        self.assertEqual((task["title"], task["priority"], task["assigned_to"], task["reference_doctype"]),
+                         ("Xác nhận ghi danh: Lan", "High", "mai@x.vn", "CRM Deal"))
+
+    def test_a_live_registration_gets_no_second_draft_or_task(self):
+        frappe, lead = self.frappe(live=[{"name": "CRM-DEAL-9", "status": "Pending Payment", "course_schedule": "s"}])
+        self.assertEqual(self.run_it(frappe, "CRM-LEAD-1", "VP-EXCEL"), "CRM-DEAL-9")
+        lead.create_deal.assert_not_called()
+
+    def test_the_task_is_made_once(self):
+        frappe, _ = self.frappe(task_exists=True)
+        self.run_it(frappe, "CRM-LEAD-1", "VP-EXCEL")
+        self.assertFalse([c for c in frappe.get_doc.call_args_list if isinstance(c.args[0], dict)])
+
+    def test_a_class_chosen_later_is_set_on_the_draft(self):
+        frappe, _ = self.frappe(live=[{"name": "CRM-DEAL-9", "status": "Awaiting Confirmation", "course_schedule": None}])
+        deal = frappe.get_doc.return_value
+        self.assertEqual(self.run_it(frappe, "CRM-LEAD-1", "VP-EXCEL", "T"), "CRM-DEAL-9")
+        self.assertEqual(deal.course_schedule, "sched-1")
+        deal.save.assert_called_once()
+
+    def test_no_lead_or_course_is_nothing(self):
+        frappe, _ = self.frappe()
+        self.assertEqual(self.run_it(frappe, "", "VP-EXCEL"), "")
+        self.assertEqual(self.run_it(frappe, "CRM-LEAD-1", ""), "")
 
 
 class TestSchedule(unittest.TestCase):

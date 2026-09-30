@@ -42,6 +42,9 @@ class RecordingEffects:
     def book_trial(self, state, booking, owner=""):
         self.calls.append(("book_trial", {"lead": state.lead, "booking": booking, "owner": owner}))
 
+    def enrol(self, state, course, class_title="", owner=""):
+        self.calls.append(("enrol", {"lead": state.lead, "course": course, "class_title": class_title, "owner": owner}))
+
     def note(self, conversation_id, text):
         self.calls.append(("note", {"conversation_id": conversation_id, "text": text}))
 
@@ -88,6 +91,12 @@ class ChatwootEffects:
         from mmm_custom.engine import repo
 
         repo.create_trial_task(state.lead, booking, owner)
+
+    def enrol(self, state, course, class_title="", owner=""):
+        """D-118: the customer wants to register: a draft registration and a Task for whoever serves the Lead."""
+        from mmm_custom import enrolment
+
+        enrolment.create_draft(state.lead, course, class_title, owner, "bot")
 
     def save_lead(self, state, fields, courses, contact):
         from mmm_custom.engine import repo

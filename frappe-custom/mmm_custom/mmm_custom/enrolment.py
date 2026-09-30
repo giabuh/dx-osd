@@ -49,6 +49,17 @@ def lead_after_deal_change(old_status, new_status, lost_reason="", others_alive=
     return {} if old_status == AWAITING_CONFIRMATION else {"status": CONTACTED, "converted": 0}
 
 
+def draft_plan(lead_status_type, live_deal, course, schedule=""):
+    """What the bot / Jev does for a customer who wants to register (D-118): "create" a draft registration,
+    "set_class" on the draft it made before (a class was chosen later), or "" (nothing to do)."""
+    if not course or lead_status_type == "Lost":
+        return ""
+    if live_deal:
+        waiting = live_deal.get("status") == AWAITING_CONFIRMATION and not live_deal.get("course_schedule")
+        return "set_class" if waiting and schedule else ""
+    return "create"
+
+
 def schedule_title(course_name, branch, start_date, shift):
     """"Excel cơ bản · CN Quận 7 · 04/10/2026 · Tối": what staff pick a class by (Course Schedule names are random)."""
     day = start_date.strftime("%d/%m/%Y") if hasattr(start_date, "strftime") else str(start_date or "")
@@ -169,6 +180,49 @@ def on_update(doc, method=None):
         lead.flags.lead_engine = True
         lead.flags.registered = True  # the guard: this change comes from a registration
         lead.save(ignore_permissions=True)
+
+
+SOURCE_LABELS = {"bot": "bot chat", "jev": "Jev"}
+
+
+def create_draft(lead, course, schedule_title="", owner="", source="bot"):
+    """D-118: a customer said in chat that they want to register. Make the registration a person confirms: a CRM Deal
+    "Chờ xác nhận" (course, class when chosen, listed fee and promotion via before_insert) and a High-priority Task
+    for the Lead's owner. The Lead keeps its status until the Deal is confirmed (`on_update`). Idempotent: while a
+    live registration exists nothing new is made; a class chosen later is set on the draft. Returns the Deal or ""."""
+    if not (lead and course):
+        return ""
+    lead_doc = frappe.get_doc("CRM Lead", lead)
+    schedule = frappe.db.get_value("Course Schedule", {"title": schedule_title, "course": course}, "name") \
+        if schedule_title else ""
+    live = frappe.get_all("CRM Deal", filters={"lead": lead, "status": ["in", list(LIVE_DEAL)]},
+                          fields=["name", "status", "course_schedule"], limit=1)
+    plan = draft_plan(frappe.get_cached_value("CRM Lead Status", lead_doc.status, "type"), live[0] if live else None,
+                      course, schedule)
+    if plan == "set_class":
+        deal = frappe.get_doc("CRM Deal", live[0]["name"])
+        deal.course_schedule = schedule
+        deal.save(ignore_permissions=True)
+        return live[0]["name"]
+    if plan != "create":
+        return live[0]["name"] if live else ""
+    lead_doc.flags.ignore_permissions = True
+    contact = lead_doc.create_contact("", False)  # links by phone / email, or creates the student's contact
+    name = lead_doc.create_deal(contact, lead_doc.create_organization(), {
+        "status": AWAITING_CONFIRMATION, "enrol_course": course, "course_schedule": schedule or None})
+    owner = owner or lead_doc.lead_owner or None
+    title = f"Xác nhận ghi danh: {lead_doc.lead_name or lead}"[:140]
+    if not frappe.db.exists("CRM Task", {"reference_doctype": "CRM Deal", "reference_docname": name, "title": title}):
+        from datetime import timedelta
+
+        frappe.get_doc({
+            "doctype": "CRM Task", "title": title, "status": "Todo", "priority": "High", "assigned_to": owner,
+            "description": (f"Khách nhắn muốn đăng ký khóa {course}" + (f", lớp {schedule_title}" if schedule_title else "")
+                            + f" ({SOURCE_LABELS.get(source, source)}). Gọi xác nhận lớp và học phí: chuyển hồ sơ sang "
+                              "Chờ đóng phí (hoặc nhập tiền cọc); khách không đăng ký thì Hủy đăng ký."),
+            "reference_doctype": "CRM Deal", "reference_docname": name,
+            "due_date": frappe.utils.now_datetime() + timedelta(days=1)}).insert(ignore_permissions=True)
+    return name
 
 
 def rewrite_layout(layout, type_):

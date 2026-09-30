@@ -221,6 +221,20 @@
   "lead_field": ""
  },
  {
+  "slot_key": "enrol_class",
+  "label": "Lớp đăng ký",
+  "slot_type": "text",
+  "catalog_source": "",
+  "required": 0,
+  "sort_order": 85,
+  "ask_on_demand": 1,
+  "ask_template": "{{ brand.you | capitalize }} muốn đăng ký lớp nào ạ?",
+  "options": [],
+  "depends_on_slot": "",
+  "depends_on_value": "",
+  "lead_field": ""
+ },
+ {
   "slot_key": "referral_code",
   "label": "Mã giới thiệu",
   "slot_type": "referral_code",

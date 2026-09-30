@@ -58,7 +58,7 @@ class Decision:
 
 # Skills answered from the site's live data and buttons (open classes, booking, the level test): a reply staff
 # once wrote on the same topic has none of that, so it never replaces them (D-114).
-LIVE_ACTIONS = ("schedule_lookup", "trial_offer", "book_trial", "level_quiz")
+LIVE_ACTIONS = ("schedule_lookup", "trial_offer", "book_trial", "level_quiz", "enrol")
 FACT_LABELS = {"summary": "giới thiệu", "syllabus": "nội dung học", "duration": "thời lượng", "audience": "đối tượng học",
                "certificate": "chứng chỉ", "next": "khóa học tiếp theo"}
 

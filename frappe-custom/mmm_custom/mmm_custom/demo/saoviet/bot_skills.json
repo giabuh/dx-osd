@@ -700,21 +700,30 @@
   "examples": "mình muốn đăng ký\ngiữ chỗ lớp tối cho mình",
   "aliases": "dang ky, ghi danh, giu cho",
   "parameters": [
-   "course"
+   "course",
+   "phone"
   ],
   "missing_policy": "ask",
-  "action_type": "handoff",
-  "action_config": {},
+  "action_type": "enrol",
+  "action_config": {
+   "slot": "enrol_class",
+   "limit": 3
+  },
   "templates": [
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.me }} ghi nhận đăng ký, tư vấn viên sẽ liên hệ giữ chỗ cho {{ brand.you }} ngay ạ."
+    "template": "Dạ {{ brand.me }} ghi nhận {{ brand.you }} muốn đăng ký khóa {{ course.name }} ạ.{% if schedules %} Các lớp sắp khai giảng:{% for s in schedules %}\\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\\n{{ brand.you | capitalize }} bấm chọn lớp phù hợp để {{ brand.me }} ghi vào hồ sơ nhé ạ.{% endif %} Tư vấn viên sẽ gọi xác nhận lớp và học phí cho {{ brand.you }} ngay ạ."
+   },
+   {
+    "variant_key": "chosen",
+    "when": "enrol_class",
+    "template": "Dạ {{ brand.me }} đã ghi lớp {{ enrol_class }} vào hồ sơ đăng ký của {{ brand.you }} ạ. Tư vấn viên sẽ gọi xác nhận lớp và học phí ngay ạ."
    }
   ],
   "follow_ups": [],
   "creates_lead": 1,
-  "handoff_after": 0,
+  "handoff_after": 1,
   "sort_order": 280
  },
  {

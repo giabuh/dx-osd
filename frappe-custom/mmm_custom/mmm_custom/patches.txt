@@ -9,3 +9,4 @@ mmm_custom.patches.v1_0.create_ai_fields
 mmm_custom.patches.v1_1.facebook_page
 mmm_custom.patches.v1_1.education_lifecycle
 mmm_custom.patches.v1_2.simplify_registration
+mmm_custom.patches.v1_2.draft_registration

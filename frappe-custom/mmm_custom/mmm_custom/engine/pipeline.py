@@ -269,6 +269,25 @@ def book_trials(turn, effects, catalog, plan=None):
             turn.reply.errors.append({"type": "trial_failed", "detail": str(e)[:300]})
 
 
+def enrol_drafts(turn, effects, catalog, plan=None):
+    """An `enrol` skill answered this turn (D-118): a draft registration and a Task, once the Lead, the course and
+    the phone are known. The Lead keeps its status until a person confirms; a later tap on a class sets the class."""
+    state = turn.state
+    course_slot, phone = catalog.slot_for("course"), phone_slot(catalog)
+    course = value(state.slots, course_slot.key) if course_slot else ""
+    if not (state.lead and course and phone and filled(state.slots, phone)):
+        return
+    for key in turn.decision.skills:
+        skill = catalog.skills.get(key)
+        if not (skill and skill.action == "enrol"):
+            continue
+        try:
+            effects.enrol(state, course, value(state.slots, skill.config.get("slot", "enrol_class")) or "",
+                          plan.owner if plan else "")
+        except Exception as e:
+            turn.reply.errors.append({"type": "enrol_failed", "detail": str(e)[:300]})
+
+
 def run_turn(event, repo, effects, render, draft=False, fallback=False):
     """One customer message → understanding, decision, reply, side effects. `draft` (D-110): what the bot would
     answer for staff to see; it never hands off and the caller passes a repo and effects that write nothing.
@@ -352,6 +371,7 @@ def run_turn(event, repo, effects, render, draft=False, fallback=False):
         except Exception as e:
             turn.reply.errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
     book_trials(turn, effects, catalog, plan)
+    enrol_drafts(turn, effects, catalog, plan)
     repo.save_state(state)
     for change in attempt_changes(offers_before, state.offers, turn.decision, catalog):
         try:
