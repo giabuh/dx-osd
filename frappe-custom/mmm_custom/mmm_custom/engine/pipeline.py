@@ -113,6 +113,8 @@ def apply_decision(state, decision, reply, event, catalog):
             state.pending["confirm"] = decision.confirm
     if reply.ask:
         state.slots.setdefault(reply.ask, {})["asked"] = 1
+    for key in reply.skipped:
+        state.slots.setdefault(key, {})["skipped"] = 1
     if reply.hold and decision.ask and decision.ask != reply.ask:
         state.slots.get(decision.ask, {}).pop("asked", None)  # not asked after all: ask it once the quiz ends
     lines = [{"from": "customer", "text": event.text[:300]}]
@@ -269,6 +271,30 @@ def book_trials(turn, effects, catalog, plan=None):
             turn.reply.errors.append({"type": "trial_failed", "detail": str(e)[:300]})
 
 
+def enrol_drafts(turn, effects, catalog, plan=None):
+    """The draft registration and its Task (D-118), made once the registration dialogue ends in a handoff (D-121):
+    with the class and the phone it asked, for the consultant the conversation goes to. After a handoff the dialogue
+    no longer runs, so an `enrol` answer there drafts at once, and a later tap on a class sets the class. The Lead
+    keeps its status until a person confirms."""
+    from mmm_custom.engine import enrol_flow
+
+    state, decision = turn.state, turn.decision
+    key = enrol_flow.skill_key(catalog)
+    course_slot = catalog.slot_for("course")
+    course = value(state.slots, course_slot.key) if course_slot else ""
+    if not (key and state.lead and course):
+        return
+    finished = decision.type == "handoff" and enrol_flow.phase(decision.slots, catalog) == enrol_flow.DONE
+    after = turn.status_before == "handed_off" and key in decision.skills
+    if not (finished or after):
+        return
+    try:
+        effects.enrol(state, course, value(state.slots, enrol_flow.class_slot(catalog)) or "",
+                      plan.owner if plan else "")
+    except Exception as e:
+        turn.reply.errors.append({"type": "enrol_failed", "detail": f"{type(e).__name__}: {e}"[:300]})
+
+
 def run_turn(event, repo, effects, render, draft=False, fallback=False):
     """One customer message → understanding, decision, reply, side effects. `draft` (D-110): what the bot would
     answer for staff to see; it never hands off and the caller passes a repo and effects that write nothing.
@@ -299,7 +325,9 @@ def run_turn(event, repo, effects, render, draft=False, fallback=False):
         handing = [k for k in d.skills if catalog.skills[k].action == "handoff"]
         d.skills = [k for k in d.skills if k not in handing]
         turn.needs_staff = catalog.skills[handing[0]].title if handing else STAFF_REASONS.get(d.handoff_reason, "")
-        turn.no_answer = not d.answered and (d.fallback or d.handoff_reason == "stuck")
+        # a hand-off for having everything required hides that a question the customer asked went unanswered
+        asked = d.handoff_reason == "required_filled" and turn.understanding.question
+        turn.no_answer = not d.answered and (d.fallback or d.handoff_reason == "stuck" or asked)
         if d.type == "handoff" or (handing and d.type == "answer") or (person and turn.no_answer):
             d.type = "answer" if d.answered else "silent"  # "em chưa hiểu" after a wait is worse than the hold line
     apply_quiz_results(turn.decision, catalog)
@@ -350,6 +378,7 @@ def run_turn(event, repo, effects, render, draft=False, fallback=False):
         except Exception as e:
             turn.reply.errors.append({"type": "handoff_failed", "detail": str(e)[:300]})
     book_trials(turn, effects, catalog, plan)
+    enrol_drafts(turn, effects, catalog, plan)
     repo.save_state(state)
     for change in attempt_changes(offers_before, state.offers, turn.decision, catalog):
         try:

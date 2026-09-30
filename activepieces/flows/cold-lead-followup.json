@@ -31,7 +31,7 @@
               "staleDays": "3",
               "crmBaseUrl": "https://crm.example.com",
               "crmApiToken": "CRM_API_KEY:CRM_API_SECRET",
-              "openStatuses": "New,Contacted,Nurture",
+              "openStatuses": "New,Contacted",
               "confidenceThreshold": "0.7"
             },
             "sampleData": {},

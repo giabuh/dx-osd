@@ -22,6 +22,9 @@ SMALLTALK_WORDS = frozenset(
     "xin a ad admin shop page trung tam em anh chi ban moi nguoi ca nha oi nhe nha ne da vang buoi sang trua chieu "
     "toi".split())
 MAX_SMALLTALK_WORDS = 6
+# Folded Vietnamese question words: "có khóa robotics không", "học mấy buổi", "ở đâu", "khi nào khai giảng".
+QUESTION_RE = re.compile(r"\b(?:khong|ko|hong|hok|chua|bao nhieu|bao lau|may (?:buoi|thang|tuan|gio|tieng|ngay|tuoi|lop)"
+                         r"|o dau|khi nao|luc nao|gi|sao|the nao|nhu nao|ra sao|nao|ha|nhi)\b")
 
 
 def fold(text):
@@ -54,6 +57,11 @@ def find_phrases(folded_text, table, min_words=1):
         if v not in best or e - s > best[v][1] - best[v][0]:
             best[v] = (s, e)
     return best
+
+
+def is_question(text):
+    """The customer asks something: a question mark or a Vietnamese question word."""
+    return "?" in (text or "") or bool(QUESTION_RE.search(fold(text)))
 
 
 def content_words(folded_text, spans):

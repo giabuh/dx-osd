@@ -112,10 +112,13 @@ class CRMDeal(Document):
 
 	def validate_status(self):
 		if self.is_new() and not self.status:
-			if frappe.db.exists("CRM Deal Status", "Qualification"):
-				self.status = "Qualification"
+			# D-117: a Deal is a registration record and starts waiting for the fee
+			for status in ("Pending Payment", "Qualification"):
+				if frappe.db.exists("CRM Deal Status", status):
+					self.status = status
+					break
 			else:
-				self.status = frappe.get_all("CRM Deal Status", {"type": "Open"}, pluck="name")[0]
+				self.status = frappe.get_all("CRM Deal Status", {"type": "Open"}, pluck="name", order_by="position asc")[0]
 
 	def set_primary_contact(self, contact=None):
 		if not self.contacts:
@@ -281,59 +284,30 @@ class CRMDeal(Document):
 
 	@staticmethod
 	def default_list_data():
+		# D-117: a Deal is a registration record. The "organization" column shows the student when there is no
+		# organization (Deals.vue), so it is labelled Student.
 		columns = [
-			{
-				"label": "Organization",
-				"type": "Link",
-				"key": "organization",
-				"options": "CRM Organization",
-				"width": "11rem",
-			},
-			{
-				"label": "Annual Revenue",
-				"type": "Currency",
-				"key": "annual_revenue",
-				"align": "right",
-				"width": "9rem",
-			},
-			{
-				"label": "Status",
-				"type": "Link",
-				"options": "CRM Deal Status",
-				"key": "status",
-				"width": "10rem",
-			},
-			{
-				"label": "Email",
-				"type": "Data",
-				"key": "email",
-				"width": "12rem",
-			},
-			{
-				"label": "Mobile No.",
-				"type": "Data",
-				"key": "mobile_no",
-				"width": "11rem",
-			},
-			{
-				"label": "Assigned To",
-				"type": "Text",
-				"key": "_assign",
-				"width": "10rem",
-			},
-			{
-				"label": "Last Modified",
-				"type": "Datetime",
-				"key": "modified",
-				"width": "8rem",
-			},
+			{"label": "Student", "type": "Link", "key": "organization", "options": "CRM Organization", "width": "12rem"},
+			{"label": "Enrolled Course", "type": "Link", "key": "enrol_course", "options": "CRM Product", "width": "11rem"},
+			{"label": "Class Start Date", "type": "Date", "key": "class_start_date", "width": "8rem"},
+			{"label": "Territory", "type": "Link", "key": "territory", "options": "CRM Territory", "width": "9rem"},
+			{"label": "Final Fee", "type": "Currency", "key": "final_fee", "align": "right", "width": "9rem"},
+			{"label": "Balance Due", "type": "Currency", "key": "balance_due", "align": "right", "width": "9rem"},
+			{"label": "Status", "type": "Link", "options": "CRM Deal Status", "key": "status", "width": "9rem"},
+			{"label": "Mobile No.", "type": "Data", "key": "mobile_no", "width": "10rem"},
+			{"label": "Assigned To", "type": "Text", "key": "_assign", "width": "9rem"},
+			{"label": "Last Modified", "type": "Datetime", "key": "modified", "width": "8rem"},
 		]
 		rows = [
 			"name",
 			"organization",
 			"lead_name",
 			"first_name",
-			"annual_revenue",
+			"enrol_course",
+			"class_start_date",
+			"territory",
+			"final_fee",
+			"balance_due",
 			"status",
 			"email",
 			"currency",
@@ -353,7 +327,7 @@ class CRMDeal(Document):
 		return {
 			"column_field": "status",
 			"title_field": "organization",
-			"kanban_fields": '["annual_revenue", "email", "mobile_no", "_assign", "modified"]',
+			"kanban_fields": '["enrol_course", "class_start_date", "balance_due", "mobile_no", "_assign"]',
 		}
 
 

@@ -697,19 +697,37 @@
   "skill_key": "register",
   "title": "đăng ký học",
   "jev_description": "The customer wants to register or reserve a seat",
-  "examples": "mình muốn đăng ký\ngiữ chỗ lớp tối cho mình",
-  "aliases": "dang ky, ghi danh, giu cho",
+  "examples": "mình muốn đăng ký\ngiữ chỗ lớp tối cho mình\ne muon dk khoa excel\ncho mình đky lớp photoshop",
+  "aliases": "dang ky, ghi danh, giu cho, dk, dky, dki",
   "parameters": [
    "course"
   ],
   "missing_policy": "ask",
-  "action_type": "handoff",
-  "action_config": {},
+  "action_type": "enrol",
+  "action_config": {
+   "slot": "enrol_class",
+   "limit": 3
+  },
   "templates": [
+   {
+    "variant_key": "stop",
+    "when": "enrol_stop",
+    "template": "{% if enrol_stop == 'later' %}Dạ không sao ạ, {{ brand.you }} cứ cân nhắc thêm. Khi nào sẵn sàng {{ brand.you }} nhắn {{ brand.me }} để giữ chỗ lớp khóa {{ course.name }} nhé ạ.{% else %}Dạ vâng ạ. {{ brand.you | capitalize }} cần tìm hiểu thêm gì cứ nhắn {{ brand.me }} nhé ạ.{% endif %}"
+   },
+   {
+    "variant_key": "chosen",
+    "when": "enrol_class",
+    "template": "Dạ {{ brand.me }} đã ghi lớp {{ enrol_class }} cho {{ brand.you }} ạ."
+   },
+   {
+    "variant_key": "resumed",
+    "when": "resumed and schedules",
+    "template": "{% if unclear %}Dạ {{ brand.me }} chưa rõ ý {{ brand.you }} ạ. {% endif %}{{ brand.you | capitalize }} chọn giúp {{ brand.me }} lớp khóa {{ course.name }} ở các nút bên dưới, hoặc bấm \"Nhờ tư vấn chọn lớp\" nhé ạ."
+   },
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.me }} ghi nhận đăng ký, tư vấn viên sẽ liên hệ giữ chỗ cho {{ brand.you }} ngay ạ."
+    "template": "Dạ {{ brand.me }} ghi nhận {{ brand.you }} muốn đăng ký khóa {{ course.name }} ạ.{% if schedules %} Các lớp sắp khai giảng:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn lớp phù hợp, hoặc bấm \"Nhờ tư vấn chọn lớp\" nếu chưa chọn được nhé ạ.{% else %} Hiện khóa này chưa có lớp mở mới, tư vấn viên sẽ báo lịch khai giảng cho {{ brand.you }} ạ.{% endif %}"
    }
   ],
   "follow_ups": [],

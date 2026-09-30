@@ -56,9 +56,13 @@ class TestMatchPending(unittest.TestCase):
         options = {b["title"]: b["action"] for b in offers.buttons("excel_quiz")}
         for text in ("ok", "Ok em", "được", "làm thử", "làm luôn nhé"):
             self.assertEqual(match_pending(text, {"options": options})["type"], "skill", text)
-        for text in ("thôi", "để sau nhé", "không", "chưa cần"):
+        for text in ("thôi", "để sau nhé", "không", "chưa cần", "không cần đâu", "không cần đâu ạ", "khỏi",
+                     "khỏi test nha", "không muốn làm test", "mình không thích làm bài test", "không cần test đâu em",
+                     "chưa muốn", "không có nhu cầu"):
             self.assertEqual(match_pending(text, {"options": options})["type"], "offer_decline", text)
         self.assertIsNone(match_pending("học phí bao nhiêu", {"options": options}))
+        # a refusal that carries a real question is left to the rest of the turn, which answers it
+        self.assertIsNone(match_pending("không cần test, cho mình hỏi học phí khóa word bao nhiêu", {"options": options}))
 
     def test_trial_date_typed(self):
         pending = {"options": TRIAL}
@@ -71,6 +75,8 @@ class TestMatchPending(unittest.TestCase):
     def test_yes_no(self):
         self.assertTrue(yes_no("ok a"))
         self.assertFalse(yes_no("thoi de sau"))
+        self.assertFalse(yes_no("khong can dau"))
+        self.assertIsNone(yes_no("khong biet hoc phi bao nhieu"))
         self.assertIsNone(yes_no("hoc phi bao nhieu"))
 
 

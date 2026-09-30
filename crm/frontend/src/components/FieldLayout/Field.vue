@@ -553,7 +553,7 @@ const field = computed(() => {
 
   let _field = {
     ...field,
-    filters: parseLinkFilters(field.link_filters),
+    filters: parseLinkFilters(field.link_filters, data.value),
     placeholder: field.placeholder || field.label,
     display_via_depends_on: displayViaDependsOn,
     mandatory_via_depends_on: evaluateDependsOnValue(

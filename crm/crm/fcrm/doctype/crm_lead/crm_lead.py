@@ -419,20 +419,24 @@ class CRMLead(Document):
 	@staticmethod
 	def default_list_data():
 		# Sao Việt: the same context the admin customer dashboard shows (branch, course, source, hotness).
+		# English labels, translated by vi.po like every other column (D-116).
 		columns = [
 			{"label": "Full Name", "type": "Data", "key": "lead_name", "width": "12rem"},
-			{"label": "Chi nhánh", "type": "Link", "key": "territory", "options": "CRM Territory", "width": "9rem"},
-			{"label": "Khóa quan tâm", "type": "Data", "key": "course_interest", "width": "12rem"},
+			# Same column mmm_custom.pages adds to saved views; keep the two alike.
+			{"label": "Facebook Page", "type": "Data", "key": "facebook_page", "width": "10rem"},
+			{"label": "Territory", "type": "Link", "key": "territory", "options": "CRM Territory", "width": "9rem"},
+			{"label": "Course Interest", "type": "Data", "key": "course_interest", "width": "12rem"},
 			{"label": "Source", "type": "Link", "key": "source", "options": "CRM Lead Source", "width": "8rem"},
-			{"label": "Độ nóng", "type": "Select", "key": "ai_hotness", "width": "6rem"},
+			{"label": "Hotness", "type": "Select", "key": "ai_hotness", "width": "6rem"},
 			{"label": "Status", "type": "Link", "options": "CRM Lead Status", "key": "status", "width": "8rem"},
 			{"label": "Mobile No.", "type": "Data", "key": "mobile_no", "width": "10rem"},
-			{"label": "Phụ trách", "type": "Link", "options": "User", "key": "lead_owner", "width": "10rem"},
+			{"label": "Owner", "type": "Link", "options": "User", "key": "lead_owner", "width": "10rem"},
 			{"label": "Last Modified", "type": "Datetime", "key": "modified", "width": "8rem"},
 		]
 		rows = [
 			"name",
 			"lead_name",
+			"facebook_page",
 			"territory",
 			"course_interest",
 			"source",
@@ -457,7 +461,7 @@ class CRMLead(Document):
 		return {
 			"column_field": "status",
 			"title_field": "lead_name",
-			"kanban_fields": '["organization", "email", "mobile_no", "_assign", "modified"]',
+			"kanban_fields": '["course_interest", "territory", "mobile_no", "_assign", "modified"]',
 		}
 
 
@@ -477,8 +481,11 @@ def convert_to_deal(
 	lead = frappe.get_cached_doc("CRM Lead", lead)
 	if frappe.get_cached_value("CRM Lead Status", lead.status, "type") == "Lost":
 		frappe.throw(_("Cannot convert a lead with status {0}").format(lead.status))
-	if frappe.db.exists("CRM Lead Status", "Qualified"):
-		lead.db_set("status", "Qualified")
+	# D-116: a registered Lead is "Converted" (Đã đăng ký); sites without that status keep upstream's "Qualified"
+	for status in ("Converted", "Qualified"):
+		if frappe.db.exists("CRM Lead Status", status):
+			lead.db_set("status", status)
+			break
 	lead.db_set("converted", 1)
 	if lead.sla and frappe.db.exists("CRM Communication Status", "Replied"):
 		lead.db_set("communication_status", "Replied")

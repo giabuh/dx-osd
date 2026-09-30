@@ -193,6 +193,29 @@ def load(anchor=None):
 	return created
 
 
+def load_register_skill():
+	"""Patch v1_2 (D-118): the `enrol_class` slot and the `register` skill that drafts a registration. A `register`
+	skill a manager changed (no longer the handoff-only default) is left alone."""
+	data = load_dataset()
+	slot = next(s for s in data["bot_slots"] if s["slot_key"] == "enrol_class")
+	skill = next(s for s in data["bot_skills"] if s["skill_key"] == "register")
+	upsert("Bot Slot", {"slot_key": "enrol_class"}, {
+		**{k: slot[k] for k in ("label", "slot_type", "catalog_source", "required", "sort_order", "ask_template",
+		                        "lead_field")}, "active": 1, "ask_on_demand": slot.get("ask_on_demand", 0),
+		"options": slot["options"]})
+	current = frappe.db.get_value("Bot Skill", {"skill_key": "register"}, "action_type")
+	if current not in (None, "handoff", "enrol"):
+		return
+	skill_fields = ("title", "jev_description", "examples", "aliases", "missing_policy", "action_type",
+	                "creates_lead", "handoff_after", "sort_order")
+	upsert("Bot Skill", {"skill_key": "register"}, {
+		**{k: skill[k] for k in skill_fields}, "active": 1,
+		"action_config": json.dumps(skill["action_config"], ensure_ascii=False),
+		"parameters": [{"bot_slot": p} for p in skill["parameters"]],
+		"templates": skill["templates"], "follow_ups": skill["follow_ups"]})
+	frappe.db.commit()
+
+
 def purge_demo():
 	"""Delete demo-only rows (schedules, promotions, demo courses); territories, groups and bot data stay."""
 	counts = {}

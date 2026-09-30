@@ -5,10 +5,18 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import engine_fixtures  # noqa: F401  (puts the app on sys.path)
 
-from mmm_custom.engine.text import content_words, find_phone, find_phrases, fold, normalize_vn_phone, plain_text, slug
+from mmm_custom.engine.text import (content_words, find_phone, find_phrases, fold, is_question, normalize_vn_phone,
+                                    plain_text, slug)
 
 
 class TestText(unittest.TestCase):
+    def test_is_question(self):
+        for text in ("Khóa robotics em có không", "học mấy buổi 1 tuần", "trung tâm ở đâu vậy", "khi nào khai giảng",
+                     "học phí sao em", "được chưa", "ok?"):
+            self.assertTrue(is_question(text), text)
+        for text in ("mình muốn học khóa máy tính", "0399981234", "cảm ơn em", "bắt đầu từ tháng sau"):
+            self.assertFalse(is_question(text), text)
+
     def test_fold_strips_diacritics_case_and_punctuation(self):
         self.assertEqual(fold("Học phí Excel ở Dĩ An, Q.7?"), "hoc phi excel o di an q 7")
         self.assertEqual(fold("ĐỒ HỌA"), "do hoa")

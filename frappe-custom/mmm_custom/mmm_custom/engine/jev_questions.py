@@ -7,9 +7,10 @@ English carrying the Vietnamese names and aliases customers use. Keys:
     staff_reply    which reply staff once wrote answers the message, among the most similar ones (D-114)
     level_unsure   unsure of their level, asked only while a level test can be offered (D-106)
     reply_to_bot   which of the buttons the bot just offered a typed message means (D-107)
+    enrol_step     where a message inside the registration dialogue leads: answer, side question, later… (D-121)
 """
 
-from mmm_custom.engine import staff_replies
+from mmm_custom.engine import enrol_flow, staff_replies
 from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.decide import slot_active
 from mmm_custom.engine.offers import LEVEL_UNSURE, available
@@ -23,10 +24,13 @@ COURSE_FAQ = "course_faq"
 COURSE_FACT = "course_fact"
 STAFF_REPLY = "staff_reply"
 REPLY_TO_BOT = "reply_to_bot"
+# "cho mình làm bài test" is "let me take the test", not "for my child": Jev read it as the child option (0.75).
+CHOICE_HINT = ("Choose an option only when the chat says it. In Vietnamese \"cho mình / cho em / cho tôi\" followed "
+               "by a verb means \"let me …\", not an answer to this question.")
 # Parts of a course's own data the bot can answer from (D-110): key -> (Course attribute, what the customer asks).
 # Fee and schedules are skills of their own (fee_quote, schedule_lookup) with promotions and open classes.
 FACTS = {
-    "summary": ("summary", "What the course is, what it is about overall"),
+    "summary": ("summary", "Whether the centre has this course and what it is about overall (\"có khóa … không\")"),
     "syllabus": ("syllabus", "The lessons, topics or programme the course teaches"),
     "duration": ("duration", "How long the course takes: weeks, months, number of sessions"),
     "audience": ("audience", "Who the course is for: level needed, beginners, age"),
@@ -89,7 +93,10 @@ def _catalog_questions(slot, state, u, catalog):
     out = {}
     if not parent and not candidates:
         out[f"parent:{slot.key}"] = _choice(f"Which {parent_what} does the customer mean in this Vietnamese chat?", parents)
-    out[f"slot:{slot.key}"] = _choice(f"Which {what} does the customer mean in this Vietnamese chat?", leaves)
+    hint = (" Choose a course only when the chat names that course or one of its own aliases; a field of study "
+            "alone (\"tin học văn phòng\", \"đồ họa\") is a course group, not a course: choose none."
+            if slot.source == "course" else "")
+    out[f"slot:{slot.key}"] = _choice(f"Which {what} does the customer mean in this Vietnamese chat?{hint}", leaves)
     return out
 
 
@@ -107,7 +114,8 @@ def build_questions(state, u, catalog, skills=True, text=""):
         if slot.type == "catalog":
             q.update(_catalog_questions(slot, state, u, catalog))
         elif slot.type == "choice":
-            q[f"slot:{slot.key}"] = _choice(f"What does the customer answer for '{slot.label}' in this Vietnamese chat?",
+            q[f"slot:{slot.key}"] = _choice(f"What does the customer answer for '{slot.label}' in this Vietnamese chat? "
+                                            f"{CHOICE_HINT}",
                                             {o.value: _named(o.label, o.aliases) for o in slot.options})
         elif slot.type == "number":
             q[f"slot:{slot.key}"] = _choice(f"Which number does the customer give for '{slot.label}'?",
@@ -139,8 +147,13 @@ def build_questions(state, u, catalog, skills=True, text=""):
     if options and not u.tapped:  # a typed answer the keyword tier could not tie to a button (D-107)
         q[REPLY_TO_BOT] = _choice("The bot's last message offered these buttons. Which one does the customer's latest "
                                   "message choose, in their own words (agreeing, refusing, a date, an answer)? "
-                                  "Choose none when they ask or say something else.",
+                                  "A message that picks one and also asks something else still picks it. Choose none "
+                                  "when it picks none of them.",
                                   {str(i): title for i, title in enumerate(options)})
+    if enrol_flow.is_open(state, catalog):  # the bot is registering the customer: does the message follow? (D-121)
+        q[enrol_flow.STEP] = _choice("The bot is registering the customer for a course: it asked them to pick a class, "
+                                     "then for a phone number so a consultant can confirm. What does the customer's "
+                                     "latest message do?", enrol_flow.STEPS)
     q["intent"] = {"type": "choice", "instructions": "What does the customer want in this Vietnamese chat with a training centre?",
                    "criteria": INTENTS}
     q["hotness"] = {"type": "score", "instructions": "How close is the customer to enrolling, based on the whole chat?",

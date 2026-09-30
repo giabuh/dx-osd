@@ -45,7 +45,7 @@ DEFAULT_SETTINGS = {
                               "{{ brand.you }} làm tiếp để nhận quà nhé 🎁\nCâu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}",
     "quiz_remind_after_hours": 2,
     # Answers from a course's own data when Jev ties the question to it (D-110, engine/jev_questions.FACTS).
-    "fact_summary_template": "Dạ khóa {{ course.name }} ạ: {{ course.summary }}",
+    "fact_summary_template": "Dạ trung tâm có khóa {{ course.name }} ạ. {{ course.summary }}",
     "fact_syllabus_template": "Dạ khóa {{ course.name }} học các nội dung chính sau ạ:"
                               "{% for s in course.syllabus[:8] %}\n• {{ s }}{% endfor %}",
     "fact_duration_template": "Dạ khóa {{ course.name }} học trong {{ course.duration }} ạ.",

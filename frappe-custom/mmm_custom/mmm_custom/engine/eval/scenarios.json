@@ -164,9 +164,10 @@
  {
   "id": "S08",
   "title": "Khách nóng ở Bình Thạnh",
-  "why": "Jev đọc khách sắp đăng ký → trưởng nhóm chi nhánh",
+  "why": "Jev đọc khách sắp đăng ký; bot hỏi lớp trước (D-121) rồi chuyển trưởng nhóm chi nhánh",
   "messages": [
-   "Mình ở Bình Thạnh, đăng ký Excel luôn hôm nay, gọi mình 0901111222"
+   "Mình ở Bình Thạnh, đăng ký Excel luôn hôm nay, gọi mình 0901111222",
+   "Nhờ tư vấn chọn lớp"
   ],
   "signals": {
    "hotness": 2.0,

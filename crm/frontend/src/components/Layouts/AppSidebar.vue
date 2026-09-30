@@ -221,6 +221,7 @@ import SettingsIcon from '~icons/lucide/settings'
 import MegaphoneIcon from '~icons/lucide/megaphone'
 import MessageSquareIcon from '~icons/lucide/message-square'
 import GlobeIcon from '~icons/lucide/globe'
+import GraduationCapIcon from '~icons/lucide/graduation-cap'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
@@ -321,6 +322,11 @@ const links = [
     label: 'Tasks',
     icon: TaskIcon,
     to: 'Tasks',
+  },
+  {
+    label: 'Courses & Classes',
+    icon: GraduationCapIcon,
+    to: 'Classes',
   },
 ]
 

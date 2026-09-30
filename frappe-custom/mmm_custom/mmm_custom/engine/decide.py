@@ -7,7 +7,9 @@ Decision: answer skill(s) (and ask the next slot), ask the next missing slot, ha
 import copy
 from dataclasses import dataclass, field
 
+from mmm_custom.engine import enrol_flow
 from mmm_custom.engine.offers import BUTTON_ACTIONS, MAX_RESUMES, focus, paused_quiz, quiz_offer, subject
+from mmm_custom.engine.slot_types import REGISTRY
 from mmm_custom.engine.state import filled, value
 
 HANDOFF_REASONS = {
@@ -17,6 +19,7 @@ HANDOFF_REASONS = {
     "hot": "Khách hot, sẵn sàng đăng ký",
     "required_filled": "Đã đủ thông tin bắt buộc",
     "stuck": "Bot chưa hiểu khách nhiều lượt liên tiếp",
+    "enrol_ready": "Khách đăng ký: đã hỏi xong lớp và số điện thoại",
 }
 IMMEDIATE = ("button", "wants_human", "skill")
 # Why a person must answer, in the words a staff draft note uses (D-110); other reasons need no note.
@@ -49,6 +52,7 @@ class Decision:
     phone_check: str = ""                       # a phone number with a digit missing: ask to check it (D-107)
     quiz_done: str = ""                         # level quiz finished this turn: ask the phone next (pipeline)
     voucher: dict = field(default_factory=dict)  # level-test reward sent this turn (pipeline, D-106)
+    enrol_stop: str = ""                        # the customer left the registration dialogue: later | cancel (D-121)
 
     @property
     def answered(self):
@@ -56,7 +60,10 @@ class Decision:
         return bool(self.skills or self.faq or self.fact or self.staff_reply)
 
 
-FACT_LABELS = {"summary": "giới thiệu khóa", "syllabus": "nội dung học", "duration": "thời lượng", "audience": "đối tượng học",
+# Skills answered from the site's live data and buttons (open classes, booking, the level test): a reply staff
+# once wrote on the same topic has none of that, so it never replaces them (D-114).
+LIVE_ACTIONS = ("schedule_lookup", "trial_offer", "book_trial", "level_quiz", "enrol")
+FACT_LABELS = {"summary": "giới thiệu", "syllabus": "nội dung học", "duration": "thời lượng", "audience": "đối tượng học",
                "certificate": "chứng chỉ", "next": "khóa học tiếp theo"}
 
 
@@ -95,8 +102,15 @@ def merge(slots, u, catalog):
                 entry.pop("value", None)  # an explicit "not X, Y" must not leave X silently stored
             entry["candidates"] = list(candidates)
             changed.append(key)
+    fills = dict(u.fills)
+    for key in u.parents:  # an area with one branch (a group with one course) needs no second question
+        slot, entry = catalog.slot(key), out.get(key) or {}
+        if slot and slot.type == "catalog" and not filled(out, key) and key not in fills and entry.get("parent"):
+            only = [v for v, _, parent in REGISTRY["catalog"].items(slot, out, catalog) if parent == entry["parent"]]
+            if len(only) == 1:
+                fills[key] = {"value": only[0], "source": "parent", "confidence": 1.0}
     new = []
-    for key, fill in u.fills.items():
+    for key, fill in fills.items():
         slot, entry = catalog.slot(key), out.setdefault(key, {})
         if entry.get("value") != fill["value"]:
             entry.update(fill)
@@ -142,14 +156,19 @@ def next_slot(slots, catalog, first=()):
     return ""
 
 
-def handoff_reason(u, skills, slots, stuck, catalog):
+def handoff_reason(u, skills, slots, stuck, catalog, enrolling=False):
+    """`enrolling` (D-121): the registration dialogue runs; it hands off itself once the class and the phone are
+    asked, so neither a hot customer nor the required slots end it early. The dialogue's own skill never hands off."""
     floor = float(catalog.settings["handoff_noul"])
     if u.handoff:
         return "button"
     if u.wants_human >= floor:
         return "wants_human"
-    if any(catalog.skills[k].action == "handoff" or catalog.skills[k].handoff_after for k in skills):
+    if any(catalog.skills[k].action == "handoff" or (catalog.skills[k].handoff_after and catalog.skills[k].action != "enrol")
+           for k in skills):
         return "skill"
+    if enrolling:
+        return "stuck" if stuck >= int(catalog.settings["max_stuck_turns"]) else ""
     if u.hotness.get("value") == "hot" and u.hotness.get("confidence", 0) >= floor:
         return "hot"
     if required_filled(slots, catalog):
@@ -170,9 +189,16 @@ def decide(state, u, catalog, person_ok=False):
         return Decision("silent", **keep, close=True, reason=f"Tin nhắn rác ({u.spam:.2f}): bot dừng, không tạo Lead")
 
     slots, new, changed = merge(state.slots, u, catalog)
+    active = state.status == "active"
+    enrol_key = enrol_flow.skill_key(catalog)
+    was_enrolling = active and enrol_flow.is_open(state, catalog)
+    stop = enrol_flow.apply_step(u.enrol_step, slots, catalog) if was_enrolling else ""
     skills, waiting = pick_skills(state, u, slots, catalog)
     faq = u.faq  # one answer from the course's knowledge: its FAQ, else a staff reply, else its data
     staff = {} if faq else u.staff_reply
+    if staff and any(k == catalog.staff_reply(staff["name"]).topic and catalog.skills[k].action in LIVE_ACTIONS
+                     for k in skills):
+        staff = {}
     fact = {} if (faq or staff) else u.fact
     small_talk = u.greeting and not (new or changed or faq or staff or fact)
     if small_talk:
@@ -188,23 +214,35 @@ def decide(state, u, catalog, person_ok=False):
         skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     skills, squeezed = focus(skills, catalog)
     phone = next((s.key for s in catalog.slots if s.type == "phone"), "")
-    if phone in u.fills or u.phone_suspect or u.gives_contact:  # their number, not a question about ours (D-107)
+    gives_phone = phone in u.fills or u.phone_suspect or u.gives_contact  # their number, not a question about ours (D-107)
+    if gives_phone:
         skills = [k for k in skills if not catalog.skills[k].config.get("not_when_customer_gives_phone")]
     phone_check = u.phone_suspect if phone and not filled(slots, phone) else ""
-    paused = paused_quiz(state.pending)
+    if stop and enrol_key not in skills:
+        skills = skills + [enrol_key]  # its "không sao ạ" answer (D-121)
+    if active and not stop and enrol_key in skills and not was_enrolling:
+        enrol_flow.start(slots, catalog)  # "mình muốn đăng ký": lead the customer to a class and a phone
+    enrolling = active and not stop and enrol_flow.phase(slots, catalog) == enrol_flow.OPEN
+    if enrolling and enrol_flow.class_slot(catalog) in new and enrol_key not in skills:
+        skills = skills + [enrol_key]  # a class typed rather than tapped is confirmed the same way
+    step = enrol_flow.next_step(slots, catalog) if enrolling else ""
+    paused = paused_quiz(state.pending) or (enrol_key if enrolling and step == "class" else "")
     resume = ""
     if (paused and paused not in skills and not u.declined and not u.handoff and not u.phone_suspect
             and state.status == "active" and int(state.pending.get("resumes") or 0) < MAX_RESUMES):
         resume = paused  # answer the side question, then the question the customer stopped at
         skills = skills + [paused]
+    if enrolling and step == "class" and enrol_key not in skills and int(state.pending.get("resumes") or 0) >= MAX_RESUMES:
+        enrol_flow.skip(slots, enrol_flow.class_slot(catalog))  # asked twice already: the consultant picks the class
+        step = enrol_flow.next_step(slots, catalog)
     greet = (state.turns == 0 or small_talk) and not skills and not know
     side = [k for k in skills if k != resume]
     unclear = bool(resume) and not (new or changed or side or know or waiting)  # nothing but an unknown answer
     progress = bool(new or changed or skills or waiting or know or u.handoff or u.focus or u.confirm or u.rejected
-                    or u.declined or u.phone_suspect)
+                    or u.declined or u.phone_suspect or u.enrol_step)
     stuck = 0 if progress or greet else state.stuck_turns + 1
     common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq, fact=fact, staff_reply=staff,
-                  declined=u.declined, resume=resume, phone_check=phone_check, ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
+                  declined=u.declined, resume=resume, phone_check=phone_check, enrol_stop=stop, ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
     answered = ", ".join(([f'"{faq_question(faq, catalog)}"'] if faq else []) +
                          ([fact_label(fact, catalog)] if fact else []) + (["câu trả lời NV"] if staff else []) +
                          [catalog.skills[k].title for k in side])
@@ -219,8 +257,17 @@ def decide(state, u, catalog, person_ok=False):
     confirm = u.confirm
     if confirm.get("kind") == "skill" and (new or changed or skills or waiting or know):
         confirm = {}  # the turn already answers or asks something: a "did you mean…?" on top is noise
-    why = "" if small_talk else handoff_reason(u, skills, slots, stuck, catalog)
+    if confirm.get("kind") == "skill" and gives_phone and \
+            catalog.skills[confirm["skill"]].config.get("not_when_customer_gives_phone"):
+        confirm = {}  # "số điện thoại tôi là …" is never "did you mean our hotline?" (D-107)
+    why = "" if small_talk else handoff_reason(u, skills, slots, stuck, catalog, enrolling)
+    if why == "hot" and phone_check:
+        why = ""  # a hot customer with a mistyped number: get a number the consultant can call first (D-107)
+    if enrolling and not why and not step and not phone_check:
+        why = "enrol_ready"
     if why and (why in IMMEDIATE or not confirm):
+        if enrolling:
+            enrol_flow.finish(slots, catalog)  # the pipeline drafts the registration with what was asked
         return Decision("handoff", **common, handoff_reason=why, reason=HANDOFF_REASONS[why])
     if confirm:
         reason = f"Xác nhận: {confirm['label']}" + (f"; trả lời: {answered}" if answered else "")
@@ -236,9 +283,11 @@ def decide(state, u, catalog, person_ok=False):
     first = ([phone] if phone_check else []) + ([u.focus] if u.focus else []) + \
         (list(catalog.skills[waiting].params) if waiting else [])
     ask = next_slot(slots, catalog, first)
+    if enrolling or stop:  # the dialogue asks only its own next step, and an ended one asks nothing (D-121)
+        ask = phone if phone and (step == "phone" or (enrolling and phone_check)) else ""
     later = not ask or not catalog.slot(ask).required or catalog.slot(ask).type == "phone"
-    offer = "" if first or u.declined or not later else quiz_offer(state, u, slots, catalog, skills)
-    if squeezed and not offer and squeezed not in state.offers and not any(
+    offer = "" if first or u.declined or not later or enrolling or stop else quiz_offer(state, u, slots, catalog, skills)
+    if squeezed and not enrolling and not stop and not offer and squeezed not in state.offers and not any(
             catalog.skills[k].action in BUTTON_ACTIONS for k in skills):
         offer = squeezed  # asked for a test together with something else: answer first, then offer it
     if offer:  # the level test replaces an optional question or the phone one, which it earns (D-106)
@@ -248,8 +297,11 @@ def decide(state, u, catalog, person_ok=False):
         reason = f"Trả lời: {answered}; {offered[0].lower()}{offered[1:]}" if answered else offered
         return Decision("answer" if answered else "ask_slot", **common, greet=greet, offer=offer, reason=reason)
     reason = f"Trả lời: {answered}" if answered else ("Khách để sau bài test" if u.declined else "")
+    if stop:
+        reason = f"Khách dừng đăng ký ({'để sau' if stop == enrol_flow.LATER else 'không đăng ký nữa'})"
     if resume:  # the quiz holds the turn: no other question
-        again = f"quay lại câu hỏi bài test {subject(resume, catalog)} đang dở"
+        again = ("quay lại chọn lớp đăng ký" if resume == enrol_key else
+                 f"quay lại câu hỏi bài test {subject(resume, catalog)} đang dở")
         reason = f"{reason}; {again}" if reason else again[0].upper() + again[1:]
         return Decision("answer", **common, greet=greet, unclear=unclear, reason=reason)
     if ask:

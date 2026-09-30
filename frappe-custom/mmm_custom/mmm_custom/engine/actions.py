@@ -3,7 +3,7 @@ arithmetic are code here, never Jev (D-003). A new action = one function decorat
 @action("name") + the Select option in catalog_rules.ACTION_TYPES / the Bot Skill DocType.
 
 An action returns extra template context; keys starting with "_" are instructions for the composer
-(`_attachments`, `_buttons`), not template data."""
+(`_attachments`, `_buttons`, `_skip`: nothing to say), not template data."""
 
 from dataclasses import dataclass
 
@@ -78,20 +78,59 @@ def _short_date(day):
     return f"{weekday} {day:%d/%m}"
 
 
+def _class_buttons(schedules, slot, skill, label, value_of):
+    """One button per class: a tap fills `slot` with `value_of(class)` and answers `skill`."""
+    return [{"title": label(s)[:20],
+             "action": {"type": "slot", "slot": slot, "value": value_of(s), "skill": skill}} for s in schedules]
+
+
+def _day_shift(s):
+    return f"{_short_date(s['date'])} {str(s.get('shift') or '').split(' ')[0]}".strip()
+
+
 @action("trial_offer")
 def trial_offer(a):
     """Free trial (D-102): the next open classes of the course as buttons; a tap fills the slot named in
     `action_config.slot` with a readable booking and answers the skill `action_config.skill`."""
     cfg, course = a.skill.config, a.ctx["course"]
     schedules = find_schedules(a.data, a.ctx, a.today, int(cfg.get("limit", 3))) if course else []
-    buttons = []
-    for s in schedules:
-        shift = str(s.get("shift") or "").split(" ")[0]
-        booking = " · ".join(x for x in (course["name"], date_vi(s["date"]), str(s.get("shift") or ""), s.get("branch") or "") if x)
-        buttons.append({"title": f"{_short_date(s['date'])} {shift}".strip()[:20],
-                        "action": {"type": "slot", "slot": cfg.get("slot", "trial_class"), "value": booking,
-                                   "skill": cfg.get("skill", "")}})
-    return {"schedules": schedules, "_buttons": buttons}
+
+    def booking(s):
+        return " · ".join(x for x in (course["name"], date_vi(s["date"]), str(s.get("shift") or ""), s.get("branch") or "") if x)
+
+    return {"schedules": schedules,
+            "_buttons": _class_buttons(schedules, cfg.get("slot", "trial_class"), cfg.get("skill", ""), _day_shift, booking)}
+
+
+def _class_label(s):
+    """"05/10 Sáng Quận 6": the day, the shift and the branch, so classes of one day at different branches get
+    different buttons (Messenger drops quick replies with the same title)."""
+    shift = str(s.get("shift") or "").split(" ")[0]
+    branch = str(s.get("branch") or "").removeprefix("CN ")
+    return " ".join(x for x in (f"{s['date']:%d/%m}", shift, branch) if x)
+
+
+@action("enrol")
+def enrol(a):
+    """Registration (D-118, dialogue D-121): the next open classes of the course as buttons, plus one to let the
+    consultant choose; a tap fills `action_config.slot` with the class title and answers this skill again. With no open
+    class the step is skipped and the phone is asked. The draft registration is made by the pipeline (effects)."""
+    from mmm_custom.engine import enrol_flow
+
+    if a.ctx.get("enrol_stop"):
+        return {"enrol_stop": a.ctx["enrol_stop"]}
+    cfg, course = a.skill.config, a.ctx["course"]
+    slot = cfg.get("slot", "enrol_class")
+    chosen = value(a.slots, slot)
+    if chosen:
+        return {"enrol_class": chosen}
+    schedules = find_schedules(a.data, a.ctx, a.today, int(cfg.get("limit", 3))) if course else []
+    out = {"schedules": schedules, "resumed": bool(a.ctx.get("resumed")), "unclear": bool(a.ctx.get("unclear"))}
+    if not schedules:
+        phone = enrol_flow.phone_slot(a.catalog)
+        return {**out, "_skip_slot": slot, **({"_then_ask": phone} if phone and not filled(a.slots, phone) else {})}
+    buttons = _class_buttons(schedules, slot, a.skill.key, _class_label, lambda s: s.get("title") or "")
+    return {**out, "_buttons": buttons + [{"title": enrol_flow.ANY_CLASS_TITLE, "action": {"type": "skip", "slot": slot}}]}
 
 
 @action("book_trial")
@@ -215,6 +254,8 @@ def recommend_courses(a):
                 return {**out, "_ask": ask}
         if ranked:
             picked, scores = [c for c, _ in ranked[:top]], dict((c.code, s) for c, s in ranked)
+    if not picked:  # no course fits the learner's audience and age: no "em gợi ý các khóa này" over an empty list
+        return {**out, "_skip": True}
     buttons = [{"title": c.button, "action": {"type": "slot", "slot": course_slot.key, "value": c.code}}
                for c in picked] if course_slot else []
     out.update(recommendations=[{"course": c.name, "code": c.code, "fee": c.fee, "score": scores.get(c.code)}

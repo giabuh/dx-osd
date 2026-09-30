@@ -74,6 +74,8 @@ class TestActions(unittest.TestCase):
         self.assertEqual([r["code"] for r in teen["recommendations"]], ["TE-PY", "TE-ROBO-NC"])
         adult = act("course_advisor", {"learner": fill("self")})
         self.assertTrue(all(CAT.courses[r["code"]].audience != "Trẻ em" for r in adult["recommendations"]))
+        nothing = act("course_advisor", {"learner": fill("self"), "learner_age": fill(3)})
+        self.assertEqual(nothing, {"_skip": True}, "no course fits: the reply says nothing rather than an empty list")
 
     def test_branch_info_lists_area_branches(self):
         out = act("branch_info", {"branch": {"parent": "Đồng Nai"}})

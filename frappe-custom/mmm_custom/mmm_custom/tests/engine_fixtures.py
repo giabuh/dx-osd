@@ -151,7 +151,8 @@ class FakeRepo:
 
 def schedule(course, branch, day, shift="Tối 17:00–21:00", weekdays="T3, T5, T7", seats=6):
     return {"course": course, "branch": branch, "date": day, "shift": shift, "weekdays": weekdays,
-            "seats_left": seats}
+            "seats_left": seats, "name": f"{course}-{branch}-{day:%Y%m%d}",
+            "title": f"{course} · {branch} · {day:%d/%m/%Y} · {shift.split(' ')[0]}"}
 
 
 def promo(title, kind="Percent", amount=10, courses=(), groups=(), branches=()):

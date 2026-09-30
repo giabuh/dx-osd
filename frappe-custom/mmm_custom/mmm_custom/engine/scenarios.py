@@ -5,7 +5,8 @@ RecordingEffects, so nothing is sent to Chatwoot and no Lead is written.
 Offline the unit tests run them on the demo catalog; on a site
 `bench --site crm.localhost execute mmm_custom.engine.scenarios.report` runs them on live data, and
 `/crm/admin` calls `run_all`. Checks name consultant attributes (branch, specialty, level, B2B), never
-people, so they hold on any dataset shaped like the demo."""
+people, so they hold on any dataset shaped like the demo. `report --kwargs "{'real_jev': 1}"` asks the
+site's real Jev instead of the fixed signals: the scenarios must still hold with the live model."""
 
 import copy
 import json
@@ -53,8 +54,8 @@ class ScenarioRepo:
     """Wraps a repo (FakeRepo offline, FrappeRepo on a site): conversation state in memory, no logs,
     a fixed Jev stand-in, and an optional returning customer owned by a consultant of a given branch."""
 
-    def __init__(self, base, scenario):
-        self.base, self.scenario = base, scenario
+    def __init__(self, base, scenario, real_jev=False):
+        self.base, self.scenario, self.real_jev = base, scenario, real_jev
         self.states, self.owner = {}, ""
         setup = scenario.get("setup") or {}
         if setup.get("returning_owner_branch"):
@@ -67,6 +68,8 @@ class ScenarioRepo:
         return getattr(self.base, name)
 
     def jev_client(self):
+        if self.real_jev:
+            return self.base.jev_client()
         signals = self.scenario.get("signals")
         return SignalJev(signals) if signals else None
 
@@ -98,6 +101,9 @@ class ScenarioRepo:
 
     def lead_owner(self, lead):
         return self.owner if lead == RETURNING_LEAD else self.base.lead_owner(lead)
+
+    def online_agents(self):
+        return None  # who is on duty right now (D-113) must not change a scenario's expected routing
 
     def open_schedules(self, course, branch, shift, today, limit):
         rows = (self.scenario.get("setup") or {}).get("schedules")
@@ -183,8 +189,8 @@ def evaluate(scenario, transcript, effects, consultants, final):
     return checks
 
 
-def run_scenario(scenario, base_repo, render):
-    repo, effects = ScenarioRepo(base_repo, scenario), RecordingEffects()
+def run_scenario(scenario, base_repo, render, real_jev=False):
+    repo, effects = ScenarioRepo(base_repo, scenario, real_jev), RecordingEffects()
     cid, transcript, final = f"scenario-{scenario['id']}", [], None
     for i, text in enumerate(scenario["messages"], 1):
         if isinstance(text, dict):  # {"tap": n}: the customer taps the n-th button of the last reply
@@ -206,16 +212,16 @@ def run_scenario(scenario, base_repo, render):
             "assigned": {"owner": handoff["owner"], "team": handoff["team"]} if handoff else None}
 
 
-def run_scenarios(base_repo, render, scenarios=None):
-    results = [run_scenario(s, base_repo, render) for s in (scenarios or load_scenarios())]
+def run_scenarios(base_repo, render, scenarios=None, real_jev=False):
+    results = [run_scenario(s, base_repo, render, real_jev) for s in (scenarios or load_scenarios())]
     return {"total": len(results), "passed": sum(r["passed"] for r in results), "results": results}
 
 
-def _site_run():
+def _site_run(real_jev=False):
     from mmm_custom.engine.render import frappe_renderer
     from mmm_custom.engine.repo import FrappeRepo
 
-    return run_scenarios(FrappeRepo(sandbox=True), frappe_renderer)
+    return run_scenarios(FrappeRepo(sandbox=True), frappe_renderer, real_jev=real_jev)
 
 
 @frappe.whitelist() if frappe else (lambda f: f)
@@ -225,9 +231,9 @@ def run_all():
     return json.loads(json.dumps(_site_run(), default=str))
 
 
-def report():
+def report(real_jev=False):
     """`bench --site crm.localhost execute mmm_custom.engine.scenarios.report`: a readable pass/fail table."""
-    out = _site_run()
+    out = _site_run(bool(int(real_jev)))
     for r in out["results"]:
         print(f"{'PASS' if r['passed'] else 'FAIL'}  {r['id']}  {r['title']}")
         for c in r["checks"]:

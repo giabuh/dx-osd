@@ -30,12 +30,15 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
 
     channel = Current.account.facebook_pages.find_or_initialize_by(page_id: params.require(:page_id))
     created = channel.new_record?
+    inbox_name = params[:inbox_name].to_s.strip.presence
     ActiveRecord::Base.transaction do
       channel.update!(page_access_token: params.require(:page_access_token),
                       user_access_token: params[:user_access_token].presence || params[:page_access_token])
       @facebook_inbox = channel.inbox || Current.account.inboxes.create!(
-        name: params[:inbox_name].presence || "Facebook #{channel.page_id}", channel: channel
+        name: inbox_name || "Facebook #{channel.page_id}", channel: channel
       )
+      # A page connected before keeps its inbox but takes the page's current name (the CRM sends it).
+      @facebook_inbox.update!(name: inbox_name) if inbox_name && !created
     end
     channel.subscribe unless created # a new channel subscribes in after_create_commit
     channel.reauthorized!

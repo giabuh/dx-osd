@@ -45,14 +45,6 @@ webhook.webhook_type = :account_type
 webhook.secret = SecureRandom.hex(32) if webhook.secret.blank?
 webhook.save!
 
-# Also configure Inbox for EduFlow Academy if not present
-inbox = account.inboxes.find_by(name: 'EduFlow Academy Facebook')
-if !inbox
-  channel = Channel::Api.create!(account: account)
-  inbox = Inbox.create!(account: account, channel: channel, name: 'EduFlow Academy Facebook')
-  InboxMember.find_or_create_by!(inbox: inbox, user: user)
-end
-
 # Generate / retrieve API access token for Administrator
 token = user.access_token&.token
 if token.blank?
@@ -87,8 +79,6 @@ puts "WEBHOOK_SECRET_VALUE=#{webhook.secret}"
 puts "ADMIN_TOKEN_VALUE=#{token}"
 puts "PLATFORM_TOKEN_VALUE=#{platform_token}"
 puts "WEBHOOK_SUBSCRIPTIONS: #{webhook.subscriptions}"
-puts "INBOX_ID: #{inbox.id}"
-puts "INBOX_NAME: #{inbox.name}"
 """
 
 def read_env_file(path):

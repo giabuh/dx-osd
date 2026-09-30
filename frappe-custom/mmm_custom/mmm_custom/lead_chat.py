@@ -15,6 +15,8 @@ from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.crm_links import chatwoot_base
 from mmm_custom.desk import can_open_bot
 from mmm_custom.engine import presence
+from mmm_custom.pages import FIELD, page_of_inbox
+from mmm_custom.engine.repo import lead_contacted
 
 whitelist = frappe.whitelist if frappe else (lambda **kw: (lambda fn: fn))
 
@@ -79,6 +81,12 @@ def conversation_of(lead, client):
     return newest_conversation(client.list_contact_conversations(int(contact_id)))
 
 
+def page_of_conversation(lead, conversation):
+    """The Facebook page this conversation is on; the Lead's pages when the bot never saw it."""
+    inbox = frappe.db.get_value("Bot Conversation", {"conversation_id": str(conversation)}, "inbox_id")
+    return page_of_inbox(inbox) or frappe.db.get_value("CRM Lead", lead, FIELD) or ""
+
+
 def own_token(user):
     """The user's own Chatwoot token (Consultant.chatwoot_access_token), or ""."""
     if not frappe.db.exists("Consultant", user):
@@ -110,12 +118,12 @@ def chat(lead):
     client = admin_client()
     conversation = conversation_of(lead, client)
     if not conversation:
-        return {"conversation": None, "messages": [], "can_reply": False, "chatwoot_url": None}
+        return {"conversation": None, "messages": [], "can_reply": False, "chatwoot_url": None, "page": ""}
     presence.seen(conversation, frappe.session.user)  # the Lead page chat is open: the bot drafts, not answers (D-112)
     payload = client.list_messages(conversation).get("payload") or []
     return {"conversation": conversation, "messages": [to_message(m) for m in payload],
             "can_reply": bool(own_token(frappe.session.user) or can_open_bot()),
-            "chatwoot_url": _conversation_url(conversation)}
+            "chatwoot_url": _conversation_url(conversation), "page": page_of_conversation(lead, conversation)}
 
 
 @whitelist(methods=["POST"])
@@ -139,4 +147,5 @@ def send(lead, text):
         if status in (401, 403, 404):  # Chatwoot: the conversation is not assigned to this agent's team yet
             frappe.throw("Cuộc chat này chưa được giao cho nhóm của bạn trên Chatwoot (bot chưa chuyển khách).")
         raise
+    lead_contacted(lead)  # a consultant answered from the Lead page: Đang tư vấn (D-116)
     return to_message(sent)

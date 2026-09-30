@@ -12,10 +12,10 @@ from mmm_custom import hooks, lead_views
 class TestQuickFilters(unittest.TestCase):
     def test_site_filters_kept_and_missing_ones_appended(self):
         self.assertEqual(lead_views.merge_filters(["lead_name", "status", "territory"]),
-                         ["lead_name", "status", "territory", "ai_hotness", "course_interest"])
+                         ["lead_name", "status", "territory", "facebook_page", "ai_hotness", "course_interest"])
 
     def test_nothing_to_add_is_unchanged(self):
-        current = ["territory", "ai_hotness", "course_interest", "status"]
+        current = ["territory", "facebook_page", "ai_hotness", "course_interest", "status"]
         self.assertEqual(lead_views.merge_filters(current), current)
 
     def test_runs_on_migrate(self):

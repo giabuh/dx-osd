@@ -85,14 +85,24 @@ doctype_js = {"CRM Product": "public/js/crm_product.js"}
 # Installation
 # ------------
 
-after_install = "mmm_custom.setup.create_custom_field_and_lead_sources"
+# Patches do not run on a fresh install, so the lifecycle migration (D-116) runs here too.
+after_install = ["mmm_custom.setup.create_custom_field_and_lead_sources", "mmm_custom.lifecycle.migrate",
+                 "mmm_custom.setup.ensure_vnd", "mmm_custom.enrolment.ensure_deal_defaults"]
 # Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
 after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.ensure_sources",
                  "mmm_custom.referral.backfill", "mmm_custom.setup.update_crm_fields_layout",
                  "mmm_custom.desk.hide_unused_workspaces",
                  "mmm_custom.desk.remove_old_bot_workspace", "mmm_custom.desk.ensure_bot_workspace_icon",
                  "mmm_custom.desk.apply_default_apps", "mmm_custom.crm_links.retire_lead_form_script",
-                 "mmm_custom.lead_views.ensure_lead_quick_filters"]
+                 "mmm_custom.lead_views.ensure_lead_quick_filters",
+                 # D-116/D-117: missing statuses and lost reasons only; a manager's colour/order edits stay
+                 "mmm_custom.lifecycle.ensure_statuses_hook",
+                 # one branch field: the legacy `branch` select is hidden, its values fill `territory`
+                 "mmm_custom.branches.migrate",
+                 # the Deal page is a registration record: course, class, fee (D-117)
+                 "mmm_custom.enrolment.update_deal_layouts",
+                 # VND everywhere and a Deal that needs no status / currency typed in (D-120)
+                 "mmm_custom.setup.ensure_vnd", "mmm_custom.enrolment.ensure_deal_defaults"]
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
 # clears the engine's cached catalog snapshot so the next customer message sees it.
@@ -105,10 +115,19 @@ doc_events = {
 doc_events["Staff Reply"] = {"on_update": "mmm_custom.engine.staff_replies.on_change",
                              "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 # Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
-doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update",
+doc_events["CRM Lead"] = {"on_update": ["mmm_custom.engine.learning.on_lead_update",
+                                        # the Chatwoot contact shows the Lead's real status (D-116)
+                                        "mmm_custom.lifecycle.on_lead_update"],
                           # Referral codes (D-103)
                           "before_insert": "mmm_custom.referral.set_code",
-                          "validate": "mmm_custom.referral.resolve_referrer"}
+                          "validate": ["mmm_custom.referral.resolve_referrer", "mmm_custom.branches.fill_territory",
+                                       # "Đã đăng ký" only through Ghi danh (D-119)
+                                       "mmm_custom.lifecycle.guard_converted"]}
+# The registration record (D-117): course, class, fee after promotion, deposit; a postponed one returns to nurturing.
+doc_events["CRM Deal"] = {"before_insert": "mmm_custom.enrolment.before_insert",
+                          "validate": "mmm_custom.enrolment.validate",
+                          "after_insert": "mmm_custom.enrolment.after_insert",
+                          "on_update": "mmm_custom.enrolment.on_update"}
 # Consultants see every Lead/Deal of their branch, not only their own (crm/permissions/org_hierarchy.py).
 crm_record_scope = ["mmm_custom.scope.record_scope"]
 
@@ -127,8 +146,8 @@ lead_engine_events = {"handed_off": ["mmm_custom.intelligence.on_handed_off"],
                       # Nobody answered in time and the assignee is off duty: someone on duty gets it (D-113).
                       "assist_timeout": ["mmm_custom.engine.copilot.on_timeout"]}
 
-# [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
-# It does nothing unless the site config has typesafe_api_key.
+# Nurturing by Lead status (D-116): 08:00 site time, so consultants find the Tasks when their day starts.
+# The rules run without AI; with typesafe_api_key Jev picks call / message for quiet Leads.
 # Autopilot publisher: runs every 5 minutes to publish scheduled Facebook posts.
 scheduler_events = {
 	"cron": {

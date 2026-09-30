@@ -19,7 +19,7 @@ class TestBuildCatalog(unittest.TestCase):
 
     def test_slots_sorted_with_dependency(self):
         self.assertEqual([s.key for s in self.cat.slots],
-                         ["course", "branch", "learner", "goal", "level", "learner_age", "preferred_shift", "customer_name", "phone", "trial_class", "referral_code", "quiz_progress", "placement", "quiz_detail", "voucher_code"])
+                         ["course", "branch", "learner", "goal", "level", "learner_age", "preferred_shift", "customer_name", "phone", "trial_class", "enrol_class", "referral_code", "quiz_progress", "placement", "quiz_detail", "voucher_code"])
         self.assertEqual(self.cat.slot("learner_age").depends_on, ("learner", "child"))
         self.assertEqual(self.cat.slot("learner").option("child").button, "Cho con em")
 

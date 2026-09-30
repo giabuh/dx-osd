@@ -15,10 +15,14 @@ YES = frozenset({"ok", "oke", "okie", "okay", "ok em", "oke em", "ok a", "duoc",
 NO = frozenset({"khong", "ko", "k", "khong a", "khong em", "thoi", "thoi a", "thoi em", "de sau", "de sau nhe",
                 "de khi khac", "luc khac", "khi khac", "khong lam", "khong can", "chua", "chua can", "ban", "dang ban",
                 "thoi khong lam", "khong lam dau", "de sau a"})
+REFUSALS = ("khong can", "khong muon", "khong thich", "khong co nhu cau", "chua muon", "khoi")
+REFUSAL_WORDS = 8
 LETTERS = "abcdefgh"
 INDEX_RE = re.compile(r"^(?:cau|dap an|chon|phuong an|dap an la|chon cau|toi chon|em chon|minh chon)?\s*([a-h]|[1-8])$")
 DATE_RE = re.compile(r"(\d{1,2})\s*[/\-.]\s*(\d{1,2})")
 DAY_RE = re.compile(r"\bngay\s+(\d{1,2})\b")
+MONTH_RE = re.compile(r"\bthang\s+(\d{1,2})\b")
+CLASS_TITLE_RE = re.compile(r"(\d{2})/(\d{2})\s+(\S+)\s*(.*)")
 WEEKDAY_RE = re.compile(r"\b(?:thu\s*|t)([2-7])\b|\b(chu nhat|cn)\b")
 SHIFTS = ("sang", "chieu", "toi")
 WEEKDAY_WORDS = {"thu hai": "2", "thu ba": "3", "thu tu": "4", "thu nam": "5", "thu sau": "6", "thu bay": "7"}
@@ -45,9 +49,16 @@ def yes_no(folded):
     text = re.sub(r"\b(a|nhe|nha|nhe em|ha|luon a)$", "", folded).strip() or folded
     if folded in YES or text in YES:
         return True
-    if folded in NO or text in NO or text.startswith(("thoi ", "de sau", "khong lam")):
+    if folded in NO or text in NO or text.startswith(("thoi ", "de sau", "khong lam")) or _refuses(text):
         return False
     return None
+
+
+def _refuses(text):
+    """"không cần đâu", "mình không muốn làm test", "khỏi test nha": a short refusal. A long message is left
+    alone, it usually carries a question of its own ("không cần test, cho mình hỏi học phí…")."""
+    text = re.sub(r"^(minh|em|toi|anh|chi)\s+", "", text)
+    return len(text.split()) <= REFUSAL_WORDS and text.startswith(REFUSALS)
 
 
 def _by_title(folded, options):
@@ -104,6 +115,34 @@ def _by_date(text, options):
     return hits[0] if len(hits) == 1 else None
 
 
+def match_class(text, pending, slot):
+    """The registration class button (titled "05/10 Sáng Quận 6", D-121) a typed message picks, even inside a longer
+    message that also asks something ("sáng quận 6 ngày 5 tháng 10, học phí sao"): the only button that fits the day,
+    month, shift and branch written. Needs a day, or a branch with a shift: "quận 6 nằm đâu" only names a branch."""
+    options = {t: a for t, a in ((pending or {}).get("options") or {}).items()
+               if a.get("type") == "slot" and a.get("slot") == slot}
+    if not options:
+        return None
+    folded = fold(text)
+    day, month, _, shift = _trial_parts(text)
+    m = MONTH_RE.search(folded)
+    month = month or (int(m.group(1)) if m else None)
+    parsed = {t: CLASS_TITLE_RE.match(t) for t in options}
+    branches = {t: fold(p.group(4)) for t, p in parsed.items() if p and p.group(4)}
+    named = any(b and b in folded for b in branches.values())
+    if not (day or (named and shift)):
+        return None
+    hits = []
+    for title, p in parsed.items():
+        if not p:
+            continue
+        if (day and day != int(p.group(1))) or (month and month != int(p.group(2))) or \
+                (shift and shift != fold(p.group(3))) or (named and branches.get(title, "") not in folded):
+            continue
+        hits.append(options[title])
+    return hits[0] if len(hits) == 1 else None
+
+
 def match_pending(text, pending):
     """The action of the offered button this message means, or None."""
     options = (pending or {}).get("options") or {}
@@ -112,6 +151,8 @@ def match_pending(text, pending):
     folded = fold(text)
     if not folded:
         return None
+    if is_offer(options) and yes_no(folded) is False:  # "không thích làm bài test" names the start button
+        return next(a for a in options.values() if a.get("type") == "offer_decline")
     action = _by_title(folded, options)
     if action:
         return action

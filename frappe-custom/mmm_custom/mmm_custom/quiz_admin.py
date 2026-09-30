@@ -18,7 +18,7 @@ whitelist = frappe.whitelist if frappe else (lambda **kw: (lambda fn: fn))
 
 PERIODS = (7, 30, 90, 365)
 STAGES = (("offered", "Được mời"), ("started", "Làm bài"), ("done", "Làm xong"), ("phone", "Để lại SĐT"),
-          ("enrolled", "Ghi danh"))
+          ("enrolled", "Đã đăng ký"))
 VARIANTS = (("start", "Câu mở đầu (câu 1)"), ("default", "Các câu tiếp theo"), ("result", "Báo kết quả"))
 DEFAULT_TEMPLATES = {
     "start": "Dạ {{ brand.me }} gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 "
@@ -127,8 +127,10 @@ def _choices():
                             fields=["value", "label"], order_by="idx asc")
     goals = frappe.get_all("Bot Slot Option", filters={"parent": "goal", "parenttype": "Bot Slot"},
                            fields=["value", "label"], order_by="idx asc")
-    courses = frappe.get_all("CRM Product", filters={"disabled": 0}, fields=["name as code", "product_name as name",
-                                                                           "course_group as group"], order_by="name asc")
+    # "group" is a reserved SQL word, so rename course_group here instead of aliasing it in the query.
+    courses = [{"code": c.name, "name": c.product_name, "group": c.course_group}
+               for c in frappe.get_all("CRM Product", filters={"disabled": 0},
+                                       fields=["name", "product_name", "course_group"], order_by="name asc")]
     groups = frappe.get_all("Course Group", pluck="name", order_by="sort_order asc")
     return {"levels": levels, "goals": goals, "courses": courses, "groups": groups}
 

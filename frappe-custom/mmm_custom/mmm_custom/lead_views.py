@@ -9,7 +9,7 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
-LEAD_QUICK_FILTERS = ("territory", "ai_hotness", "course_interest")
+LEAD_QUICK_FILTERS = ("territory", "facebook_page", "ai_hotness", "course_interest")
 
 
 def merge_filters(current, wanted=LEAD_QUICK_FILTERS):

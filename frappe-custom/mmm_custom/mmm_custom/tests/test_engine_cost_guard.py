@@ -45,6 +45,12 @@ class TestAllowJev(unittest.TestCase):
         self.assertEqual(allow_jev(u, state, CAT, NOW), (True, ""))
         self.assertEqual(allow_jev(Understanding(fills={"branch": fill("CN Dĩ An")}), state, CAT, NOW), (True, ""))
 
+    def test_a_question_keywords_do_not_answer_needs_jev(self):
+        u = Understanding(fills={"course": fill("TE-ROBO")}, question=True)
+        self.assertEqual(allow_jev(u, ConversationState("1"), CAT, NOW), (True, ""), "có khóa robotics không")
+        u.skills = ["fee_quote"]
+        self.assertEqual(allow_jev(u, ConversationState("1"), CAT, NOW), (False, "keywords_resolved"))
+
     def test_hourly_cap(self):
         u = Understanding(unmatched=["x"])
         busy = ConversationState("1", jev_calls=[NOW - 10] * 20)

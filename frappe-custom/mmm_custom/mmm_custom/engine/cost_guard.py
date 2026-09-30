@@ -8,9 +8,11 @@ def recent_calls(calls, now):
 
 
 def keywords_resolved(u, state):
-    """Skip when all content is explained and any pending question is answered."""
+    """Skip when all content is explained, any pending question is answered and a question the customer asks is
+    answered by a keyword skill ("có khóa robotics không" names a course but asks about it: Jev reads the course)."""
     pending = state.pending.get("slot") or ""
-    return not u.unmatched and (not pending or pending in u.fills or pending in u.parents)
+    asked = u.question and not u.skills
+    return not u.unmatched and not asked and (not pending or pending in u.fills or pending in u.parents)
 
 
 def library_has(u, state, catalog, text):

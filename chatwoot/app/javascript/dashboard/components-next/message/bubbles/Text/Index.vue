@@ -8,9 +8,21 @@ import { MESSAGE_TYPES } from '../../constants';
 import { MESSAGE_STATUS } from 'shared/constants/messages';
 import { useMessageContext } from '../../provider.js';
 import { useTranslations } from 'dashboard/composables/useTranslations';
+import { useStore } from 'vuex';
+import { useI18n } from 'vue-i18n';
+import { useMapGetter } from 'dashboard/composables/store';
+import NextButton from 'dashboard/components-next/button/Button.vue';
+import { jevDraftReply } from '../../helpers/jevDraft';
 
-const { content, attachments, contentAttributes, messageType, status } =
-  useMessageContext();
+const {
+  content,
+  attachments,
+  contentAttributes,
+  messageType,
+  status,
+  isPrivate,
+  conversationId,
+} = useMessageContext();
 
 const { hasTranslations, translationContent } =
   useTranslations(contentAttributes);
@@ -46,6 +58,28 @@ const isEmpty = computed(() => {
 const handleSeeOriginal = () => {
   renderOriginal.value = !renderOriginal.value;
 };
+
+// DX-OSD staff assist: send the reply of a Jev draft note to the customer in one click.
+const store = useStore();
+const { t } = useI18n();
+const currentUser = useMapGetter('getCurrentUser');
+const draftReply = computed(() =>
+  isPrivate.value ? jevDraftReply(content.value) : null
+);
+const draftSent = ref(false);
+// A failed send shows on the sent message itself, with its retry.
+const sendDraft = () => {
+  draftSent.value = true;
+  store.dispatch('createPendingMessageAndSend', {
+    conversationId: conversationId.value,
+    message: draftReply.value,
+    private: false,
+    sender: {
+      name: currentUser.value?.name,
+      thumbnail: currentUser.value?.avatar_url,
+    },
+  });
+};
 </script>
 
 <template>
@@ -80,6 +114,19 @@ const handleSeeOriginal = () => {
         @toggle="handleSeeOriginal"
       />
       <AttachmentChips :attachments="attachments" class="gap-2" />
+      <div v-if="draftReply" class="flex justify-end">
+        <NextButton
+          xs
+          icon="i-lucide-send"
+          :label="
+            draftSent
+              ? t('CONVERSATION.BOT_ASSIST.DRAFT_SENT')
+              : t('CONVERSATION.BOT_ASSIST.SEND_DRAFT')
+          "
+          :disabled="draftSent"
+          @click="sendDraft"
+        />
+      </div>
       <template v-if="isTemplate">
         <div
           v-if="contentAttributes.submittedEmail"

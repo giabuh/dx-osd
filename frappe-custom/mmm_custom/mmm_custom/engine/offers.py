@@ -13,7 +13,7 @@ OFFERED, DECLINED, STARTED, DONE, REMINDED, REWARDED = "offered", "declined", "s
 LEVEL_UNSURE = "level_unsure"  # Jev noul, asked only when an offer is possible
 UNSURE_FLOOR = 0.6
 START_TITLE, LATER_TITLE = "Làm bài test", "Để sau"
-BUTTON_ACTIONS = ("trial_offer", "book_trial", "recommend_courses", "level_quiz")  # answers that bring their own buttons
+BUTTON_ACTIONS = ("trial_offer", "book_trial", "recommend_courses", "level_quiz", "enrol")  # answers that bring their own buttons
 MAX_RESUMES = 2  # a customer who keeps asking other things is let go; the reminder job may bring them back
 
 

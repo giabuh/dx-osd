@@ -118,6 +118,21 @@ RSpec.describe 'Callbacks API', type: :request do
       expect(response.parsed_body['id']).to eq(inbox.id)
       expect(Facebook::Messenger::Subscriptions).to have_received(:subscribe)
     end
+
+    it 'renames the inbox of a page connected before to the page name sent' do
+      post url, headers: admin.create_new_auth_token,
+                params: { page_id: facebook_page.page_id, page_access_token: 'new-tok', inbox_name: 'Tin học Ngôi Sao' }, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(inbox.reload.name).to eq('Tin học Ngôi Sao')
+    end
+
+    it 'keeps the name of a page connected before when no name is sent' do
+      expect do
+        post url, headers: admin.create_new_auth_token,
+                  params: { page_id: facebook_page.page_id, page_access_token: 'new-tok' }, as: :json
+      end.not_to(change { inbox.reload.name })
+    end
   end
 
   describe 'POST /api/v1/accounts/{account.id}/callbacks/disconnect_facebook_page' do

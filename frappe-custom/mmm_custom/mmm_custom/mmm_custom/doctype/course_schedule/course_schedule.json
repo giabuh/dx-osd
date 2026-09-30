@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "title",
   "course",
   "branch",
   "start_date",
@@ -15,6 +16,13 @@
   "is_demo_data"
  ],
  "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "read_only": 1,
+   "description": "Tên lớp hiển thị khi chọn lớp trong hồ sơ đăng ký (D-117)"
+  },
   {
    "fieldname": "course",
    "fieldtype": "Link",
@@ -74,7 +82,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-26 00:00:00.000000",
+ "modified": "2026-09-30 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Course Schedule",
@@ -108,5 +116,8 @@
  "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "title",
+ "show_title_field_in_link": 1,
+ "search_fields": "course,branch,start_date"
 }

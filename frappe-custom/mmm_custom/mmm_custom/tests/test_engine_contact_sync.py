@@ -21,7 +21,7 @@ class TestContactUpdate(unittest.TestCase):
         self.assertEqual(contact_update(fields, [EXCEL], "CRM-LEAD-1"), {
             "phone_number": "+84912345678",
             "custom_attributes": {"crm_lead_id": "CRM-LEAD-1", "khoa_hoc_quan_tam": "Excel từ cơ bản đến nâng cao",
-                                  "chi_nhanh": "CN Dĩ An", "trang_thai_lead": "tiềm năng"}})
+                                  "chi_nhanh": "CN Dĩ An"}})
 
     def test_only_known_values_are_sent(self):
         self.assertEqual(contact_update({}, [], "CRM-LEAD-1"), {"custom_attributes": {"crm_lead_id": "CRM-LEAD-1"}})
@@ -29,7 +29,8 @@ class TestContactUpdate(unittest.TestCase):
     def test_every_attribute_has_a_definition(self):
         keys = set(contact_update({"mobile_no": "+84912345678", "territory": "X", "status": "New"}, [EXCEL], "L",
                                   "http://crm.test")["custom_attributes"])
-        self.assertEqual(keys, {attr[0] for attr in CONTACT_ATTRIBUTES})
+        # trang_thai_lead follows the Lead's real status on save (lifecycle.on_lead_update), not the bot's write
+        self.assertEqual(keys | {"trang_thai_lead"}, {attr[0] for attr in CONTACT_ATTRIBUTES})
 
     def test_crm_link_only_with_a_crm_url(self):
         self.assertNotIn("ho_so_crm", contact_update({}, [], "CRM-LEAD-1")["custom_attributes"])

@@ -23,6 +23,20 @@ class TestDecide(unittest.TestCase):
         self.assertEqual((d.type, d.ask, d.greet, d.fallback, d.stuck_turns), ("ask_slot", "course", True, False, 0))
         self.assertEqual(d.slots["course"]["asked"], 1)
 
+    def test_a_customer_giving_a_short_number_is_not_asked_about_our_hotline(self):
+        hotline = {"kind": "skill", "skill": "hotline", "label": "hotline, Zalo"}
+        u = Understanding(confirm=hotline, phone_suspect="039182384")
+        d = decide(state(turns=3, slots={"course": fill("VP-EXCEL")}), u, CAT)
+        self.assertEqual((d.type, d.confirm, d.phone_check), ("ask_slot", {}, "039182384"))
+
+    def test_a_hot_customer_with_a_short_number_is_asked_to_check_it_first(self):
+        hot = {"value": "hot", "confidence": 0.95}
+        u = Understanding(phone_suspect="039182384", hotness=hot)
+        d = decide(state(turns=3, slots={"course": fill("VP-EXCEL")}), u, CAT)
+        self.assertEqual((d.type, d.phone_check), ("ask_slot", "039182384"))
+        d = decide(state(turns=3, slots={"course": fill("VP-EXCEL")}), Understanding(hotness=hot), CAT)
+        self.assertEqual((d.type, d.handoff_reason), ("handoff", "hot"))
+
     def test_a_skill_marked_alone_drops_the_other_answers(self):
         u = Understanding(skills=["fee_quote", "corporate_training"], fills={"course": fill("VP-EXCEL")})
         d = decide(state(turns=1), u, CAT)
@@ -106,6 +120,22 @@ class TestDecide(unittest.TestCase):
     def test_focus_asks_that_slot(self):
         d = decide(state(turns=1), Understanding(focus="preferred_shift"), CAT)
         self.assertEqual(d.ask, "preferred_shift")
+
+
+
+class TestSingleChild(unittest.TestCase):
+    def test_an_area_with_one_branch_fills_the_branch(self):
+        area = next(a for a in CAT.areas if len(CAT.branches_in(a)) == 1)
+        d = decide(ConversationState("1", slots={"course": fill("VP-EXCEL")}), Understanding(parents={"branch": area}), CAT)
+        self.assertEqual(d.slots["branch"]["value"], CAT.branches_in(area)[0].name)
+        self.assertIn("branch", d.new_slots)
+        self.assertNotEqual(d.ask, "branch")
+
+    def test_an_area_with_several_branches_still_asks(self):
+        area = next(a for a in CAT.areas if len(CAT.branches_in(a)) > 1)
+        d = decide(ConversationState("1", slots={"course": fill("VP-EXCEL")}), Understanding(parents={"branch": area}), CAT)
+        self.assertNotIn("value", d.slots["branch"])
+        self.assertEqual(d.ask, "branch")
 
 
 if __name__ == "__main__":

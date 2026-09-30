@@ -21,6 +21,7 @@ from mmm_custom.engine.understand import understand
 
 CAT = demo_catalog()
 REGISTER = {"Đăng ký giữ chỗ": {"type": "skill", "skill": "register"}, "Xem lịch khác": {"type": "ask", "slot": "branch"}}
+HUMAN = {"Báo lỗi": {"type": "skill", "skill": "complaint"}, "Xem lịch khác": {"type": "ask", "slot": "branch"}}
 
 
 
@@ -48,14 +49,23 @@ class TestUnderstanding(unittest.TestCase):
         self.assertEqual(allow_jev(u, s, CAT, 0.0, text="hihi"), (False, "greeting"))
 
     def test_typed_reply_mapped_to_a_handoff_skill_is_asked_back(self):
+        s = ConversationState("1", turns=3, slots=KNOWN, pending={"slot": "", "options": HUMAN})
+        u = understand("được đó em", s, CAT)
+        questions = build_questions(s, u, CAT)
+        out = combine(u, {REPLY_TO_BOT: {"choice": "0", "confidence": 0.95}}, questions, s, CAT)
+        self.assertNotIn("complaint", out.skills)
+        self.assertEqual((out.confirm["kind"], out.confirm["skill"]), ("skill", "complaint"))
+        d = decide(s, out, CAT)
+        self.assertEqual(d.type, "confirm")
+
+    def test_typed_yes_to_register_starts_the_registration_dialogue(self):
         s = ConversationState("1", turns=3, slots=KNOWN, pending={"slot": "", "options": REGISTER})
         u = understand("được đó em", s, CAT)
         questions = build_questions(s, u, CAT)
         out = combine(u, {REPLY_TO_BOT: {"choice": "0", "confidence": 0.95}}, questions, s, CAT)
-        self.assertNotIn("register", out.skills)
-        self.assertEqual((out.confirm["kind"], out.confirm["skill"]), ("skill", "register"))
+        self.assertIn("register", out.skills)
         d = decide(s, out, CAT)
-        self.assertEqual(d.type, "confirm")
+        self.assertEqual((d.type, d.skills), ("answer", ["register"]))  # no handoff before the class and phone (D-121)
 
 
 class TestDecide(unittest.TestCase):

@@ -32,7 +32,9 @@ class TestCustomerDashboard(unittest.TestCase):
         self.out = build(LEADS, GROUPS, PEOPLE, {"a": "CN Bình Thạnh · chuyên Tin học văn phòng · ít khách nhất"})
 
     def test_funnel_counts_each_stage(self):
-        self.assertEqual([s["count"] for s in self.out["funnel"]], [4, 2, 2, 3, 1])
+        self.assertEqual([s["count"] for s in self.out["funnel"]], [4, 2, 2, 3, 1, 1])
+        self.assertEqual([s["stage"] for s in self.out["funnel"]],
+                         ["Lead mới", "Có số điện thoại", "Đủ thông tin", "Đã giao tư vấn", "Hẹn học thử", "Đã đăng ký"])
         self.assertEqual((self.out["totals"]["hot"], self.out["totals"]["b2b"]), (1, 1))
 
     def test_sources_list_every_channel_legacy_names_included_and_other(self):
@@ -56,12 +58,17 @@ class TestCustomerDashboard(unittest.TestCase):
     def test_latest_leads_explain_the_assignment(self):
         row = next(r for r in self.out["latest"] if r["name"] == "a")
         self.assertEqual((row["source"], row["owner"], row["status"], row["hotness"]),
-                         ("Facebook Messenger", "Mai", "Tiềm năng", "Nóng"))
+                         ("Facebook Messenger", "Mai", "Đủ thông tin", "Nóng"))
         self.assertIn("ít khách nhất", row["why"])
-        self.assertEqual(next(r for r in self.out["latest"] if r["name"] == "ccc")["status"], "Ghi danh")
+        self.assertEqual(next(r for r in self.out["latest"] if r["name"] == "ccc")["status"], "Đã đăng ký")
+
+    def test_later_steps_count_as_qualified(self):
+        out = build([lead("e", status="Contacted", lead_owner="mai@x"), lead("f", status="Trial Booked")], {}, PEOPLE, {})
+        self.assertEqual((out["totals"]["qualified"], out["totals"]["trial"]), (2, 1))
+        self.assertEqual(out["latest"][0]["status"] in ("Đang tư vấn", "Hẹn học thử / test"), True)
 
     def test_handoff_why_keeps_only_the_routing_part(self):
-        self.assertEqual(handoff_why("Đã đủ thông tin bắt buộc · CN Quận 7 · ít khách nhất · Lead: tiềm năng"),
+        self.assertEqual(handoff_why("Đã đủ thông tin bắt buộc · CN Quận 7 · ít khách nhất · Lead: Đủ thông tin"),
                          "CN Quận 7 · ít khách nhất")
         self.assertEqual(handoff_why(""), "")
 
