@@ -113,6 +113,8 @@ def apply_decision(state, decision, reply, event, catalog):
             state.pending["confirm"] = decision.confirm
     if reply.ask:
         state.slots.setdefault(reply.ask, {})["asked"] = 1
+    for key in reply.skipped:
+        state.slots.setdefault(key, {})["skipped"] = 1
     if reply.hold and decision.ask and decision.ask != reply.ask:
         state.slots.get(decision.ask, {}).pop("asked", None)  # not asked after all: ask it once the quiz ends
     lines = [{"from": "customer", "text": event.text[:300]}]
@@ -270,23 +272,27 @@ def book_trials(turn, effects, catalog, plan=None):
 
 
 def enrol_drafts(turn, effects, catalog, plan=None):
-    """An `enrol` skill answered this turn (D-118): a draft registration and a Task, once the Lead and the course are
-    known (the phone is asked in the reply, not required: a consultant confirms by chat or call). The Lead keeps its
-    status until a person confirms; a later tap on a class sets the class."""
-    state = turn.state
+    """The draft registration and its Task (D-118), made once the registration dialogue ends in a handoff (D-121):
+    with the class and the phone it asked, for the consultant the conversation goes to. After a handoff the dialogue
+    no longer runs, so an `enrol` answer there drafts at once, and a later tap on a class sets the class. The Lead
+    keeps its status until a person confirms."""
+    from mmm_custom.engine import enrol_flow
+
+    state, decision = turn.state, turn.decision
+    key = enrol_flow.skill_key(catalog)
     course_slot = catalog.slot_for("course")
     course = value(state.slots, course_slot.key) if course_slot else ""
-    if not (state.lead and course):
+    if not (key and state.lead and course):
         return
-    for key in turn.decision.skills:
-        skill = catalog.skills.get(key)
-        if not (skill and skill.action == "enrol"):
-            continue
-        try:
-            effects.enrol(state, course, value(state.slots, skill.config.get("slot", "enrol_class")) or "",
-                          plan.owner if plan else "")
-        except Exception as e:
-            turn.reply.errors.append({"type": "enrol_failed", "detail": str(e)[:300]})
+    finished = decision.type == "handoff" and enrol_flow.phase(decision.slots, catalog) == enrol_flow.DONE
+    after = turn.status_before == "handed_off" and key in decision.skills
+    if not (finished or after):
+        return
+    try:
+        effects.enrol(state, course, value(state.slots, enrol_flow.class_slot(catalog)) or "",
+                      plan.owner if plan else "")
+    except Exception as e:
+        turn.reply.errors.append({"type": "enrol_failed", "detail": f"{type(e).__name__}: {e}"[:300]})
 
 
 def run_turn(event, repo, effects, render, draft=False, fallback=False):

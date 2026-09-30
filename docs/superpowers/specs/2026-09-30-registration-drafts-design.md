@@ -39,9 +39,14 @@ VND: `setup.ensure_vnd`. Patch `v1_2/simplify_registration` fixes the stored lay
 
 ### Drafts by the bot and Jev (D-118)
 
-1. Bot turn: skill `register` (action `enrol`). Course and phone are asked; the next open classes are offered as
-   buttons filling the `enrol_class` slot; the conversation is handed off. `pipeline.enrol_drafts` →
-   `effects.enrol` → `enrolment.create_draft`.
+1. Bot turn: skill `register` (action `enrol`, needs only the course) starts the registration dialogue (D-121,
+   `engine/enrol_flow.py`): the next open classes as buttons filling `enrol_class`, plus "Nhờ tư vấn chọn lớp"
+   (skip); then the phone; then the handoff (reason `enrol_ready`). While it runs, neither a hot reading nor the
+   required slots hand off. A message that leaves the dialogue is read by Jev (`enrol_step`): a side question is
+   answered and the class buttons come back (twice, then the consultant picks the class); `later` / `cancel` end it
+   without a handoff or a draft; `no_phone` / `any_class` skip that step; asking for a person hands off at once.
+   The draft is made when the dialogue ends in a handoff (`pipeline.enrol_drafts` → `effects.enrol` →
+   `enrolment.create_draft`), with the class and phone it asked; after a handoff, `register` drafts at once.
 2. After a consultant has replied: `intelligence.analyze_conversation` asks Jev `enrol / not_yet` (only when a draft
    is possible) and drafts at confidence ≥ 0.85, with a private note in the conversation.
 3. `create_draft`: Deal "Awaiting Confirmation" (course, class if chosen, fee and promotion from `before_insert`), the

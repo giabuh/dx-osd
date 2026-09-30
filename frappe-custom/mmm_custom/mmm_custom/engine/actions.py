@@ -112,16 +112,25 @@ def _class_label(s):
 
 @action("enrol")
 def enrol(a):
-    """Registration (D-118): the next open classes of the course as buttons; a tap fills `action_config.slot` with the
-    class title and answers this skill again. The draft registration is made by the pipeline (effects)."""
+    """Registration (D-118, dialogue D-121): the next open classes of the course as buttons, plus one to let the
+    consultant choose; a tap fills `action_config.slot` with the class title and answers this skill again. With no open
+    class the step is skipped and the phone is asked. The draft registration is made by the pipeline (effects)."""
+    from mmm_custom.engine import enrol_flow
+
+    if a.ctx.get("enrol_stop"):
+        return {"enrol_stop": a.ctx["enrol_stop"]}
     cfg, course = a.skill.config, a.ctx["course"]
     slot = cfg.get("slot", "enrol_class")
     chosen = value(a.slots, slot)
     if chosen:
         return {"enrol_class": chosen}
     schedules = find_schedules(a.data, a.ctx, a.today, int(cfg.get("limit", 3))) if course else []
-    return {"schedules": schedules,
-            "_buttons": _class_buttons(schedules, slot, a.skill.key, _class_label, lambda s: s.get("title") or "")}
+    out = {"schedules": schedules, "resumed": bool(a.ctx.get("resumed")), "unclear": bool(a.ctx.get("unclear"))}
+    if not schedules:
+        phone = enrol_flow.phone_slot(a.catalog)
+        return {**out, "_skip_slot": slot, **({"_then_ask": phone} if phone and not filled(a.slots, phone) else {})}
+    buttons = _class_buttons(schedules, slot, a.skill.key, _class_label, lambda s: s.get("title") or "")
+    return {**out, "_buttons": buttons + [{"title": enrol_flow.ANY_CLASS_TITLE, "action": {"type": "skip", "slot": slot}}]}
 
 
 @action("book_trial")

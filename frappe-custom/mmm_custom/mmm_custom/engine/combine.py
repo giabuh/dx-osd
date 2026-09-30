@@ -182,6 +182,16 @@ def _reply_to_bot(u, answers, questions, state, catalog):
     u.matches.append({"button": int(choice), "kind": "jev", "confidence": round(p, 3)})
 
 
+def _enrol_step(u, answers, questions, catalog):
+    """Jev read where a message inside the registration dialogue leads (D-121); decide() acts on it."""
+    from mmm_custom.engine.enrol_flow import STEP
+
+    choice, p = _choice(answers, questions, STEP)
+    if choice is not None and p >= float(catalog.settings["choice_act"]):
+        u.enrol_step = choice
+        u.matches.append({"enrol_step": choice, "kind": "jev", "confidence": round(p, 3)})
+
+
 def combine(u, answers, questions, state, catalog):
     if u.tapped:
         return u  # buttons (and typed answers to a confirmation) are never overridden
@@ -195,5 +205,6 @@ def combine(u, answers, questions, state, catalog):
     _course_fact(out, answers, questions, known_course(state, u, catalog), catalog)
     _staff_reply(out, answers, questions, catalog)
     _reply_to_bot(out, answers, questions, state, catalog)
+    _enrol_step(out, answers, questions, catalog)
     _signals(out, answers, questions, catalog)
     return out

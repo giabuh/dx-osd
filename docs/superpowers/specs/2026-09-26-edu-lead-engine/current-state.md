@@ -28,6 +28,7 @@ for real customers until a later labelled gate passes.
 | `engine/cost_guard.py`, `evaluate.py`, `eval/utterances.json` | Per-conversation and daily budget checks; 104 labelled utterances and D-033 go-live gate | C4+ reads |
 | `engine/advisor.py` | Audience/age/group shortlist and bounded Jev composite ranking, with a data-only fallback | C4+ reads |
 | `engine/decide.py` | Pure `decide()` → answer / confirm / ask_slot / handoff / silent; wants-human and hot handoff, spam close, pending skill | C4+ reads |
+| `engine/enrol_flow.py` | Pure registration dialogue (D-121): class → phone → handoff `enrol_ready`; Jev `enrol_step` (answer, question, any_class, no_phone, later, cancel) | — |
 | `engine/context.py`, `render.py`, `actions.py`, `reply.py` | Template context, render guard + filters, action registry (incl. `trial_offer`/`book_trial`, D-102; the Task is created by `pipeline.book_trials` → `repo.create_trial_task`), advisor recommendations and combined replies | C6.3 `book_appointment` |
 | `engine/lead.py`, `repo.py` | Slots ↔ Lead fields (`territory`, `products`, `learner_type`, `learner_age`, `preferred_shift`, `first_name`, `mobile_no`), returning-customer prefill; all database access (catalog cache cleared by `doc_events`) | — |
 | `engine/log.py`, `learning.py` | AI Decision Log rows + learning signals; daily retention purge; `consultant_corrected` on CRM Lead update | C9.2 review UI |

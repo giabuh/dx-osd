@@ -43,6 +43,7 @@ class Understanding:
     gives_contact: bool = False                    # "số điện thoại của tôi là …": the customer's number, not ours
     greeting: bool = False                         # only a greeting or a laugh: "hihi", "chào em" (D-109)
     question: bool = False                         # the message asks something ("có khóa robotics không")
+    enrol_step: str = ""                           # Jev: where a message inside the registration dialogue leads (D-121)
 
 
 def apply_action(u, action):

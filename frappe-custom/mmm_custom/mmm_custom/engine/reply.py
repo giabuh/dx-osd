@@ -35,6 +35,7 @@ class Reply:
     pending_skill: str = ""
     jev_extra: list = field(default_factory=list)
     hold: bool = False  # an action is mid-dialogue (a quiz question): ask no other slot this turn (D-104)
+    skipped: list = field(default_factory=list)  # slots an action found nothing to ask for (no open class, D-121)
 
     def options(self):
         return {b["title"]: b["action"] for b in self.buttons}
@@ -142,7 +143,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
     for key in decision.skills:
         skill = catalog.skills[key]
         try:
-            action_ctx = {**ctx, "resumed": key == decision.resume, "unclear": key == decision.resume and decision.unclear}
+            action_ctx = {**ctx, "resumed": key == decision.resume, "unclear": key == decision.resume and decision.unclear,
+                          "enrol_stop": decision.enrol_stop}
             out = run_action(skill, action_ctx, decision.slots, catalog, data, today, jev, jev_state)
         except Exception as e:
             reply.errors.append({"type": "action_error", "source": key, "detail": str(e)[:300]})
@@ -155,6 +157,10 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
             continue
         if out.get("_skip"):
             continue
+        if out.get("_skip_slot"):
+            reply.skipped.append(out["_skip_slot"])
+        if out.get("_then_ask") and not reply.ask and decision.type != "handoff":
+            reply.ask = out["_then_ask"]  # asked after this answer, not instead of it
         skill_ctx = {**ctx, **{k: v for k, v in out.items() if not k.startswith("_")}}
         template = choose_template(skill, skill_ctx, render)
         if template:

@@ -7,9 +7,10 @@ English carrying the Vietnamese names and aliases customers use. Keys:
     staff_reply    which reply staff once wrote answers the message, among the most similar ones (D-114)
     level_unsure   unsure of their level, asked only while a level test can be offered (D-106)
     reply_to_bot   which of the buttons the bot just offered a typed message means (D-107)
+    enrol_step     where a message inside the registration dialogue leads: answer, side question, later… (D-121)
 """
 
-from mmm_custom.engine import staff_replies
+from mmm_custom.engine import enrol_flow, staff_replies
 from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.decide import slot_active
 from mmm_custom.engine.offers import LEVEL_UNSURE, available
@@ -145,6 +146,10 @@ def build_questions(state, u, catalog, skills=True, text=""):
                                   "message choose, in their own words (agreeing, refusing, a date, an answer)? "
                                   "Choose none when they ask or say something else.",
                                   {str(i): title for i, title in enumerate(options)})
+    if enrol_flow.is_open(state, catalog):  # the bot is registering the customer: does the message follow? (D-121)
+        q[enrol_flow.STEP] = _choice("The bot is registering the customer for a course: it asked them to pick a class, "
+                                     "then for a phone number so a consultant can confirm. What does the customer's "
+                                     "latest message do?", enrol_flow.STEPS)
     q["intent"] = {"type": "choice", "instructions": "What does the customer want in this Vietnamese chat with a training centre?",
                    "criteria": INTENTS}
     q["hotness"] = {"type": "score", "instructions": "How close is the customer to enrolling, based on the whole chat?",
