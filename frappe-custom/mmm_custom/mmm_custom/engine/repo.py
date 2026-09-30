@@ -219,15 +219,22 @@ def set_lead_owner(lead, user):
     doc.save(ignore_permissions=True)
 
 
-def mark_consultant_replied(conversation_id):
-    """D-059: a human answered — the bot stays silent in this conversation from now on. A conversation the
-    bot never saw gets a row too, so the bot does not talk over an agent who is already chatting."""
+def mark_consultant_replied(conversation_id, now=None):
+    """A person answered (D-059, D-111): from now on the bot only suggests in this conversation, and what the
+    customer was waiting for is answered, so the fallback timer stops. A conversation the bot never saw gets a
+    row too, so the bot does not talk over an agent who is already chatting."""
+    from mmm_custom.engine.copilot import human_replied
+
+    now = time.time() if now is None else now
     name = frappe.db.get_value("Bot Conversation", {"conversation_id": conversation_id})
     if name:
-        frappe.db.set_value("Bot Conversation", name, "consultant_replied", 1)
+        assist = _json(frappe.db.get_value("Bot Conversation", name, "assist"))
+        frappe.db.set_value("Bot Conversation", name, {"consultant_replied": 1, "fallback_due_at": 0,
+                                                        "assist": json.dumps(human_replied(assist, now), ensure_ascii=False)})
     else:
         frappe.get_doc({"doctype": "Bot Conversation", "conversation_id": conversation_id, "status": "active",
-                        "consultant_replied": 1, "slots": "{}", "pending": "{}"}).insert(ignore_permissions=True)
+                        "consultant_replied": 1, "slots": "{}", "pending": "{}",
+                        "assist": json.dumps(human_replied({}, now))}).insert(ignore_permissions=True)
 
 
 def close_conversation(conversation_id):
@@ -289,7 +296,8 @@ class FrappeRepo:
             consultant=d.consultant or "", is_sandbox=bool(d.is_sandbox), is_returning=bool(d.is_returning),
             turns=d.turns or 0, answered=json.loads(d.answered_skills) if d.answered_skills else [],
             history=d.history if isinstance(d.history, list) else (json.loads(d.history) if d.history else []),
-            ai=_json(d.ai_signals), offers=_json(d.get("quiz_offers")),
+            ai=_json(d.ai_signals), offers=_json(d.get("quiz_offers")), claimed_by=d.get("claimed_by") or "",
+            fallback_due=float(d.get("fallback_due_at") or 0), assist=_json(d.get("assist")),
             jev_calls=d.jev_calls if isinstance(d.jev_calls, list) else (json.loads(d.jev_calls) if d.jev_calls else []))
 
     def new_state(self, event):
@@ -325,6 +333,8 @@ class FrappeRepo:
             "ai_signals": json.dumps(state.ai, ensure_ascii=False),
             "quiz_offers": json.dumps(state.offers),
             "jev_calls": json.dumps(state.jev_calls),
+            "claimed_by": state.claimed_by or None, "fallback_due_at": state.fallback_due or 0,
+            "assist": json.dumps(state.assist, ensure_ascii=False),
         }
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": state.conversation_id})
         if name:

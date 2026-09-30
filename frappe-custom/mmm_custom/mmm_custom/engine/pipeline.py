@@ -267,14 +267,22 @@ def book_trials(turn, effects, catalog, plan=None):
             turn.reply.errors.append({"type": "trial_failed", "detail": str(e)[:300]})
 
 
-def run_turn(event, repo, effects, render, draft=False):
+def run_turn(event, repo, effects, render, draft=False, fallback=False):
     """One customer message → understanding, decision, reply, side effects. `draft` (D-110): what the bot would
-    answer for staff to see; it never hands off and the caller passes a repo and effects that write nothing."""
+    answer for staff to see; it never hands off and the caller passes a repo and effects that write nothing.
+    `fallback` (D-111): nobody answered the waiting messages in time, so the bot answers them now, even after a
+    person wrote; with a person involved it never hands off again and, with nothing to say, sends the hold line."""
     catalog = repo.catalog()
     state = repo.load_state(event)
     state.channel, state.campaign = event.channel or state.channel, event.campaign or state.campaign
     if not draft and event.message_id and event.message_id <= state.last_message_id:
         return None  # redelivered webhook: this message was already answered
+    person = fallback and bool(state.consultant_replied or state.claimed_by)
+    replied = state.consultant_replied
+    if fallback:
+        state.consultant_replied = False  # restored before saving: only this answer overrides D-059
+        state.assist = {**state.assist, "waiting": []}
+        state.fallback_due = 0.0
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),
                 state.status, state.turns, state.stuck_turns)
     jev = repo.jev_client()
@@ -285,7 +293,7 @@ def run_turn(event, repo, effects, render, draft=False):
     if turn.jev.error == "daily_budget":
         repo.warn_budget()
     turn.decision = decide(state, turn.understanding, catalog)
-    if draft:  # staff are already there: keep only what the bot can answer, never a handoff
+    if draft or person:  # staff are already there: keep only what the bot can answer, never a handoff
         d = turn.decision
         handing = [k for k in d.skills if catalog.skills[k].action == "handoff"]
         d.skills = [k for k in d.skills if k not in handing]
@@ -314,6 +322,13 @@ def run_turn(event, repo, effects, render, draft=False):
         if call.get("input_tokens"):
             repo.add_jev_tokens(call["input_tokens"])
     turn.reply.errors[:0] = errors
+    if fallback and turn.decision.type == "silent" and state.status != "closed":
+        turn.needs_staff = turn.needs_staff or "timeout"
+        if not state.assist.get("held"):  # once until a person writes: "đã báo tư vấn viên, chờ chút nhé"
+            turn.reply = hold_reply(state, catalog, render, turn.reply)
+            state.assist["held"] = True
+        effects.emit("assist_timeout", {"conversation_id": state.conversation_id, "lead": state.lead,
+                                        "is_sandbox": state.is_sandbox, "needs": turn.needs_staff})
     if turn.reply.messages:
         try:
             effects.send(state.conversation_id, turn.reply)
@@ -328,6 +343,7 @@ def run_turn(event, repo, effects, render, draft=False):
         except Exception as e:
             turn.reply.errors.append({"type": "spam_failed", "detail": str(e)[:300]})
     write_lead(turn, effects, catalog)
+    state.consultant_replied = replied or state.consultant_replied
     if plan:
         state.consultant = plan.consultant_name
         try:
@@ -351,17 +367,30 @@ def run_turn(event, repo, effects, render, draft=False):
     return turn
 
 
+def hold_reply(state, catalog, render, reply):
+    """The hold line (Lead Engine Settings.hold_template) as the whole reply."""
+    from mmm_custom.engine.context import base_context
+    from mmm_custom.engine.render import RenderError, render_text
+
+    try:
+        text = render_text(catalog.settings["hold_template"], base_context(state.slots, catalog, state), render)
+    except RenderError as e:
+        reply.errors.append({"type": "render_error", "source": "hold", "detail": str(e)[:300]})
+        return reply
+    reply.messages = [text] if text else []
+    return reply
+
+
 def process_event(payload):
-    """RQ job (enqueued by bot_api.agent_bot_webhook with job_id = message id, deduplicated)."""
+    """RQ job (enqueued by bot_api.agent_bot_webhook with job_id = message id, deduplicated). The bot answers, or
+    drafts for the staff member who is there (engine/copilot.py, D-111)."""
     from frappe.utils.synchronization import filelock
 
-    from mmm_custom.engine.effects import chatwoot_effects
-    from mmm_custom.engine.render import frappe_renderer
-    from mmm_custom.engine.repo import FrappeRepo
+    from mmm_custom.engine import copilot
 
     event = parse_event(payload)
     if event.kind != "customer_message" or not event.conversation_id:
         return
     with filelock(f"lead_engine_conversation_{event.conversation_id}", timeout=60):
-        run_turn(event, FrappeRepo(), chatwoot_effects(frappe.conf), frappe_renderer)
+        copilot.process(event)
         frappe.db.commit()

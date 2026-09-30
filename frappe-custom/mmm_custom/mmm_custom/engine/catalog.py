@@ -17,6 +17,10 @@ DEFAULT_SETTINGS = {
     "regreet_template": "Dạ {{ brand.me }} chào {{ brand.you }} ạ!{% if course.name %} {{ brand.you | capitalize }} cần "
                         "{{ brand.me }} tư vấn thêm về học phí, lịch khai giảng hay nội dung khóa {{ course.name }} ạ?{% endif %}",
     "max_skills_per_reply": 3, "max_stuck_turns": 2, "log_retention_days": 180,
+    # Staff assist (D-111): while a person watches, claimed or wrote in a conversation the bot only suggests; what
+    # nobody answers within assist_wait_minutes it answers itself. assist_disabled = 1 → the bot always answers.
+    "assist_disabled": 0, "assist_wait_minutes": 5,
+    "hold_template": "Dạ {{ brand.me }} đã báo tư vấn viên, {{ brand.you }} chờ {{ brand.me }} một chút nhé ạ.",
     "jev_live": 0, "jev_timeout": 8, "catalog_act": 0.95, "catalog_confirm": 0.55, "choice_act": 0.80,
     "choice_confirm": 0.50, "skill_act": 0.90, "skill_confirm": 0.60, "handoff_noul": 0.70, "spam_threshold": 0.80,
     "jev_calls_per_hour": 20, "jev_daily_token_budget": 0, "playground_daily_token_budget": 0,

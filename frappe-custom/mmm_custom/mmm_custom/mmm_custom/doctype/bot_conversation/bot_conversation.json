@@ -18,6 +18,9 @@
   "turns",
   "last_message_id",
   "consultant_replied",
+  "claimed_by",
+  "fallback_due_at",
+  "assist",
   "is_returning",
   "is_sandbox",
   "answered_skills",
@@ -105,6 +108,24 @@
    "label": "Consultant Replied"
   },
   {
+   "description": "Chatwoot agent id of the staff member who pressed \"Nhận xử lý\" (D-111)",
+   "fieldname": "claimed_by",
+   "fieldtype": "Data",
+   "label": "Claimed By"
+  },
+  {
+   "description": "Epoch seconds: the bot answers the waiting messages at this time if nobody has (D-111). 0 = nothing waiting",
+   "fieldname": "fallback_due_at",
+   "fieldtype": "Float",
+   "label": "Fallback Due At",
+   "search_index": 1
+  },
+  {
+   "fieldname": "assist",
+   "fieldtype": "JSON",
+   "label": "Assist"
+  },
+  {
    "fieldname": "is_returning",
    "fieldtype": "Check",
    "label": "Is Returning"
@@ -146,7 +167,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-27 12:00:00.000000",
+ "modified": "2026-09-30 11:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Bot Conversation",

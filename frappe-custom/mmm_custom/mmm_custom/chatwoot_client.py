@@ -241,9 +241,11 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
-    def set_conversation_attributes(self, conversation_id: int, attributes: dict) -> dict:
+    def set_conversation_attributes(self, conversation_id: int, attributes: dict, merge: bool = False) -> dict:
+        """Replace the conversation's custom attributes, or with `merge` update only the keys sent."""
+        body = {"custom_attributes": attributes, **({"merge": True} if merge else {})}
         resp = requests.post(f"{self._base}/conversations/{conversation_id}/custom_attributes", headers=self._headers,
-                             json={"custom_attributes": attributes}, timeout=REQUEST_TIMEOUT)
+                             json=body, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
 

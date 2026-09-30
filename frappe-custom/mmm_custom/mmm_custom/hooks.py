@@ -133,6 +133,8 @@ scheduler_events = {
 		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
 		# Level tests left half-way get one reminder (D-106).
 		"*/15 * * * *": ["mmm_custom.quiz_reminders.run"],
+		# Staff assist: the bot answers what nobody answered within assist_wait_minutes (D-111).
+		"* * * * *": ["mmm_custom.engine.copilot.run_due"],
 	},
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
 	# Connected Facebook pages: is each page token still accepted (channels tab shows the status).

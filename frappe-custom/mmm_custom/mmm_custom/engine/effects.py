@@ -42,6 +42,12 @@ class RecordingEffects:
     def book_trial(self, state, booking, owner=""):
         self.calls.append(("book_trial", {"lead": state.lead, "booking": booking, "owner": owner}))
 
+    def note(self, conversation_id, text):
+        self.calls.append(("note", {"conversation_id": conversation_id, "text": text}))
+
+    def assist_status(self, conversation_id, attributes):
+        self.calls.append(("assist_status", {"conversation_id": conversation_id, **attributes}))
+
 
 class ChatwootEffects:
     """Customer-facing calls use the Agent Bot token so Chatwoot marks them as the bot's own messages
@@ -62,6 +68,17 @@ class ChatwootEffects:
 
     def emit(self, event, payload):
         events.emit(event, payload)
+
+    def note(self, conversation_id, text):
+        """A private note only staff see: the bot's draft while a person handles the conversation (D-111)."""
+        self.bot.send_private_note(conversation_id, text)
+
+    def assist_status(self, conversation_id, attributes):
+        """bot_mode / bot_fallback_at / claimed_by on the conversation, for the assist banner (D-111). Best effort."""
+        try:
+            self.user.set_conversation_attributes(conversation_id, attributes, merge=True)
+        except Exception:
+            logger.exception("assist status for conversation %s not written", conversation_id)
 
     def mark_spam(self, conversation_id):
         self.bot.add_labels(conversation_id, ["spam"])

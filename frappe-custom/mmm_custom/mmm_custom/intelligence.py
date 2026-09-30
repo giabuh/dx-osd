@@ -190,6 +190,12 @@ def bot_active(conversation_id) -> bool:
                                  {"conversation_id": str(conversation_id), "status": "active", "is_sandbox": 0}))
 
 
+def bot_handles(conversation_id) -> bool:
+    """The lead engine owns this conversation (D-111): it drafts the staff suggestions itself, per message."""
+    return bool(frappe.db.exists("Bot Conversation", {"conversation_id": str(conversation_id), "is_sandbox": 0,
+                                                      "status": ["!=", "closed"]}))
+
+
 def has_human_assignee(conversation: dict) -> bool:
     """A staff member owns the conversation (assigned by a person, by themselves, or by the bot's handoff)."""
     assignee = ((conversation or {}).get("meta") or {}).get("assignee") or {}
@@ -266,7 +272,8 @@ def enqueue_analysis(payload: dict) -> dict:
         "mmm_custom.intelligence.analyze_conversation", queue="long", conversation_id=conversation["id"],
         # Pending = the agent bot is still qualifying the lead; a suggestion per Quick Reply click is noise.
         # Nobody assigned yet: the suggestion comes when someone takes the conversation (enqueue_on_assignment).
-        suggest_reply=conversation.get("status") != "pending" and has_human_assignee(conversation),
+        suggest_reply=(conversation.get("status") != "pending" and has_human_assignee(conversation)
+                       and not bot_handles(conversation["id"])),
     )
     return {"status": "queued", "conversation_id": conversation["id"]}
 
