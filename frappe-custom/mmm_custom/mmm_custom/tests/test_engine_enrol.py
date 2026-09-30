@@ -34,6 +34,9 @@ def repo_with_classes():
 
 
 class TestEnrolAction(unittest.TestCase):
+    def test_register_needs_only_the_course_so_a_hot_customer_still_gets_the_classes(self):
+        self.assertEqual(CAT.skills["register"].params, ("course",))
+
     def test_register_is_an_enrol_skill_that_hands_off(self):
         skill = CAT.skills["register"]
         self.assertEqual(skill.action, "enrol")
@@ -46,10 +49,18 @@ class TestEnrolAction(unittest.TestCase):
 
     def test_next_classes_become_buttons_that_fill_the_class_slot(self):
         out = act({"course": fill("VP-EXCEL"), "branch": fill("CN Quận 7")}, repo_with_classes())
-        self.assertEqual([b["title"] for b in out["_buttons"]], ["T3 06/10 Tối", "CN 11/10 Sáng"])
+        self.assertEqual([b["title"] for b in out["_buttons"]], ["06/10 Tối Quận 7", "11/10 Sáng Quận 7"])
         self.assertEqual(out["_buttons"][0]["action"], {
             "type": "slot", "slot": "enrol_class", "skill": "register",
             "value": "VP-EXCEL · CN Quận 7 · 06/10/2026 · Tối"})
+
+    def test_classes_of_one_day_at_different_branches_get_different_buttons(self):
+        repo = FakeRepo(CAT, TODAY)
+        repo.schedules = [schedule("VP-EXCEL", "CN Quận 6", date(2026, 10, 5)),
+                          schedule("VP-EXCEL", "CN Bình Thạnh", date(2026, 10, 5))]
+        titles = [b["title"] for b in act({"course": fill("VP-EXCEL")}, repo)["_buttons"]]
+        self.assertEqual(len(set(titles)), 2)
+        self.assertTrue(all(len(t) <= 20 for t in titles))
 
     def test_a_chosen_class_is_echoed_and_offers_no_more_buttons(self):
         out = act({"course": fill("VP-EXCEL"), "enrol_class": fill("VP-EXCEL · CN Quận 7 · 06/10/2026 · Tối")},
@@ -87,6 +98,10 @@ class TestEnrolDrafts(unittest.TestCase):
         enrol_drafts(t, fx, CAT, plan)
         return fx, fx.of("enrol")
 
+    def test_a_course_makes_a_draft_even_without_a_phone(self):
+        _, calls = self.run_it(turn({"course": fill("VP-EXCEL")}), SimpleNamespace(owner="mai@x.vn"))
+        self.assertEqual(calls, [{"lead": "CRM-LEAD-1", "course": "VP-EXCEL", "class_title": "", "owner": "mai@x.vn"}])
+
     def test_course_and_phone_make_a_draft(self):
         fx, calls = self.run_it(turn({"course": fill("VP-EXCEL"), "phone": fill("0901111222")}),
                                 SimpleNamespace(owner="mai@x.vn"))
@@ -97,9 +112,8 @@ class TestEnrolDrafts(unittest.TestCase):
                                      "enrol_class": fill("VP-EXCEL · CN Quận 7 · 06/10/2026 · Tối")}))
         self.assertEqual(calls[0]["class_title"], "VP-EXCEL · CN Quận 7 · 06/10/2026 · Tối")
 
-    def test_no_phone_no_course_or_no_lead_no_draft(self):
-        for slots, lead in (({"course": fill("VP-EXCEL")}, "CRM-LEAD-1"),
-                            ({"phone": fill("0901111222")}, "CRM-LEAD-1"),
+    def test_no_course_or_no_lead_no_draft(self):
+        for slots, lead in (({"phone": fill("0901111222")}, "CRM-LEAD-1"),
                             ({"course": fill("VP-EXCEL"), "phone": fill("0901111222")}, "")):
             self.assertEqual(self.run_it(turn(slots, lead))[1], [])
 

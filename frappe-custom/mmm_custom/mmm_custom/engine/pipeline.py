@@ -270,12 +270,13 @@ def book_trials(turn, effects, catalog, plan=None):
 
 
 def enrol_drafts(turn, effects, catalog, plan=None):
-    """An `enrol` skill answered this turn (D-118): a draft registration and a Task, once the Lead, the course and
-    the phone are known. The Lead keeps its status until a person confirms; a later tap on a class sets the class."""
+    """An `enrol` skill answered this turn (D-118): a draft registration and a Task, once the Lead and the course are
+    known (the phone is asked in the reply, not required: a consultant confirms by chat or call). The Lead keeps its
+    status until a person confirms; a later tap on a class sets the class."""
     state = turn.state
-    course_slot, phone = catalog.slot_for("course"), phone_slot(catalog)
+    course_slot = catalog.slot_for("course")
     course = value(state.slots, course_slot.key) if course_slot else ""
-    if not (state.lead and course and phone and filled(state.slots, phone)):
+    if not (state.lead and course):
         return
     for key in turn.decision.skills:
         skill = catalog.skills.get(key)

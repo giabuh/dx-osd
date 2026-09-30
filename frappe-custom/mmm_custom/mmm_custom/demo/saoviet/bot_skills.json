@@ -700,8 +700,7 @@
   "examples": "mình muốn đăng ký\ngiữ chỗ lớp tối cho mình",
   "aliases": "dang ky, ghi danh, giu cho",
   "parameters": [
-   "course",
-   "phone"
+   "course"
   ],
   "missing_policy": "ask",
   "action_type": "enrol",
@@ -713,7 +712,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.me }} ghi nhận {{ brand.you }} muốn đăng ký khóa {{ course.name }} ạ.{% if schedules %} Các lớp sắp khai giảng:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn lớp phù hợp để {{ brand.me }} ghi vào hồ sơ nhé ạ.{% endif %} Tư vấn viên sẽ gọi xác nhận lớp và học phí cho {{ brand.you }} ngay ạ."
+    "template": "Dạ {{ brand.me }} ghi nhận {{ brand.you }} muốn đăng ký khóa {{ course.name }} ạ.{% if schedules %} Các lớp sắp khai giảng:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn lớp phù hợp để {{ brand.me }} ghi vào hồ sơ nhé ạ.{% endif %} Tư vấn viên sẽ gọi xác nhận lớp và học phí cho {{ brand.you }} ngay ạ.{% if not slots.phone %} {{ brand.you | capitalize }} để lại số điện thoại giúp {{ brand.me }} để tư vấn viên liên hệ nhanh nhé ạ.{% endif %}"
    },
    {
     "variant_key": "chosen",

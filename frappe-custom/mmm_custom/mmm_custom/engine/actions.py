@@ -102,6 +102,14 @@ def trial_offer(a):
             "_buttons": _class_buttons(schedules, cfg.get("slot", "trial_class"), cfg.get("skill", ""), _day_shift, booking)}
 
 
+def _class_label(s):
+    """"05/10 Sáng Quận 6": the day, the shift and the branch, so classes of one day at different branches get
+    different buttons (Messenger drops quick replies with the same title)."""
+    shift = str(s.get("shift") or "").split(" ")[0]
+    branch = str(s.get("branch") or "").removeprefix("CN ")
+    return " ".join(x for x in (f"{s['date']:%d/%m}", shift, branch) if x)
+
+
 @action("enrol")
 def enrol(a):
     """Registration (D-118): the next open classes of the course as buttons; a tap fills `action_config.slot` with the
@@ -113,7 +121,7 @@ def enrol(a):
         return {"enrol_class": chosen}
     schedules = find_schedules(a.data, a.ctx, a.today, int(cfg.get("limit", 3))) if course else []
     return {"schedules": schedules,
-            "_buttons": _class_buttons(schedules, slot, a.skill.key, _day_shift, lambda s: s.get("title") or "")}
+            "_buttons": _class_buttons(schedules, slot, a.skill.key, _class_label, lambda s: s.get("title") or "")}
 
 
 @action("book_trial")
