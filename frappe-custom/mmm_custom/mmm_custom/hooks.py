@@ -108,7 +108,9 @@ doc_events = {
 doc_events["Staff Reply"] = {"on_update": "mmm_custom.engine.staff_replies.on_change",
                              "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 # Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
-doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update",
+doc_events["CRM Lead"] = {"on_update": ["mmm_custom.engine.learning.on_lead_update",
+                                        # the Chatwoot contact shows the Lead's real status (D-116)
+                                        "mmm_custom.lifecycle.on_lead_update"],
                           # Referral codes (D-103)
                           "before_insert": "mmm_custom.referral.set_code",
                           "validate": "mmm_custom.referral.resolve_referrer"}

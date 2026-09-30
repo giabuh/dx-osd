@@ -11,10 +11,10 @@ except ImportError:  # offline tests
 
 from mmm_custom.dedupe import find_matching_lead, normalize_phone
 from mmm_custom.engine.lead import PLACEHOLDER_NAMES, contact_prefill, prefill_slots
-from mmm_custom.engine.qualify import AUTO_STATUSES
 from mmm_custom.engine.catalog import DEFAULT_SETTINGS, build_catalog
 from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
+from mmm_custom.lifecycle import CONTACTED, TRIAL_BOOKED, auto_update
 
 CACHE_KEY = "lead_engine_catalog_rows"
 FIRST_TOUCH = ("source", "source_campaign")
@@ -169,8 +169,9 @@ def save_lead(state, fields, courses, contact):
             val = normalize_phone(val)
             if doc.mobile_no and doc.mobile_no != val:
                 continue
-        if field == "status" and name and doc.status not in AUTO_STATUSES:
-            continue  # a person moved this Lead (Contacted, Converted…): the bot leaves it (D-083)
+        if field == "status":  # only a forward move the lifecycle allows; a Lost status carries its reason (D-116)
+            doc.update(auto_update(doc.status, val, doc.get("lost_reason") or ""))
+            continue
         doc.set(field, val)
     _append_products(doc, courses)
     doc.flags.lead_engine = True  # learning.on_lead_update skips the engine's own saves (D-057)
@@ -200,27 +201,53 @@ def trial_due(booking, today):
     return None
 
 
+def advance_lead(lead, target, **values):
+    """An automatic status move (D-116) plus `values`; nothing when the lifecycle refuses the move and there is
+    nothing else to write. A full save, so the status log and the Chatwoot status attribute follow."""
+    doc = frappe.get_doc("CRM Lead", lead)
+    values = {k: v for k, v in values.items() if doc.meta.has_field(k) and doc.get(k) != v}
+    values.update(auto_update(doc.status, target, doc.get("lost_reason") or ""))
+    if not values:
+        return ""
+    doc.update(values)
+    doc.flags.lead_engine = True
+    doc.save(ignore_permissions=True)
+    return doc.status
+
+
 def create_trial_task(lead, booking, owner=""):
-    """D-102: one open trial-class Task per Lead and booking."""
+    """D-102: one open trial-class Task per Lead and booking; the Lead moves to Trial Booked (D-116)."""
     if not lead:
         return
+    due = trial_due(booking, frappe.utils.getdate())
     title = f"Học thử: {booking}"[:140]
-    if frappe.db.exists("CRM Task", {"reference_doctype": "CRM Lead", "reference_docname": lead, "title": title}):
-        return
-    owner = owner or frappe.db.get_value("CRM Lead", lead, "lead_owner") or None
-    frappe.get_doc({
-        "doctype": "CRM Task", "title": title, "status": "Todo", "priority": "High", "assigned_to": owner,
-        "description": f"Khách giữ chỗ học thử qua chat: {booking}. Gọi xác nhận trước buổi học.",
-        "reference_doctype": "CRM Lead", "reference_docname": lead,
-        "due_date": trial_due(booking, frappe.utils.getdate()),
-    }).insert(ignore_permissions=True)
+    if not frappe.db.exists("CRM Task", {"reference_doctype": "CRM Lead", "reference_docname": lead, "title": title}):
+        owner = owner or frappe.db.get_value("CRM Lead", lead, "lead_owner") or None
+        frappe.get_doc({
+            "doctype": "CRM Task", "title": title, "status": "Todo", "priority": "High", "assigned_to": owner,
+            "description": f"Khách giữ chỗ học thử qua chat: {booking}. Gọi xác nhận trước buổi học.",
+            "reference_doctype": "CRM Lead", "reference_docname": lead, "due_date": due,
+        }).insert(ignore_permissions=True)
+    advance_lead(lead, TRIAL_BOOKED, **({"trial_date": due} if due else {}))
 
 
 def set_lead_owner(lead, user):
+    """Handoff (D-058): the consultant owns the Lead and it is being consulted now (Contacted, D-116)."""
     doc = frappe.get_doc("CRM Lead", lead)
     doc.lead_owner = user
+    doc.update(auto_update(doc.status, CONTACTED, doc.get("lost_reason") or ""))
     doc.flags.lead_engine = True
     doc.save(ignore_permissions=True)
+
+
+def lead_contacted(lead):
+    """A person answered the customer: the Lead is being consulted (D-116). Never breaks the caller."""
+    if not lead:
+        return
+    try:
+        advance_lead(lead, CONTACTED)
+    except Exception:
+        frappe.log_error(title="Lead status: Contacted not written", message=f"CRM Lead {lead}")
 
 
 def chatwoot_admin():
@@ -239,9 +266,11 @@ def mark_consultant_replied(conversation_id, now=None):
     now = time.time() if now is None else now
     name = frappe.db.get_value("Bot Conversation", {"conversation_id": conversation_id})
     if name:
-        assist = _json(frappe.db.get_value("Bot Conversation", name, "assist"))
+        row = frappe.db.get_value("Bot Conversation", name, ["assist", "lead", "is_sandbox"], as_dict=True)
         frappe.db.set_value("Bot Conversation", name, {"consultant_replied": 1, "fallback_due_at": 0,
-                                                        "assist": json.dumps(human_replied(assist, now), ensure_ascii=False)})
+                                                        "assist": json.dumps(human_replied(_json(row.assist), now), ensure_ascii=False)})
+        if row.lead and not row.is_sandbox:
+            lead_contacted(row.lead)
     else:
         frappe.get_doc({"doctype": "Bot Conversation", "conversation_id": conversation_id, "status": "active",
                         "consultant_replied": 1, "slots": "{}", "pending": "{}",

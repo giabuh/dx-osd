@@ -144,7 +144,7 @@ def update_crm_fields_layout():
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
 							fields += ["source_campaign", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
-							fields += ["quiz_detail", "voucher_code"]  # D-106
+							fields += ["quiz_detail", "voucher_code", "trial_date"]  # D-106, D-116
 						for f in fields:
 							if f not in col_fields:
 								col_fields.append(f)
@@ -206,6 +206,8 @@ CATALOG_FIELDS = {
 		 "description": "Chủ đề khách làm sai trong bài test (D-106)", "insert_after": "placement_result"},
 		{"fieldname": "voucher_code", "label": "Voucher Code", "fieldtype": "Data", "length": 40, "read_only": 1,
 		 "description": "Mã ưu đãi bot tặng sau bài test (D-106)", "insert_after": "quiz_detail"},
+		# The trial class / level test date a booking set (D-102, D-116): follow-up checks in after it
+		{"fieldname": "trial_date", "label": "Trial Date", "fieldtype": "Date", "insert_after": "voucher_code"},
 		# Where the Lead first came from, next to the standard `source` (D-100)
 		{"fieldname": "source_campaign", "label": "Campaign", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "description": "Campaign or landing page reported by the channel", "insert_after": "source"},

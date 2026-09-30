@@ -96,12 +96,14 @@ class TestSend(unittest.TestCase):
         own.send_message.return_value = {"id": 9, "message_type": 1, "sender": AGENT, "content": text}
         with patch.object(lead_chat, "frappe", frappe), patch.object(lead_chat, "admin_client", return_value=admin), \
                 patch.object(lead_chat, "sender_client", return_value=own if sender else None):
-            return lead_chat.send("CRM-LEAD-1", text), own
+            with patch.object(lead_chat, "lead_contacted") as self.contacted:
+                return lead_chat.send("CRM-LEAD-1", text), own
 
     def test_sends_as_the_consultant(self):
         out, own = self.send(fake_frappe(linked=["123"]))
         own.send_message.assert_called_once_with(123, "Dạ lớp tối T3 khai giảng 07/10 ạ")
         self.assertEqual(out["kind"], "staff")
+        self.contacted.assert_called_once_with("CRM-LEAD-1")  # answered: Đang tư vấn (D-116)
 
     def test_conversation_not_yet_handed_to_the_team(self):
         own = MagicMock()

@@ -118,6 +118,27 @@ def deal_rows():
 
 # ---------------------------------------------------------------- Frappe side
 
+def on_lead_update(doc, method=None):
+    """doc_events CRM Lead on_update: the Chatwoot contact shows the Lead's real status (`trang_thai_lead`),
+    whoever changed it — the bot, a handoff, a consultant in the CRM."""
+    if not doc.get("chatwoot_contact_id") or not doc.status or not doc.has_value_changed("status"):
+        return
+    frappe.enqueue("mmm_custom.lifecycle.push_status", queue="short", enqueue_after_commit=True,
+                   job_id=f"lead_status_{doc.name}", deduplicate=True, lead=doc.name)
+
+
+def push_status(lead):
+    from mmm_custom.lead_chat import admin_client
+
+    row = frappe.db.get_value("CRM Lead", lead, ["chatwoot_contact_id", "status"], as_dict=True)
+    if not row or not row.chatwoot_contact_id:
+        return
+    try:
+        admin_client().update_contact(int(row.chatwoot_contact_id), {"trang_thai_lead": LABELS.get(row.status, row.status)})
+    except Exception:
+        frappe.log_error(title="Lead status not written to Chatwoot", message=f"CRM Lead {lead}")
+
+
 def _existing(doctype, fields):
     return {r.name: dict(r) for r in frappe.get_all(doctype, fields=["name", *fields])}
 

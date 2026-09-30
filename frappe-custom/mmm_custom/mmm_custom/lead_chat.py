@@ -15,6 +15,7 @@ from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.crm_links import chatwoot_base
 from mmm_custom.desk import can_open_bot
 from mmm_custom.engine import presence
+from mmm_custom.engine.repo import lead_contacted
 
 whitelist = frappe.whitelist if frappe else (lambda **kw: (lambda fn: fn))
 
@@ -139,4 +140,5 @@ def send(lead, text):
         if status in (401, 403, 404):  # Chatwoot: the conversation is not assigned to this agent's team yet
             frappe.throw("Cuộc chat này chưa được giao cho nhóm của bạn trên Chatwoot (bot chưa chuyển khách).")
         raise
+    lead_contacted(lead)  # a consultant answered from the Lead page: Đang tư vấn (D-116)
     return to_message(sent)
