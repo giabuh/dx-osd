@@ -15,6 +15,8 @@ YES = frozenset({"ok", "oke", "okie", "okay", "ok em", "oke em", "ok a", "duoc",
 NO = frozenset({"khong", "ko", "k", "khong a", "khong em", "thoi", "thoi a", "thoi em", "de sau", "de sau nhe",
                 "de khi khac", "luc khac", "khi khac", "khong lam", "khong can", "chua", "chua can", "ban", "dang ban",
                 "thoi khong lam", "khong lam dau", "de sau a"})
+REFUSALS = ("khong can", "khong muon", "khong thich", "khong co nhu cau", "chua muon", "khoi")
+REFUSAL_WORDS = 8
 LETTERS = "abcdefgh"
 INDEX_RE = re.compile(r"^(?:cau|dap an|chon|phuong an|dap an la|chon cau|toi chon|em chon|minh chon)?\s*([a-h]|[1-8])$")
 DATE_RE = re.compile(r"(\d{1,2})\s*[/\-.]\s*(\d{1,2})")
@@ -45,9 +47,16 @@ def yes_no(folded):
     text = re.sub(r"\b(a|nhe|nha|nhe em|ha|luon a)$", "", folded).strip() or folded
     if folded in YES or text in YES:
         return True
-    if folded in NO or text in NO or text.startswith(("thoi ", "de sau", "khong lam")):
+    if folded in NO or text in NO or text.startswith(("thoi ", "de sau", "khong lam")) or _refuses(text):
         return False
     return None
+
+
+def _refuses(text):
+    """"không cần đâu", "mình không muốn làm test", "khỏi test nha": a short refusal. A long message is left
+    alone, it usually carries a question of its own ("không cần test, cho mình hỏi học phí…")."""
+    text = re.sub(r"^(minh|em|toi|anh|chi)\s+", "", text)
+    return len(text.split()) <= REFUSAL_WORDS and text.startswith(REFUSALS)
 
 
 def _by_title(folded, options):
@@ -112,6 +121,8 @@ def match_pending(text, pending):
     folded = fold(text)
     if not folded:
         return None
+    if is_offer(options) and yes_no(folded) is False:  # "không thích làm bài test" names the start button
+        return next(a for a in options.values() if a.get("type") == "offer_decline")
     action = _by_title(folded, options)
     if action:
         return action
