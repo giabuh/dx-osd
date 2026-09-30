@@ -9224,3 +9224,6 @@ msgstr "Khách này đã có hồ sơ đăng ký đang chờ xử lý"
 
 msgid "Use Convert to Deal to register a lead"
 msgstr "Dùng nút Ghi danh để đăng ký"
+
+msgid "Courses & Classes"
+msgstr "Khóa học & Lớp"

@@ -113,6 +113,12 @@ const routes = [
     component: () => import('@/pages/ChatwootInbox.vue'),
   },
   {
+    // Courses and the classes about to start, with seats left; managers add and edit (mmm_custom.classes).
+    path: '/classes/:tab?',
+    name: 'Classes',
+    component: () => import('@/pages/Classes.vue'),
+  },
+  {
     // Manager screens (branches, staff, course knowledge, bot playground) over mmm_custom APIs.
     path: '/admin/:tab?',
     name: 'Admin',
