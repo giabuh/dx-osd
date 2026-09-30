@@ -112,8 +112,9 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
             if text and text not in paragraphs:
                 paragraphs.append(text)
 
-    if decision.greet:
-        say(settings["greeting_template"], ctx, "greeting")
+    if decision.greet:  # later in the conversation a short greeting back, not the bot's introduction (D-109)
+        again = state.turns and settings.get("regreet_template")
+        say(settings["regreet_template"] if again else settings["greeting_template"], ctx, "regreet" if again else "greeting")
     if decision.declined:
         say(settings["quiz_decline_template"], ctx, "quiz_decline")
     if decision.fallback:

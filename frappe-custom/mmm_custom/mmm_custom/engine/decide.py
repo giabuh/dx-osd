@@ -154,6 +154,9 @@ def decide(state, u, catalog):
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
     faq = u.faq
+    small_talk = u.greeting and not (new or changed or faq)
+    if small_talk:
+        skills = []  # "hihi" / "chào em" asks nothing: greet back and invite, never hand off (D-109)
     alone = [k for k in skills if catalog.skills[k].config.get("alone")]
     if alone:  # e.g. a company asking for a quote: no retail fee or course FAQ on top (D-099)
         skills, faq = alone, None
@@ -170,7 +173,7 @@ def decide(state, u, catalog):
             and state.status == "active" and int(state.pending.get("resumes") or 0) < MAX_RESUMES):
         resume = paused  # answer the side question, then the question the customer stopped at
         skills = skills + [paused]
-    greet = state.turns == 0 and not skills and not faq
+    greet = (state.turns == 0 or small_talk) and not skills and not faq
     side = [k for k in skills if k != resume]
     unclear = bool(resume) and not (new or changed or side or faq or waiting)  # nothing but an unknown answer
     progress = bool(new or changed or skills or waiting or faq or u.handoff or u.focus or u.confirm or u.rejected
@@ -181,6 +184,8 @@ def decide(state, u, catalog):
     answered = ", ".join(([f'"{faq_question(faq, catalog)}"'] if faq else []) + [catalog.skills[k].title for k in side])
 
     if state.status == "handed_off":
+        if small_talk:
+            return Decision("answer", **common, greet=True, reason="Khách chào; chào lại, chờ tư vấn viên")
         if skills or faq:
             return Decision("answer", **common, reason=f"Đã chuyển tư vấn viên; trả lời: {answered}")
         return Decision("silent", **common, reason="Đã chuyển tư vấn viên, chờ tư vấn viên nhắn")
@@ -188,13 +193,20 @@ def decide(state, u, catalog):
     confirm = u.confirm
     if confirm.get("kind") == "skill" and (new or changed or skills or waiting or faq):
         confirm = {}  # the turn already answers or asks something: a "did you mean…?" on top is noise
-    why = handoff_reason(u, skills, slots, stuck, catalog)
+    why = "" if small_talk else handoff_reason(u, skills, slots, stuck, catalog)
     if why and (why in IMMEDIATE or not confirm):
         return Decision("handoff", **common, handoff_reason=why, reason=HANDOFF_REASONS[why])
     if confirm:
         reason = f"Xác nhận: {confirm['label']}" + (f"; trả lời: {answered}" if answered else "")
         return Decision("confirm", **common, confirm=confirm, greet=greet, reason=reason)
 
+    if small_talk and state.turns and not resume:  # mid-conversation greeting: greet back, invite a course (D-109)
+        course = catalog.slot_for("course")
+        ask = course.key if course and not filled(slots, course.key) and slot_active(course, slots) else ""
+        if ask:
+            slots.setdefault(ask, {})["asked"] = 1
+        return Decision("ask_slot" if ask else "answer", **common, ask=ask, greet=True,
+                        reason="Khách chào; chào lại và mời chọn khóa" if ask else "Khách chào; chào lại và mời tư vấn tiếp")
     first = ([phone] if phone_check else []) + ([u.focus] if u.focus else []) + \
         (list(catalog.skills[waiting].params) if waiting else [])
     ask = next_slot(slots, catalog, first)

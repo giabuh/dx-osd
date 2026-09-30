@@ -153,7 +153,13 @@ def _reply_to_bot(u, answers, questions, state, catalog):
     actions = list((state.pending.get("options") or {}).values())
     if choice is None or p < float(catalog.settings["choice_act"]) or int(choice) >= len(actions):
         return
-    apply_action(u, actions[int(choice)])
+    action = actions[int(choice)]
+    skill = catalog.skills.get(action.get("skill")) if action.get("type") == "skill" else None
+    if skill and (skill.action == "handoff" or skill.handoff_after):
+        # a typed reply never hands off on its own: "Đăng ký giữ chỗ" is asked back first (D-109)
+        ask_confirm(u, {"kind": "skill", "skill": skill.key, "label": skill.title})
+        return
+    apply_action(u, action)
     u.matches.append({"button": int(choice), "kind": "jev", "confidence": round(p, 3)})
 
 
@@ -163,6 +169,9 @@ def combine(u, answers, questions, state, catalog):
     course = faq_course(state, u, catalog)  # the course the FAQ question was built for
     out = copy.deepcopy(u)
     answers = answers if isinstance(answers, dict) else {}
+    if u.greeting:  # "hihi" is small talk: no button, skill or slot, whatever Jev reads into it (D-109)
+        _signals(out, answers, questions, catalog)
+        return out
     _slots(out, answers, questions, catalog, state)
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)

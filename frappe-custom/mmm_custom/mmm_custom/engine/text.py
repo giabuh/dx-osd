@@ -14,6 +14,15 @@ STOPWORDS = frozenset(
     "nhieu lam roi dang biet giup xin chao cam on oke ok uhm uh".split())
 
 
+# A message made only of these (folded) words, with at least one greeting or laugh, is small talk (D-109):
+# "hihi", "chào em", "alo ad ơi", "hello shop ạ", "chào buổi sáng".
+GREETING_RE = re.compile(r"(?:chao+|hi+|hello+|hel+o+|a+lo+|hey+|(?:h[aeiu]+){2,}|(?:k[ae]+){2,}|(?:hj+)+)")
+SMALLTALK_WORDS = frozenset(
+    "xin a ad admin shop page trung tam em anh chi ban moi nguoi ca nha oi nhe nha ne da vang buoi sang trua chieu "
+    "toi".split())
+MAX_SMALLTALK_WORDS = 6
+
+
 def fold(text):
     """Lowercase, drop Vietnamese diacritics (đ → d) and punctuation: "Dĩ An, Q.7" → "di an q 7"."""
     text = (text or "").lower().replace("đ", "d")
@@ -57,6 +66,15 @@ def content_words(folded_text, spans):
             continue
         out.append(word)
     return list(dict.fromkeys(out))
+
+
+def is_smalltalk(folded_text):
+    """True for a greeting or a laugh with nothing else in it: "hihi", "chao em", "alo ad oi"."""
+    words = (folded_text or "").split()
+    if not words or len(words) > MAX_SMALLTALK_WORDS:
+        return False
+    greetings = [w for w in words if GREETING_RE.fullmatch(w)]
+    return bool(greetings) and all(w in SMALLTALK_WORDS or GREETING_RE.fullmatch(w) for w in words)
 
 
 def normalize_vn_phone(raw):

@@ -13,6 +13,7 @@
   "website",
   "email",
   "greeting_template",
+  "regreet_template",
   "fallback_template",
   "signoff",
   "engine_section",
@@ -104,6 +105,12 @@
    "label": "Greeting Template"
   },
   {
+   "description": "Sent when the customer only greets later in the conversation (\"hihi\", \"chào em\"). Empty: the built-in greeting back.",
+   "fieldname": "regreet_template",
+   "fieldtype": "Small Text",
+   "label": "Greeting Back Template"
+  },
+  {
    "fieldname": "fallback_template",
    "fieldtype": "Small Text",
    "label": "Fallback Template"
@@ -190,7 +197,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-09-27 13:00:00.000000",
+ "modified": "2026-09-30 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Lead Engine Settings",

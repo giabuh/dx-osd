@@ -14,6 +14,8 @@ DEFAULT_SETTINGS = {
     "brand_name": "", "bot_name": "", "address_customer": "anh/chị", "address_self": "em",
     "hotline": "", "zalo": "", "website": "", "email": "", "signoff": "",
     "greeting_template": "", "fallback_template": "", "handoff_template": "", "summary_template": "",
+    "regreet_template": "Dạ {{ brand.me }} chào {{ brand.you }} ạ!{% if course.name %} {{ brand.you | capitalize }} cần "
+                        "{{ brand.me }} tư vấn thêm về học phí, lịch khai giảng hay nội dung khóa {{ course.name }} ạ?{% endif %}",
     "max_skills_per_reply": 3, "max_stuck_turns": 2, "log_retention_days": 180,
     "jev_live": 0, "jev_timeout": 8, "catalog_act": 0.95, "catalog_confirm": 0.55, "choice_act": 0.80,
     "choice_confirm": 0.50, "skill_act": 0.90, "skill_confirm": 0.60, "handoff_noul": 0.70, "spam_threshold": 0.80,
