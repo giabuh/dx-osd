@@ -336,17 +336,236 @@ def detect_branch_from_text(text: str) -> str | None:
     return None
 
 
+# ── Bot Slot CRM Dynamic Integration ──────────────────────────────
+_SLOT_CACHE = {"timestamp": 0, "data": None}
+
+PREFERRED_SLOT_ORDER = [
+    "course",
+    "learner",
+    "learner_age",
+    "level",
+    "goal",
+    "branch",
+    "preferred_shift",
+    "phone",
+]
+
+
+def fetch_bot_slots_config(cache_ttl: int = 30) -> dict:
+    """Fetch active Bot Slot configuration and options from Frappe CRM (cached for cache_ttl seconds)."""
+    global _SLOT_CACHE
+    now = time.time()
+    if _SLOT_CACHE["data"] and (now - _SLOT_CACHE["timestamp"] < cache_ttl):
+        return _SLOT_CACHE["data"]
+
+    cmd = [
+        "docker", "exec", "-w", "/home/frappe/frappe-bench", "crm-frappe-1",
+        "./env/bin/python", "-c",
+        "import frappe, json; frappe.init(site='crm.localhost', sites_path='sites'); frappe.connect(); "
+        "slots = frappe.get_all('Bot Slot', filters={'active': 1}, fields=['name', 'slot_key', 'label', 'slot_type', 'required', 'ask_template', 'lead_field']); "
+        "opts = frappe.get_all('Bot Slot Option', fields=['parent', 'value', 'label', 'button_label', 'aliases']); "
+        "print(json.dumps({'slots': slots, 'options': opts}))"
+    ]
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
+        if res.returncode == 0 and res.stdout.strip():
+            data = json.loads(res.stdout.strip())
+            _SLOT_CACHE = {"timestamp": now, "data": data}
+            return data
+    except Exception:
+        pass
+
+    return _SLOT_CACHE.get("data") or {
+        "slots": [
+            {"slot_key": "course", "label": "Khóa học", "slot_type": "catalog", "required": 1},
+            {"slot_key": "branch", "label": "Chi nhánh", "slot_type": "catalog", "required": 1},
+            {"slot_key": "learner_age", "label": "Tuổi người học", "slot_type": "number", "required": 1},
+            {"slot_key": "phone", "label": "Số điện thoại", "slot_type": "phone", "required": 1},
+        ],
+        "options": []
+    }
+
+
+def extract_learner_age(text: str) -> int | None:
+    """Extract learner age from message text or quick reply payload."""
+    if not text:
+        return None
+    lower = text.lower()
+    if "age_kids" in lower or "6 - 9" in lower:
+        return 8
+    if "age_teens" in lower or "10 - 15" in lower:
+        return 12
+    if "age_adult" in lower or any(k in lower for k in ["sinh viên", "đi làm", "người lớn"]):
+        return 22
+
+    m = re.search(r"(?:bé|cháu|con|em|mình|học viên)?\s*(\d{1,2})\s*(?:tuổi|tuoi|t\b)", lower)
+    if m:
+        try:
+            val = int(m.group(1))
+            if 3 <= val <= 80:
+                return val
+        except ValueError:
+            pass
+
+    m_plain = re.fullmatch(r"\s*(\d{1,2})\s*", text.strip())
+    if m_plain:
+        try:
+            val = int(m_plain.group(1))
+            if 4 <= val <= 70:
+                return val
+        except ValueError:
+            pass
+    return None
+
+
+def extract_preferred_shift(text: str) -> str | None:
+    """Extract preferred study shift."""
+    if not text:
+        return None
+    lower = text.lower()
+    if any(k in lower for k in ["tối", "toi", "2-4-6", "3-5-7", "evening", "shift_evening"]):
+        return "Ca tối (18h30 - 20h30)"
+    if any(k in lower for k in ["sáng", "sang", "cuối tuần", "thứ 7", "chủ nhật", "t7", "cn", "weekend", "shift_weekend"]):
+        return "Ca cuối tuần (Sáng T7 - CN)"
+    if any(k in lower for k in ["chiều", "chieu", "afternoon", "shift_afternoon"]):
+        return "Ca chiều"
+    return None
+
+
+def extract_learner_type(text: str) -> str | None:
+    """Extract learner target group."""
+    if not text:
+        return None
+    lower = text.lower()
+    if any(k in lower for k in ["con em", "cho con", "bé", "cho bé", "cháu", "learner_child"]):
+        return "Con em"
+    if any(k in lower for k in ["bản thân", "cho mình", "cho tôi", "tôi học", "mình học", "learner_self"]):
+        return "Bản thân"
+    if any(k in lower for k in ["công ty", "doanh nghiệp", "nhân viên", "learner_staff"]):
+        return "Nhân viên công ty"
+    return None
+
+
+def extract_level(text: str) -> str | None:
+    """Extract current knowledge level."""
+    if not text:
+        return None
+    lower = text.lower()
+    if any(k in lower for k in ["chưa biết gì", "mất gốc", "mới bắt đầu", "từ đầu", "từ số 0", "level_beginner"]):
+        return "Chưa biết gì"
+    if any(k in lower for k in ["cơ bản", "biết chút", "đã biết", "level_basic"]):
+        return "Biết cơ bản"
+    if any(k in lower for k in ["nâng cao", "chuyên sâu", "level_advanced"]):
+        return "Muốn nâng cao"
+    return None
+
+
+def extract_goal(text: str) -> str | None:
+    """Extract learning objective."""
+    if not text:
+        return None
+    lower = text.lower()
+    if any(k in lower for k in ["chứng chỉ", "thi mos", "lấy bằng", "goal_cert"]):
+        return "Lấy chứng chỉ"
+    if any(k in lower for k in ["văn phòng", "công việc", "đi làm", "goal_office"]):
+        return "Công việc văn phòng"
+    if any(k in lower for k in ["cho bé", "làm quen", "goal_kids"]):
+        return "Cho bé làm quen"
+    return None
+
+
+def extract_all_slots(full_thread_text: str, latest_msg: str, slots_config: dict) -> dict:
+    """Extract all available slot values from conversation thread & latest message."""
+    collected = {}
+
+    c = detect_course_from_text(full_thread_text)
+    if c:
+        collected["course"] = c
+
+    b = detect_branch_from_text(full_thread_text)
+    if b:
+        collected["branch"] = b
+
+    m_phone = re.search(r"(0\d{9}|\+84\d{9})", full_thread_text)
+    if m_phone:
+        collected["phone"] = m_phone.group(1)
+
+    age = extract_learner_age(latest_msg) or extract_learner_age(full_thread_text)
+    if age:
+        collected["learner_age"] = age
+
+    shift = extract_preferred_shift(latest_msg) or extract_preferred_shift(full_thread_text)
+    if shift:
+        collected["preferred_shift"] = shift
+
+    l_type = extract_learner_type(latest_msg) or extract_learner_type(full_thread_text)
+    if l_type:
+        collected["learner"] = l_type
+
+    lvl = extract_level(latest_msg) or extract_level(full_thread_text)
+    if lvl:
+        collected["level"] = lvl
+
+    g = extract_goal(latest_msg) or extract_goal(full_thread_text)
+    if g:
+        collected["goal"] = g
+
+    return collected
+
+
+def get_next_missing_slot(collected_slots: dict, slots_config: dict) -> dict | None:
+    """Find the next required slot according to Bot Slot configuration that has not been collected."""
+    slots = slots_config.get("slots", [])
+    required_slots = {
+        s.get("slot_key"): s
+        for s in slots
+        if s.get("required") and s.get("slot_key") != "customer_name"
+    }
+
+    for key in PREFERRED_SLOT_ORDER:
+        if key in required_slots and key not in collected_slots:
+            return required_slots[key]
+
+    for key, slot_def in required_slots.items():
+        if key not in collected_slots:
+            return slot_def
+
+    return None
+
+
 # ── Conversational Messenger Reply Generator ───────────────────────
-def generate_ai_conversation_reply(customer_name: str, history: list[str], latest_msg: str) -> str:
-    """Generate a highly contextual, natural, consultative Messenger response using 9Router/Gemini or smart heuristics."""
+def generate_ai_conversation_reply(
+    customer_name: str,
+    history: list[str],
+    latest_msg: str,
+    collected_slots: dict | None = None,
+    next_missing_slot: dict | None = None,
+) -> str:
+    """Generate a highly contextual, natural, consultative Messenger response based on Bot Slot configuration."""
+    collected = collected_slots or {}
     phone_match = re.search(r"(0\d{9}|\+84\d{9})", latest_msg)
     lower = latest_msg.lower()
 
     # 1. Deterministic phone number detection (actual digits provided)
     if phone_match:
         phone = phone_match.group(1)
+        collected["phone"] = phone
+        # If all required slots are now complete, send full summary confirmation
+        summary_items = []
+        if collected.get("course"):
+            summary_items.append(f"• Khóa học: {collected['course']}")
+        if collected.get("learner_age"):
+            summary_items.append(f"• Độ tuổi: {collected['learner_age']} tuổi")
+        if collected.get("preferred_shift"):
+            summary_items.append(f"• Ca học: {collected['preferred_shift']}")
+        if collected.get("branch"):
+            summary_items.append(f"• Cơ sở: {collected['branch']}")
+        summary_items.append(f"• Số điện thoại: {phone}")
+
+        summary_text = "\n".join(summary_items)
         return (
-            f"Dạ em cảm ơn anh/chị {customer_name} nhiều ạ! Em đã lưu Số Điện Thoại {phone} của mình rồi ạ. "
+            f"Dạ em cảm ơn anh/chị {customer_name} nhiều ạ! Em đã ghi nhận đầy đủ hồ sơ đăng ký cho mình:\n"
+            f"{summary_text}\n\n"
             f"Chuyên viên tuyển sinh của EduFlow sẽ sớm liên hệ qua SĐT để hỗ trợ xếp lớp và gửi vé mời học thử miễn phí cho mình nhé! "
             f"Chúc anh/chị một ngày thật vui vẻ ạ! ✨"
         )
@@ -366,28 +585,42 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
         )
 
     history_str = "\n".join(history[-6:])
+    collected_summary = ", ".join(f"{k}: {v}" for k, v in collected.items()) if collected else "Chưa có"
+
+    # Contextual goal guidance for AI
+    if next_missing_slot:
+        missing_label = next_missing_slot.get("label", "thông tin tiếp theo")
+        missing_key = next_missing_slot.get("slot_key", "")
+        missing_template = next_missing_slot.get("ask_template", "")
+        next_step_instruction = (
+            f"MỤC TIÊU BẮT BUỘC LƯỢT NÀY (theo cấu hình CRM Bot Slot):\n"
+            f"Thu thập thông tin: [{missing_label}] (key: {missing_key}).\n"
+            f"Gợi ý câu hỏi: \"{missing_template}\".\n"
+            f"Yêu cầu: Hãy xác nhận thân thiện thông tin khách vừa gửi ở tin nhắn mới nhất, sau đó khéo léo hỏi khách thông tin [{missing_label}] để phục vụ xếp lớp/tư vấn lộ trình."
+        )
+    else:
+        next_step_instruction = (
+            "Tất cả các thông tin bắt buộc đã được thu thập đầy đủ. Hãy chúc mừng và mời khách để lại SĐT hoặc xác nhận lại lịch học."
+        )
+
     prompt = (
         f"Bạn là Chuyên viên Tư vấn Tuyển sinh Cao cấp của Học viện EduFlow Academy (Việt Nam).\n"
         f"Nhiệm vụ: Phản hồi tin nhắn Messenger của học viên '{customer_name}' một cách tự nhiên, lễ phép, thông minh, chuyên nghiệp và KHÔNG BỊ SƯỢNG.\n\n"
         f"Lịch sử trò chuyện gần nhất:\n{history_str}\n\n"
         f"Tin nhắn mới nhất của {customer_name}: \"{latest_msg}\"\n\n"
+        f"Thông tin đã thu thập được từ khách: {collected_summary}\n\n"
+        f"{next_step_instruction}\n\n"
         f"Kiến thức đào tạo EduFlow:\n"
         f"1. Photoshop Thực chiến: 12 buổi (6 tuần), thực hành 100% trên máy tính. Học từ con số 0 đến tự làm banner, poster, chỉnh ảnh chuyên nghiệp. Học bổng hỗ trợ 35% học phí + tặng 50GB tài nguyên thiết kế.\n"
         f"2. Tin học văn phòng & MOS: Excel/Word/PowerPoint từ căn bản đến nâng cao, cam kết chuẩn đầu ra MOS quốc tế.\n"
         f"3. Lập trình Python & Web: Dành cho người mới bắt đầu từ số 0 đến tự xây dựng phần mềm và phân tích dữ liệu.\n"
-        f"4. Cơ sở đào tạo:\n"
-        f"   - CS1: Điện Biên Phủ, Q. Bình Thạnh (gần ngã tư Hàng Xanh)\n"
-        f"   - CS2: Nguyễn Thị Minh Khai, Q.1\n"
-        f"   - CS3: Võ Văn Ngân, TP. Thủ Đức\n"
-        f"5. Lịch học các cơ sở:\n"
-        f"   - Lớp tối 2-4-6 (18h30 - 20h30)\n"
-        f"   - Lớp cuối tuần (Sáng Thứ 7 & Chủ Nhật: 9h00 - 11h30)\n"
+        f"4. Cơ sở đào tạo: CS1 Điện Biên Phủ (Bình Thạnh), CS2 Nguyễn Thị Minh Khai (Q.1), CS3 Võ Văn Ngân (TP. Thủ Đức).\n"
+        f"5. Lịch học các cơ sở: Lớp tối 2-4-6 (18h30 - 20h30), Lớp cuối tuần (Sáng T7 - CN 9h00 - 11h30).\n"
         f"6. Học phí: Ưu đãi 35% chỉ còn ~1.950.000đ - 2.500.000đ tùy khóa.\n\n"
-        f"QUY TẮC PHẢN HỒI (RẤT QUAN TRỌNG ĐỂ KHÔNG BỊ SƯỢNG):\n"
-        f"1. Nếu khách vừa chọn cơ sở (vd: CS1 Bình Thạnh): Hãy nhiệt tình xác nhận cơ sở đã chọn, sau đó giới thiệu 2 khung giờ học (Tối 2-4-6 hoặc Sáng T7-CN) và hỏi khách tiện học giờ nào hơn.\n"
-        f"2. Nếu khách vừa chọn ca học/giờ học (vd: Tối 2-4-6 hay Cuối tuần): Xác nhận ca học, và xin phép xin Số Điện Thoại (SĐT) trực tiếp vào ô chat để chuyên viên hỗ trợ giữ chỗ ưu đãi học bổng 35% và gửi vé học thử miễn phí.\n"
-        f"3. Tuyệt đối KHÔNG gửi menu cứng nhắc, KHÔNG lặp lại giới thiệu chung nếu khách đã chọn bước tiếp theo.\n"
-        f"4. Giọng văn: Ấm áp, lịch sự, xưng 'em', gọi khách là 'anh/chị' hoặc 'anh/chị {customer_name}'. Ngắn gọn dưới 60 từ. Không dùng markdown (** hay ##)."
+        f"QUY TẮC PHẢN HỒI:\n"
+        f"1. Tuyệt đối KHÔNG gửi menu cứng nhắc, KHÔNG lặp lại giới thiệu chung nếu khách đã chọn bước tiếp theo.\n"
+        f"2. Luôn xác nhận thông tin khách vừa chọn một cách hào hứng và tích cực.\n"
+        f"3. Giọng văn: Ấm áp, lịch sự, xưng 'em', gọi khách là 'anh/chị' hoặc 'anh/chị {customer_name}'. Ngắn gọn dưới 60 từ. Không dùng markdown (** hay ##)."
     )
 
     # 1. Try 9Router (local fast proxy)
@@ -439,94 +672,51 @@ def generate_ai_conversation_reply(customer_name: str, history: list[str], lates
             pass
 
     # ── Contextual Heuristic Engine (100% natural, non-stiff fallback) ──
-    # 2. Branch chosen (e.g. CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức)
-    branch_val = detect_branch_from_text(latest_msg)
-    if branch_val:
+    missing_key = next_missing_slot.get("slot_key") if next_missing_slot else None
+
+    if missing_key == "learner_age":
         return (
-            f"Dạ tuyệt vời ạ, cơ sở {branch_val} phòng máy thực hành cấu hình cao rất mới và thuận tiện đi lại luôn anh/chị {customer_name} ơi! ✨\n\n"
-            f"Hiện tại cơ sở đang có 2 ca học cho khóa mới:\n"
-            f"• Lớp tối 2-4-6: 18h30 - 20h30\n"
-            f"• Lớp cuối tuần: Sáng Thứ 7 & Chủ Nhật (9h00 - 11h30)\n\n"
-            f"Mình thấy khung giờ nào thuận tiện hơn để em hỗ trợ giữ chỗ ưu đãi học bổng 35% cho mình nhé? ⏰"
+            f"Dạ tuyệt vời ạ! Để EduFlow chuẩn bị tài liệu và xếp lớp có độ tuổi và nhóm học phù hợp nhất, bé nhà mình (hoặc anh/chị) năm nay bao nhiêu tuổi rồi ạ? 👶"
         )
 
-    # 3. Schedule chosen (e.g. Tối 2-4-6, Cuối tuần)
-    if any(k in lower for k in ["tối 2-4-6", "2-4-6", "tối 3-5-7", "cuối tuần", "thứ 7", "chủ nhật", "t7", "cn"]):
+    if missing_key == "branch":
         return (
-            f"Dạ em đã ghi nhận lịch học dự kiến của anh/chị {customer_name} rồi ạ! 🌟\n\n"
-            f"Để hoàn tất giữ suất học bổng ưu đãi 35% học phí và nhận vé tham gia buổi học thử 1-1 miễn phí, anh/chị nhắn em xin Số Điện Thoại (SĐT) trực tiếp vào ô chat để chuyên viên hỗ trợ làm hồ sơ cho mình nhé! 📱"
+            f"Dạ EduFlow có 3 cơ sở đào tạo với phòng máy thực hành cấu hình cao tại TP.HCM:\n"
+            f"📍 CS1: Điện Biên Phủ, Q. Bình Thạnh\n"
+            f"📍 CS2: Nguyễn Thị Minh Khai, Q.1\n"
+            f"📍 CS3: Võ Văn Ngân, TP. Thủ Đức\n\n"
+            f"Mình thấy tiện học ở cơ sở nào để em hỗ trợ giữ lịch học thử cho mình nhé! 🏢"
         )
 
-    # 4. Tuition / Price inquiry
-    if any(k in lower for k in ["học phí", "giá", "bao nhiêu", "chi phí", "tiền"]):
+    if missing_key == "preferred_shift":
         return (
-            f"Dạ học phí các khóa tại EduFlow dao động từ 2.500.000đ - 3.800.000đ tùy nội dung đào tạo ạ.\n\n"
-            f"🎁 Đặc biệt trong tuần này, EduFlow đang có Học bổng ưu đãi 35% học phí và tặng kèm buổi học thử 1-1 miễn phí.\n\n"
-            f"Anh/chị {customer_name} đang quan tâm lớp học vào buổi tối hay cuối tuần để em báo mức ưu đãi chi tiết và giữ chỗ cho mình nhé! ✨"
+            f"Dạ EduFlow có 2 khung giờ học rất thuận tiện:\n"
+            f"• Lớp tối 2-4-6 (18h30 - 20h30)\n"
+            f"• Lớp cuối tuần (Sáng Thứ 7 & Chủ Nhật)\n\n"
+            f"Anh/chị {customer_name} thấy ca học nào phù hợp hơn để em hỗ trợ đăng ký cho mình nhé? ⏰"
         )
 
-    # 5. Branch / Location general inquiry
-    if any(k in lower for k in ["ở đâu", "địa chỉ", "cơ sở", "chi nhánh"]):
+    if missing_key == "phone":
         return (
-            f"Dạ EduFlow có 3 cơ sở đào tạo với phòng máy thực hành cấu hình cao tại TP.HCM ạ:\n"
-            f"📍 CS1: Điện Biên Phủ, P.25, Q. Bình Thạnh\n"
-            f"📍 CS2: Nguyễn Thị Minh Khai, P. Bến Nghé, Q.1\n"
-            f"📍 CS3: Võ Văn Ngân, P. Linh Chiểu, TP. Thủ Đức\n\n"
-            f"Các cơ sở đều có lớp tối (18h30 - 20h30) và cuối tuần. Mình tiện học ở cơ sở nào để em hỗ trợ giữ lịch học thử cho mình nhé! 🏢"
+            f"Dạ để hoàn tất giữ suất học bổng ưu đãi 35% học phí và nhận vé tham gia buổi học thử 1-1 miễn phí, anh/chị nhắn em xin Số Điện Thoại (SĐT) trực tiếp vào ô chat để chuyên viên hỗ trợ làm hồ sơ cho mình nhé! 📱"
         )
 
-    # 6. Schedule general inquiry
-    if any(k in lower for k in ["buổi tối", "tối", "cuối tuần", "lịch học", "thời gian", "mấy giờ"]):
+    if missing_key == "learner":
         return (
-            f"Dạ EduFlow có lịch học linh hoạt rất thuận tiện cho người đi làm và sinh viên ạ:\n"
-            f"• Lớp tối: 18h30 - 20h30 (Thứ 2-4-6 hoặc Thứ 3-5-7).\n"
-            f"• Lớp cuối tuần: Sáng Thứ 7 & Chủ Nhật.\n\n"
-            f"Khung giờ nào thuận tiện nhất cho anh/chị {customer_name} ạ? Nhắn em xin SĐT để chuyên viên xếp lớp phù hợp nhất cho mình nhé! ⏰"
+            f"Dạ khóa học này mình đang tìm hiểu cho con em hay cho bản thân/công ty học vậy ạ? 🎓"
         )
 
-    full_context = " ".join(history) + " " + latest_msg
-    course_context = detect_course_from_text(full_context)
-
-    # 7. User said "ok", "dạ", "vâng", "tư vấn", or acknowledging previous course mention
-    if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh"]):
+    if missing_key == "level":
         return (
-            f"Dạ em gửi anh/chị {customer_name} thông tin khóa học Photoshop Thực chiến tại EduFlow ạ:\n\n"
-            f"📚 Điểm nổi bật khóa học:\n"
-            f"• Đi từ cơ bản đến nâng cao: Làm chủ công cụ, cắt ghép, chỉnh màu ảnh chân dung & sản phẩm.\n"
-            f"• Thực hành thiết kế ấn phẩm thực tế: Banner, poster, cover Facebook truyền thông bán hàng.\n"
-            f"• Thời lượng: 12 buổi (6 tuần) - thực hành 100% trên máy tính.\n"
-            f"• Lịch học linh hoạt: Lớp tối 2-4-6 hoặc lớp cuối tuần (T7 - CN).\n\n"
-            f"🎁 Ưu đãi tuần này: Giảm 35% học phí + tặng kèm kho 50GB Plugin & Font chữ thiết kế bản quyền.\n\n"
-            f"Dạ mình tiện học tại cơ sở nào (Bình Thạnh, Quận 1 hay Thủ Đức) và muốn học tối hay cuối tuần để em hỗ trợ xếp lịch cho mình nhé! ✨"
+            f"Dạ mình đã từng học qua hoặc biết cơ bản về môn này chưa, hay học từ số 0 để em tư vấn lộ trình nhé ạ? ✨"
         )
 
-    if course_context == "Tin học văn phòng & Luyện thi MOS":
-        return (
-            f"Dạ em gửi anh/chị {customer_name} thông tin khóa Tin học văn phòng & Luyện thi MOS tại EduFlow ạ:\n\n"
-            f"📚 Điểm nổi bật:\n"
-            f"• Thành thạo Excel/Word/PowerPoint từ căn bản đến nâng cao.\n"
-            f"• Làm chủ hàm nâng cao (VLOOKUP, INDEX/MATCH), Pivot Table & tự động hóa báo cáo doanh nghiệp.\n"
-            f"• Cam kết chuẩn đầu ra đỗ chứng chỉ MOS quốc tế.\n"
-            f"• Lịch học: Lớp tối 2-4-6 hoặc cuối tuần.\n\n"
-            f"🎁 Ưu đãi: Giảm 35% học phí trong tuần này. Mình tiện học ở cơ sở Bình Thạnh, Q.1 hay Thủ Đức để em gửi lịch học thử cho mình nhé! 🌟"
-        )
-
-    if course_context == "Lập trình Python thực chiến":
-        return (
-            f"Dạ em gửi anh/chị {customer_name} lộ trình Lập trình Python Thực chiến tại EduFlow ạ:\n\n"
-            f"📚 Điểm nổi bật:\n"
-            f"• Dành cho người mới bắt đầu từ con số 0, không cần có nền tảng trước.\n"
-            f"• Xây dựng tư duy logic, lập trình ứng dụng, xử lý dữ liệu và tự động hóa công việc.\n"
-            f"• Thời lượng 8-10 tuần, giảng viên cầm tay chỉ việc 1-1.\n\n"
-            f"🎁 Đang có học bổng hỗ trợ 35% học phí tuần này. Anh/chị {customer_name} đang tìm hiểu học để phục vụ công việc hay mục tiêu gì để em tư vấn kỹ hơn nhé! 💻"
-        )
-
-    # 8. General welcoming response
+    # General course intro fallback
     return (
         f"Dạ em chào anh/chị {customer_name}! EduFlow Academy có các chương trình đào tạo thực chiến nổi bật:\n"
-        f"1. Thiết kế đồ họa / Photoshop (cắt ghép, chỉnh màu, thiết kế banner/poster quảng cáo)\n"
-        f"2. Tin học văn phòng & Luyện thi MOS (Word, Excel, PowerPoint chuyên nghiệp)\n"
-        f"3. Lập trình Python & Tự động hóa từ cơ bản\n\n"
+        f"1. Thiết kế đồ họa / Photoshop\n"
+        f"2. Tin học văn phòng & Luyện thi MOS\n"
+        f"3. Lập trình Python & Tự động hóa\n\n"
         f"Anh/chị đang quan tâm đến bộ môn nào để em gửi thông tin chi tiết và ưu đãi học bổng 35% cho mình nhé! 🎓"
     )
 
@@ -552,8 +742,10 @@ def get_smart_quick_replies(
     message_text: str = "",
     history: list[str] | None = None,
     has_phone: bool = False,
+    next_missing_slot: dict | None = None,
+    slots_config: dict | None = None,
 ) -> list[dict]:
-    """Return contextual Quick Reply buttons for Facebook Messenger."""
+    """Return contextual Quick Reply buttons for Facebook Messenger based on Bot Slot progression."""
     lower = (message_text or "").lower()
 
     # 1. Concluded / phone provided / thank you -> NO buttons (completely clean chat)
@@ -563,33 +755,72 @@ def get_smart_quick_replies(
     if any(k in lower for k in ["cảm ơn", "cam on", "thank", "tks", "bye", "tạm biệt", "ok em", "chúc em", "tuyệt vời"]):
         return []
 
-    # 2. Asking for phone number (waiting for digits from customer) -> NO buttons (leave text bar clean)
+    # 2. If next missing slot is phone -> NO buttons (let customer type their phone cleanly)
+    if next_missing_slot and next_missing_slot.get("slot_key") == "phone":
+        return []
+
     if any(k in lower for k in ["gửi số điện thoại", "sđt", "sdt", "số điện thoại", "cho sdt", "gửi sdt"]):
         return []
 
     # 3. Schedule chosen -> bot asks for phone number -> NO buttons (leave text bar clean)
     if any(k in lower for k in ["tối", "cuối tuần", "2-4-6", "3-5-7", "t7", "cn", "sáng"]):
-        return []
+        if not next_missing_slot or next_missing_slot.get("slot_key") == "phone":
+            return []
 
-    # 4. Customer just chose or mentioned a branch -> suggest schedule shifts
-    if any(k in lower for k in ["bình thạnh", "quận 1", "q1", "thủ đức", "cs1", "cs2", "cs3"]):
-        return [
-            {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
-            {"content_type": "text", "title": "☀️ Lớp sáng T7 - CN", "payload": "SHIFT_WEEKEND"},
-            {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
-            {"content_type": "text", "title": "📞 Nhận tư vấn 1-1", "payload": "CONSULT_1_1"},
-        ]
+    # 4. Dynamic buttons driven by next_missing_slot
+    if next_missing_slot:
+        missing_key = next_missing_slot.get("slot_key")
 
-    # 5. In Photoshop context or learning from scratch -> suggest branches
-    if course_context == "Photoshop thực chiến" or any(k in lower for k in ["photoshop", "pts", "đồ họa", "chỉnh ảnh", "từ số 0", "cơ bản", "mới bắt đầu", "đi làm"]):
-        return [
-            {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
-            {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
-            {"content_type": "text", "title": "📍 CS3 Thủ Đức", "payload": "CS3_THU_DUC"},
-            {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
-        ]
+        if missing_key == "course":
+            return [
+                {"content_type": "text", "title": "🎨 Khóa Photoshop", "payload": "COURSE_PHOTOSHOP"},
+                {"content_type": "text", "title": "📊 Tin học MOS", "payload": "COURSE_MOS"},
+                {"content_type": "text", "title": "💻 Lập trình Python", "payload": "COURSE_PYTHON"},
+                {"content_type": "text", "title": "🤖 Robotics STEM", "payload": "COURSE_STEM"},
+            ]
 
-    # 6. If course context is already established, don't show generic course menu
+        if missing_key == "branch":
+            return [
+                {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
+                {"content_type": "text", "title": "📍 CS2 Quận 1", "payload": "CS2_QUAN_1"},
+                {"content_type": "text", "title": "📍 CS3 Thủ Đức", "payload": "CS3_THU_DUC"},
+            ]
+
+        if missing_key == "learner_age":
+            return [
+                {"content_type": "text", "title": "👶 Bé 6 - 9 tuổi", "payload": "AGE_KIDS"},
+                {"content_type": "text", "title": "👦 Bé 10 - 15 tuổi", "payload": "AGE_TEENS"},
+                {"content_type": "text", "title": "🎓 Sinh viên / Đi làm", "payload": "AGE_ADULT"},
+            ]
+
+        if missing_key == "preferred_shift":
+            return [
+                {"content_type": "text", "title": "🌙 Lớp tối 2-4-6", "payload": "SHIFT_EVENING"},
+                {"content_type": "text", "title": "☀️ Lớp sáng T7 - CN", "payload": "SHIFT_WEEKEND"},
+            ]
+
+        if missing_key == "learner":
+            return [
+                {"content_type": "text", "title": "👶 Cho con em", "payload": "LEARNER_CHILD"},
+                {"content_type": "text", "title": "🙋 Cho bản thân", "payload": "LEARNER_SELF"},
+                {"content_type": "text", "title": "🏢 Cho công ty", "payload": "LEARNER_STAFF"},
+            ]
+
+        if missing_key == "level":
+            return [
+                {"content_type": "text", "title": "🌱 Chưa biết gì", "payload": "LEVEL_BEGINNER"},
+                {"content_type": "text", "title": "📘 Biết cơ bản", "payload": "LEVEL_BASIC"},
+                {"content_type": "text", "title": "🚀 Muốn nâng cao", "payload": "LEVEL_ADVANCED"},
+            ]
+
+        if missing_key == "goal":
+            return [
+                {"content_type": "text", "title": "💼 Đi làm văn phòng", "payload": "GOAL_OFFICE"},
+                {"content_type": "text", "title": "📜 Lấy chứng chỉ", "payload": "GOAL_CERT"},
+                {"content_type": "text", "title": "👶 Cho bé làm quen", "payload": "GOAL_KIDS"},
+            ]
+
+    # Default fallback
     if course_context:
         return [
             {"content_type": "text", "title": "📍 CS1 Bình Thạnh", "payload": "CS1_BINH_THANH"},
@@ -598,7 +829,6 @@ def get_smart_quick_replies(
             {"content_type": "text", "title": "💰 Học phí ưu đãi", "payload": "TUITION_DISCOUNT"},
         ]
 
-    # 7. Default broad course selection only at very start
     return [
         {"content_type": "text", "title": "🎨 Khóa Photoshop", "payload": "COURSE_PHOTOSHOP"},
         {"content_type": "text", "title": "📊 Tin học MOS", "payload": "COURSE_MOS"},
@@ -664,9 +894,23 @@ def send_messenger_message(
     return sent_res
 
 
-def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None, branch: str = None):
-    """Sync qualified lead info to Frappe CRM."""
+def sync_to_frappe_crm(
+    customer_name: str,
+    phone: str = None,
+    course: str = None,
+    branch: str = None,
+    collected_slots: dict | None = None,
+):
+    """Sync qualified lead info to Frappe CRM using dynamic Bot Slot values."""
     try:
+        collected = collected_slots or {}
+        course = collected.get("course") or course
+        branch = collected.get("branch") or branch
+        phone = collected.get("phone") or phone
+        learner_age = collected.get("learner_age")
+        preferred_shift = collected.get("preferred_shift")
+        learner = collected.get("learner")
+
         # Check if lead exists
         cmd = [
             "docker", "exec", "crm-frappe-1",
@@ -686,6 +930,12 @@ def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None
             if phone:
                 update_fields["mobile_no"] = phone
                 update_fields["status"] = "Qualified"
+            if learner_age:
+                update_fields["learner_age"] = int(learner_age)
+            if preferred_shift:
+                update_fields["preferred_shift"] = preferred_shift
+            if learner:
+                update_fields["learner_type"] = learner
 
             cmd_update = [
                 "docker", "exec", "crm-frappe-1",
@@ -710,6 +960,13 @@ def sync_to_frappe_crm(customer_name: str, phone: str = None, course: str = None
                 doc["course_interest"] = course
             if branch:
                 doc["branch"] = branch
+            if learner_age:
+                doc["learner_age"] = int(learner_age)
+            if preferred_shift:
+                doc["preferred_shift"] = preferred_shift
+            if learner:
+                doc["learner_type"] = learner
+
             cmd_insert = [
                 "docker", "exec", "crm-frappe-1",
                 "bench", "--site", "crm.localhost", "execute",
@@ -830,26 +1087,35 @@ def process_messenger_conversations(
                 m_role = "EduFlow Academy" if m_is_page else m_sender.get("name", "Khách")
                 history.append(f"[{m_role}]: {m_text}")
 
-        # Detect course and branch context
-        full_thread_text = " ".join(history) + " " + msg_text
-        course_val = detect_course_from_text(full_thread_text)
-        branch_val = detect_branch_from_text(msg_text)
+        # Fetch dynamic Bot Slot configuration from CRM
+        slots_config = fetch_bot_slots_config()
 
-        # Generate intelligent contextual reply
+        # Detect course, branch and all slots from conversation context
+        full_thread_text = " ".join(history) + " " + msg_text
+        collected_slots = extract_all_slots(full_thread_text, msg_text, slots_config)
+        next_missing_slot = get_next_missing_slot(collected_slots, slots_config)
+
         # Detect phone number in current message or thread
         phone_match = re.search(r"(0\d{9}|\+84\d{9})", msg_text)
-        phone_val = phone_match.group(1) if phone_match else None
-        has_phone_in_thread = bool(phone_match or re.search(r"(0\d{9}|\+84\d{9})", full_thread_text))
+        has_phone_in_thread = bool("phone" in collected_slots or phone_match or re.search(r"(0\d{9}|\+84\d{9})", full_thread_text))
 
-        # Generate intelligent contextual reply
-        reply_text = generate_ai_conversation_reply(sender_name, history, msg_text)
+        # Generate intelligent contextual reply driven by Bot Slot requirements
+        reply_text = generate_ai_conversation_reply(
+            customer_name=sender_name,
+            history=history,
+            latest_msg=msg_text,
+            collected_slots=collected_slots,
+            next_missing_slot=next_missing_slot,
+        )
 
-        # Smart quick reply buttons (will be empty [] when phone provided, asking for phone, or concluded)
+        # Smart quick reply buttons for the next missing slot
         smart_quick_replies = get_smart_quick_replies(
-            course_context=course_val,
+            course_context=collected_slots.get("course"),
             message_text=msg_text,
             history=history,
             has_phone=has_phone_in_thread,
+            next_missing_slot=next_missing_slot,
+            slots_config=slots_config,
         )
 
         # Keep conversation clean and consultative - do not send unsolicited images
@@ -878,8 +1144,8 @@ def process_messenger_conversations(
                     btn_info = f" with {len(smart_quick_replies)} quick buttons" if smart_quick_replies else " (clean conclusion, no buttons)"
                     print(f"   📩 Messenger reply sent to {sender_name} (Ref: {mid}){btn_info}")
 
-                # Check for phone, branch, course and sync to CRM
-                sync_to_frappe_crm(sender_name, phone=phone_val, course=course_val, branch=branch_val)
+                # Sync all collected slots (course, branch, phone, age, shift, learner) to CRM Lead
+                sync_to_frappe_crm(sender_name, collected_slots=collected_slots)
 
                 replied.add(msg_id)
                 new_replies += 1

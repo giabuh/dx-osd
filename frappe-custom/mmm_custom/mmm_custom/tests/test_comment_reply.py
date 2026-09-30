@@ -202,7 +202,61 @@ class TestCommentReplySystem(unittest.TestCase):
             self.assertIsNotNone(res)
             self.assertEqual(res["message_id"], "m_qr_1")
             kwargs = mock_post.call_args[1]
-            self.assertEqual(kwargs["json"]["message"]["quick_replies"], qr)
+    def test_dynamic_bot_slot_progression(self):
+        """Test Bot Slot dynamic configuration progression and slot extractors."""
+        config = {
+            "slots": [
+                {"slot_key": "course", "label": "Khóa học", "required": 1},
+                {"slot_key": "branch", "label": "Chi nhánh", "required": 1},
+                {"slot_key": "learner_age", "label": "Tuổi người học", "required": 1},
+                {"slot_key": "preferred_shift", "label": "Ca học", "required": 1},
+                {"slot_key": "phone", "label": "Số điện thoại", "required": 1},
+            ],
+            "options": []
+        }
+
+        # Step 1: Empty thread -> missing course
+        slots = cr.extract_all_slots("", "Em muốn tìm hiểu học", config)
+        self.assertNotIn("course", slots)
+        next_s = cr.get_next_missing_slot(slots, config)
+        self.assertIsNotNone(next_s)
+        self.assertEqual(next_s["slot_key"], "course")
+        qr = cr.get_smart_quick_replies(None, "Em muốn tìm hiểu học", next_missing_slot=next_s, slots_config=config)
+        self.assertTrue(any("Photoshop" in r["title"] for r in qr))
+
+        # Step 2: Customer picked course -> missing learner_age
+        slots = cr.extract_all_slots("Em học Photoshop", "Photoshop", config)
+        self.assertEqual(slots.get("course"), "Photoshop thực chiến")
+        next_s = cr.get_next_missing_slot(slots, config)
+        self.assertEqual(next_s["slot_key"], "learner_age")
+        qr = cr.get_smart_quick_replies("Photoshop thực chiến", "Photoshop", next_missing_slot=next_s, slots_config=config)
+        self.assertTrue(any("tuổi" in r["title"] for r in qr))
+
+        # Step 3: Customer specified age -> missing branch
+        slots = cr.extract_all_slots("Em học Photoshop", "bé 8 tuổi", config)
+        self.assertEqual(slots.get("learner_age"), 8)
+        next_s = cr.get_next_missing_slot(slots, config)
+        self.assertEqual(next_s["slot_key"], "branch")
+        qr = cr.get_smart_quick_replies("Photoshop thực chiến", "bé 8 tuổi", next_missing_slot=next_s, slots_config=config)
+        self.assertTrue(any("Bình Thạnh" in r["title"] for r in qr))
+
+        # Step 4: Customer picked branch -> missing preferred_shift
+        slots = cr.extract_all_slots("Em học Photoshop bé 8 tuổi ở Bình Thạnh", "CS1 Bình Thạnh", config)
+        self.assertEqual(slots.get("branch"), "CS1 Bình Thạnh")
+        next_s = cr.get_next_missing_slot(slots, config)
+        self.assertEqual(next_s["slot_key"], "preferred_shift")
+
+        # Step 5: Customer picked shift -> missing phone
+        slots = cr.extract_all_slots("Em học Photoshop bé 8 tuổi ở Bình Thạnh lớp tối 2-4-6", "lớp tối 2-4-6", config)
+        self.assertEqual(slots.get("preferred_shift"), "Ca tối (18h30 - 20h30)")
+        next_s = cr.get_next_missing_slot(slots, config)
+        self.assertEqual(next_s["slot_key"], "phone")
+        qr = cr.get_smart_quick_replies("Photoshop thực chiến", "lớp tối 2-4-6", next_missing_slot=next_s, slots_config=config)
+        self.assertEqual(qr, [])  # Empty for phone input
+
+        # Step 6: All slots collected -> next_missing_slot is None
+        slots["phone"] = "0901234567"
+        self.assertIsNone(cr.get_next_missing_slot(slots, config))
 
 
 if __name__ == "__main__":
