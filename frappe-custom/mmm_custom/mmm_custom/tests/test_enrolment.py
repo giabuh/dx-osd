@@ -21,7 +21,8 @@ finally:
         sys.modules["frappe"] = _real_frappe
 
 from mmm_custom import enrolment, hooks
-from mmm_custom.enrolment import compute, next_status, promotion_discount, schedule_title
+from mmm_custom.enrolment import (
+    DEAL_DEFAULTS, RETIRED_FIELDS, compute, lead_after_deal_change, next_status, promotion_discount, schedule_title)
 
 
 class TestFee(unittest.TestCase):
@@ -50,9 +51,42 @@ class TestStatus(unittest.TestCase):
         self.assertEqual(next_status("Pending Payment", 0, 2_000_000), "Deposit Paid")
         self.assertEqual(next_status("Pending Payment", 0, 0), "Pending Payment")
 
+    def test_a_deposit_on_a_draft_moves_it_on_too(self):
+        self.assertEqual(next_status("Awaiting Confirmation", 500_000, 0), "Deposit Paid")
+        self.assertEqual(next_status("Awaiting Confirmation", 0, 0), "Awaiting Confirmation")
+
     def test_enrolment_and_cancellation_stay_a_person_s(self):
         self.assertEqual(next_status("Deposit Paid", 500_000, 2_000_000), "Deposit Paid")
         self.assertEqual(next_status("Lost", 500_000, 0), "Lost")
+
+
+class TestLeadAfterDealChange(unittest.TestCase):
+    def test_confirming_a_draft_registers_the_lead(self):
+        for new in ("Pending Payment", "Deposit Paid", "Won"):
+            self.assertEqual(lead_after_deal_change("Awaiting Confirmation", new, "", False),
+                             {"status": "Converted", "converted": 1})
+
+    def test_an_ordinary_change_leaves_the_lead(self):
+        self.assertEqual(lead_after_deal_change("Pending Payment", "Deposit Paid", "", False), {})
+        self.assertEqual(lead_after_deal_change(None, "Pending Payment", "", False), {})
+
+    def test_postponed_goes_back_to_nurturing(self):
+        for old in ("Pending Payment", "Awaiting Confirmation"):
+            self.assertEqual(lead_after_deal_change(old, "Lost", "Postponed", False),
+                             {"status": "Nurture", "converted": 0})
+
+    def test_a_cancelled_registration_returns_the_lead_to_consulting(self):
+        self.assertEqual(lead_after_deal_change("Pending Payment", "Lost", "Schedule Mismatch", False),
+                         {"status": "Contacted", "converted": 0})
+        self.assertEqual(lead_after_deal_change("Deposit Paid", "Lost", "", False),
+                         {"status": "Contacted", "converted": 0})
+
+    def test_a_cancelled_draft_never_moved_the_lead_so_it_stays(self):
+        self.assertEqual(lead_after_deal_change("Awaiting Confirmation", "Lost", "Location Too Far", False), {})
+
+    def test_another_live_registration_keeps_the_lead_registered(self):
+        self.assertEqual(lead_after_deal_change("Pending Payment", "Lost", "Postponed", True), {})
+        self.assertEqual(lead_after_deal_change("Pending Payment", "Lost", "Other", True), {})
 
 
 class TestSchedule(unittest.TestCase):
@@ -91,6 +125,7 @@ class TestHooksOnADeal(unittest.TestCase):
 
     def test_postponed_registration_sends_the_lead_back_to_nurturing(self):
         frappe = MagicMock()
+        frappe.db.count.return_value = 0
         lead = frappe.get_doc.return_value
         doc = self.deal(status="Lost", lost_reason="Postponed", lead="CRM-LEAD-1")
         doc.has_value_changed.return_value = True
@@ -106,13 +141,40 @@ class TestHooksOnADeal(unittest.TestCase):
         self.assertEqual(frappe.enqueue.call_args.args[0], "mmm_custom.lifecycle.push_status")
         self.assertEqual(frappe.enqueue.call_args.kwargs["lead"], "CRM-LEAD-1")
 
-    def test_other_cancellations_leave_the_lead(self):
+    def cancel(self, before, others=0, **values):
         frappe = MagicMock()
-        doc = self.deal(status="Lost", lost_reason="Pricing", lead="CRM-LEAD-1")
+        frappe.db.count.return_value = others
+        lead = frappe.get_doc.return_value
+        doc = self.deal(status="Lost", lead="CRM-LEAD-1", **values)
         doc.has_value_changed.return_value = True
+        doc.get_doc_before_save.return_value = MagicMock(status=before)
         with patch.object(enrolment, "frappe", frappe):
             enrolment.on_update(doc)
+        return frappe, lead
+
+    def test_other_cancellations_send_the_lead_back_to_consulting(self):
+        frappe, lead = self.cancel("Pending Payment", lost_reason="Pricing")
+        lead.update.assert_called_once_with({"status": "Contacted", "converted": 0})
+        lead.save.assert_called_once()
+
+    def test_a_cancelled_draft_leaves_the_lead(self):
+        frappe, lead = self.cancel("Awaiting Confirmation", lost_reason="Pricing")
         frappe.get_doc.assert_not_called()
+
+    def test_another_live_registration_leaves_the_lead(self):
+        frappe, lead = self.cancel("Pending Payment", others=1, lost_reason="Pricing")
+        frappe.get_doc.assert_not_called()
+
+    def test_confirming_a_draft_registers_the_lead(self):
+        frappe = MagicMock()
+        lead = frappe.get_doc.return_value
+        doc = self.deal(status="Pending Payment", lead="CRM-LEAD-1")
+        doc.has_value_changed.return_value = True
+        doc.get_doc_before_save.return_value = MagicMock(status="Awaiting Confirmation")
+        with patch.object(enrolment, "frappe", frappe):
+            enrolment.on_update(doc)
+        lead.update.assert_called_once_with({"status": "Converted", "converted": 1})
+        self.assertTrue(lead.flags.registered)
 
 
 class TestPage(unittest.TestCase):
@@ -135,10 +197,40 @@ class TestPage(unittest.TestCase):
         lead = {f["fieldname"] for f in setup_mod.CATALOG_FIELDS["CRM Lead"]} | {"course_interest"}
         self.assertLessEqual({"course_interest", "placement_result", "voucher_code", "trial_date"}, lead & self.DEAL_FIELDS)
 
+    def test_payment_due_date_is_gone(self):
+        self.assertEqual(RETIRED_FIELDS, ("payment_due_date",))
+        self.assertNotIn("payment_due_date", self.DEAL_FIELDS)
+        for layout in (enrolment.SIDE_PANEL, enrolment.DATA_FIELDS, enrolment.REQUIRED_FIELDS):
+            self.assertNotIn("payment_due_date", self.fields(layout))
+
+    def test_the_modal_asks_course_class_branch_and_deposit_only(self):
+        self.assertEqual(self.fields(enrolment.REQUIRED_FIELDS),
+                         {"enrol_course", "course_schedule", "territory", "deposit_amount"})
+
+    def test_class_choices_follow_the_deal_s_branch(self):
+        flt = next(f for f in setup_mod.CATALOG_FIELDS["CRM Deal"] if f["fieldname"] == "course_schedule")["link_filters"]
+        self.assertIn("eval: doc.territory", flt)
+
+    def test_deal_defaults_hide_status_and_use_vnd(self):
+        self.assertEqual(DEAL_DEFAULTS, {"status": "Pending Payment", "currency": "VND"})
+
+    def test_rewrite_removes_retired_fields_in_place_and_adds_the_branch(self):
+        import json
+        old = json.dumps([{"name": "first_tab", "sections": [{"name": "enrolment_section", "columns": [
+            {"name": "column_r1", "fields": ["enrol_course", "course_schedule"]},
+            {"name": "column_r2", "fields": ["deposit_amount", "payment_due_date"]}]}]}])
+        self.assertEqual(json.loads(enrolment.rewrite_layout(old, "Required Fields"))[0]["sections"][0]["columns"][1]["fields"],
+                         ["territory", "deposit_amount"])
+        side = json.dumps(enrolment.SIDE_PANEL).replace('"deposit_date"', '"deposit_date", "payment_due_date"')
+        self.assertNotIn("payment_due_date", enrolment.rewrite_layout(side, "Side Panel"))
+
     def test_hooks(self):
         self.assertEqual(hooks.doc_events["CRM Deal"]["validate"], "mmm_custom.enrolment.validate")
         self.assertEqual(hooks.doc_events["CRM Deal"]["after_insert"], "mmm_custom.enrolment.after_insert")
         self.assertIn("mmm_custom.enrolment.update_deal_layouts", hooks.after_migrate)
+        for hook in ("mmm_custom.enrolment.ensure_deal_defaults", "mmm_custom.setup.ensure_vnd"):
+            self.assertIn(hook, hooks.after_migrate)
+            self.assertIn(hook, hooks.after_install)
 
 
 if __name__ == "__main__":

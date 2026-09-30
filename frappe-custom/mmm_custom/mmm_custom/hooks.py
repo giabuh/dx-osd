@@ -86,7 +86,8 @@ doctype_js = {"CRM Product": "public/js/crm_product.js"}
 # ------------
 
 # Patches do not run on a fresh install, so the lifecycle migration (D-116) runs here too.
-after_install = ["mmm_custom.setup.create_custom_field_and_lead_sources", "mmm_custom.lifecycle.migrate"]
+after_install = ["mmm_custom.setup.create_custom_field_and_lead_sources", "mmm_custom.lifecycle.migrate",
+                 "mmm_custom.setup.ensure_vnd", "mmm_custom.enrolment.ensure_deal_defaults"]
 # Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
 after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.ensure_sources",
                  "mmm_custom.referral.backfill", "mmm_custom.setup.update_crm_fields_layout",
@@ -99,7 +100,9 @@ after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.e
                  # one branch field: the legacy `branch` select is hidden, its values fill `territory`
                  "mmm_custom.branches.migrate",
                  # the Deal page is a registration record: course, class, fee (D-117)
-                 "mmm_custom.enrolment.update_deal_layouts"]
+                 "mmm_custom.enrolment.update_deal_layouts",
+                 # VND everywhere and a Deal that needs no status / currency typed in (D-120)
+                 "mmm_custom.setup.ensure_vnd", "mmm_custom.enrolment.ensure_deal_defaults"]
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
 # clears the engine's cached catalog snapshot so the next customer message sees it.
@@ -117,7 +120,9 @@ doc_events["CRM Lead"] = {"on_update": ["mmm_custom.engine.learning.on_lead_upda
                                         "mmm_custom.lifecycle.on_lead_update"],
                           # Referral codes (D-103)
                           "before_insert": "mmm_custom.referral.set_code",
-                          "validate": ["mmm_custom.referral.resolve_referrer", "mmm_custom.branches.fill_territory"]}
+                          "validate": ["mmm_custom.referral.resolve_referrer", "mmm_custom.branches.fill_territory",
+                                       # "Đã đăng ký" only through Ghi danh (D-119)
+                                       "mmm_custom.lifecycle.guard_converted"]}
 # The registration record (D-117): course, class, fee after promotion, deposit; a postponed one returns to nurturing.
 doc_events["CRM Deal"] = {"before_insert": "mmm_custom.enrolment.before_insert",
                           "validate": "mmm_custom.enrolment.validate",

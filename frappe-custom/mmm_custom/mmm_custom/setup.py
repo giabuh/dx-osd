@@ -259,7 +259,7 @@ CATALOG_FIELDS = {
 		{"fieldname": "enrol_course", "label": "Enrolled Course", "fieldtype": "Link", "options": "CRM Product",
 		 "in_list_view": 1, "in_standard_filter": 1, "insert_after": "status"},
 		{"fieldname": "course_schedule", "label": "Class", "fieldtype": "Link", "options": "Course Schedule",
-		 "link_filters": '[["Course Schedule", "course", "=", "eval: doc.enrol_course"], ["Course Schedule", "status", "=", "Open"]]',
+		 "link_filters": '[["Course Schedule", "course", "=", "eval: doc.enrol_course"], ["Course Schedule", "branch", "=", "eval: doc.territory"], ["Course Schedule", "status", "=", "Open"]]',
 		 "insert_after": "enrol_course"},
 		{"fieldname": "class_start_date", "label": "Class Start Date", "fieldtype": "Date", "read_only": 1,
 		 "in_list_view": 1, "insert_after": "course_schedule"},
@@ -278,9 +278,8 @@ CATALOG_FIELDS = {
 		 "description": "Tổng số đã đóng, gồm cả tiền cọc", "insert_after": "deposit_date"},
 		{"fieldname": "balance_due", "label": "Balance Due", "fieldtype": "Currency", "options": "currency",
 		 "read_only": 1, "insert_after": "paid_amount"},
-		{"fieldname": "payment_due_date", "label": "Payment Due Date", "fieldtype": "Date", "insert_after": "balance_due"},
 		{"fieldname": "course_interest", "label": "Course Interest", "fieldtype": "Data", "read_only": 1,
-		 "insert_after": "payment_due_date"},
+		 "insert_after": "balance_due"},
 		{"fieldname": "placement_result", "label": "Level Test", "fieldtype": "Data", "read_only": 1,
 		 "insert_after": "course_interest"},
 		{"fieldname": "voucher_code", "label": "Voucher Code", "fieldtype": "Data", "length": 40, "read_only": 1,
@@ -310,6 +309,42 @@ def create_catalog_fields():
 		for field in fields:
 			ensure_custom_field(dt, field)
 	frappe.db.commit()
+
+
+def vnd_plan(currency, system, fcrm):
+    """The writes that make VND the currency (D-120), from what is there now. `currency`: the Currency VND row (dict or
+    None); `system` / `fcrm`: {currency, currency_precision, number_format}. Empty values only: a deliberate later
+    choice is kept. Pure."""
+    plan = {}
+    want = {"enabled": 1, "symbol": "₫", "number_format": "#.###", "symbol_on_right": 1}
+    if any((currency or {}).get(k) != v for k, v in want.items()):
+        plan["currency"] = want
+    if not (system or {}).get("currency"):
+        plan["system"] = {"currency": "VND", "currency_precision": "0", "number_format": "#.###"}
+    if not (fcrm or {}).get("currency"):
+        plan["fcrm"] = {"currency": "VND"}  # locks once set (fcrm_settings.py), and Deals convert against it
+    return plan
+
+
+def ensure_vnd():
+    """after_migrate / after_install: the CRM counts in VND, not USD."""
+    plan = vnd_plan(frappe.db.get_value("Currency", "VND", ["enabled", "symbol", "number_format", "symbol_on_right"],
+                                        as_dict=True),
+                    {k: frappe.db.get_single_value("System Settings", k) for k in
+                     ("currency", "currency_precision", "number_format")},
+                    {"currency": frappe.db.get_single_value("FCRM Settings", "currency")})
+    if "currency" in plan:
+        for key, value in plan["currency"].items():
+            frappe.db.set_value("Currency", "VND", key, value)
+    for key, value in plan.get("system", {}).items():
+        frappe.db.set_single_value("System Settings", key, value)
+    if "system" in plan:
+        frappe.db.set_default("currency", "VND")
+    if "fcrm" in plan:  # after the system currency: FCRM Settings converts against it
+        frappe.db.set_single_value("FCRM Settings", "currency", "VND")
+    if plan:
+        frappe.clear_cache()
+        frappe.db.commit()
 
 
 def setup_workspaces():

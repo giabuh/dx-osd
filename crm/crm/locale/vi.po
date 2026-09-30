@@ -8942,6 +8942,9 @@ msgstr "Học thử & Đánh giá"
 msgid "Proposal & Tuition"
 msgstr "Báo học phí & Ưu đãi"
 
+msgid "Awaiting Confirmation"
+msgstr "Chờ xác nhận"
+
 msgid "Pending Payment"
 msgstr "Chờ đóng phí"
 

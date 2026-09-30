@@ -12,6 +12,7 @@ except ImportError:  # offline tests
 
 NEW, QUALIFIED, CONTACTED, TRIAL_BOOKED = "New", "Qualified", "Contacted", "Trial Booked"
 NURTURE, CONVERTED, UNQUALIFIED, JUNK = "Nurture", "Converted", "Unqualified", "Junk"
+AWAITING_CONFIRMATION = "Awaiting Confirmation"  # a draft registration the bot / Jev made (D-118)
 PENDING_PAYMENT, DEPOSIT_PAID, WON, LOST = "Pending Payment", "Deposit Paid", "Won", "Lost"
 
 # (key, Vietnamese label, type, colour[, probability]); position is the row order
@@ -26,6 +27,7 @@ LEAD_STATUSES = (
     (JUNK, "Rác / Spam", "Lost", "purple"),
 )
 DEAL_STATUSES = (
+    (AWAITING_CONFIRMATION, "Chờ xác nhận", "Open", "gray", 20),
     (PENDING_PAYMENT, "Chờ đóng phí", "Open", "orange", 50),
     (DEPOSIT_PAID, "Đã đặt cọc", "Ongoing", "blue", 80),
     (WON, "Đã nhập học", "Won", "green", 100),
@@ -36,6 +38,8 @@ OLD_DEAL_STATUSES = ("Qualification", "Demo/Making", "Proposal/Quotation", "Nego
 
 LABELS = {s[0]: s[1] for s in LEAD_STATUSES}
 DEAL_LABELS = {s[0]: s[1] for s in DEAL_STATUSES}
+LIVE_DEAL = (AWAITING_CONFIRMATION, PENDING_PAYMENT, DEPOSIT_PAID)  # a registration still in play
+CONFIRMED_DEAL = (PENDING_PAYMENT, DEPOSIT_PAID, WON)  # a person accepted it: the Lead is registered
 OPEN_LEAD = (NEW, QUALIFIED, CONTACTED, TRIAL_BOOKED, NURTURE)  # still in play: not registered, not lost
 LOST_LEAD = (UNQUALIFIED, JUNK)
 
@@ -104,6 +108,11 @@ def reason_for_lost(ai_intent, status):
     return OTHER
 
 
+def needs_registration(status, status_changed, has_confirmed_deal):
+    """Registered (Converted) is reached only through Ghi danh (D-119): refuse it when no registration backs it."""
+    return status == CONVERTED and bool(status_changed) and not has_confirmed_deal
+
+
 def plan_statuses(existing, wanted, create_only=False):
     """[(action, row)]: create what is missing; with `create_only` False also bring type/colour/position (and
     probability) in line. `existing`: {name: {type, color, position, probability?}}; `wanted`: rows as dicts."""
@@ -135,6 +144,18 @@ def on_lead_update(doc, method=None):
         return
     frappe.enqueue("mmm_custom.lifecycle.push_status", queue="short", enqueue_after_commit=True,
                    job_id=f"lead_status_{doc.name}", deduplicate=True, lead=doc.name)
+
+
+def guard_converted(doc, method=None):
+    """doc_events CRM Lead validate: "Đã đăng ký" cannot be set by hand, from the page, a kanban drop or a bulk edit.
+    convert_to_deal writes it with db_set (no validate) and the enrolment hook sets `flags.registered`."""
+    flags = frappe.flags
+    if doc.flags.get("registered") or flags.in_import or flags.in_migrate or flags.in_install:
+        return
+    changed = doc.is_new() or doc.has_value_changed("status")
+    if doc.status == CONVERTED and changed and needs_registration(
+            doc.status, changed, frappe.db.exists("CRM Deal", {"lead": doc.name, "status": ["in", CONFIRMED_DEAL]})):
+        frappe.throw("Trạng thái Đã đăng ký chỉ đặt được qua nút Ghi danh (tạo hồ sơ đăng ký).")
 
 
 def push_status(lead):

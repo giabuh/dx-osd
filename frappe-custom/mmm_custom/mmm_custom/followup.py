@@ -8,8 +8,8 @@ Task for the Lead owner, at 08:00 so consultants find it when their day starts.
 | Trial Booked  | the trial date has passed                     | Sau học thử: chốt đăng ký / hẹn lại (High)        |
 | Nurture       | no Task, every `nurture_every_days` (14)      | Chăm sóc định kỳ with the next class, up to       |
 |               |                                              | `nurture_max_touches` (4); then Xem xét đóng      |
-| Deal: Pending | no Task, quiet `payment_stale_days` (3) or    | Nhắc đóng phí (High), on the registration (D-117) |
-|  Payment      | past its `payment_due_date`                   |                                                   |
+| Deal: Pending | no Task, quiet `payment_stale_days` (3)       | Nhắc đóng phí (High), on the registration (D-117) |
+|  Payment      |                                               |                                                   |
 
 The rules are pure (`rule_task`); a Lead with an open Task is left alone, except the after-trial check (the trial
 Task itself is usually still open). It never changes a Lead: moving it on stays a person's decision. Settings:
@@ -101,12 +101,9 @@ def rule_task(lead, now, cfg, tasks, next_class=""):
 
 
 def payment_task(deal, now, cfg, tasks):
-    """A registration waiting for the fee (D-117): remind when it has been quiet or its payment date passed."""
+    """A registration waiting for the fee (D-117): remind when it has been quiet."""
     if deal.get("status") != PENDING_PAYMENT or any(t["status"] in OPEN_TASK_STATUSES for t in tasks):
         return None
-    due = _date(deal.get("payment_due_date"))
-    if due and due < now.date():
-        return {"kind": "payment", "why": f"Hạn đóng phí {due:%d/%m} đã qua, khách chưa đóng / đặt cọc."}
     if now - deal["modified"] >= timedelta(days=int(cfg["payment_stale_days"])):
         return {"kind": "payment", "why": "Khách đã đăng ký nhưng chưa đóng phí / đặt cọc: gọi nhắc, giữ chỗ lớp."}
     return None
@@ -192,8 +189,7 @@ def plan_followups(now: datetime | None = None) -> dict:
         _create_task(lead, kind, why, now, suffix)
         results.append({"lead": lead["name"], "action": "task_created", "choice": kind})
     deals = frappe.get_all("CRM Deal", filters={"status": PENDING_PAYMENT}, order_by="modified asc",
-                           fields=["name", "lead_name", "deal_owner", "status", "modified", "payment_due_date"],
-                           limit=int(cfg["max_leads"])) if frappe.get_meta("CRM Deal").has_field("payment_due_date") else []
+                           fields=["name", "lead_name", "deal_owner", "status", "modified"], limit=int(cfg["max_leads"]))
     for deal in deals:
         rule = payment_task(deal, now, cfg, _tasks(deal["name"], "CRM Deal"))
         if rule:

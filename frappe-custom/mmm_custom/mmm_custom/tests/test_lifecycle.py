@@ -8,7 +8,7 @@ from mmm_custom import hooks
 from mmm_custom.lifecycle import (
     BOT_REASON, CONTACTED, CONVERTED, DEAL_STATUSES, EXISTING_STUDENT, JUNK, LABELS, LEAD_STATUSES, NEW, NURTURE,
     OTHER, PENDING_PAYMENT, QUALIFIED, SPAM, TRIAL_BOOKED, UNQUALIFIED, auto_update, can_auto_move, deal_rows,
-    lead_rows, plan_statuses, reached, reason_for_lost)
+    lead_rows, needs_registration, plan_statuses, reached, reason_for_lost)
 
 
 class TestStatuses(unittest.TestCase):
@@ -29,9 +29,27 @@ class TestStatuses(unittest.TestCase):
         self.assertFalse([k for k, v in LABELS.items() if "tiềm năng" in v.lower()])
 
     def test_deal_is_a_registration_record(self):
-        self.assertEqual([s[0] for s in DEAL_STATUSES], [PENDING_PAYMENT, "Deposit Paid", "Won", "Lost"])
+        self.assertEqual([s[0] for s in DEAL_STATUSES],
+                         ["Awaiting Confirmation", PENDING_PAYMENT, "Deposit Paid", "Won", "Lost"])
+        self.assertEqual([r["position"] for r in deal_rows()], [1, 2, 3, 4, 5])
         self.assertEqual(deal_rows()[0]["type"], "Open")
         self.assertEqual(deal_rows()[-1]["probability"], 0)
+
+
+class TestRegistrationGuard(unittest.TestCase):
+    def test_registered_needs_a_confirmed_registration(self):
+        self.assertTrue(needs_registration(CONVERTED, True, False))
+
+    def test_a_confirmed_registration_or_an_unchanged_status_passes(self):
+        self.assertFalse(needs_registration(CONVERTED, True, True))
+        self.assertFalse(needs_registration(CONVERTED, False, False))
+
+    def test_other_statuses_are_not_guarded(self):
+        for status in (NEW, QUALIFIED, CONTACTED, TRIAL_BOOKED, NURTURE, UNQUALIFIED, JUNK):
+            self.assertFalse(needs_registration(status, True, False))
+
+    def test_the_guard_is_a_lead_validate_hook(self):
+        self.assertIn("mmm_custom.lifecycle.guard_converted", hooks.doc_events["CRM Lead"]["validate"])
 
 
 class TestAutoMoves(unittest.TestCase):

@@ -82,9 +82,8 @@ class TestPaymentReminder(unittest.TestCase):
         self.assertEqual(payment_task(self.deal(), NOW, CFG, [])["kind"], "payment")
         self.assertIsNone(payment_task(self.deal(modified=NOW - timedelta(days=1)), NOW, CFG, []))
 
-    def test_past_due_date_reminds_at_once(self):
-        rule = payment_task(self.deal(modified=NOW, payment_due_date=date(2026, 9, 24)), NOW, CFG, [])
-        self.assertIn("24/09", rule["why"])
+    def test_a_payment_date_no_longer_matters(self):
+        self.assertIsNone(payment_task(self.deal(modified=NOW, payment_due_date=date(2026, 9, 24)), NOW, CFG, []))
 
     def test_paid_or_already_followed_is_left_alone(self):
         self.assertIsNone(payment_task(self.deal(status="Deposit Paid"), NOW, CFG, []))

@@ -5,7 +5,8 @@ has been paid; `compute` and `next_status` are pure, the doc_events hooks below 
 - before_insert: the course and its listed fee from the Lead's first course, the best active promotion.
 - validate: the class belongs to the course (its start date is copied), discount / final fee / balance, `deal_value`
   = final fee (upstream dashboards sum it), a deposit moves Pending Payment → Deposit Paid.
-- on_update: a registration cancelled as Postponed sends the Lead back to Nurture, so nurturing picks it up again.
+- on_update: the Lead follows its registrations (`lead_after_deal_change`, D-119): confirming a draft registers it,
+  a cancelled registration sends it back to consulting (Postponed: to Nurture, so nurturing picks it up again).
 """
 
 try:
@@ -13,7 +14,9 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
-from mmm_custom.lifecycle import DEPOSIT_PAID, LOST, NURTURE, PENDING_PAYMENT, POSTPONED
+from mmm_custom.lifecycle import (
+    AWAITING_CONFIRMATION, CONFIRMED_DEAL, CONTACTED, CONVERTED, DEPOSIT_PAID, LIVE_DEAL, LOST, NURTURE, PENDING_PAYMENT,
+    POSTPONED, WON)
 
 
 def compute(fee, discount=0, deposit=0, paid=0):
@@ -28,9 +31,22 @@ def compute(fee, discount=0, deposit=0, paid=0):
 
 def next_status(status, deposit=0, paid=0):
     """Money received moves a registration waiting for the fee to Deposit Paid; enrolment (Won) stays a person's."""
-    if status == PENDING_PAYMENT and max(float(deposit or 0), float(paid or 0)) > 0:
+    if status in (AWAITING_CONFIRMATION, PENDING_PAYMENT) and max(float(deposit or 0), float(paid or 0)) > 0:
         return DEPOSIT_PAID
     return status
+
+
+def lead_after_deal_change(old_status, new_status, lost_reason="", others_alive=False):
+    """The Lead fields a registration's status change implies (D-119), or {}. Confirming a draft registers the Lead;
+    a cancelled registration returns it to consulting (Postponed: to nurturing). A draft never moved the Lead, so
+    cancelling one leaves it, and so does another live registration of the same Lead."""
+    if old_status == AWAITING_CONFIRMATION and new_status in CONFIRMED_DEAL:
+        return {"status": CONVERTED, "converted": 1}
+    if new_status != LOST or others_alive:
+        return {}
+    if lost_reason == POSTPONED:
+        return {"status": NURTURE, "converted": 0}
+    return {} if old_status == AWAITING_CONFIRMATION else {"status": CONTACTED, "converted": 0}
 
 
 def schedule_title(course_name, branch, start_date, shift):
@@ -47,7 +63,7 @@ SIDE_PANEL = [
                                             "deal_owner"]}]},
     {"label": "Fee", "name": "fee_section", "opened": True, "columns": [
         {"name": "column_fee", "fields": ["tuition_fee", "promotion", "discount_amount", "final_fee", "deposit_amount",
-                                          "deposit_date", "paid_amount", "balance_due", "payment_due_date"]}]},
+                                          "deposit_date", "paid_amount", "balance_due"]}]},
     {"label": "Source", "name": "source_section", "opened": False, "columns": [
         {"name": "column_source", "fields": ["source", "lead", "course_interest", "placement_result", "voucher_code",
                                              "trial_date"]}]},
@@ -58,8 +74,7 @@ DATA_FIELDS = [{"name": "first_tab", "sections": [
         {"name": "column_e2", "fields": ["territory", "deal_owner", "source"]}]},
     {"label": "Fee", "name": "fee_section", "opened": True, "columns": [
         {"name": "column_f1", "fields": ["tuition_fee", "promotion", "discount_amount", "final_fee"]},
-        {"name": "column_f2", "fields": ["deposit_amount", "deposit_date", "paid_amount", "balance_due",
-                                         "payment_due_date"]}]},
+        {"name": "column_f2", "fields": ["deposit_amount", "deposit_date", "paid_amount", "balance_due"]}]},
     {"label": "Details", "name": "details_section", "opened": False, "columns": [
         {"name": "column_d1", "fields": ["organization", "next_step"]},
         {"name": "column_d2", "fields": ["course_interest", "placement_result", "voucher_code"]}]},
@@ -67,8 +82,11 @@ DATA_FIELDS = [{"name": "first_tab", "sections": [
 REQUIRED_FIELDS = [{"name": "first_tab", "sections": [
     {"label": "Registration", "name": "enrolment_section", "columns": [
         {"name": "column_r1", "fields": ["enrol_course", "course_schedule"]},
-        {"name": "column_r2", "fields": ["deposit_amount", "payment_due_date"]}]},
+        {"name": "column_r2", "fields": ["territory", "deposit_amount"]}]},  # the branch narrows the class list
 ]}]
+RETIRED_FIELDS = ("payment_due_date",)
+# The modal and the server fill these in: nobody types a status or a currency to register someone
+DEAL_DEFAULTS = {"status": PENDING_PAYMENT, "currency": "VND"}
 
 
 def promotion_discount(promo, fee):
@@ -138,14 +156,62 @@ def after_insert(doc, method=None):
 
 
 def on_update(doc, method=None):
-    """Cancelled as Postponed: the customer is not lost, the Lead goes back to nurturing (D-117)."""
+    """The Lead follows its registration (D-117, D-119): confirmed → registered; cancelled → back to consulting."""
     if not doc.get("lead") or not doc.has_value_changed("status"):
         return
-    if doc.status == LOST and doc.get("lost_reason") == POSTPONED:
+    before = doc.get_doc_before_save()
+    others = frappe.db.count("CRM Deal", {"lead": doc.lead, "name": ["!=", doc.name],
+                                          "status": ["in", [*LIVE_DEAL, WON]]}) if doc.status == LOST else 0
+    values = lead_after_deal_change(before.status if before else None, doc.status, doc.get("lost_reason"), others > 0)
+    if values:
         lead = frappe.get_doc("CRM Lead", doc.lead)
-        lead.update({"status": NURTURE, "converted": 0})
+        lead.update(values)
         lead.flags.lead_engine = True
+        lead.flags.registered = True  # the guard: this change comes from a registration
         lead.save(ignore_permissions=True)
+
+
+def rewrite_layout(layout, type_):
+    """A stored layout (JSON text) without the retired fields; the Required Fields modal also gets the branch.
+    Edits in place, so a manager's other changes stay."""
+    import json
+
+    from mmm_custom.setup import remove_fields
+
+    data = remove_fields(json.loads(layout or "[]"), RETIRED_FIELDS)
+    if type_ == "Required Fields":
+        for section in (s for tab in data for s in tab.get("sections", [])):
+            cols = section.get("columns", [])
+            if any("deposit_amount" in c.get("fields", []) and "territory" not in c["fields"] for c in cols):
+                for col in cols:
+                    if "deposit_amount" in col["fields"]:
+                        col["fields"].insert(0, "territory")
+    return json.dumps(data, ensure_ascii=False)
+
+
+def rewrite_layouts():
+    """Patch v1_2: the stored Deal layouts lose the retired fields (update_deal_layouts leaves layouts that already
+    have the registration section alone)."""
+    for name in frappe.get_all("CRM Fields Layout", filters={"dt": "CRM Deal"}, pluck="name"):
+        doc = frappe.get_doc("CRM Fields Layout", name)
+        layout = rewrite_layout(doc.layout, doc.type)
+        if layout != doc.layout:
+            doc.layout = layout
+            doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+
+def ensure_deal_defaults():
+    """after_migrate / after_install: Property Setters that default the Deal's status and currency."""
+    from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+    for field, value in DEAL_DEFAULTS.items():
+        current = frappe.db.get_value("Property Setter", {"doc_type": "CRM Deal", "field_name": field,
+                                                          "property": "default"}, "value")
+        if current != value:
+            make_property_setter("CRM Deal", field, "default", value, "Text", validate_fields_for_doctype=False)
+    frappe.clear_cache(doctype="CRM Deal")
+    frappe.db.commit()
 
 
 def update_deal_layouts():
