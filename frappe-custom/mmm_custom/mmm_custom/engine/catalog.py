@@ -20,6 +20,8 @@ DEFAULT_SETTINGS = {
     # Staff assist (D-111): while a person watches, claimed or wrote in a conversation the bot only suggests; what
     # nobody answers within assist_wait_minutes it answers itself. assist_disabled = 1 → the bot always answers.
     "assist_disabled": 0, "assist_wait_minutes": 5,
+    # Gemini drafts for staff when the bot has no answer (D-115); needs gemini_api_key in the site config.
+    "llm_draft_disabled": 0, "llm_drafts_per_hour": 6,
     "hold_template": "Dạ {{ brand.me }} đã báo tư vấn viên, {{ brand.you }} chờ {{ brand.me }} một chút nhé ạ.",
     "jev_live": 0, "jev_timeout": 8, "catalog_act": 0.95, "catalog_confirm": 0.55, "choice_act": 0.80,
     "choice_confirm": 0.50, "skill_act": 0.90, "skill_confirm": 0.60, "handoff_noul": 0.70, "spam_threshold": 0.80,

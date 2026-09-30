@@ -16,7 +16,7 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
-from mmm_custom.engine.draft import draft_turn, note
+from mmm_custom.engine.draft import NO_KNOWLEDGE, draft_turn, note
 from mmm_custom.engine.pipeline import Event, run_turn
 
 AUTO, ASSIST = "auto", "assist"
@@ -86,19 +86,43 @@ def handle(event, repo, effects, render, viewers=()):
         turn = run_turn(merged_event(state), repo, effects, render, fallback=True)
         effects.assist_status(state.conversation_id, status_attributes(turn.state if turn else state, AUTO))
         return turn
-    turn = _suggest(event, repo, effects, render, catalog)
+    turn = _suggest(event, repo, effects, render, catalog, state)
     hold(state, event, repo.now(), catalog.settings)
     repo.save_state(state)
     effects.assist_status(state.conversation_id, status_attributes(state, ASSIST))
     return turn
 
 
-def _suggest(event, repo, effects, render, catalog):
+def _suggest(event, repo, effects, render, catalog, state=None):
+    """The bot's draft as a private note; when the bot has no answer, a checked Gemini draft instead (D-115)."""
     turn = draft_turn(event, repo, render)
     text = note(turn, catalog)
+    if text == NO_KNOWLEDGE and state is not None and turn is not None:
+        text = _written(event, turn, repo, catalog, state) or text
     if text:
         effects.note(event.conversation_id, text)
     return turn
+
+
+def _written(event, turn, repo, catalog, state):
+    from mmm_custom import llm
+    from mmm_custom.engine import llm_draft
+    from mmm_custom.engine.actions import applicable
+    from mmm_custom.engine.context import course_context
+
+    if not llm.api_key():
+        return None
+    course_slot = catalog.slot_for("course")
+    course = catalog.courses.get((turn.state.slots.get(course_slot.key) or {}).get("value")) if course_slot else None
+    today = repo.today()
+    schedules = repo.open_schedules(course.code, None, None, today, 3) if course else []
+    promotions = [p for p in repo.active_promotions(today)
+                  if course and applicable(p, course_context(course, catalog), "")]
+    turn.state.assist = dict(state.assist)
+    written, _ = llm_draft.make(event.text, turn.state, catalog, repo.jev_client(), llm.generate, schedules, promotions,
+                                repo.now())
+    state.assist = {**state.assist, "llm_calls": turn.state.assist.get("llm_calls", [])}
+    return written
 
 
 def answer(conversation_id, repo, effects, render):
