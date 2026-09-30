@@ -155,3 +155,85 @@ def capture(conversation_id, message_id, text, consultant=""):
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"status": "captured", "name": doc.name}
+
+
+# ---------------------------------------------------------------- review screen ("Tri thức khóa học" → "Câu trả lời NV")
+ROLES = ("System Manager", "Sales Manager")
+FIELDS = ["name", "status", "course", "course_group", "topic", "customer_examples", "reply", "needs_check", "consultant",
+          "source", "draft_outcome", "modified"]
+
+
+def preview(reply, course, catalog, render):
+    """The reply as the customer would read it with today's data, or the template error."""
+    from mmm_custom.engine.context import base_context
+    from mmm_custom.engine.render import RenderError, render_text
+    from mmm_custom.engine.state import ConversationState
+
+    slots = {"course": {"value": course.code}} if course else {}
+    try:
+        return render_text(reply, base_context(slots, catalog, ConversationState("preview")), render), ""
+    except RenderError as e:
+        return "", str(e)[:300]
+
+
+def outcome_stats(rows):
+    """{used, edited, ignored, total} over the drafts staff saw. Pure."""
+    counts = {"used": 0, "edited": 0, "ignored": 0}
+    for r in rows:
+        if r.get("draft_outcome") in counts:
+            counts[r["draft_outcome"]] += 1
+    return {**counts, "total": sum(counts.values())}
+
+
+@frappe.whitelist() if frappe else (lambda f: f)
+def library(product=None):
+    """The staff replies of one course (and of its group), newest first, with a preview; plus the review queue size."""
+    import json
+
+    from mmm_custom.engine.render import frappe_renderer
+    from mmm_custom.engine.repo import FrappeRepo
+
+    frappe.only_for(ROLES)
+    catalog = FrappeRepo().catalog()
+    course = catalog.courses.get(product) if product else None
+    filters = {"status": ["!=", "rejected"]}
+    or_filters = [["course", "=", course.code], ["course_group", "=", course.group]] if course else None
+    rows = frappe.get_all("Staff Reply", filters=filters, or_filters=or_filters, fields=FIELDS,
+                          order_by="status desc, modified desc", limit=300)
+    for r in rows:
+        if course and r.course_group == course.group and not r.course:
+            r["scope"] = "group"
+        r["preview"], r["error"] = preview(r.reply, course, catalog, frappe_renderer)
+    stats = outcome_stats(frappe.get_all("Staff Reply", filters={"draft_outcome": ["is", "set"]}, fields=["draft_outcome"]))
+    pending = frappe.db.count("Staff Reply", {"status": "new"})
+    return json.loads(json.dumps({"replies": rows, "pending": pending, "stats": stats}, default=str))
+
+
+@frappe.whitelist() if frappe else (lambda f: f)
+def review(name, status, reply=None):
+    """Approve or reject a staff reply, optionally with an edited template. An approved reply must render and must
+    not carry amounts the course data does not explain (needs_check), unless the manager edited them."""
+    from mmm_custom.engine.render import frappe_renderer
+    from mmm_custom.engine.repo import FrappeRepo
+
+    frappe.only_for(ROLES)
+    if status not in ("approved", "rejected", "new"):
+        frappe.throw("Trạng thái không hợp lệ.")
+    doc = frappe.get_doc("Staff Reply", name)
+    edited = reply is not None and reply.strip() != (doc.reply or "").strip()
+    if edited:
+        doc.reply = reply.strip()
+    if status == "approved":
+        catalog = FrappeRepo().catalog()
+        course = catalog.courses.get(doc.course) or next(
+            (c for c in catalog.courses.values() if c.group == doc.course_group), None)
+        _, error = preview(doc.reply, course, catalog, frappe_renderer)
+        if error:
+            frappe.throw(f"Câu trả lời chưa hiển thị được: {error}")
+        if doc.needs_check and not edited:
+            frappe.throw(f"Kiểm tra lại số tiền {doc.needs_check} (không khớp học phí khóa) rồi sửa trước khi duyệt.")
+        if edited:
+            doc.needs_check = None
+    doc.status = status
+    doc.save(ignore_permissions=True)
+    return {"name": doc.name, "status": doc.status, "reply": doc.reply}

@@ -120,6 +120,17 @@ class TestJevChoosesAStaffReply(unittest.TestCase):
         self.assertIn("2.000.000", note)
 
 
+class TestReviewScreen(unittest.TestCase):
+    def test_preview_uses_today_s_course_data(self):
+        text, error = sr.preview("Dạ học phí {{ course.fee | vnd }} ạ", CAT.courses["KT-MISA"], CAT, render)
+        self.assertEqual((text, error), ("Dạ học phí 2.000.000đ ạ", ""))
+        self.assertTrue(sr.preview("Dạ {{ course.fee | nope }} ạ", CAT.courses["KT-MISA"], CAT, render)[1])
+
+    def test_outcome_stats(self):
+        rows = [{"draft_outcome": "used"}, {"draft_outcome": "used"}, {"draft_outcome": "ignored"}, {"draft_outcome": None}]
+        self.assertEqual(sr.outcome_stats(rows), {"used": 2, "edited": 0, "ignored": 1, "total": 3})
+
+
 class TestSeed(unittest.TestCase):
     def test_large_and_about_the_asked_groups(self):
         groups = Counter(r["course_group"] for r in SEED)

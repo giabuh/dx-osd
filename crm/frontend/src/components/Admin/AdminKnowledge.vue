@@ -161,6 +161,90 @@
             </p>
           </section>
           <section>
+            <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <h4 class="text-base-medium">Câu trả lời của nhân viên</h4>
+              <span class="text-p-sm text-ink-gray-5">
+                {{ library.pending }} câu chờ duyệt (mọi khóa)
+              </span>
+            </div>
+            <p class="mb-2 text-p-sm text-ink-gray-5">
+              Bot chỉ gửi cho khách câu đã duyệt; câu chờ duyệt chỉ được gợi ý
+              cho nhân viên. Học phí, tên khóa, thời lượng luôn lấy từ dữ liệu
+              khóa học.
+            </p>
+            <p v-if="library.stats.total" class="mb-2 text-p-sm text-ink-gray-6">
+              Gợi ý của Jev: nhân viên gửi nguyên văn {{ pct('used') }}% · sửa
+              rồi gửi {{ pct('edited') }}% · tự viết câu khác
+              {{ pct('ignored') }}%
+            </p>
+            <ErrorMessage :message="libraryError" />
+            <div
+              v-for="r in library.replies"
+              :key="r.name"
+              class="mb-3 rounded border border-outline-gray-2 p-3"
+            >
+              <div
+                class="flex flex-wrap items-center gap-2 text-p-sm text-ink-gray-5"
+              >
+                <Badge
+                  :label="r.status === 'approved' ? 'Đã duyệt' : 'Chờ duyệt'"
+                  :theme="r.status === 'approved' ? 'green' : 'orange'"
+                />
+                <span v-if="r.scope === 'group'">
+                  Dùng cho cả nhóm {{ r.course_group }}
+                </span>
+                <span v-if="r.topic">· {{ r.topic }}</span>
+                <span v-if="r.consultant">· {{ r.consultant }}</span>
+              </div>
+              <div class="mt-2 text-p-sm text-ink-gray-6">
+                Khách hỏi: {{ examples(r) }}
+              </div>
+              <FormControl
+                v-if="editing === r.name"
+                v-model="editText"
+                type="textarea"
+                :rows="4"
+                class="mt-2"
+              />
+              <p
+                v-else
+                class="mt-2 whitespace-pre-wrap rounded bg-surface-gray-1 px-3 py-2 text-p-base"
+                :class="r.error ? 'text-ink-red-6' : ''"
+              >
+                {{ r.error || r.preview }}
+              </p>
+              <p v-if="r.needs_check" class="mt-1 text-p-sm text-ink-red-6">
+                Số tiền cần kiểm tra (không khớp học phí khóa):
+                {{ r.needs_check }}
+              </p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <template v-if="editing === r.name">
+                  <Button
+                    size="sm"
+                    variant="solid"
+                    label="Lưu & duyệt"
+                    @click="review(r, 'approved', editText)"
+                  />
+                  <Button size="sm" label="Hủy" @click="editing = ''" />
+                </template>
+                <template v-else>
+                  <Button
+                    v-if="r.status !== 'approved'"
+                    size="sm"
+                    variant="solid"
+                    label="Duyệt"
+                    @click="review(r, 'approved')"
+                  />
+                  <Button size="sm" label="Sửa" @click="edit(r)" />
+                  <Button size="sm" label="Bỏ" @click="review(r, 'rejected')" />
+                </template>
+              </div>
+            </div>
+            <p v-if="!library.replies.length" class="text-ink-gray-5">
+              Chưa có câu trả lời nào của nhân viên cho khóa này.
+            </p>
+          </section>
+          <section>
             <h4 class="mb-1 text-base-medium">
               Lớp sắp khai giảng ({{ detail.schedule_count || 0 }})
             </h4>
@@ -192,7 +276,7 @@
 <script setup>
 import CourseDialog from './CourseDialog.vue'
 import { adminCall, money } from './adminApi'
-import { ErrorMessage, Progress, TextInput } from 'frappe-ui'
+import { Badge, ErrorMessage, FormControl, Progress, TextInput } from 'frappe-ui'
 import { computed, nextTick, onActivated, reactive, ref } from 'vue'
 
 const courses = ref([])
@@ -208,6 +292,10 @@ const detailLoading = ref(false)
 const detailBox = ref(null)
 const fileInput = ref(null)
 const dialog = reactive({ open: false, course: {}, source: '' })
+const library = reactive({ replies: [], pending: 0, stats: { total: 0 } })
+const libraryError = ref('')
+const editing = ref('')
+const editText = ref('')
 
 const clamp = (value) => Math.max(0, Math.min(100, Number(value) || 0))
 
@@ -250,6 +338,7 @@ async function showCourse(code) {
     detail.value = await adminCall('mmm_custom.engine.knowledge.course', {
       product: code,
     })
+    loadLibrary(code)
     await nextTick()
     if (window.matchMedia('(max-width: 767px)').matches) {
       detailBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -258,6 +347,47 @@ async function showCourse(code) {
     detailError.value = e.message
   } finally {
     detailLoading.value = false
+  }
+}
+
+// Staff reply library (D-114): what staff answered, reviewed before the bot sends it to customers
+async function loadLibrary(code) {
+  libraryError.value = ''
+  try {
+    Object.assign(
+      library,
+      await adminCall('mmm_custom.engine.staff_replies.library', {
+        product: code,
+      }),
+    )
+  } catch (e) {
+    libraryError.value = e.message
+  }
+}
+
+const pct = (key) =>
+  Math.round((100 * (library.stats[key] || 0)) / (library.stats.total || 1))
+
+const examples = (r) =>
+  (r.customer_examples || '').split('\n').filter(Boolean).slice(0, 3).join(' · ')
+
+function edit(r) {
+  editing.value = r.name
+  editText.value = r.reply
+}
+
+async function review(r, status, reply) {
+  libraryError.value = ''
+  try {
+    await adminCall('mmm_custom.engine.staff_replies.review', {
+      name: r.name,
+      status,
+      reply,
+    })
+    editing.value = ''
+    await loadLibrary(selected.value)
+  } catch (e) {
+    libraryError.value = e.message
   }
 }
 
