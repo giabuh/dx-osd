@@ -195,6 +195,16 @@ class TestDialogue(unittest.TestCase):
         self.assertIn("chọn lớp", t.reason)
         self.assertEqual(c.fx.of("handoff"), [])
 
+    def test_a_class_typed_with_a_question_is_taken_and_the_question_answered(self):
+        c = Chat()
+        c.say("mình muốn đăng ký khóa excel")
+        t = c.say("tối quận 7 ngày 6 tháng 10\nvậy học phí sao vậy")
+        self.assertEqual(t.decision.slots["enrol_class"]["value"], CLASS)
+        self.assertEqual((t.decision.ask, t.decision.resume), ("phone", ""))
+        self.assertIn("fee_quote", t.decision.skills)
+        self.assertIn("đã ghi lớp", c.sent())
+        self.assertEqual(c.buttons(), [])  # no fee follow-ups under the phone question
+
     def test_after_two_side_questions_the_consultant_picks_the_class(self):
         c = Chat()
         c.say("mình muốn đăng ký khóa excel")
@@ -306,6 +316,32 @@ class TestEnrolDrafts(unittest.TestCase):
         fx.enrol = boom
         enrol_drafts(t, fx, CAT, None)
         self.assertEqual(t.reply.errors[0], {"type": "enrol_failed", "detail": "PermissionError: "})
+
+
+
+class TestMatchClass(unittest.TestCase):
+    PENDING = {"options": {
+        "05/10 Sáng Quận 6": {"type": "slot", "slot": "enrol_class", "value": "A", "skill": "register"},
+        "05/10 Sáng Bình Thạn": {"type": "slot", "slot": "enrol_class", "value": "B", "skill": "register"},
+        "12/10 Tối Quận 6": {"type": "slot", "slot": "enrol_class", "value": "C", "skill": "register"},
+        "Nhờ tư vấn chọn lớp": {"type": "skip", "slot": "enrol_class"}}}
+
+    def pick(self, text):
+        from mmm_custom.engine.reply_match import match_class
+
+        action = match_class(text, self.PENDING, "enrol_class")
+        return action["value"] if action else None
+
+    def test_day_shift_and_branch_in_any_words(self):
+        self.assertEqual(self.pick("sáng quận 6 ngày 5 tháng 10\nvậy học phí sao vậy"), "A")
+        self.assertEqual(self.pick("lớp 5/10 ở bình thạnh nhé"), "B")
+        self.assertEqual(self.pick("cho mình lớp tối quận 6"), "C")
+
+    def test_nothing_or_several_fitting_picks_none(self):
+        self.assertIsNone(self.pick("ngày 5 nhé"))  # Quận 6 and Bình Thạnh
+        self.assertIsNone(self.pick("học phí bao nhiêu"))
+        self.assertIsNone(self.pick("sáng"))
+        self.assertIsNone(self.pick("trung tâm ở quận 6 nằm đâu vậy"))  # asks about the branch, picks no class
 
 
 if __name__ == "__main__":

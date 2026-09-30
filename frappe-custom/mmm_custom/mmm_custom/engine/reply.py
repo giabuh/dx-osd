@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from mmm_custom.engine.actions import run_action
 from mmm_custom.engine.context import base_context, course_context
-from mmm_custom.engine import offers
+from mmm_custom.engine import enrol_flow, offers
 from mmm_custom.engine.jev_questions import COURSE_FACT, COURSE_FAQ, STAFF_REPLY
 from mmm_custom.engine.render import RenderError, condition, render_text
 from mmm_custom.engine.slot_types import REGISTRY
@@ -206,6 +206,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         if slot.type in REGISTRY:
             ask_buttons = REGISTRY[slot.type].buttons(slot, decision.slots, catalog)
 
+    if decision.type != "handoff" and enrol_flow.phase(decision.slots, catalog) == enrol_flow.OPEN:
+        follow_ups = []  # the registration dialogue asks one thing; other buttons would lead the customer away (D-121)
     for group in (confirm_buttons, offer_buttons, action_buttons, ask_buttons, follow_ups[:MAX_FOLLOW_UPS]):
         if group:
             add_buttons(reply, group)

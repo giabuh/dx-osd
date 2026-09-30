@@ -3,7 +3,8 @@
 import re
 from dataclasses import dataclass, field
 
-from mmm_custom.engine.reply_match import match_pending, yes_no
+from mmm_custom.engine import enrol_flow
+from mmm_custom.engine.reply_match import match_class, match_pending, yes_no
 from mmm_custom.engine.slot_types import REGISTRY, CatalogSlot, course_phrases
 from mmm_custom.engine.text import content_words, find_phrases, fold, is_question, is_smalltalk
 
@@ -126,6 +127,11 @@ def understand(text, state, catalog):
             if len(alternatives) == 1:
                 u.fills[slot.key] = {"value": alternatives[0], "source": "keyword", "confidence": 1.0}
                 u.ambiguous[slot.key] = alternatives  # Jev may cross-check, but cannot restore the rejected value
+    enrol = enrol_flow.class_slot(catalog)
+    chosen = match_class(text, state.pending, enrol) if enrol and enrol not in u.fills else None
+    if chosen:  # a class typed inside a longer message: the rest ("học phí sao") is still read (D-121)
+        u.fills[enrol] = {"value": chosen["value"], "source": "keyword", "confidence": 1.0}
+        u.matches.append({"slot": enrol, "kind": "class", "value": chosen["value"]})
     u.gives_contact = bool(OWN_CONTACT_RE.search(folded))
     u.unmatched = content_words(folded, u.spans)
     u.has_number = any(ch.isdigit() for ch in folded)

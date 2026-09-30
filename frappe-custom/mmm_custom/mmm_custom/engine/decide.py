@@ -223,6 +223,8 @@ def decide(state, u, catalog, person_ok=False):
     if active and not stop and enrol_key in skills and not was_enrolling:
         enrol_flow.start(slots, catalog)  # "mình muốn đăng ký": lead the customer to a class and a phone
     enrolling = active and not stop and enrol_flow.phase(slots, catalog) == enrol_flow.OPEN
+    if enrolling and enrol_flow.class_slot(catalog) in new and enrol_key not in skills:
+        skills = skills + [enrol_key]  # a class typed rather than tapped is confirmed the same way
     step = enrol_flow.next_step(slots, catalog) if enrolling else ""
     paused = paused_quiz(state.pending) or (enrol_key if enrolling and step == "class" else "")
     resume = ""
