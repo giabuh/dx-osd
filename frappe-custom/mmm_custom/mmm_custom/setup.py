@@ -47,16 +47,14 @@ def create_custom_fields():
 			"label": "Branch",
 			"fieldtype": "Select",
 			"options": "\nCS1 Bình Thạnh\nCS2 Quận 1\nCS3 Thủ Đức",
-			"in_list_view": 1,
-			"in_standard_filter": 1,
+			"hidden": 1,  # legacy: `territory` is the branch (D-116, mmm_custom.branches)
 			"insert_after": "course_interest",
 		}).insert(ignore_permissions=True)
 		print("Custom field branch created")
 	else:
 		doc = frappe.get_doc("Custom Field", "CRM Lead-branch")
 		doc.options = "\nCS1 Bình Thạnh\nCS2 Quận 1\nCS3 Thủ Đức"
-		doc.in_list_view = 1
-		doc.in_standard_filter = 1
+		doc.hidden, doc.in_list_view, doc.in_standard_filter = 1, 0, 0
 		doc.save(ignore_permissions=True)
 		print("Custom field branch updated")
 
@@ -119,8 +117,38 @@ def create_custom_field():
 	create_custom_fields()
 
 
+# Upstream B2B fields a training centre's Lead form does not need (D-116); `organization` stays for companies.
+REMOVE_FROM_LEAD = ("website", "annual_revenue", "no_of_employees", "industry", "job_title", "branch")
+
+
+def remove_fields(layout, names):
+	"""Drop `names` from every column of a CRM Fields Layout (sections, or tabs of sections); in place."""
+	if isinstance(layout, list):
+		for item in layout:
+			remove_fields(item, names)
+	elif isinstance(layout, dict):
+		if isinstance(layout.get("fields"), list):
+			layout["fields"] = [f for f in layout["fields"] if (f.get("fieldname") if isinstance(f, dict) else f) not in names]
+		for key in ("sections", "columns"):
+			remove_fields(layout.get(key), names)
+	return layout
+
+
+def layout_fields(layout):
+	"""Every fieldname a CRM Fields Layout shows."""
+	out = set()
+	if isinstance(layout, list):
+		for item in layout:
+			out |= layout_fields(item)
+	elif isinstance(layout, dict):
+		out |= {f.get("fieldname") if isinstance(f, dict) else f for f in layout.get("fields") or []}
+		for key in ("sections", "columns"):
+			out |= layout_fields(layout.get(key))
+	return out
+
+
 def update_crm_fields_layout():
-	"""Ensure course_interest and branch are visible in Frappe CRM UI layouts."""
+	"""The centre's fields on the Lead layouts (course, branch = territory, AI, level test…), without B2B fields."""
 	import json
 
 	layouts_to_update = {
@@ -135,19 +163,22 @@ def update_crm_fields_layout():
 		doc = frappe.get_doc("CRM Fields Layout", layout_name)
 		try:
 			layout = json.loads(doc.layout)
+			present = layout_fields(layout)  # a field shown in another section (territory) is not added twice
 			for section in layout:
 				if section.get("name") == target_section:
 					columns = section.get("columns", [])
 					if columns:
 						col_fields = columns[-1].setdefault("fields", [])
-						fields = ["course_interest", "branch", "data_quality"]
+						fields = ["course_interest", "territory", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
 							fields += ["source_campaign", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
 							fields += ["quiz_detail", "voucher_code", "trial_date"]  # D-106, D-116
 						for f in fields:
-							if f not in col_fields:
+							if f not in present:
 								col_fields.append(f)
+								present.add(f)
+			remove_fields(layout, REMOVE_FROM_LEAD)
 			doc.layout = json.dumps(layout)
 			doc.save(ignore_permissions=True)
 			print(f"{layout_name} layout updated")

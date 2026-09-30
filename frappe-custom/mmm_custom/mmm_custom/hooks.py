@@ -95,7 +95,9 @@ after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.e
                  "mmm_custom.desk.apply_default_apps", "mmm_custom.crm_links.retire_lead_form_script",
                  "mmm_custom.lead_views.ensure_lead_quick_filters",
                  # D-116/D-117: missing statuses and lost reasons only; a manager's colour/order edits stay
-                 "mmm_custom.lifecycle.ensure_statuses_hook"]
+                 "mmm_custom.lifecycle.ensure_statuses_hook",
+                 # one branch field: the legacy `branch` select is hidden, its values fill `territory`
+                 "mmm_custom.branches.migrate"]
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
 # clears the engine's cached catalog snapshot so the next customer message sees it.
@@ -113,7 +115,7 @@ doc_events["CRM Lead"] = {"on_update": ["mmm_custom.engine.learning.on_lead_upda
                                         "mmm_custom.lifecycle.on_lead_update"],
                           # Referral codes (D-103)
                           "before_insert": "mmm_custom.referral.set_code",
-                          "validate": "mmm_custom.referral.resolve_referrer"}
+                          "validate": ["mmm_custom.referral.resolve_referrer", "mmm_custom.branches.fill_territory"]}
 # Consultants see every Lead/Deal of their branch, not only their own (crm/permissions/org_hierarchy.py).
 crm_record_scope = ["mmm_custom.scope.record_scope"]
 

@@ -33,7 +33,7 @@ TASKS = {
 }
 OPEN_TASK_STATUSES = ["Backlog", "Todo", "In Progress"]
 LEAD_FIELDS = ["name", "lead_name", "status", "source", "lead_owner", "modified", "mobile_no", "email",
-               "course_interest", "branch", "ai_intent", "ai_hotness"]
+               "course_interest", "territory", "ai_intent", "ai_hotness"]
 
 
 def plan_followups(now: datetime | None = None) -> dict:

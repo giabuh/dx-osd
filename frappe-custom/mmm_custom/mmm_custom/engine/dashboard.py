@@ -42,7 +42,7 @@ def summary():
     linked = set(frappe.get_all("Bot Conversation", filters={"is_sandbox": 0, "lead": ["is", "set"]}, pluck="lead"))
     or_filters = {"source": BOT_SOURCE, "name": ["in", list(linked)]} if linked else None
     leads = frappe.get_all("CRM Lead", filters=None if linked else {"source": BOT_SOURCE}, or_filters=or_filters,
-                           fields=["name", "lead_name", "first_name", "mobile_no", "course_interest", "territory", "branch",
+                           fields=["name", "lead_name", "first_name", "mobile_no", "course_interest", "territory",
                                    "lead_owner", "source", "status", "creation"], limit_page_length=0)
     rows = [dict(row) for row in leads]
     names = [row["name"] for row in rows]

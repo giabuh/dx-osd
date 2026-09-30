@@ -1363,7 +1363,7 @@ def get_leads_by_course_interest(from_date: str | None = None, to_date: str | No
 
 
 def get_leads_by_branch(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""Bar chart of leads grouped by branch."""
+	"""Bar chart of leads grouped by branch (the standard territory field, D-116)."""
 	Lead = DocType("CRM Lead")
 
 	if not from_date or not to_date:
@@ -1373,11 +1373,11 @@ def get_leads_by_branch(from_date: str | None = None, to_date: str | None = None
 	query = (
 		frappe.qb.from_(Lead)
 		.select(
-			Coalesce(IfNull(Lead.branch, ""), "Chưa phân").as_("branch"),
+			Coalesce(IfNull(Lead.territory, ""), "Chưa phân").as_("branch"),
 			Count("*").as_("count"),
 		)
 		.where(Date(Lead.creation).between(from_date, to_date))
-		.groupby(Lead.branch)
+		.groupby(Lead.territory)
 		.orderby(Count("*"), order=frappe.qb.desc)
 	)
 
