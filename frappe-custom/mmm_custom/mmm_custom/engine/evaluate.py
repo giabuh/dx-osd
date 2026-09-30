@@ -132,19 +132,27 @@ def run(limit=None):
     catalog, tokens = load_catalog(), {"input": 0, "model": ""}
 
     def ask(state, questions):
-        result = client.ask(state, questions)
-        tokens["input"] += result.input_tokens
-        tokens["model"] = result.model or tokens["model"]
-        return result.answers if result.status == "ok" else None
+        for _ in range(2):  # a call that fails outright is asked once more: this grades reading, not uptime
+            result = client.ask(state, questions)
+            tokens["input"] += result.input_tokens
+            tokens["model"] = result.model or tokens["model"]
+            if result.status == "ok":
+                return result.answers
+            failures.append(result.error)
+        return None
+
+    failures = []
 
     items = load_utterances()[: int(limit)] if limit else load_utterances()
     rows = evaluate_items(items, catalog, ask)
     report = summarize(rows)
-    report.update({"items": len(items), "input_tokens": tokens["input"], "model": tokens["model"]})
+    report.update({"items": len(items), "input_tokens": tokens["input"], "model": tokens["model"],
+                   "call_failures": failures})
     path = frappe.get_site_path("private", "files", "lead_engine_eval.json")
     Path(path).write_text(json.dumps({"report": report, "rows": rows}, ensure_ascii=False, indent=1, default=str),
                           encoding="utf-8")
     for name, f in sorted(report["families"].items()):
         bands = " ".join(f"{b}:{f['bands'][b]['n']}/{f['bands'][b]['wrong']}✗" for b in BANDS)
         print(f"{name:28} {f['correct']:>3}/{f['n']:<3} {bands}")
-    return {k: report[k] for k in ("passed", "critical_act_wrong", "errors", "items", "input_tokens", "model")} | {"report_file": path}
+    return {k: report[k] for k in ("passed", "critical_act_wrong", "errors", "items", "input_tokens", "model")} | {
+        "call_failures": len(failures), "report_file": path}
