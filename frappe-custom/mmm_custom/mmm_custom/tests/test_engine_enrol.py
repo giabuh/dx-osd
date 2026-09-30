@@ -60,6 +60,10 @@ class TestEnrolAction(unittest.TestCase):
         out = act({"course": fill("VP-EXCEL")}, FakeRepo(CAT, TODAY))
         self.assertEqual((out["schedules"], out["_buttons"]), ([], []))
 
+    def test_the_class_list_breaks_lines_for_real(self):
+        for t in CAT.skills["register"].templates:
+            self.assertNotIn("\\n", t.text)
+
     def test_reply_lists_classes_or_confirms_the_choice(self):
         from engine_fixtures import render
 

@@ -713,7 +713,7 @@
    {
     "variant_key": "default",
     "when": "",
-    "template": "Dạ {{ brand.me }} ghi nhận {{ brand.you }} muốn đăng ký khóa {{ course.name }} ạ.{% if schedules %} Các lớp sắp khai giảng:{% for s in schedules %}\\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\\n{{ brand.you | capitalize }} bấm chọn lớp phù hợp để {{ brand.me }} ghi vào hồ sơ nhé ạ.{% endif %} Tư vấn viên sẽ gọi xác nhận lớp và học phí cho {{ brand.you }} ngay ạ."
+    "template": "Dạ {{ brand.me }} ghi nhận {{ brand.you }} muốn đăng ký khóa {{ course.name }} ạ.{% if schedules %} Các lớp sắp khai giảng:{% for s in schedules %}\n• {{ s.date | date_vi }} ({{ s.shift }}) tại {{ s.branch }}{% endfor %}\n{{ brand.you | capitalize }} bấm chọn lớp phù hợp để {{ brand.me }} ghi vào hồ sơ nhé ạ.{% endif %} Tư vấn viên sẽ gọi xác nhận lớp và học phí cho {{ brand.you }} ngay ạ."
    },
    {
     "variant_key": "chosen",
