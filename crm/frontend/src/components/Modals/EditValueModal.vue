@@ -141,6 +141,13 @@ const lostReason = ref('')
 const lostNotes = ref('')
 const lostReasonLinkRef = ref(null)
 
+const isWonLeadStatus = computed(
+  () =>
+    props.doctype === 'CRM Lead' &&
+    field.value.fieldname === 'status' &&
+    getLeadStatus(newValue.value)?.type === 'Won',
+)
+
 const isLostStatus = computed(() => {
   if (field.value.fieldname !== 'status' || !newValue.value) return false
   if (props.doctype === 'CRM Lead') {
@@ -164,6 +171,11 @@ function updateValues() {
   let fieldVal = newValue.value
   if (field.value.fieldtype == 'Check') {
     fieldVal = fieldVal == 'Yes' ? 1 : 0
+  }
+
+  if (isWonLeadStatus.value) {
+    error.value = __('Use Convert to Deal to register a lead')
+    return
   }
 
   let data = { [field.value.fieldname]: fieldVal || null }

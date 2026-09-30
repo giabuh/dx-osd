@@ -502,6 +502,14 @@ const sections = createResource({
 })
 
 async function triggerStatusChange(value) {
+  // D-119: registered is reached through Ghi danh, which creates the registration; never by picking the status
+  if (
+    getLeadStatus(value)?.type === 'Won' &&
+    getLeadStatus(doc.value.status)?.type !== 'Won'
+  ) {
+    showConvertToDealModal.value = true
+    return
+  }
   await triggerOnChange('status', value)
   setLostReason()
 }

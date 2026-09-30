@@ -1020,6 +1020,10 @@ function updateKanbanSettings(data) {
       name: data.item,
       fieldname: view.value.column_field,
       value: data.to,
+    }).catch((err) => {
+      // the server refused the move (e.g. registered without a registration): put the card back
+      toast.error(err.messages?.[0] || __('Error updating field'))
+      reload()
     })
     return
   }

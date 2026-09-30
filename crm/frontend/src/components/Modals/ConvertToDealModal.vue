@@ -49,35 +49,30 @@
         </div>
       </template>
 
+      <!-- D-119: a draft the bot or Jev made is confirmed on its own page; a second registration would double it -->
       <div
-        class="mb-4 flex items-center gap-2 text-ink-gray-5"
-        :class="{ 'mt-6': lead.organization }"
+        v-if="liveDeal.data?.length"
+        class="mb-4 rounded bg-surface-amber-2 p-3 text-base text-ink-gray-8"
       >
-        <ContactsIcon class="h-4 w-4" />
-        <label class="block text-base">{{ __('Contact') }}</label>
-      </div>
-      <div class="ml-6 text-ink-gray-9">
-        <div class="flex items-center justify-between text-base">
-          <div>{{ __('Choose Existing') }}</div>
-          <Switch v-model="existingContactChecked" />
-        </div>
-        <Link
-          v-if="existingContactChecked"
-          class="form-control mt-2.5"
-          size="md"
-          :value="existingContact"
-          doctype="Contact"
-          @change="(data) => (existingContact = data)"
-        />
-        <div v-else class="mt-2.5 text-base">
-          {{ __("New contact will be created based on the person's details") }}
-        </div>
+        {{
+          __('This customer already has a registration waiting to be handled')
+        }}
+        <router-link
+          class="font-medium underline"
+          :to="{ name: 'Deal', params: { dealId: liveDeal.data[0].name } }"
+          @click="show = false"
+        >
+          {{ liveDeal.data[0].name }}
+        </router-link>
       </div>
 
-      <div v-if="dealTabs.data?.length" class="h-px w-full border-t my-6" />
+      <div
+        v-if="dealTabs.data?.length && !liveDeal.data?.length"
+        class="h-px w-full border-t my-6"
+      />
 
       <FieldLayout
-        v-if="dealTabs.data?.length"
+        v-if="dealTabs.data?.length && !liveDeal.data?.length"
         :tabs="dealTabs.data"
         :data="deal.doc"
         doctype="CRM Deal"
@@ -86,14 +81,18 @@
     </template>
     <template #actions>
       <div class="flex justify-end">
-        <Button :label="__('Convert')" variant="solid" @click="convertToDeal" />
+        <Button
+          v-if="!liveDeal.data?.length"
+          :label="__('Convert')"
+          variant="solid"
+          @click="convertToDeal"
+        />
       </div>
     </template>
   </Dialog>
 </template>
 <script setup>
 import OrganizationsIcon from '@/components/Icons/OrganizationsIcon.vue'
-import ContactsIcon from '@/components/Icons/ContactsIcon.vue'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 import Link from '@/components/Controls/Link.vue'
@@ -123,10 +122,8 @@ const { user } = sessionStore()
 const { updateOnboardingStep } = useOnboarding('frappecrm')
 const { doctypeMeta: leadMeta } = getMeta('CRM Lead')
 
-const existingContactChecked = ref(false)
 const existingOrganizationChecked = ref(false)
 
-const existingContact = ref('')
 const existingOrganization = ref('')
 const error = ref('')
 const { capture } = useTelemetry()
@@ -134,21 +131,29 @@ const { capture } = useTelemetry()
 const { triggerConvertToDeal } = useDocument('CRM Lead', props.lead.name)
 const { document: deal } = useDocument('CRM Deal')
 
+const liveDeal = createResource({
+  url: 'frappe.client.get_list',
+  params: {
+    doctype: 'CRM Deal',
+    filters: {
+      lead: props.lead.name,
+      status: [
+        'in',
+        ['Awaiting Confirmation', 'Pending Payment', 'Deposit Paid'],
+      ],
+    },
+    fields: ['name'],
+    limit_page_length: 1,
+  },
+  auto: true,
+})
+
 async function convertToDeal() {
   error.value = ''
-
-  if (existingContactChecked.value && !existingContact.value) {
-    error.value = __('Please select an existing contact')
-    return
-  }
 
   if (existingOrganizationChecked.value && !existingOrganization.value) {
     error.value = __('Please select an existing organization')
     return
-  }
-
-  if (!existingContactChecked.value && existingContact.value) {
-    existingContact.value = ''
   }
 
   if (!existingOrganizationChecked.value && existingOrganization.value) {
@@ -160,7 +165,7 @@ async function convertToDeal() {
   let _deal = await call('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', {
     lead: props.lead.name,
     deal: deal.doc,
-    existing_contact: existingContact.value,
+    existing_contact: '', // the server links the contact by phone / email, or creates it
     existing_organization: existingOrganization.value,
   }).catch((err) => {
     if (err.exc_type == 'MandatoryError') {
@@ -182,9 +187,7 @@ async function convertToDeal() {
   })
   if (_deal) {
     show.value = false
-    existingContactChecked.value = false
     existingOrganizationChecked.value = false
-    existingContact.value = ''
     existingOrganization.value = ''
     error.value = ''
     updateOnboardingStep('convert_lead_to_deal', true, false, () => {
@@ -298,9 +301,9 @@ function isMatchingCustomField(leadField, dealField) {
 function isCustomField(field) {
   return Boolean(
     field?.is_custom_field ||
-      field?.custom ||
-      field?.fieldname?.startsWith('custom_') ||
-      field?.name === `${field?.parent}-${field?.fieldname}`,
+    field?.custom ||
+    field?.fieldname?.startsWith('custom_') ||
+    field?.name === `${field?.parent}-${field?.fieldname}`,
   )
 }
 

@@ -9218,3 +9218,9 @@ msgstr "Đăng ký học"
 #. mmm_custom: customer lifecycle (D-116, D-117)
 msgid "Fee"
 msgstr "Học phí"
+
+msgid "This customer already has a registration waiting to be handled"
+msgstr "Khách này đã có hồ sơ đăng ký đang chờ xử lý"
+
+msgid "Use Convert to Deal to register a lead"
+msgstr "Dùng nút Ghi danh để đăng ký"
