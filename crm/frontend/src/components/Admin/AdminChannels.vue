@@ -177,8 +177,9 @@
           <p class="text-p-base text-ink-gray-6">
             Dùng khi CRM chưa có địa chỉ HTTPS công khai để Facebook chuyển về.
             Lấy User Access Token của tài khoản quản lý các page trong Graph API
-            Explorer (chọn app của bạn và các quyền pages_show_list,
-            pages_messaging, pages_manage_metadata, leads_retrieval).
+            Explorer (chọn app của bạn, loại User Token, và các quyền
+            pages_show_list, pages_messaging, pages_manage_metadata,
+            pages_read_engagement, leads_retrieval, business_management).
           </p>
           <FormControl
             v-model="token"
