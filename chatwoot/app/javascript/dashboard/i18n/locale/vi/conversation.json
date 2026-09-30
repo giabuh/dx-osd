@@ -52,6 +52,8 @@
       "RELEASE": "Trả lại cho Jev",
       "CLAIM_SUCCESS": "Bạn đã nhận xử lý hội thoại này",
       "RELEASE_SUCCESS": "Jev sẽ tự trả lời hội thoại này",
+      "SEND_DRAFT": "Gửi cho khách",
+      "DRAFT_SENT": "Đã gửi",
       "REPLY_NOW_SUCCESS": "Jev sẽ trả lời trong vòng một phút",
       "ERROR": "Chưa cập nhật được hội thoại, vui lòng thử lại",
       "SOMEONE": "Một nhân viên"

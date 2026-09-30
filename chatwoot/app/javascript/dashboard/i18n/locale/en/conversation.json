@@ -56,6 +56,8 @@
       "RELEASE": "Hand back to Jev",
       "CLAIM_SUCCESS": "You are handling this conversation",
       "RELEASE_SUCCESS": "Jev answers this conversation again",
+      "SEND_DRAFT": "Send to customer",
+      "DRAFT_SENT": "Sent",
       "REPLY_NOW_SUCCESS": "Jev will reply within a minute",
       "ERROR": "Could not update the conversation, please try again",
       "SOMEONE": "A staff member"
