@@ -34,9 +34,8 @@ except ImportError:
     frappe.AuthenticationError = AuthenticationError
     frappe.throw = _throw
 
-from mmm_custom.dedupe import find_matching_lead, normalize_phone
 from mmm_custom.data_quality import compute_data_quality
-from mmm_custom.engine.repo import add_products, load_catalog
+from mmm_custom.engine.repo import ensure_lead, load_catalog
 from mmm_custom.engine.understand import match_courses
 from mmm_custom.intelligence import enqueue_analysis, enqueue_on_assignment
 from mmm_custom.sources import channel_key, source_name
@@ -167,99 +166,28 @@ def chatwoot_sync():
     contact_id = contact.get("id")
     raw_name = contact.get("name")
     first_name = str(raw_name).strip() if raw_name and str(raw_name).strip() else _PLACEHOLDER_NAME
-    email = contact.get("email")
-    phone = contact.get("phone_number") or contact.get("phone")
-    custom_attrs = contact.get("custom_attributes") or {}
-    crm_lead_id = custom_attrs.get("crm_lead_id")
 
     msg_text = extract_message_text(conversation, payload)
     courses = detect_courses(msg_text)
     course_interest = ", ".join(c.name for c in courses) or None
 
-    # 2. Dedup & Lead Convergence — 3-tier: crm_lead_id → chatwoot_contact_id → email/phone
-    if crm_lead_id and frappe.db.exists("CRM Lead", crm_lead_id):
-        lead_name = crm_lead_id
-        if contact_id:
-            frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
-        if course_interest:
-            frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_interest)
-        # Fix placeholder name if we now have the real name
-        if first_name != _PLACEHOLDER_NAME:
-            stored = frappe.db.get_value(
-                "CRM Lead", lead_name, ["first_name", "lead_name"], as_dict=True,
-            )
-            if stored and stored.get("first_name") in (
-                _PLACEHOLDER_NAME, "EduFlow Student", None, "",
-            ):
-                frappe.db.set_value("CRM Lead", lead_name, "first_name", first_name)
-                frappe.db.set_value("CRM Lead", lead_name, "lead_name", first_name)
-    elif contact_id and frappe.db.exists("CRM Lead", {"chatwoot_contact_id": str(contact_id)}):
-        lead_name = frappe.db.get_value("CRM Lead", {"chatwoot_contact_id": str(contact_id)}, "name")
-        if course_interest:
-            frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_interest)
-        # Fix placeholder name if we now have the real name
-        if first_name != _PLACEHOLDER_NAME:
-            stored = frappe.db.get_value(
-                "CRM Lead", lead_name, ["first_name", "lead_name"], as_dict=True,
-            )
-            if stored and stored.get("first_name") in (
-                _PLACEHOLDER_NAME, "EduFlow Student", None, "",
-            ):
-                frappe.db.set_value("CRM Lead", lead_name, "first_name", first_name)
-                frappe.db.set_value("CRM Lead", lead_name, "lead_name", first_name)
-    else:
-        matched = find_matching_lead(email, phone)
-        if matched:
-            lead_name = matched.name if hasattr(matched, "name") else matched.get("name")
-            if contact_id:
-                frappe.db.set_value("CRM Lead", lead_name, "chatwoot_contact_id", str(contact_id))
-            if course_interest:
-                frappe.db.set_value("CRM Lead", lead_name, "course_interest", course_interest)
-            # Fix placeholder name if we now have the real name
-            if first_name != _PLACEHOLDER_NAME:
-                stored = frappe.db.get_value(
-                    "CRM Lead", lead_name, ["first_name", "lead_name"], as_dict=True,
-                )
-                if stored and stored.get("first_name") in (
-                    _PLACEHOLDER_NAME, "EduFlow Student", None, "",
-                ):
-                    frappe.db.set_value("CRM Lead", lead_name, "first_name", first_name)
-                    frappe.db.set_value("CRM Lead", lead_name, "lead_name", first_name)
-        else:
-            lead_data = {
-                "doctype": "CRM Lead",
-                "first_name": first_name,
-                "email": email,
-                "mobile_no": normalize_phone(phone),
-                "source": _lead_source(conversation),
-                "chatwoot_contact_id": str(contact_id) if contact_id is not None else None,
-            }
-            if course_interest:
-                lead_data["course_interest"] = course_interest
-            lead = frappe.get_doc(lead_data).insert(ignore_permissions=True)
-            lead_name = lead.name
-
-            try:
-                from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
-                lead_title = "Khách hàng tiềm năng mới"
-                lead_src = lead_data.get("source") or "Messenger"
-                course_text = f" quan tâm khóa học {course_interest}" if course_interest else ""
-                notify_crm_users(
-                    title=lead_title,
-                    message=f"Học viên {first_name} vừa liên hệ qua {lead_src}{course_text}.",
-                    notification_type="Assignment",
-                    reference_doctype="CRM Lead",
-                    reference_name=lead_name,
-                )
-            except Exception:
-                pass
-
-    if courses:
+    # 2. Dedup & Lead convergence (crm_lead_id → chatwoot_contact_id → email/phone), shared with the bot engine:
+    # a contact becomes one Lead whichever event arrives first (repo.ensure_lead).
+    lead_name, created = ensure_lead(contact, _lead_source(conversation), courses)
+    if created:
         try:
-            add_products(lead_name, courses)
-        except Exception as e:
-            if hasattr(frappe, "log_error"):
-                frappe.log_error(title="Failed to add course products to Lead", message=str(e))
+            from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+            lead_src = _lead_source(conversation)
+            course_text = f" quan tâm khóa học {course_interest}" if course_interest else ""
+            notify_crm_users(
+                title="Khách hàng tiềm năng mới",
+                message=f"Học viên {first_name} vừa liên hệ qua {lead_src}{course_text}.",
+                notification_type="Assignment",
+                reference_doctype="CRM Lead",
+                reference_name=lead_name,
+            )
+        except Exception:
+            pass
 
     # 3. Log conversation to FCRM Note
     try:

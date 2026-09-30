@@ -141,19 +141,66 @@ def add_products(lead_name, courses):
     doc.save(ignore_permissions=True)
 
 
+def _display_name(contact):
+    return " ".join(str(contact.get("name") or "").split())
+
+
+def _new_lead(contact, source=""):
+    """A new CRM Lead for a Chatwoot contact; the status is left to the CRM default (New)."""
+    doc = frappe.new_doc("CRM Lead")
+    doc.update({"first_name": _display_name(contact) or PLACEHOLDER_NAMES[0], "email": contact.get("email") or None})
+    if source and frappe.db.exists("CRM Lead Source", source):  # older sites may lack the channel sources
+        doc.source = source
+    return doc
+
+
+def claim_new_lead(contact_id):
+    """conversation_created and the contact's first message arrive together and both look for a Lead: only the
+    one holding this 30-second claim creates it, the other looks again after a moment."""
+    if not contact_id:
+        return True
+    return bool(frappe.cache().set(f"mmm_custom:new_lead:{contact_id}", 1, nx=True, ex=30))
+
+
+def _find_or_wait(contact_id, contact, phone, email):
+    name = find_lead(contact_id, contact, phone, email)
+    if not name and not claim_new_lead(contact_id):
+        time.sleep(2)
+        name = find_lead(contact_id, contact, phone, email)
+    return name
+
+
+def ensure_lead(contact, source="", courses=()):
+    """The one way a Chatwoot contact becomes a CRM Lead (Chatwoot webhook; the engine's save_lead shares the
+    lookup, the new-Lead shape and the claim): find it (crm_lead_id → chatwoot_contact_id → phone/email) or create
+    it, link the contact, replace a placeholder name, fill an empty phone, append courses. Returns (name, created)."""
+    contact_id = str(contact.get("id") or "")
+    phone = normalize_phone(contact.get("phone_number") or contact.get("phone") or "")
+    email = contact.get("email") or None
+    name = _find_or_wait(contact_id, contact, phone, email)
+    doc = frappe.get_doc("CRM Lead", name) if name else _new_lead(contact, source)
+    if contact_id and not doc.get("chatwoot_contact_id"):
+        doc.chatwoot_contact_id = contact_id
+    real = _display_name(contact)
+    if real and real not in PLACEHOLDER_NAMES and (doc.get("first_name") or "") in PLACEHOLDER_NAMES:
+        doc.first_name, doc.lead_name = real, real
+    if phone and not doc.get("mobile_no"):
+        doc.mobile_no = phone
+    _append_products(doc, courses)
+    doc.flags.lead_engine = True
+    if name:
+        doc.save(ignore_permissions=True)
+    else:
+        doc.insert(ignore_permissions=True)
+    return doc.name, not name
+
+
 def save_lead(state, fields, courses, contact):
     """Create or update the conversation's Lead. Never overwrites a real name or a different phone a
     person entered; courses are appended, not replaced (D-022)."""
     name = state.lead if state.lead and frappe.db.exists("CRM Lead", state.lead) else None
-    name = name or find_lead(state.contact_id, contact, fields.get("mobile_no"), contact.get("email"))
-    if name:
-        doc = frappe.get_doc("CRM Lead", name)
-    else:
-        raw_name = " ".join(str(contact.get("name") or "").split())
-        doc = frappe.new_doc("CRM Lead")
-        doc.update({"first_name": raw_name or PLACEHOLDER_NAMES[0], "email": contact.get("email") or None})
-        if frappe.db.exists("CRM Lead Source", "Messenger Bot"):  # created by after_install; older sites may lack it
-            doc.source = "Messenger Bot"
+    name = name or _find_or_wait(state.contact_id, contact, fields.get("mobile_no"), contact.get("email"))
+    doc = frappe.get_doc("CRM Lead", name) if name else _new_lead(contact, "Messenger Bot")
     if state.contact_id and not doc.get("chatwoot_contact_id"):
         doc.chatwoot_contact_id = state.contact_id  # link a phone-matched Lead so the next conversation finds it
     for field, val in fields.items():

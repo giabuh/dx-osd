@@ -43,11 +43,8 @@ class TestChatwootSyncApi(unittest.TestCase):
         self.mock_frappe.AuthenticationError = api_mod.frappe.AuthenticationError
         self.mock_frappe.throw = api_mod.frappe.throw
         catalog_patch = patch("mmm_custom.api.load_catalog", return_value=CAT)
-        products_patch = patch("mmm_custom.api.add_products")
         catalog_patch.start()
-        self.mock_add_products = products_patch.start()
         self.addCleanup(catalog_patch.stop)
-        self.addCleanup(products_patch.stop)
 
     def _setup_request(self, ts=None, sig=None, body_bytes=b""):
         mock_req = MagicMock()
@@ -158,160 +155,55 @@ class TestChatwootSyncApi(unittest.TestCase):
         enqueue.assert_called_once_with(payload)
         self.assertEqual(res, {"status": "queued"})
 
-    def test_existing_crm_lead_id_in_crm(self):
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 99,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 456,
-                        "name": "Tran Van B",
-                        "email": "tranb@example.com",
-                        "phone_number": "0912345678",
-                        "custom_attributes": {"crm_lead_id": "CRM-LEAD-EXISTING-01"},
-                    }
-                },
-                "messages": [{"content": "Xin chao toi muon tu van"}],
-            },
-        }
+    def created(self, contact, messages=(), conv_id=99, lead=("CRM-LEAD-1", False), put=None):
+        """Run a conversation_created webhook; the Lead lookup/creation itself is repo.ensure_lead's."""
+        payload = {"event": "conversation_created",
+                   "conversation": {"id": conv_id, "contact_inbox": {"contact": contact},
+                                    "messages": [{"content": m} for m in messages]}}
         body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
+        ts = str(int(time.time()))
+        self._setup_request(ts=ts, sig=compute_signature(self.secret, ts, body), body_bytes=body)
+        self.mock_frappe.db.exists.return_value = False  # channel sources not created yet: "Messenger"
+        with patch.object(api_mod, "frappe", self.mock_frappe), \
+                patch.object(api_mod, "ensure_lead", return_value=lead) as ensure, \
+                patch("requests.put", **({"side_effect": put} if put else {})) as mock_put:
+            res = chatwoot_sync()
+        return res, ensure, mock_put
 
-        self.mock_frappe.db.exists.return_value = True
-        mock_note = MagicMock()
-        self.mock_frappe.get_doc.return_value = mock_note
+    def test_a_contact_becomes_one_lead_through_ensure_lead(self):
+        contact = {"id": 456, "name": "Tran Van B", "email": "tranb@example.com", "phone_number": "0912345678",
+                   "custom_attributes": {"crm_lead_id": "CRM-LEAD-1"}}
+        res, ensure, mock_put = self.created(contact, ["Xin chao toi muon tu van"])
+        self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-1"})
+        ensure.assert_called_once_with(contact, "Messenger", [])
+        mock_put.assert_called_once_with(
+            "http://127.0.0.1:3000/api/v1/accounts/1/contacts/456",
+            headers={"api_access_token": "mock_token_abc"},
+            json={"custom_attributes": {"crm_lead_id": "CRM-LEAD-1"}},
+            timeout=5,
+        )
 
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("requests.put") as mock_put:
-                res = chatwoot_sync()
-                self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-EXISTING-01"})
-                self.mock_frappe.db.exists.assert_called_once_with("CRM Lead", "CRM-LEAD-EXISTING-01")
-                self.mock_frappe.db.set_value.assert_called_with("CRM Lead", "CRM-LEAD-EXISTING-01", "chatwoot_contact_id", "456")
-                mock_note.insert.assert_called_once()
-                mock_put.assert_called_once_with(
-                    "http://127.0.0.1:3000/api/v1/accounts/1/contacts/456",
-                    headers={"api_access_token": "mock_token_abc"},
-                    json={"custom_attributes": {"crm_lead_id": "CRM-LEAD-EXISTING-01"}},
-                    timeout=5,
-                )
+    def test_courses_named_in_the_first_message_go_to_the_lead(self):
+        contact = {"id": 999, "name": "Nguyen Thi D"}
+        _, ensure, _ = self.created(contact, ["Chào cô, em muốn đăng ký học AutoCAD cho cháu"])
+        self.assertEqual([c.code for c in ensure.call_args[0][2]], ["VKT-CAD2D"])
 
-    def test_matched_lead_by_email_or_phone(self):
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 101,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 789,
-                        "name": "Le Thi C",
-                        "email": "lethic@example.com",
-                        "phone_number": "0987654321",
-                        "custom_attributes": {},
-                    }
-                },
-                "messages": [{"content": "Dang ky hoc excel"}],
-            },
-        }
-        body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
-
-        self.mock_frappe.db.exists.return_value = False
-        matched_lead = {"name": "CRM-LEAD-MATCHED-99"}
-
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("mmm_custom.api.find_matching_lead", return_value=matched_lead) as mock_find:
-                with patch("requests.put") as mock_put:
-                    res = chatwoot_sync()
-                    self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-MATCHED-99"})
-                    mock_find.assert_called_once_with("lethic@example.com", "0987654321")
-                    self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-MATCHED-99", "chatwoot_contact_id", "789")
-                    self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-MATCHED-99", "course_interest", "Excel từ cơ bản đến nâng cao")
-                    mock_put.assert_called_once()
-
-    def test_create_new_lead_when_no_match(self):
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 102,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 888,
-                        "name": "",  # Empty name -> should fallback to "Khách Messenger"
-                        "email": "newbie@example.com",
-                        "phone_number": "0901234567",
-                    }
-                },
-                "messages": [],
-            },
-        }
-        body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
-
-        self.mock_frappe.db.exists.return_value = False
-        mock_lead_doc = MagicMock()
-        mock_lead_doc.name = "CRM-LEAD-NEW-001"
-        mock_lead_doc.insert.return_value = mock_lead_doc
-        self.mock_frappe.get_doc.return_value = mock_lead_doc
-
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("mmm_custom.api.find_matching_lead", return_value=None):
-                with patch("requests.put") as mock_put:
-                    res = chatwoot_sync()
-                    self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-NEW-001"})
-                    self.mock_frappe.get_doc.assert_any_call({
-                        "doctype": "CRM Lead",
-                        "first_name": "Khách Messenger",
-                        "email": "newbie@example.com",
-                        "mobile_no": "+84901234567",
-                        "source": "Messenger",
-                        "chatwoot_contact_id": "888",
-                    })
-                    mock_lead_doc.insert.assert_called()
-                    mock_put.assert_called_once()
+    def test_the_first_message_is_kept_as_a_note(self):
+        self.created({"id": 1, "name": "A"}, ["Dang ky hoc excel"], conv_id=101)
+        note = next(c[0][0] for c in self.mock_frappe.get_doc.call_args_list
+                    if isinstance(c[0][0], dict) and c[0][0].get("doctype") == "FCRM Note")
+        self.assertEqual((note["title"], note["content"], note["reference_docname"]),
+                         ("Chatwoot #101", "Dang ky hoc excel", "CRM-LEAD-1"))
 
     def test_chatwoot_writeback_failure_handled_gracefully(self):
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 103,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 555,
-                        "name": "Hoang D",
-                        "email": "hoang@example.com",
-                        "phone_number": "0911223344",
-                    }
-                },
-            },
-        }
-        body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
-
-        mock_lead = MagicMock()
-        mock_lead.name = "CRM-LEAD-HOANG-01"
-        mock_lead.insert.return_value = mock_lead
-        self.mock_frappe.get_doc.return_value = mock_lead
-        self.mock_frappe.db.exists.return_value = False
-
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("mmm_custom.api.find_matching_lead", return_value=None):
-                with patch("requests.put", side_effect=Exception("Chatwoot offline")):
-                    res = chatwoot_sync()
-                    # Should succeed and return lead_id despite Chatwoot network error
-                    self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-HOANG-01"})
-                    # Error Log titles are capped at 140 chars; a long title raises and rolls the Lead back.
-                    kwargs = self.mock_frappe.log_error.call_args.kwargs
-                    self.assertLessEqual(len(kwargs["title"]), 140)
-                    self.assertIn("Chatwoot offline", kwargs["message"])
+        res, _, _ = self.created({"id": 555, "name": "Hoang D"}, lead=("CRM-LEAD-HOANG-01", True),
+                                 put=Exception("Chatwoot offline"))
+        # Should succeed and return lead_id despite Chatwoot network error
+        self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-HOANG-01"})
+        # Error Log titles are capped at 140 chars; a long title raises and rolls the Lead back.
+        kwargs = self.mock_frappe.log_error.call_args.kwargs
+        self.assertLessEqual(len(kwargs["title"]), 140)
+        self.assertIn("Chatwoot offline", kwargs["message"])
 
     def test_detect_course_interest_from_catalog(self):
         self.assertEqual(detect_course_interest("Em muốn học Excel nâng cao", CAT), "Excel nâng cao & Dashboard")
@@ -320,182 +212,6 @@ class TestChatwootSyncApi(unittest.TestCase):
         self.assertEqual(detect_course_interest("photoshop va illustrator", CAT), "Photoshop cơ bản, Illustrator")
         for text in ("Xin chào trung tâm!", "Tư vấn học phí giúp em", "", None):
             self.assertIsNone(detect_course_interest(text, CAT))
-
-    def test_create_new_lead_with_course_interest(self):
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 104,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 999,
-                        "name": "Nguyen Thi D",
-                        "email": "nguyend@example.com",
-                        "phone_number": "0933445566",
-                    }
-                },
-                "messages": [{"content": "Chào cô, em muốn đăng ký học AutoCAD cho cháu"}],
-            },
-        }
-        body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
-
-        self.mock_frappe.db.exists.return_value = False
-        mock_lead_doc = MagicMock()
-        mock_lead_doc.name = "CRM-LEAD-MATH-001"
-        mock_lead_doc.insert.return_value = mock_lead_doc
-        self.mock_frappe.get_doc.return_value = mock_lead_doc
-
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("mmm_custom.api.find_matching_lead", return_value=None):
-                with patch("requests.put"):
-                    res = chatwoot_sync()
-                    self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-MATH-001"})
-                    self.mock_frappe.get_doc.assert_any_call({
-                        "doctype": "CRM Lead",
-                        "first_name": "Nguyen Thi D",
-                        "email": "nguyend@example.com",
-                        "mobile_no": "+84933445566",
-                        "source": "Messenger",
-                        "chatwoot_contact_id": "999",
-                        "course_interest": "AutoCAD 2D",
-                    })
-                    args = self.mock_add_products.call_args[0]
-                    self.assertEqual((args[0], [c.code for c in args[1]]), ("CRM-LEAD-MATH-001", ["VKT-CAD2D"]))
-
-    def test_existing_lead_updates_course_interest(self):
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 105,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 456,
-                        "name": "Tran Van B",
-                        "email": "tranb@example.com",
-                        "phone_number": "0912345678",
-                        "custom_attributes": {"crm_lead_id": "CRM-LEAD-EXISTING-01"},
-                    }
-                },
-                "messages": [{"content": "Toi muon cho con hoc robotics"}],
-            },
-        }
-        body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
-
-        self.mock_frappe.db.exists.return_value = True
-        mock_note = MagicMock()
-        self.mock_frappe.get_doc.return_value = mock_note
-
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("requests.put"):
-                res = chatwoot_sync()
-                self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-EXISTING-01"})
-                self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-EXISTING-01", "chatwoot_contact_id", "456")
-                self.mock_frappe.db.set_value.assert_any_call("CRM Lead", "CRM-LEAD-EXISTING-01", "course_interest", "Robotics cơ bản")
-
-    def test_existing_lead_placeholder_name_gets_fixed(self):
-        """When an existing lead has "EduFlow Student" or "Khách Messenger" as
-        first_name, updating it with a real contact name should fix first_name
-        and lead_name."""
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 106,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 456,
-                        "name": "Nguyễn Văn A",
-                        "email": "nguyena@example.com",
-                        "phone_number": "0912345678",
-                        "custom_attributes": {"crm_lead_id": "CRM-LEAD-PLACEHOLDER"},
-                    }
-                },
-                "messages": [{"content": "Xin chào"}],
-            },
-        }
-        body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
-
-        self.mock_frappe.db.exists.return_value = True
-        # Simulate the stored lead has old placeholder name
-        self.mock_frappe.db.get_value.return_value = {
-            "first_name": "EduFlow Student",
-            "lead_name": "EduFlow Student",
-        }
-        mock_note = MagicMock()
-        self.mock_frappe.get_doc.return_value = mock_note
-
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("requests.put"):
-                res = chatwoot_sync()
-                self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-PLACEHOLDER"})
-                # Verify first_name and lead_name were updated
-                self.mock_frappe.db.set_value.assert_any_call(
-                    "CRM Lead", "CRM-LEAD-PLACEHOLDER", "first_name", "Nguyễn Văn A"
-                )
-                self.mock_frappe.db.set_value.assert_any_call(
-                    "CRM Lead", "CRM-LEAD-PLACEHOLDER", "lead_name", "Nguyễn Văn A"
-                )
-
-    def test_dedup_by_chatwoot_contact_id(self):
-        """When crm_lead_id is not set but the contact_id matches an existing
-        lead's chatwoot_contact_id, the lead should be updated (not duplicated)."""
-        valid_ts = str(int(time.time()))
-        payload = {
-            "event": "conversation_created",
-            "conversation": {
-                "id": 107,
-                "contact_inbox": {
-                    "contact": {
-                        "id": 777,
-                        "name": "Trần Văn B",
-                        "email": None,
-                        "phone_number": None,
-                        "custom_attributes": {},  # no crm_lead_id set yet
-                    }
-                },
-                "messages": [{"content": "Xin chào"}],
-            },
-        }
-        body = json.dumps(payload).encode("utf-8")
-        sig = compute_signature(self.secret, valid_ts, body)
-        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
-
-        # First call: crm_lead_id not found → chatwoot_contact_id matches
-        def exists_side_effect(doctype, name_or_filters=None):
-            if isinstance(name_or_filters, dict) and "chatwoot_contact_id" in name_or_filters:
-                return True  # found by chatwoot_contact_id
-            return False  # crm_lead_id not found
-
-        self.mock_frappe.db.exists.side_effect = exists_side_effect
-
-        def get_value_side_effect(*args, **kwargs):
-            # First call: get lead name by chatwoot_contact_id filter
-            if kwargs.get("as_dict"):
-                return {"first_name": "Trần Văn B", "lead_name": "Trần Văn B"}
-            return "CRM-LEAD-EXISTING-BY-CW"
-
-        self.mock_frappe.db.get_value.side_effect = get_value_side_effect
-        mock_note = MagicMock()
-        self.mock_frappe.get_doc.return_value = mock_note
-
-        with patch.object(api_mod, "frappe", self.mock_frappe):
-            with patch("requests.put"):
-                res = chatwoot_sync()
-                self.assertEqual(res, {"status": "success", "lead_id": "CRM-LEAD-EXISTING-BY-CW"})
-                # Should NOT have called get_doc with "CRM Lead" for insert
-                insert_calls = [
-                    c for c in self.mock_frappe.get_doc.call_args_list
-                    if isinstance(c[0][0], dict) and c[0][0].get("doctype") == "CRM Lead"
-                ]
-                self.assertEqual(len(insert_calls), 0, "Should not create new lead")
 
 
 if __name__ == "__main__":
