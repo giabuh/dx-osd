@@ -3,7 +3,13 @@
     <div
       class="flex items-center justify-between gap-2 px-3 pb-3 sm:px-10 text-p-sm text-ink-gray-5"
     >
-      <span v-if="chat.data?.conversation">
+      <span v-if="chat.data?.conversation" class="flex items-center gap-2">
+        <Badge
+          v-if="chat.data.page"
+          :label="'Trang: ' + chat.data.page"
+          theme="blue"
+          variant="subtle"
+        />
         Cuộc chat #{{ chat.data.conversation }} · tự cập nhật mỗi 15 giây
       </span>
       <span v-else />

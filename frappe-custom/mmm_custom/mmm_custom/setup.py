@@ -143,7 +143,7 @@ def update_crm_fields_layout():
 						fields = ["course_interest", "branch", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
-							fields += ["source_campaign", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
+							fields += ["source_campaign", "facebook_page", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
 							fields += ["quiz_detail", "voucher_code"]  # D-106
 						for f in fields:
 							if f not in col_fields:
@@ -209,6 +209,10 @@ CATALOG_FIELDS = {
 		# Where the Lead first came from, next to the standard `source` (D-100)
 		{"fieldname": "source_campaign", "label": "Campaign", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "description": "Campaign or landing page reported by the channel", "insert_after": "source"},
+		# The Facebook page (Chatwoot inbox) the person messaged; one person on two pages is two Leads (pages.py)
+		{"fieldname": "facebook_page", "label": "Trang Facebook", "fieldtype": "Data", "length": 140, "read_only": 1,
+		 "in_list_view": 1, "in_standard_filter": 1, "description": "Trang Facebook khách đã nhắn tin",
+		 "insert_after": "source_campaign"},
 		# Referral codes (D-103): this Lead's own code, the code a friend gave, and that friend
 		{"fieldname": "referral_code", "label": "Referral Code", "fieldtype": "Data", "length": 10, "unique": 1,
 		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "source_campaign"},

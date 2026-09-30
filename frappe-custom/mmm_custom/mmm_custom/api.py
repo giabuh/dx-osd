@@ -39,6 +39,7 @@ from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.engine.repo import add_products, load_catalog
 from mmm_custom.engine.understand import match_courses
 from mmm_custom.intelligence import enqueue_analysis, enqueue_on_assignment
+from mmm_custom.pages import record_page
 from mmm_custom.sources import channel_key, source_name
 
 
@@ -253,6 +254,12 @@ def chatwoot_sync():
                 )
             except Exception:
                 pass
+
+    try:
+        record_page(lead_name, conversation.get("inbox_id"))
+    except Exception as e:
+        if hasattr(frappe, "log_error"):
+            frappe.log_error(title="Failed to record the Lead's Facebook page", message=str(e))
 
     if courses:
         try:

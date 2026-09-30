@@ -60,7 +60,8 @@ class TestChat(unittest.TestCase):
         client.list_contact_conversations.return_value = [{"id": 41, "last_activity_at": 5}]
         with patch.object(lead_chat, "frappe", frappe), patch.object(lead_chat, "ChatwootClient", return_value=client), \
                 patch.object(lead_chat, "own_token", return_value=token), \
-                patch.object(lead_chat, "can_open_bot", return_value=manager):
+                patch.object(lead_chat, "can_open_bot", return_value=manager), \
+                patch.object(lead_chat, "page_of_inbox", return_value="Tin học Ngôi Sao"):
             return lead_chat.chat("CRM-LEAD-1"), client
 
     def test_lead_outside_the_scope_is_refused(self):
@@ -75,6 +76,7 @@ class TestChat(unittest.TestCase):
         self.assertEqual(out["chatwoot_url"], "https://chat.x/app/accounts/2/conversations/123")
         self.assertTrue(out["can_reply"])
         self.assertEqual(out["messages"][0]["kind"], "customer")
+        self.assertEqual(out["page"], "Tin học Ngôi Sao")  # which page this chat is on
 
     def test_falls_back_to_the_contacts_newest_conversation(self):
         out, client = self.run_chat(fake_frappe(contact_id="77"), token="tok")
@@ -83,7 +85,8 @@ class TestChat(unittest.TestCase):
 
     def test_no_conversation(self):
         out, _ = self.run_chat(fake_frappe(contact_id=None))
-        self.assertEqual(out, {"conversation": None, "messages": [], "can_reply": False, "chatwoot_url": None})
+        self.assertEqual(out, {"conversation": None, "messages": [], "can_reply": False, "chatwoot_url": None,
+                               "page": ""})
 
     def test_consultant_without_token_reads_but_cannot_reply(self):
         out, _ = self.run_chat(fake_frappe(linked=["123"]), token="")

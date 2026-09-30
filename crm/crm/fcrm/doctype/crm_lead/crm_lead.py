@@ -421,6 +421,8 @@ class CRMLead(Document):
 		# Sao Việt: the same context the admin customer dashboard shows (branch, course, source, hotness).
 		columns = [
 			{"label": "Full Name", "type": "Data", "key": "lead_name", "width": "12rem"},
+			# Same column mmm_custom.pages adds to saved views; keep the two alike.
+			{"label": "Trang Facebook", "type": "Data", "key": "facebook_page", "width": "10rem"},
 			{"label": "Chi nhánh", "type": "Link", "key": "territory", "options": "CRM Territory", "width": "9rem"},
 			{"label": "Khóa quan tâm", "type": "Data", "key": "course_interest", "width": "12rem"},
 			{"label": "Source", "type": "Link", "key": "source", "options": "CRM Lead Source", "width": "8rem"},
@@ -433,6 +435,7 @@ class CRMLead(Document):
 		rows = [
 			"name",
 			"lead_name",
+			"facebook_page",
 			"territory",
 			"course_interest",
 			"source",

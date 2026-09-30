@@ -15,6 +15,7 @@ from mmm_custom.engine.qualify import AUTO_STATUSES
 from mmm_custom.engine.catalog import DEFAULT_SETTINGS, build_catalog
 from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
+from mmm_custom.pages import FIELD, merge_pages, page_of_inbox
 
 CACHE_KEY = "lead_engine_catalog_rows"
 FIRST_TOUCH = ("source", "source_campaign")
@@ -172,6 +173,8 @@ def save_lead(state, fields, courses, contact):
         if field == "status" and name and doc.status not in AUTO_STATUSES:
             continue  # a person moved this Lead (Contacted, Converted…): the bot leaves it (D-083)
         doc.set(field, val)
+    if doc.meta.has_field(FIELD):
+        doc.set(FIELD, merge_pages(doc.get(FIELD), page_of_inbox(state.inbox_id)))
     _append_products(doc, courses)
     doc.flags.lead_engine = True  # learning.on_lead_update skips the engine's own saves (D-057)
     if name:
