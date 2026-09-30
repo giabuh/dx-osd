@@ -77,7 +77,8 @@ def parse_event(payload):
         return Event("customer_message", cid, int(payload.get("id") or 0), (payload.get("content") or "")[:MAX_TEXT],
                      contact, str(inbox), channel_key(conv), campaign_of(conv))
     if mtype in (1, "outgoing") and sender.get("type") == "user":
-        return Event("agent_message", cid, int(payload.get("id") or 0))
+        return Event("agent_message", cid, int(payload.get("id") or 0), (payload.get("content") or "")[:MAX_TEXT],
+                     {"id": sender.get("id"), "name": sender.get("name") or ""})
     return Event("ignore", cid)
 
 
@@ -86,11 +87,11 @@ def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0
     u = understand(text, state, catalog)
     if jev is None:
         return u, JevResult("disabled")
-    allowed, why = allow_jev(u, state, catalog, now, tokens_today, budget)
+    allowed, why = allow_jev(u, state, catalog, now, tokens_today, budget, text)
     if not allowed:
         return u, JevResult("skipped_cost_guard", error=why)
     state.jev_calls = recent_calls(state.jev_calls, now) + [now]
-    questions = build_questions(state, u, catalog)
+    questions = build_questions(state, u, catalog, text=text)
     result = jev.ask(jev_state(text, state, catalog), questions)
     if result.status != "ok":
         return u, result

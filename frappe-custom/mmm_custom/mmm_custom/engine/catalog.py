@@ -130,6 +130,18 @@ class Course:
 
 
 @dataclass(frozen=True)
+class StaffReply:
+    """One entry of the staff reply library (D-114)."""
+    name: str
+    reply: str             # template: course data as placeholders
+    examples: tuple = ()   # what customers wrote
+    course: str = ""       # course code, or "" for a whole group / any customer
+    group: str = ""
+    topic: str = ""
+    approved: bool = False  # only approved replies reach customers
+
+
+@dataclass(frozen=True)
 class Area:
     name: str
     button: str
@@ -191,6 +203,7 @@ class Catalog:
     slots: list
     skills: dict
     settings: dict
+    staff_replies: tuple = ()  # the staff reply library (D-114)
 
     def slot(self, key):
         return next((s for s in self.slots if s.key == key), None)
@@ -268,4 +281,9 @@ def build_catalog(data):
         for k in data.get("bot_skills") or [] if _active(k)}
     settings = dict(DEFAULT_SETTINGS)
     settings.update({k: v for k, v in (data.get("settings") or {}).items() if v not in (None, "", 0)})
-    return Catalog(groups, courses, areas, branches, slots, skills, settings)
+    replies = tuple(StaffReply(
+        name=r.get("name") or r.get("seed_id") or f"reply-{i}", reply=r["reply"], examples=_lines(r.get("customer_examples")),
+        course=r.get("course") or "", group=r.get("course_group") or "", topic=r.get("topic") or "",
+        approved=r.get("status") == "approved")
+        for i, r in enumerate(data.get("staff_replies") or []) if r.get("status") in ("approved", "new"))
+    return Catalog(groups, courses, areas, branches, slots, skills, settings, replies)

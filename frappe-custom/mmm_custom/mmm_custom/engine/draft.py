@@ -33,7 +33,7 @@ class DraftRepo:
 
     def load_state(self, event):
         state = copy.deepcopy(self.repo.load_state(event))
-        state.consultant_replied = False
+        state.consultant_replied, state.drafting = False, True
         if state.status == "handed_off":
             state.status = "active"
         return state
@@ -60,6 +60,8 @@ def sources(turn, catalog):
     d = turn.decision
     out = [f'FAQ "{faq_question(d.faq, catalog)}"'] if d.faq else []
     out += [fact_label(d.fact, catalog)] if d.fact else []
+    if d.staff_reply:
+        out.append("câu trả lời NV" + ("" if d.staff_reply.get("approved") else " (chưa duyệt)"))
     out += [catalog.skills[k].title for k in d.skills if k in catalog.skills]
     if d.greet:
         out.append("chào hỏi")
@@ -73,7 +75,7 @@ def note(turn, catalog):
     if turn is None:
         return None
     d = turn.decision
-    answered = d.skills or d.faq or d.fact
+    answered = d.skills or d.faq or d.fact or d.staff_reply
     why = STAFF_REASONS.get(turn.needs_staff) or (turn.needs_staff if turn.needs_staff not in (
         "stuck", "hot", "required_filled", "skill") else "")
     if why and not answered:

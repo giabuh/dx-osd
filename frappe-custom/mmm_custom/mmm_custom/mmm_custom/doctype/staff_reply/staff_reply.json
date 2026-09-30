@@ -1,0 +1,173 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-30 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "status",
+  "course",
+  "course_group",
+  "topic",
+  "customer_examples",
+  "reply",
+  "needs_check",
+  "column_break_source",
+  "source",
+  "consultant",
+  "conversation_id",
+  "lead",
+  "bot_draft",
+  "draft_outcome",
+  "seed_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "new\napproved\nrejected",
+   "default": "new",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "approved: the bot may send it to customers; new: only suggested to staff (D-114)"
+  },
+  {
+   "fieldname": "course",
+   "fieldtype": "Link",
+   "label": "Course",
+   "options": "CRM Product",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "course_group",
+   "fieldtype": "Link",
+   "label": "Course Group",
+   "options": "Course Group",
+   "in_standard_filter": 1,
+   "description": "When the reply fits every course of a group; empty with no course: any customer"
+  },
+  {
+   "fieldname": "topic",
+   "fieldtype": "Data",
+   "label": "Topic",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Bot Skill key or course fact the customer asked about (fee_quote, duration…), when known"
+  },
+  {
+   "fieldname": "customer_examples",
+   "fieldtype": "Small Text",
+   "label": "Customer Examples",
+   "reqd": 1,
+   "description": "What customers wrote, one message per line (personal data masked)"
+  },
+  {
+   "fieldname": "reply",
+   "fieldtype": "Text",
+   "label": "Reply Template",
+   "reqd": 1,
+   "description": "The staff reply as a template: fee, course name and duration come from the course data ({{ course.fee | vnd }}…)"
+  },
+  {
+   "fieldname": "needs_check",
+   "fieldtype": "Small Text",
+   "label": "Needs Check",
+   "read_only": 1,
+   "description": "Numbers in the reply that do not match the course data: fix before approving"
+  },
+  {
+   "fieldname": "column_break_source",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "staff\nseed\nllm",
+   "default": "staff",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "consultant",
+   "fieldtype": "Data",
+   "label": "Consultant"
+  },
+  {
+   "fieldname": "conversation_id",
+   "fieldtype": "Data",
+   "label": "Conversation"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "CRM Lead"
+  },
+  {
+   "fieldname": "bot_draft",
+   "fieldtype": "Text",
+   "label": "Bot Draft",
+   "read_only": 1,
+   "description": "What Jev suggested before the staff member answered"
+  },
+  {
+   "fieldname": "draft_outcome",
+   "fieldtype": "Select",
+   "label": "Draft Outcome",
+   "options": "\nused\nedited\nignored",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "seed_id",
+   "fieldtype": "Data",
+   "label": "Seed ID",
+   "unique": 1,
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-30 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Staff Reply",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "reply"
+}

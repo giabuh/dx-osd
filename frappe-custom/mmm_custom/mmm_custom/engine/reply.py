@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from mmm_custom.engine.actions import run_action
 from mmm_custom.engine.context import base_context, course_context
 from mmm_custom.engine import offers
-from mmm_custom.engine.jev_questions import COURSE_FACT, COURSE_FAQ
+from mmm_custom.engine.jev_questions import COURSE_FACT, COURSE_FAQ, STAFF_REPLY
 from mmm_custom.engine.render import RenderError, condition, render_text
 from mmm_custom.engine.slot_types import REGISTRY
 
@@ -126,6 +126,11 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         if course and index < len(course.faqs):
             say(course.faqs[index].answer, {**ctx, "course": course_context(course, catalog)}, COURSE_FAQ)
             reply.variants.append({"skill": COURSE_FAQ, "variant": str(index)})
+    elif decision.staff_reply:  # …or what staff once answered to the same question (D-114)
+        reply_row = next((r for r in catalog.staff_replies if r.name == decision.staff_reply["name"]), None)
+        if reply_row:
+            say(reply_row.reply, ctx, STAFF_REPLY)
+            reply.variants.append({"skill": STAFF_REPLY, "variant": reply_row.name})
     elif decision.fact:  # …or the part of the course's own data it asks about (D-110)
         course = catalog.courses.get(decision.fact["course"])
         key = decision.fact["fact"]

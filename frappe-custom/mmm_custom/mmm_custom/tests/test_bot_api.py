@@ -74,9 +74,10 @@ class TestAgentBotWebhook(unittest.TestCase):
             self.assertEqual(self.post(incoming(message_type="outgoing", sender_type="user")),
                              {"status": "consultant_replied"})
         mark.assert_called_once_with("5")
-        self.fr.enqueue.assert_called_once()
-        self.assertEqual(self.fr.enqueue.call_args[0][0], "mmm_custom.engine.copilot.refresh_status")
-        self.assertEqual(self.fr.enqueue.call_args.kwargs["conversation_id"], "5")
+        jobs = [c[0][0] for c in self.fr.enqueue.call_args_list]  # …and the reply library learns from it (D-114)
+        self.assertEqual(jobs, ["mmm_custom.engine.copilot.refresh_status", "mmm_custom.engine.staff_replies.capture"])
+        capture = self.fr.enqueue.call_args_list[1].kwargs
+        self.assertEqual((capture["conversation_id"], capture["message_id"], capture["text"]), ("5", 77, "xin chào"))
 
     def test_resolved_conversation_is_closed(self):
         with patch.object(bot_api_mod, "close_conversation") as close:

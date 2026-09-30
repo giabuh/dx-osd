@@ -182,6 +182,13 @@ def load(anchor=None):
 	settings.update(data["settings"])
 	settings.save(ignore_permissions=True)
 
+	# Staff reply library (D-114): seeded once; a manager's later approvals and edits are kept on reload.
+	db = FrappeDb()
+	for r in data.get("staff_replies") or []:
+		if not db.get_value("Staff Reply", {"seed_id": r["seed_id"]}):
+			db.insert("Staff Reply", {k: v for k, v in r.items() if v not in ("", None)})
+			created["Staff Reply"] = created.get("Staff Reply", 0) + 1
+
 	frappe.db.commit()
 	return created
 

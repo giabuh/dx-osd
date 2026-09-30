@@ -96,7 +96,8 @@ after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.e
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
 # clears the engine's cached catalog snapshot so the next customer message sees it.
-_LEAD_ENGINE_DATA = ("Course Group", "CRM Product", "CRM Territory", "Bot Slot", "Bot Skill", "Lead Engine Settings")
+_LEAD_ENGINE_DATA = ("Course Group", "CRM Product", "CRM Territory", "Bot Slot", "Bot Skill", "Lead Engine Settings",
+                     "Staff Reply")
 doc_events = {
 	dt: {"on_update": "mmm_custom.engine.repo.clear_catalog_cache", "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 	for dt in _LEAD_ENGINE_DATA

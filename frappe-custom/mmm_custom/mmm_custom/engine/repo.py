@@ -76,7 +76,11 @@ def load_rows():
         s["follow_ups"] = follow_ups.get(s.skill_key, [])
     settings_doc = frappe.get_single("Lead Engine Settings").as_dict()
     settings = {k: v for k, v in settings_doc.items() if k in DEFAULT_SETTINGS or k.endswith("_template")}
+    replies = frappe.get_all("Staff Reply", filters={"status": ["in", ["approved", "new"]]}, fields=[
+        "name", "status", "course", "course_group", "topic", "customer_examples", "reply"],
+        order_by="modified desc", limit=5000)
     return {
+        "staff_replies": [dict(r) for r in replies],
         "areas": _territories(), "course_groups": [dict(g) for g in groups], "courses": courses,
         "bot_slots": [{**s, "options": options.get(s.slot_key, [])} for s in slots],
         "bot_skills": [dict(s) for s in skills], "settings": settings,

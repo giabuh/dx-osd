@@ -39,6 +39,7 @@ class Decision:
     close: bool = False
     faq: dict = field(default_factory=dict)     # course FAQ answered first (D-085)
     fact: dict = field(default_factory=dict)    # …or a part of the course's own data (D-110)
+    staff_reply: dict = field(default_factory=dict)  # …or a reply staff once wrote (D-114), before a fact
     offer: str = ""                             # level quiz offered instead of the next slot question (D-106)
     declined: str = ""                          # level quiz the customer put off this turn
     resume: str = ""                            # level quiz asked again after the customer's side question (D-107)
@@ -163,14 +164,17 @@ def decide(state, u, catalog):
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
     faq = u.faq
-    fact = {} if faq else u.fact
-    small_talk = u.greeting and not (new or changed or faq or fact)
+    staff = {} if faq else u.staff_reply
+    fact = {} if (faq or staff) else u.fact
+    small_talk = u.greeting and not (new or changed or faq or staff or fact)
     if small_talk:
         skills = []  # "hihi" / "chào em" asks nothing: greet back and invite, never hand off (D-109)
     alone = [k for k in skills if catalog.skills[k].config.get("alone")]
     if alone:  # e.g. a company asking for a quote: no retail fee or course FAQ on top (D-099)
-        skills, faq, fact = alone, None, {}
-    know = faq or fact
+        skills, faq, staff, fact = alone, None, {}, {}
+    know = faq or staff or fact
+    if staff:  # staff's own answer to this very topic replaces the bot's (D-114)
+        skills = [k for k in skills if k != staff.get("topic")]
     if know:  # the course's own answer beats a generic template answer to the same question (D-085, D-110)
         skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     skills, squeezed = focus(skills, catalog)
@@ -190,10 +194,11 @@ def decide(state, u, catalog):
     progress = bool(new or changed or skills or waiting or know or u.handoff or u.focus or u.confirm or u.rejected
                     or u.declined or u.phone_suspect)
     stuck = 0 if progress or greet else state.stuck_turns + 1
-    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq, fact=fact,
+    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq, fact=fact, staff_reply=staff,
                   declined=u.declined, resume=resume, phone_check=phone_check, ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
     answered = ", ".join(([f'"{faq_question(faq, catalog)}"'] if faq else []) +
-                         ([fact_label(fact, catalog)] if fact else []) + [catalog.skills[k].title for k in side])
+                         ([fact_label(fact, catalog)] if fact else []) + (["câu trả lời NV"] if staff else []) +
+                         [catalog.skills[k].title for k in side])
 
     if state.status == "handed_off":
         if small_talk:

@@ -4,10 +4,12 @@ English carrying the Vietnamese names and aliases customers use. Keys:
     skill:<key>    one noul per Bot Skill        intent · hotness · wants_human (D-032)
     course_faq     which FAQ of the known course the message asks (D-085)
     course_fact    which part of the known course's own data the message asks: content, length, audience… (D-110)
+    staff_reply    which reply staff once wrote answers the message, among the most similar ones (D-114)
     level_unsure   unsure of their level, asked only while a level test can be offered (D-106)
     reply_to_bot   which of the buttons the bot just offered a typed message means (D-107)
 """
 
+from mmm_custom.engine import staff_replies
 from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.decide import slot_active
 from mmm_custom.engine.offers import LEVEL_UNSURE, available
@@ -19,6 +21,7 @@ NONE_TEXT = "None of these, or not said in the chat"
 MAX_HISTORY = 20  # 10 turns of customer + bot lines (D-061, D-074)
 COURSE_FAQ = "course_faq"
 COURSE_FACT = "course_fact"
+STAFF_REPLY = "staff_reply"
 REPLY_TO_BOT = "reply_to_bot"
 # Parts of a course's own data the bot can answer from (D-110): key -> (Course attribute, what the customer asks).
 # Fee and schedules are skills of their own (fee_quote, schedule_lookup) with promotions and open classes.
@@ -96,7 +99,7 @@ def _catalog_questions(slot, state, u, catalog):
     return out
 
 
-def build_questions(state, u, catalog, skills=True):
+def build_questions(state, u, catalog, skills=True, text=""):
     q = {}
     for slot in catalog.slots:
         if slot.on_demand and state.pending.get("slot") != slot.key:
@@ -131,6 +134,12 @@ def build_questions(state, u, catalog, skills=True):
         if facts:
             q[COURSE_FACT] = _choice(f"What does the customer's latest message ask about the course '{known.name}'?",
                                      {key: FACTS[key][1] for key in facts})
+        group = u.parents.get("course") or (state.slots.get("course") or {}).get("parent", "")
+        library = staff_replies.candidates(catalog, text, known, group, state.drafting) if text else []
+        if library:
+            q[STAFF_REPLY] = _choice("Which of these replies that staff once wrote answers the customer's latest "
+                                     "message in this Vietnamese chat? Choose none unless it fits the question.",
+                                     {r.name: staff_replies.criterion(r) for r in library})
     options = list((state.pending.get("options") or {}))
     if options and not u.tapped:  # a typed answer the keyword tier could not tie to a button (D-107)
         q[REPLY_TO_BOT] = _choice("The bot's last message offered these buttons. Which one does the customer's latest "

@@ -34,6 +34,7 @@ class ConversationState:
     claimed_by: str = ""  # Chatwoot agent id of the person who took the conversation ("Nhận xử lý", D-111)
     fallback_due: float = 0.0  # epoch seconds when the bot answers messages nobody answered (D-111), 0 = none
     assist: dict = field(default_factory=dict)  # waiting: [{id, text}], contact, human_at: last staff message (D-111)
+    drafting: bool = False  # a draft for staff (engine/draft.py): new library replies may be used (not stored)
     channel: str = ""  # sources.CHANNELS key of this conversation, from each webhook (not stored)
     campaign: str = ""  # campaign or landing page the channel reported (not stored)
 
