@@ -36,5 +36,19 @@ class TestVndPlan(unittest.TestCase):
         self.assertNotIn("fcrm", plan)
 
 
+class TestVndDefaults(unittest.TestCase):
+    SYSTEM = {"currency": "VND", "currency_precision": "0", "number_format": "#.###"}
+
+    def test_the_page_reads_defaults_so_they_follow_the_system_settings(self):
+        self.assertEqual(setup_mod.vnd_defaults(self.SYSTEM, {"currency": "VND"}),
+                         {"currency_precision": "0", "number_format": "#.###"})
+
+    def test_nothing_to_do_when_they_already_match(self):
+        self.assertEqual(setup_mod.vnd_defaults(self.SYSTEM, dict(self.SYSTEM)), {})
+
+    def test_another_currency_is_left_alone(self):
+        self.assertEqual(setup_mod.vnd_defaults({**self.SYSTEM, "currency": "USD"}, {}), {})
+
+
 if __name__ == "__main__":
     unittest.main()

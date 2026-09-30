@@ -326,6 +326,14 @@ def vnd_plan(currency, system, fcrm):
     return plan
 
 
+def vnd_defaults(system, defaults):
+    """The defaults the CRM page reads (`window.sysdefaults`) that still differ from a VND System Settings. Pure."""
+    if (system or {}).get("currency") != "VND":
+        return {}
+    return {k: str(system.get(k) or "") for k in ("currency", "currency_precision", "number_format")
+            if system.get(k) not in (None, "") and str((defaults or {}).get(k) or "") != str(system[k])}
+
+
 def ensure_vnd():
     """after_migrate / after_install: the CRM counts in VND, not USD."""
     plan = vnd_plan(frappe.db.get_value("Currency", "VND", ["enabled", "symbol", "number_format", "symbol_on_right"],
@@ -338,11 +346,14 @@ def ensure_vnd():
             frappe.db.set_value("Currency", "VND", key, value)
     for key, value in plan.get("system", {}).items():
         frappe.db.set_single_value("System Settings", key, value)
-    if "system" in plan:
-        frappe.db.set_default("currency", "VND")
+    system = {k: frappe.db.get_single_value("System Settings", k) for k in
+              ("currency", "currency_precision", "number_format")}
+    for key, value in vnd_defaults(system, {k: frappe.db.get_default(k) for k in system}).items():
+        frappe.db.set_default(key, value)
+        plan["defaults"] = True
     if "fcrm" in plan:  # after the system currency: FCRM Settings converts against it
         frappe.db.set_single_value("FCRM Settings", "currency", "VND")
-    if plan:
+    if plan:  # any write above, including the defaults
         frappe.clear_cache()
         frappe.db.commit()
 
