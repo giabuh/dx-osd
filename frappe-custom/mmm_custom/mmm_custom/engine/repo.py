@@ -441,10 +441,15 @@ class FrappeRepo:
             filters["branch"] = branch
         if shift:
             filters["shift"] = ["like", f"{shift}%"]
-        rows = frappe.get_all("Course Schedule", filters=filters, fields=["start_date", "shift", "weekdays", "branch", "seats"],
+        from mmm_custom.enrolment import seats_taken
+
+        rows = frappe.get_all("Course Schedule", filters=filters,
+                              fields=["name", "start_date", "shift", "weekdays", "branch", "seats"],
                               order_by="start_date asc", limit=limit)
+        taken = seats_taken([r.name for r in rows if r.seats])  # registrations holding a seat (D-117)
         return [{"date": r.start_date, "weekday": WEEKDAYS[r.start_date.weekday()], "shift": r.shift,
-                 "weekdays": r.weekdays, "branch": r.branch, "seats_left": r.seats} for r in rows]
+                 "weekdays": r.weekdays, "branch": r.branch,
+                 "seats_left": max((r.seats or 0) - taken.get(r.name, 0), 0) if r.seats else r.seats} for r in rows]
 
     def active_promotions(self, today):
         rows = frappe.get_all("Course Promotion", filters={"active": 1},

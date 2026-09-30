@@ -8,6 +8,8 @@ Task for the Lead owner, at 08:00 so consultants find it when their day starts.
 | Trial Booked  | the trial date has passed                     | Sau học thử: chốt đăng ký / hẹn lại (High)        |
 | Nurture       | no Task, every `nurture_every_days` (14)      | Chăm sóc định kỳ with the next class, up to       |
 |               |                                              | `nurture_max_touches` (4); then Xem xét đóng      |
+| Deal: Pending | no Task, quiet `payment_stale_days` (3) or    | Nhắc đóng phí (High), on the registration (D-117) |
+|  Payment      | past its `payment_due_date`                   |                                                   |
 
 The rules are pure (`rule_task`); a Lead with an open Task is left alone, except the after-trial check (the trial
 Task itself is usually still open). It never changes a Lead: moving it on stays a person's decision. Settings:
@@ -25,7 +27,7 @@ except ImportError:
     frappe = MagicMock()
 
 from mmm_custom.intelligence import DEFAULT_THRESHOLD, JEV_URL, ask_jev
-from mmm_custom.lifecycle import CONTACTED, NEW, NURTURE, QUALIFIED, TRIAL_BOOKED
+from mmm_custom.lifecycle import CONTACTED, NEW, NURTURE, PENDING_PAYMENT, QUALIFIED, TRIAL_BOOKED
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +45,10 @@ TASKS = {
     "after_trial": {"title": "Sau học thử: chốt đăng ký / hẹn lại", "priority": "High"},
     "nurture": {"title": "Chăm sóc định kỳ", "priority": "Medium"},
     "nurture_done": {"title": "Xem xét đóng khách nuôi dưỡng", "priority": "Low"},
+    "payment": {"title": "Nhắc đóng phí", "priority": "High"},
 }
 DEFAULTS = {"qualified_call_hours": 24, "stale_days": 3, "nurture_every_days": 14, "nurture_max_touches": 4,
-            "max_leads": 200}
+            "payment_stale_days": 3, "max_leads": 200}
 OPEN_TASK_STATUSES = ["Backlog", "Todo", "In Progress"]
 RULE_STATUSES = [NEW, QUALIFIED, CONTACTED, TRIAL_BOOKED, NURTURE]
 LEAD_FIELDS = ["name", "lead_name", "status", "source", "lead_owner", "modified", "mobile_no", "email",
@@ -97,8 +100,20 @@ def rule_task(lead, now, cfg, tasks, next_class=""):
     return None
 
 
-def _tasks(lead):
-    return frappe.get_all("CRM Task", filters={"reference_doctype": "CRM Lead", "reference_docname": lead},
+def payment_task(deal, now, cfg, tasks):
+    """A registration waiting for the fee (D-117): remind when it has been quiet or its payment date passed."""
+    if deal.get("status") != PENDING_PAYMENT or any(t["status"] in OPEN_TASK_STATUSES for t in tasks):
+        return None
+    due = _date(deal.get("payment_due_date"))
+    if due and due < now.date():
+        return {"kind": "payment", "why": f"Hạn đóng phí {due:%d/%m} đã qua, khách chưa đóng / đặt cọc."}
+    if now - deal["modified"] >= timedelta(days=int(cfg["payment_stale_days"])):
+        return {"kind": "payment", "why": "Khách đã đăng ký nhưng chưa đóng phí / đặt cọc: gọi nhắc, giữ chỗ lớp."}
+    return None
+
+
+def _tasks(lead, doctype="CRM Lead"):
+    return frappe.get_all("CRM Task", filters={"reference_doctype": doctype, "reference_docname": lead},
                           fields=["title", "status", "creation"], order_by="creation asc")
 
 
@@ -117,7 +132,7 @@ def _next_class(lead, today):
     return f"Lớp {course} gần nhất: {r['weekday']} {r['date']:%d/%m} · {r['shift'] or ''} · {r['branch'] or ''}."
 
 
-def _create_task(lead, kind, why, now, title_suffix=""):
+def _create_task(lead, kind, why, now, title_suffix="", doctype="CRM Lead"):
     task = TASKS[kind]
     frappe.get_doc({
         "doctype": "CRM Task",
@@ -125,8 +140,8 @@ def _create_task(lead, kind, why, now, title_suffix=""):
         "description": why,
         "priority": task["priority"],
         "status": "Todo",
-        "assigned_to": lead.get("lead_owner"),
-        "reference_doctype": "CRM Lead",
+        "assigned_to": lead.get("lead_owner") or lead.get("deal_owner"),
+        "reference_doctype": doctype,
         "reference_docname": lead["name"],
         "due_date": now + timedelta(days=1),
     }).insert(ignore_permissions=True)
@@ -176,6 +191,13 @@ def plan_followups(now: datetime | None = None) -> dict:
         suffix = f" (lần {rule['n']})" if kind == "nurture" else ""
         _create_task(lead, kind, why, now, suffix)
         results.append({"lead": lead["name"], "action": "task_created", "choice": kind})
+    for deal in frappe.get_all("CRM Deal", filters={"status": PENDING_PAYMENT}, order_by="modified asc",
+                               fields=["name", "lead_name", "deal_owner", "status", "modified", "payment_due_date"],
+                               limit=int(cfg["max_leads"])):
+        rule = payment_task(deal, now, cfg, _tasks(deal["name"], "CRM Deal"))
+        if rule:
+            _create_task(deal, rule["kind"], rule["why"], now, doctype="CRM Deal")
+            results.append({"deal": deal["name"], "action": "task_created", "choice": rule["kind"]})
     frappe.db.commit()
     return {"status": "done", "checked": len(leads), "results": results}
 

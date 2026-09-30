@@ -12,7 +12,7 @@ if "requests" not in sys.modules:
     sys.modules["requests"] = MagicMock()
 
 import mmm_custom.followup as followup
-from mmm_custom.followup import DEFAULTS, rule_task, settings
+from mmm_custom.followup import DEFAULTS, payment_task, rule_task, settings
 
 NOW = datetime(2026, 9, 25, 8, 0, 0)
 CFG = settings({})
@@ -72,6 +72,23 @@ class TestRules(unittest.TestCase):
                         "ai_followup_statuses": ["New"]})
         self.assertEqual((cfg["nurture_every_days"], cfg["stale_days"], cfg["stale_statuses"]), (7, 0, ["New"]))
         self.assertEqual(settings({})["qualified_call_hours"], DEFAULTS["qualified_call_hours"])
+
+
+class TestPaymentReminder(unittest.TestCase):
+    def deal(self, **kw):
+        return {"name": "D1", "status": "Pending Payment", "modified": NOW - timedelta(days=4), **kw}
+
+    def test_quiet_registration_gets_a_reminder(self):
+        self.assertEqual(payment_task(self.deal(), NOW, CFG, [])["kind"], "payment")
+        self.assertIsNone(payment_task(self.deal(modified=NOW - timedelta(days=1)), NOW, CFG, []))
+
+    def test_past_due_date_reminds_at_once(self):
+        rule = payment_task(self.deal(modified=NOW, payment_due_date=date(2026, 9, 24)), NOW, CFG, [])
+        self.assertIn("24/09", rule["why"])
+
+    def test_paid_or_already_followed_is_left_alone(self):
+        self.assertIsNone(payment_task(self.deal(status="Deposit Paid"), NOW, CFG, []))
+        self.assertIsNone(payment_task(self.deal(), NOW, CFG, [task("Nhắc đóng phí: Lan")]))
 
 
 class TestPlanFollowups(unittest.TestCase):
