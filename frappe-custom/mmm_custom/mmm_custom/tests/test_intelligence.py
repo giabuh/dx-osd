@@ -13,7 +13,6 @@ if "requests" not in sys.modules:
 
 import mmm_custom.intelligence as intel
 from mmm_custom.intelligence import (
-    DEFAULT_REPLY_TEMPLATES,
     HOTNESS,
     INTENTS,
     build_questions,
@@ -21,13 +20,12 @@ from mmm_custom.intelligence import (
     find_candidates,
 )
 
-TEMPLATES = {"send_price": "Dạ bên em gửi bảng giá ạ", "ask_phone": "Anh/chị cho em xin SĐT ạ"}
 CONFIDENT = {
     "intent": {"choice": "price_inquiry", "confidence": 0.9},
     "hotness": {"score": 2, "confidence": 0.8},
     "phone": {"choice": "+84901234567", "confidence": 0.95},
-    "reply": {"choice": "send_price", "confidence": 0.85},
 }
+DRAFT = "💡 Jev gợi ý (khóa Excel từ cơ bản đến nâng cao; dựa trên: báo học phí):\n\nDạ học phí khóa Excel là 1.500.000đ ạ."
 EMPTY_LEAD = {"mobile_no": "", "email": ""}
 
 
@@ -50,40 +48,36 @@ class TestPureLogic(unittest.TestCase):
         self.assertEqual(find_candidates(["đơn #12345, học phí 3.500.000đ"])["phones"], [])
 
     def test_build_questions_only_asks_what_there_is_to_choose(self):
-        bare = build_questions({"phones": [], "emails": []}, {})
+        bare = build_questions({"phones": [], "emails": []})
         self.assertEqual(list(bare), ["intent", "hotness"])
-        full = build_questions({"phones": ["+84901234567"], "emails": ["a@b.com"]}, TEMPLATES)
-        self.assertEqual(list(full), ["intent", "hotness", "phone", "email", "reply"])
+        full = build_questions({"phones": ["+84901234567"], "emails": ["a@b.com"]})
+        self.assertEqual(list(full), ["intent", "hotness", "phone", "email"])
         self.assertEqual(list(full["phone"]["criteria"]), ["+84901234567", "none"])
         self.assertEqual(len(full["hotness"]["criteria"]), len(HOTNESS))
 
-    def test_confident_answers_update_the_lead_label_and_suggest_a_reply(self):
-        plan = decide_actions(CONFIDENT, TEMPLATES, 0.7, EMPTY_LEAD)
+    def test_confident_answers_update_the_lead_and_label(self):
+        plan = decide_actions(CONFIDENT, 0.7, EMPTY_LEAD)
         self.assertEqual(plan["lead_update"], {"ai_intent": "price_inquiry", "ai_hotness": "hot", "mobile_no": "+84901234567"})
         self.assertEqual(plan["labels"], ["ai-price_inquiry", "hot"])
-        self.assertIn("độ tin cậy 0.85", plan["reply_note"])
-        self.assertIn("bảng giá", plan["reply_note"])
         self.assertEqual(plan["skipped"], [])
 
     def test_nothing_is_applied_below_the_threshold(self):
         unsure = {k: {**v, "confidence": 0.4} for k, v in CONFIDENT.items()}
-        plan = decide_actions(unsure, TEMPLATES, 0.7, EMPTY_LEAD)
+        plan = decide_actions(unsure, 0.7, EMPTY_LEAD)
         self.assertEqual(plan["lead_update"], {})
         self.assertEqual(plan["labels"], [])
-        self.assertIsNone(plan["reply_note"])
-        self.assertEqual(plan["skipped"], ["intent", "hotness", "phone", "reply"])
+        self.assertEqual(plan["skipped"], ["intent", "hotness", "phone"])
 
     def test_never_overwrites_a_phone_the_lead_already_has(self):
-        plan = decide_actions(CONFIDENT, TEMPLATES, 0.7, {"mobile_no": "+84999999999", "email": ""})
+        plan = decide_actions(CONFIDENT, 0.7, {"mobile_no": "+84999999999", "email": ""})
         self.assertNotIn("mobile_no", plan["lead_update"])
 
-    def test_spam_gets_no_reply_and_its_phone_is_never_copied(self):
+    def test_spam_phone_is_never_copied(self):
         # Real Jev run: an ad for "tăng like" was spam (0.87) and its Zalo number scored 0.69 as "the customer's own".
         answers = {**CONFIDENT, "intent": {"choice": "spam", "confidence": 0.87}}
-        plan = decide_actions(answers, TEMPLATES, 0.7, EMPTY_LEAD)
+        plan = decide_actions(answers, 0.7, EMPTY_LEAD)
         self.assertEqual(plan["lead_update"]["ai_intent"], "spam")
         self.assertNotIn("mobile_no", plan["lead_update"])
-        self.assertIsNone(plan["reply_note"])
 
 
 def conversation(contact_attrs=None, contact_id=42):
@@ -234,27 +228,26 @@ class TestAnalyzeConversation(unittest.TestCase):
         self.client = MagicMock()
         self.client.list_messages.return_value = conversation({"crm_lead_id": "LEAD-1"})
 
-    def run_job(self, answers, sleep=None, suggest_reply=True):
+    def run_job(self, answers, sleep=None, suggest_reply=True, draft=DRAFT):
         with patch.object(intel, "frappe", self.frappe), \
                 patch.object(intel, "_chatwoot_client", return_value=self.client), \
                 patch.object(intel, "ask_jev", return_value=answers) as ask, \
+                patch.object(intel, "draft_note", return_value=draft) as self.draft, \
                 patch.object(intel, "compute_data_quality") as dq:
             result = intel.analyze_conversation(5, suggest_reply=suggest_reply, sleep=sleep or MagicMock())
         return result, ask, dq
 
     def test_without_suggest_reply_it_still_classifies_but_posts_no_note(self):
         result, ask, _ = self.run_job(CONFIDENT, suggest_reply=False)
-        self.assertNotIn("reply", ask.call_args[0][2])
+        self.draft.assert_not_called()
         self.assertEqual(result["applied"], ["lead_updated", "labels_added"])
         self.client.send_private_note.assert_not_called()
 
     def test_does_not_repeat_the_same_suggestion_as_the_last_note(self):
         convo = conversation({"crm_lead_id": "LEAD-1"})
-        note = intel.decide_actions(CONFIDENT, DEFAULT_REPLY_TEMPLATES, 0.7, {"mobile_no": "", "email": ""})["reply_note"]
-        convo["payload"].append({"message_type": 1, "private": True, "content": note})
+        convo["payload"].append({"message_type": 1, "private": True, "content": DRAFT})
         self.client.list_messages.return_value = convo
-        answers = {**CONFIDENT, "reply": {"choice": "send_price", "confidence": 0.85}}
-        result, _, _ = self.run_job(answers)
+        result, _, _ = self.run_job(CONFIDENT)
         self.assertNotIn("reply_suggested", result["applied"])
         self.client.send_private_note.assert_not_called()
 
@@ -267,12 +260,13 @@ class TestAnalyzeConversation(unittest.TestCase):
         self.assertEqual(ask.call_args[1]["url"], intel.JEV_URL)
         self.assertEqual([m["from"] for m in state["chat"]], ["customer", "business", "customer"], "private notes and activity are not sent")
         self.assertEqual(list(questions["phone"]["criteria"]), ["+84901234567", "none"])
-        self.assertEqual(set(questions["reply"]["criteria"]) - {"none"}, set(DEFAULT_REPLY_TEMPLATES))
+        self.assertNotIn("reply", questions, "the suggestion is the bot's own draft, not a template Jev picks")
 
         self.frappe.db.set_value.assert_called_once_with("CRM Lead", "LEAD-1", {"ai_intent": "price_inquiry", "ai_hotness": "hot", "mobile_no": "+84901234567"})
         dq.assert_called_once_with("LEAD-1")
         self.client.add_labels.assert_called_once_with(5, ["ai-price_inquiry", "hot"])
-        self.assertIn("bảng giá", self.client.send_private_note.call_args[0][1])
+        self.assertEqual(self.client.send_private_note.call_args[0][1], DRAFT)
+        self.assertEqual(self.draft.call_args[0][0], 5)
 
     def test_jev_url_can_point_at_a_proxy(self):
         self.frappe.conf["typesafe_api_url"] = "http://proxy.local/v1/systemone"
@@ -281,7 +275,7 @@ class TestAnalyzeConversation(unittest.TestCase):
 
     def test_flags_never_merges_another_lead_with_the_newly_found_phone(self):
         self.frappe.get_all.return_value = ["LEAD-ADS-7"]
-        result, _, dq = self.run_job({**CONFIDENT, "reply": {"choice": "none", "confidence": 0.9}})
+        result, _, dq = self.run_job(CONFIDENT, draft=None)
         self.assertEqual(result["applied"], ["lead_updated", "duplicate_flagged", "labels_added"])
         self.assertEqual(self.frappe.get_all.call_args[1]["or_filters"], [["mobile_no", "=", "+84901234567"]])
         note = self.frappe.get_doc.call_args[0][0]

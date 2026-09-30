@@ -54,6 +54,7 @@ class Turn:
     stuck_before: int = 0
     reason: str = ""
     jev: object = None
+    needs_staff: str = ""  # draft only: why a person has to answer (a handoff skill or reason), for the note
 
 
 def _dict(value):
@@ -266,11 +267,13 @@ def book_trials(turn, effects, catalog, plan=None):
             turn.reply.errors.append({"type": "trial_failed", "detail": str(e)[:300]})
 
 
-def run_turn(event, repo, effects, render):
+def run_turn(event, repo, effects, render, draft=False):
+    """One customer message → understanding, decision, reply, side effects. `draft` (D-110): what the bot would
+    answer for staff to see; it never hands off and the caller passes a repo and effects that write nothing."""
     catalog = repo.catalog()
     state = repo.load_state(event)
     state.channel, state.campaign = event.channel or state.channel, event.campaign or state.campaign
-    if event.message_id and event.message_id <= state.last_message_id:
+    if not draft and event.message_id and event.message_id <= state.last_message_id:
         return None  # redelivered webhook: this message was already answered
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),
                 state.status, state.turns, state.stuck_turns)
@@ -282,6 +285,14 @@ def run_turn(event, repo, effects, render):
     if turn.jev.error == "daily_budget":
         repo.warn_budget()
     turn.decision = decide(state, turn.understanding, catalog)
+    if draft:  # staff are already there: keep only what the bot can answer, never a handoff
+        d = turn.decision
+        handing = [k for k in d.skills if catalog.skills[k].action == "handoff"]
+        d.skills = [k for k in d.skills if k not in handing]
+        if handing or d.type == "handoff":
+            turn.needs_staff = catalog.skills[handing[0]].title if handing else d.handoff_reason
+        if d.type == "handoff" or (handing and d.type == "answer" and not (d.skills or d.faq or d.fact)):
+            d.type = "answer" if (d.skills or d.faq or d.fact) else "silent"
     apply_quiz_results(turn.decision, catalog)
     issue_reward(turn.decision, state, catalog, repo, repo.today())
     turn.reason = turn.decision.reason

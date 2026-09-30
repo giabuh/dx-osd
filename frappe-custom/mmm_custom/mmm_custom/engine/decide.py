@@ -38,6 +38,7 @@ class Decision:
     ai: dict = field(default_factory=dict)
     close: bool = False
     faq: dict = field(default_factory=dict)     # course FAQ answered first (D-085)
+    fact: dict = field(default_factory=dict)    # …or a part of the course's own data (D-110)
     offer: str = ""                             # level quiz offered instead of the next slot question (D-106)
     declined: str = ""                          # level quiz the customer put off this turn
     resume: str = ""                            # level quiz asked again after the customer's side question (D-107)
@@ -47,8 +48,16 @@ class Decision:
     voucher: dict = field(default_factory=dict)  # level-test reward sent this turn (pipeline, D-106)
 
 
+FACT_LABELS = {"summary": "giới thiệu khóa", "syllabus": "nội dung học", "duration": "thời lượng", "audience": "đối tượng học",
+               "certificate": "chứng chỉ", "next": "khóa học tiếp theo"}
+
+
 def faq_question(faq, catalog):
     return catalog.courses[faq["course"]].faqs[faq["index"]].question
+
+
+def fact_label(fact, catalog):
+    return f"{FACT_LABELS.get(fact['fact'], fact['fact'])} khóa {catalog.courses[fact['course']].name}"
 
 
 def slot_active(slot, slots):
@@ -154,13 +163,15 @@ def decide(state, u, catalog):
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
     faq = u.faq
-    small_talk = u.greeting and not (new or changed or faq)
+    fact = {} if faq else u.fact
+    small_talk = u.greeting and not (new or changed or faq or fact)
     if small_talk:
         skills = []  # "hihi" / "chào em" asks nothing: greet back and invite, never hand off (D-109)
     alone = [k for k in skills if catalog.skills[k].config.get("alone")]
     if alone:  # e.g. a company asking for a quote: no retail fee or course FAQ on top (D-099)
-        skills, faq = alone, None
-    if faq:  # the course's own answer beats a generic template answer to the same question (D-085)
+        skills, faq, fact = alone, None, {}
+    know = faq or fact
+    if know:  # the course's own answer beats a generic template answer to the same question (D-085, D-110)
         skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     skills, squeezed = focus(skills, catalog)
     phone = next((s.key for s in catalog.slots if s.type == "phone"), "")
@@ -173,25 +184,26 @@ def decide(state, u, catalog):
             and state.status == "active" and int(state.pending.get("resumes") or 0) < MAX_RESUMES):
         resume = paused  # answer the side question, then the question the customer stopped at
         skills = skills + [paused]
-    greet = (state.turns == 0 or small_talk) and not skills and not faq
+    greet = (state.turns == 0 or small_talk) and not skills and not know
     side = [k for k in skills if k != resume]
-    unclear = bool(resume) and not (new or changed or side or faq or waiting)  # nothing but an unknown answer
-    progress = bool(new or changed or skills or waiting or faq or u.handoff or u.focus or u.confirm or u.rejected
+    unclear = bool(resume) and not (new or changed or side or know or waiting)  # nothing but an unknown answer
+    progress = bool(new or changed or skills or waiting or know or u.handoff or u.focus or u.confirm or u.rejected
                     or u.declined or u.phone_suspect)
     stuck = 0 if progress or greet else state.stuck_turns + 1
-    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq,
+    common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq, fact=fact,
                   declined=u.declined, resume=resume, phone_check=phone_check, ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
-    answered = ", ".join(([f'"{faq_question(faq, catalog)}"'] if faq else []) + [catalog.skills[k].title for k in side])
+    answered = ", ".join(([f'"{faq_question(faq, catalog)}"'] if faq else []) +
+                         ([fact_label(fact, catalog)] if fact else []) + [catalog.skills[k].title for k in side])
 
     if state.status == "handed_off":
         if small_talk:
             return Decision("answer", **common, greet=True, reason="Khách chào; chào lại, chờ tư vấn viên")
-        if skills or faq:
+        if skills or know:
             return Decision("answer", **common, reason=f"Đã chuyển tư vấn viên; trả lời: {answered}")
         return Decision("silent", **common, reason="Đã chuyển tư vấn viên, chờ tư vấn viên nhắn")
 
     confirm = u.confirm
-    if confirm.get("kind") == "skill" and (new or changed or skills or waiting or faq):
+    if confirm.get("kind") == "skill" and (new or changed or skills or waiting or know):
         confirm = {}  # the turn already answers or asks something: a "did you mean…?" on top is noise
     why = "" if small_talk else handoff_reason(u, skills, slots, stuck, catalog)
     if why and (why in IMMEDIATE or not confirm):

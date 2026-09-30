@@ -8,7 +8,7 @@ At most one confirmation per turn, in slot order."""
 import copy
 
 from mmm_custom.engine.context import display
-from mmm_custom.engine.jev_questions import COURSE_FAQ, NONE, REPLY_TO_BOT, faq_course
+from mmm_custom.engine.jev_questions import COURSE_FACT, COURSE_FAQ, FACTS, NONE, REPLY_TO_BOT, faq_course, known_course
 from mmm_custom.engine.offers import LEVEL_UNSURE
 from mmm_custom.intelligence import HOTNESS
 
@@ -145,6 +145,15 @@ def _course_faq(u, answers, questions, course, catalog):
         u.matches.append({"faq": course.code, "index": int(choice), "kind": "jev", "confidence": round(p, 3)})
 
 
+def _course_fact(u, answers, questions, course, catalog):
+    """Jev tied the message to a part of the course's own data (D-110); the course's FAQ, when one fits, wins."""
+    choice, p = _choice(answers, questions, COURSE_FACT)
+    if u.faq or not course or choice not in FACTS or p < float(catalog.settings["skill_act"]):
+        return
+    u.fact = {"course": course.code, "fact": choice, "confidence": round(p, 3)}
+    u.matches.append({"fact": choice, "course": course.code, "kind": "jev", "confidence": round(p, 3)})
+
+
 def _reply_to_bot(u, answers, questions, state, catalog):
     """Jev tied a typed message to one of the offered buttons: act as if it was tapped."""
     from mmm_custom.engine.understand import apply_action
@@ -176,6 +185,7 @@ def combine(u, answers, questions, state, catalog):
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)
     _course_faq(out, answers, questions, course, catalog)
+    _course_fact(out, answers, questions, known_course(state, u, catalog), catalog)
     _reply_to_bot(out, answers, questions, state, catalog)
     _signals(out, answers, questions, catalog)
     return out

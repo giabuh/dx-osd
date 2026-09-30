@@ -38,6 +38,17 @@ DEFAULT_SETTINGS = {
     "quiz_reminder_template": "Dạ {{ brand.you }} ơi, bài test {{ quiz.subject }} chỉ còn {{ quiz.left }} câu nữa là xong rồi ạ, "
                               "{{ brand.you }} làm tiếp để nhận quà nhé 🎁\nCâu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}",
     "quiz_remind_after_hours": 2,
+    # Answers from a course's own data when Jev ties the question to it (D-110, engine/jev_questions.FACTS).
+    "fact_summary_template": "Dạ khóa {{ course.name }} ạ: {{ course.summary }}",
+    "fact_syllabus_template": "Dạ khóa {{ course.name }} học các nội dung chính sau ạ:"
+                              "{% for s in course.syllabus[:8] %}\n• {{ s }}{% endfor %}",
+    "fact_duration_template": "Dạ khóa {{ course.name }} học trong {{ course.duration }} ạ.",
+    "fact_audience_template": "Dạ khóa {{ course.name }} dành cho {{ course.audience }}"
+                              "{% if course.min_age %} (từ {{ course.min_age }}{% if course.max_age %} đến {{ course.max_age }}{% endif %}"
+                              " tuổi){% endif %} ạ.",
+    "fact_certificate_template": "Dạ học xong khóa {{ course.name }}, {{ brand.you }} được cấp {{ course.certificate }} ạ.",
+    "fact_next_template": "Dạ học xong khóa {{ course.name }}, {{ brand.you }} có thể học tiếp "
+                          "{{ course.next_courses | join(', ') }} ạ.",
     "phone_check_template": "Dạ số {{ phone_suspect }} hình như chưa đủ 10 số, {{ brand.you }} kiểm tra lại giúp "
                             "{{ brand.me }} nhé ạ.",
 }

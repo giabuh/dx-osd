@@ -3,6 +3,7 @@ English carrying the Vietnamese names and aliases customers use. Keys:
     parent:<slot>  course group / area          slot:<slot>  course, branch, choice or number value
     skill:<key>    one noul per Bot Skill        intent · hotness · wants_human (D-032)
     course_faq     which FAQ of the known course the message asks (D-085)
+    course_fact    which part of the known course's own data the message asks: content, length, audience… (D-110)
     level_unsure   unsure of their level, asked only while a level test can be offered (D-106)
     reply_to_bot   which of the buttons the bot just offered a typed message means (D-107)
 """
@@ -17,7 +18,18 @@ NONE = "none"
 NONE_TEXT = "None of these, or not said in the chat"
 MAX_HISTORY = 20  # 10 turns of customer + bot lines (D-061, D-074)
 COURSE_FAQ = "course_faq"
+COURSE_FACT = "course_fact"
 REPLY_TO_BOT = "reply_to_bot"
+# Parts of a course's own data the bot can answer from (D-110): key -> (Course attribute, what the customer asks).
+# Fee and schedules are skills of their own (fee_quote, schedule_lookup) with promotions and open classes.
+FACTS = {
+    "summary": ("summary", "What the course is, what it is about overall"),
+    "syllabus": ("syllabus", "The lessons, topics or programme the course teaches"),
+    "duration": ("duration", "How long the course takes: weeks, months, number of sessions"),
+    "audience": ("audience", "Who the course is for: level needed, beginners, age"),
+    "certificate": ("certificate", "Whether a certificate or diploma is given at the end"),
+    "next": ("next_courses", "What to study after this course"),
+}
 
 
 def _named(name, aliases=()):
@@ -40,6 +52,19 @@ def faq_course(state, u, catalog):
         return None
     course = catalog.courses.get((u.fills.get(slot.key) or state.slots.get(slot.key) or {}).get("value"))
     return course if course and course.faqs else None
+
+
+def known_course(state, u, catalog):
+    """The course named in this message, else the one already known."""
+    slot = catalog.slot_for("course")
+    if not slot:
+        return None
+    return catalog.courses.get((u.fills.get(slot.key) or state.slots.get(slot.key) or {}).get("value"))
+
+
+def course_facts(course):
+    """The FACTS this course has data for, in FACTS order."""
+    return [key for key, (attr, _) in FACTS.items() if course and getattr(course, attr)]
 
 
 def jev_state(text, state, catalog):
@@ -101,6 +126,11 @@ def build_questions(state, u, catalog, skills=True):
         if course:
             q[COURSE_FAQ] = _choice(f"Which of these questions about the course '{course.name}' does the customer's latest message ask?",
                                     {str(i): _named(f.question, f.examples) for i, f in enumerate(course.faqs)})
+        known = known_course(state, u, catalog)
+        facts = course_facts(known)
+        if facts:
+            q[COURSE_FACT] = _choice(f"What does the customer's latest message ask about the course '{known.name}'?",
+                                     {key: FACTS[key][1] for key in facts})
     options = list((state.pending.get("options") or {}))
     if options and not u.tapped:  # a typed answer the keyword tier could not tie to a button (D-107)
         q[REPLY_TO_BOT] = _choice("The bot's last message offered these buttons. Which one does the customer's latest "
