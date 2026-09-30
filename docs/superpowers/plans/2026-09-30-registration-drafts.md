@@ -14,7 +14,7 @@ Spec: `docs/superpowers/specs/2026-09-30-registration-drafts-design.md`. One com
 - [x] **Layer 4** `intelligence.py`: `enrol_eligible`, the `enrol` question, `decide_actions(..., enrol_floor)`,
   `_draft_registration`. Tests: `test_intelligence`.
 - [x] **Layer 5** `classes.py`, `pages/Classes.vue`, `components/Classes/*`, route, sidebar. Tests: `test_classes`.
-- [ ] **Ops** check `Facebook Post` rows with status Scheduled, then `bench --site crm.localhost scheduler enable`
+- [x] **Ops** check `Facebook Post` rows with status Scheduled, then `bench --site crm.localhost scheduler enable`
   (starts follow-up at 08:00, the 5-minute fallback, quiz reminders, staff sync, autopilot publishing).
 - [ ] **Browser check** (needs a login): the modal, the status dropdown, kanban drop, the classes page.
 
