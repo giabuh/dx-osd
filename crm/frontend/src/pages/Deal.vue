@@ -350,6 +350,7 @@ import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
+import MessageCircleIcon from '~icons/lucide/message-circle'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import LinkIcon from '@/components/Icons/LinkIcon.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
@@ -606,6 +607,13 @@ const tabs = computed(() => {
       name: 'Attachments',
       label: __('Attachments'),
       icon: AttachmentIcon,
+    },
+    {
+      // D-117: the student's Chatwoot conversation, from the Lead the registration came from
+      name: 'Messages',
+      label: __('Messages'),
+      icon: MessageCircleIcon,
+      condition: () => !!doc.value.lead,
     },
     {
       name: 'WhatsApp',

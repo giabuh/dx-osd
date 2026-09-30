@@ -4,14 +4,35 @@ import { evaluateExpression } from '@/utils/expressions'
  * Safely parse link_filters which can be a JSON string or already an object.
  * Returns the parsed object or null.
  */
-export function parseLinkFilters(linkFilters) {
+export function parseLinkFilters(linkFilters, doc = null) {
   if (!linkFilters) return null
-  if (typeof linkFilters === 'object') return linkFilters
-  try {
-    return JSON.parse(linkFilters)
-  } catch {
-    return null
+  let filters = linkFilters
+  if (typeof linkFilters !== 'object') {
+    try {
+      filters = JSON.parse(linkFilters)
+    } catch {
+      return null
+    }
   }
+  return doc ? resolveLinkFilters(filters, doc) : filters
+}
+
+/**
+ * Fill filter values written as "eval:doc.<field>" from the document being edited, e.g. a Deal's class
+ * `{"course": "eval:doc.enrol_course"}`; a filter whose field is still empty is dropped (nothing to narrow by).
+ */
+export function resolveLinkFilters(filters, doc) {
+  if (!filters || Array.isArray(filters)) return filters
+  const out = {}
+  for (const [key, value] of Object.entries(filters)) {
+    if (typeof value === 'string' && value.startsWith('eval:doc.')) {
+      const resolved = doc?.[value.slice('eval:doc.'.length)]
+      if (resolved) out[key] = resolved
+    } else {
+      out[key] = value
+    }
+  }
+  return out
 }
 
 /**
