@@ -18,7 +18,7 @@ whitelist = frappe.whitelist if frappe else (lambda **kw: (lambda fn: fn))
 
 PERIODS = (7, 30, 90, 365)
 STAGES = (("offered", "Được mời"), ("started", "Làm bài"), ("done", "Làm xong"), ("phone", "Để lại SĐT"),
-          ("enrolled", "Ghi danh"))
+          ("enrolled", "Đã đăng ký"))
 VARIANTS = (("start", "Câu mở đầu (câu 1)"), ("default", "Các câu tiếp theo"), ("result", "Báo kết quả"))
 DEFAULT_TEMPLATES = {
     "start": "Dạ {{ brand.me }} gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 "

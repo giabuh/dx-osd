@@ -9,7 +9,7 @@ except ImportError:  # offline tests
 
 FIELD = "facebook_page"
 # Same column as the default list in crm/crm/fcrm/doctype/crm_lead/crm_lead.py; keep the two alike.
-COLUMN = {"label": "Trang Facebook", "type": "Data", "key": FIELD, "width": "10rem"}
+COLUMN = {"label": "Facebook Page", "type": "Data", "key": FIELD, "width": "10rem"}
 
 
 def merge_pages(current, page):

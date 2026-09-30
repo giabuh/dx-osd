@@ -11,11 +11,11 @@ except ImportError:  # offline tests
 
 from mmm_custom.dedupe import find_matching_lead, normalize_phone
 from mmm_custom.engine.lead import PLACEHOLDER_NAMES, contact_prefill, prefill_slots
-from mmm_custom.engine.qualify import AUTO_STATUSES
 from mmm_custom.engine.catalog import DEFAULT_SETTINGS, build_catalog
 from mmm_custom.engine.render import WEEKDAYS
 from mmm_custom.engine.state import ConversationState
 from mmm_custom.pages import FIELD, merge_pages, page_of_inbox
+from mmm_custom.lifecycle import CONTACTED, TRIAL_BOOKED, auto_update
 
 CACHE_KEY = "lead_engine_catalog_rows"
 FIRST_TOUCH = ("source", "source_campaign")
@@ -142,19 +142,71 @@ def add_products(lead_name, courses):
     doc.save(ignore_permissions=True)
 
 
+def _display_name(contact):
+    return " ".join(str(contact.get("name") or "").split())
+
+
+def _new_lead(contact, source=""):
+    """A new CRM Lead for a Chatwoot contact; the status is left to the CRM default (New)."""
+    doc = frappe.new_doc("CRM Lead")
+    doc.update({"first_name": _display_name(contact) or PLACEHOLDER_NAMES[0], "email": contact.get("email") or None})
+    if source and frappe.db.exists("CRM Lead Source", source):  # older sites may lack the channel sources
+        doc.source = source
+    return doc
+
+
+def claim_new_lead(contact_id):
+    """conversation_created and the contact's first message arrive together and both look for a Lead: only the
+    one holding this 30-second claim creates it, the other looks again after a moment."""
+    if not contact_id:
+        return True
+    return bool(frappe.cache().set(f"mmm_custom:new_lead:{contact_id}", 1, nx=True, ex=30))
+
+
+def _find_or_wait(contact_id, contact, phone, email):
+    name = find_lead(contact_id, contact, phone, email)
+    if not name and not claim_new_lead(contact_id):
+        time.sleep(2)
+        name = find_lead(contact_id, contact, phone, email)
+    return name
+
+
+def ensure_lead(contact, source="", courses=()):
+    """The one way a Chatwoot contact becomes a CRM Lead (Chatwoot webhook; the engine's save_lead shares the
+    lookup, the new-Lead shape and the claim): find it (crm_lead_id → chatwoot_contact_id → phone/email) or create
+    it, link the contact, replace a placeholder name, fill an empty phone, append courses. Returns (name, created)."""
+    contact_id = str(contact.get("id") or "")
+    phone = normalize_phone(contact.get("phone_number") or contact.get("phone") or "")
+    email = contact.get("email") or None
+    name = _find_or_wait(contact_id, contact, phone, email)
+    doc = frappe.get_doc("CRM Lead", name) if name else _new_lead(contact, source)
+    if contact_id and not doc.get("chatwoot_contact_id"):
+        doc.chatwoot_contact_id = contact_id
+    real = _display_name(contact)
+    if real and real not in PLACEHOLDER_NAMES and (doc.get("first_name") or "") in PLACEHOLDER_NAMES:
+        doc.first_name, doc.lead_name = real, real
+    if phone and not doc.get("mobile_no"):
+        doc.mobile_no = phone
+    _append_products(doc, courses)
+    doc.flags.lead_engine = True
+    if not name:
+        doc.insert(ignore_permissions=True)
+        return doc.name, True
+    try:
+        doc.save(ignore_permissions=True)
+    except Exception:  # an old Lead that no longer validates must not lose the webhook: the link is what matters
+        frappe.log_error(title="ensure_lead: Lead not updated", message=f"CRM Lead {name}")
+        if contact_id and not frappe.db.get_value("CRM Lead", name, "chatwoot_contact_id"):
+            frappe.db.set_value("CRM Lead", name, "chatwoot_contact_id", contact_id)
+    return name, False
+
+
 def save_lead(state, fields, courses, contact):
     """Create or update the conversation's Lead. Never overwrites a real name or a different phone a
     person entered; courses are appended, not replaced (D-022)."""
     name = state.lead if state.lead and frappe.db.exists("CRM Lead", state.lead) else None
-    name = name or find_lead(state.contact_id, contact, fields.get("mobile_no"), contact.get("email"))
-    if name:
-        doc = frappe.get_doc("CRM Lead", name)
-    else:
-        raw_name = " ".join(str(contact.get("name") or "").split())
-        doc = frappe.new_doc("CRM Lead")
-        doc.update({"first_name": raw_name or PLACEHOLDER_NAMES[0], "email": contact.get("email") or None})
-        if frappe.db.exists("CRM Lead Source", "Messenger Bot"):  # created by after_install; older sites may lack it
-            doc.source = "Messenger Bot"
+    name = name or _find_or_wait(state.contact_id, contact, fields.get("mobile_no"), contact.get("email"))
+    doc = frappe.get_doc("CRM Lead", name) if name else _new_lead(contact, "Messenger Bot")
     if state.contact_id and not doc.get("chatwoot_contact_id"):
         doc.chatwoot_contact_id = state.contact_id  # link a phone-matched Lead so the next conversation finds it
     for field, val in fields.items():
@@ -170,8 +222,9 @@ def save_lead(state, fields, courses, contact):
             val = normalize_phone(val)
             if doc.mobile_no and doc.mobile_no != val:
                 continue
-        if field == "status" and name and doc.status not in AUTO_STATUSES:
-            continue  # a person moved this Lead (Contacted, Converted…): the bot leaves it (D-083)
+        if field == "status":  # only a forward move the lifecycle allows; a Lost status carries its reason (D-116)
+            doc.update(auto_update(doc.status, val, doc.get("lost_reason") or ""))
+            continue
         doc.set(field, val)
     if doc.meta.has_field(FIELD):
         doc.set(FIELD, merge_pages(doc.get(FIELD), page_of_inbox(state.inbox_id)))
@@ -203,27 +256,53 @@ def trial_due(booking, today):
     return None
 
 
+def advance_lead(lead, target, **values):
+    """An automatic status move (D-116) plus `values`; nothing when the lifecycle refuses the move and there is
+    nothing else to write. A full save, so the status log and the Chatwoot status attribute follow."""
+    doc = frappe.get_doc("CRM Lead", lead)
+    values = {k: v for k, v in values.items() if doc.meta.has_field(k) and doc.get(k) != v}
+    values.update(auto_update(doc.status, target, doc.get("lost_reason") or ""))
+    if not values:
+        return ""
+    doc.update(values)
+    doc.flags.lead_engine = True
+    doc.save(ignore_permissions=True)
+    return doc.status
+
+
 def create_trial_task(lead, booking, owner=""):
-    """D-102: one open trial-class Task per Lead and booking."""
+    """D-102: one open trial-class Task per Lead and booking; the Lead moves to Trial Booked (D-116)."""
     if not lead:
         return
+    due = trial_due(booking, frappe.utils.getdate())
     title = f"Học thử: {booking}"[:140]
-    if frappe.db.exists("CRM Task", {"reference_doctype": "CRM Lead", "reference_docname": lead, "title": title}):
-        return
-    owner = owner or frappe.db.get_value("CRM Lead", lead, "lead_owner") or None
-    frappe.get_doc({
-        "doctype": "CRM Task", "title": title, "status": "Todo", "priority": "High", "assigned_to": owner,
-        "description": f"Khách giữ chỗ học thử qua chat: {booking}. Gọi xác nhận trước buổi học.",
-        "reference_doctype": "CRM Lead", "reference_docname": lead,
-        "due_date": trial_due(booking, frappe.utils.getdate()),
-    }).insert(ignore_permissions=True)
+    if not frappe.db.exists("CRM Task", {"reference_doctype": "CRM Lead", "reference_docname": lead, "title": title}):
+        owner = owner or frappe.db.get_value("CRM Lead", lead, "lead_owner") or None
+        frappe.get_doc({
+            "doctype": "CRM Task", "title": title, "status": "Todo", "priority": "High", "assigned_to": owner,
+            "description": f"Khách giữ chỗ học thử qua chat: {booking}. Gọi xác nhận trước buổi học.",
+            "reference_doctype": "CRM Lead", "reference_docname": lead, "due_date": due,
+        }).insert(ignore_permissions=True)
+    advance_lead(lead, TRIAL_BOOKED, **({"trial_date": due} if due else {}))
 
 
 def set_lead_owner(lead, user):
+    """Handoff (D-058): the consultant owns the Lead and it is being consulted now (Contacted, D-116)."""
     doc = frappe.get_doc("CRM Lead", lead)
     doc.lead_owner = user
+    doc.update(auto_update(doc.status, CONTACTED, doc.get("lost_reason") or ""))
     doc.flags.lead_engine = True
     doc.save(ignore_permissions=True)
+
+
+def lead_contacted(lead):
+    """A person answered the customer: the Lead is being consulted (D-116). Never breaks the caller."""
+    if not lead:
+        return
+    try:
+        advance_lead(lead, CONTACTED)
+    except Exception:
+        frappe.log_error(title="Lead status: Contacted not written", message=f"CRM Lead {lead}")
 
 
 def chatwoot_admin():
@@ -242,9 +321,11 @@ def mark_consultant_replied(conversation_id, now=None):
     now = time.time() if now is None else now
     name = frappe.db.get_value("Bot Conversation", {"conversation_id": conversation_id})
     if name:
-        assist = _json(frappe.db.get_value("Bot Conversation", name, "assist"))
+        row = frappe.db.get_value("Bot Conversation", name, ["assist", "lead", "is_sandbox"], as_dict=True)
         frappe.db.set_value("Bot Conversation", name, {"consultant_replied": 1, "fallback_due_at": 0,
-                                                        "assist": json.dumps(human_replied(assist, now), ensure_ascii=False)})
+                                                        "assist": json.dumps(human_replied(_json(row.assist), now), ensure_ascii=False)})
+        if row.lead and not row.is_sandbox:
+            lead_contacted(row.lead)
     else:
         frappe.get_doc({"doctype": "Bot Conversation", "conversation_id": conversation_id, "status": "active",
                         "consultant_replied": 1, "slots": "{}", "pending": "{}",
@@ -368,10 +449,15 @@ class FrappeRepo:
             filters["branch"] = branch
         if shift:
             filters["shift"] = ["like", f"{shift}%"]
-        rows = frappe.get_all("Course Schedule", filters=filters, fields=["start_date", "shift", "weekdays", "branch", "seats"],
+        from mmm_custom.enrolment import seats_taken
+
+        rows = frappe.get_all("Course Schedule", filters=filters,
+                              fields=["name", "start_date", "shift", "weekdays", "branch", "seats"],
                               order_by="start_date asc", limit=limit)
+        taken = seats_taken([r.name for r in rows if r.seats])  # registrations holding a seat (D-117)
         return [{"date": r.start_date, "weekday": WEEKDAYS[r.start_date.weekday()], "shift": r.shift,
-                 "weekdays": r.weekdays, "branch": r.branch, "seats_left": r.seats} for r in rows]
+                 "weekdays": r.weekdays, "branch": r.branch,
+                 "seats_left": max((r.seats or 0) - taken.get(r.name, 0), 0) if r.seats else r.seats} for r in rows]
 
     def active_promotions(self, today):
         rows = frappe.get_all("Course Promotion", filters={"active": 1},

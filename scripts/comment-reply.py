@@ -916,26 +916,34 @@ def sync_to_frappe_crm(
             "docker", "exec", "crm-frappe-1",
             "bench", "--site", "crm.localhost", "execute",
             "frappe.db.get_value",
-            "--args", json.dumps(["CRM Lead", {"lead_name": customer_name}, "name"]),
+            "--args", json.dumps(["CRM Lead", {"lead_name": customer_name}, ["name", "status"]]),
         ]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
-        lead_name = res.stdout.strip().replace('"', '')
+        try:
+            lead_name, lead_status = json.loads(res.stdout.strip() or "null") or (None, None)
+        except (ValueError, TypeError):
+            lead_name, lead_status = None, None
 
-        if lead_name and lead_name != "None":
-            update_fields = {"converted": 0}
+        if lead_name:
+            # D-116: never un-register a Lead (converted stays) and only a New Lead becomes Qualified;
+            # a later step (Contacted, Trial Booked, Converted) or a status a person set is left alone.
+            update_fields = {}
             if course:
                 update_fields["course_interest"] = course
             if branch:
                 update_fields["branch"] = branch
             if phone:
                 update_fields["mobile_no"] = phone
-                update_fields["status"] = "Qualified"
+                if lead_status in (None, "", "New"):
+                    update_fields["status"] = "Qualified"
             if learner_age:
                 update_fields["learner_age"] = int(learner_age)
             if preferred_shift:
                 update_fields["preferred_shift"] = preferred_shift
             if learner:
                 update_fields["learner_type"] = learner
+            if not update_fields:
+                return
 
             cmd_update = [
                 "docker", "exec", "crm-frappe-1",

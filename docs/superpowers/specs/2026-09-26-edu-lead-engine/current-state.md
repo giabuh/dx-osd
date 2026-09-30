@@ -1,4 +1,4 @@
-# Current State — Code Map (as of 2026-09-30, C1 + C2 + C3 done; staff assist D-109…D-115)
+# Current State — Code Map (as of 2026-09-30, C1 + C2 + C3 done; staff assist D-109…D-115; customer lifecycle D-116/D-117)
 
 What exists today, where it lives, and which layer changes it. Line numbers drift; re-check with
 `grep -n` before relying on one.
@@ -20,7 +20,7 @@ for real customers until a later labelled gate passes.
 
 | File | What it does today | Changed by |
 |---|---|---|
-| `api.py` `chatwoot_sync` | Chatwoot webhook → HMAC + anti-replay → 3-tier dedup → create/update CRM Lead, note log; courses detected from the catalog (`detect_courses`) → Lead `products` + `course_interest` summary; forwards `message_created` to `intelligence.enqueue_analysis` | C3.2 |
+| `api.py` `chatwoot_sync` | Chatwoot webhook → HMAC + anti-replay → `repo.ensure_lead` (3-tier dedup shared with the bot, one create claim per contact) → create/update CRM Lead, note log; courses detected from the catalog (`detect_courses`) → Lead `products` + `course_interest` summary; forwards `message_created` to `intelligence.enqueue_analysis` | C3.2 |
 | `bot_api.py` `agent_bot_webhook` | Agent Bot webhook: HMAC → `engine.pipeline.parse_event` → customer message enqueued (`job_id` = message id, deduplicated) → `engine.copilot.process`; human agent message → `consultant_replied`, assist timer stopped, banner refreshed and the text captured into the staff reply library (D-111, D-114); resolved → conversation closed | — |
 | `engine/catalog.py`, `state.py` | Immutable catalog snapshot, Jev/cost/advisor settings, and `ConversationState` with bounded history and call timestamps | C4+ reads |
 | `engine/text.py`, `slot_types.py`, `understand.py`, `reply_match.py` | Keyword tier: diacritic folding, phrase and phone matching (a number with a digit missing is read back, D-107), customer names (`person_name`), quick replies tapped or typed (folded titles, quiz letters, yes/no to the test offer, trial dates, D-107) and confirmation responses; an explicit "not X, Y" correction reopens a filled catalog slot | C4+ reads |
@@ -33,7 +33,11 @@ for real customers until a later labelled gate passes.
 | `engine/log.py`, `learning.py` | AI Decision Log rows + learning signals; daily retention purge; `consultant_corrected` on CRM Lead update | C9.2 review UI |
 | `engine/routing.py`, `handoff.py`, `chatwoot_setup.py` | Rule D pick (D-087: Lead owner → B2B consultants for a skill with `route: b2b` (D-099) → branch or Tổng đài → Team Lead if confidently hot → course-group specialist → least loaded), team, labels, `bot_*` conversation and contact attribute definitions, summary note | C4.1 CRM toggles |
 | `engine/effects.py`, `events.py`, `pipeline.py` (Lead writes also update the Chatwoot contact, D-088) | Effects interface and hook; `run_turn` calls `understand_turn` with Jev/fallback and token accounting; RQ job guarded by per-conversation `filelock` | — |
-| `engine/qualify.py` | Pure `lead_status()` → New / Qualified / Unqualified (D-083); `pipeline.write_lead` writes it once per change, `repo.save_lead` skips Leads a person moved to another status | C6.1, C6.5 |
+| `engine/qualify.py` | Pure `lead_status()` → the bot's target: Qualified / Unqualified (support) / Junk (spam) (D-083, D-116); `repo.save_lead` applies it only through `lifecycle.auto_update` (forward moves; a Lost status carries its reason) | C6.5 |
+| `lifecycle.py` | The customer journey (D-116/D-117): Lead statuses New → Qualified (Đủ thông tin) → Contacted (Đang tư vấn) → Trial Booked → Converted (Đã đăng ký), Nurture (On Hold), Unqualified / Junk (Lost) and Deal statuses Pending Payment → Deposit Paid → Won / Lost; `can_auto_move` / `auto_update` for every automatic move (handoff and first consultant reply → Contacted, `book_trial` → Trial Booked with `trial_date`); `LABELS`; lost reasons; `migrate()` (patch v1_1, after_install) and `ensure_statuses_hook` (after_migrate); `on_lead_update` pushes the real status to the Chatwoot contact (`trang_thai_lead`) | — |
+| `enrolment.py` | The registration record (D-117): Deal fields (course, class, fee, promotion, deposit, paid, balance, due date — `setup.CATALOG_FIELDS["CRM Deal"]`), `before_insert` / `validate` / `on_update` hooks (fee maths, deposit → Deposit Paid, class must match the course, a Postponed cancellation sends the Lead back to Nurture), Deal page layouts (`update_deal_layouts`), `seats_taken` for `FrappeRepo.open_schedules` | — |
+| `followup.py` | Daily nurturing by status (D-116): Qualified not called in 24 h, quiet New/Contacted (Jev picks call/message, without AI a message), after the trial date, Nurture every 14 days × 4 with the next class, unpaid registrations; runs without an AI key; `lead_nurture` site config | — |
+| `branches.py` | One branch field: the legacy `branch` select is hidden and its values fill `territory` (validate hook, after_migrate backfill) | — |
 | `mmm_custom/workspace/bot_sao_viet/` | Desk workspace grouping the bot pages and data (D-089) | — |
 | `engine/knowledge.py`, `mmm_custom/page/bot_knowledge/`, `public/js/crm_product.js`, `mmm_custom/doctype/course_faq/` | Course knowledge overview and coverage table (D-086); CRM Product fields `syllabus` + `faqs` (`setup.CATALOG_FIELDS`), answered through `jev_questions.faq_course`/`combine._course_faq` (D-085) | — |
 | `engine/playground.py`, `mmm_custom/page/bot_playground/` | `/app/bot-playground`: dry simulation, replay and an independent **Use Jev** toggle with question/answer/token inspector | — |
@@ -52,7 +56,6 @@ for real customers until a later labelled gate passes.
 | `engine/dashboard.py` | Role-gated summary of bot Lead creation, qualification, handoffs, knowledge coverage and latest qualified Leads | — |
 | `intelligence.py:208` `analyze_conversation` | Jev intent/hotness/phone/email analysis and labels; skips conversations handled by an active Bot Conversation | — |
 | `intelligence.py:74` `ask_jev` | One System One call (`/v1/systemone`), typed questions | Reused |
-| `followup.py:39` `plan_followups` | Daily 08:00 (`hooks.py` cron): Jev picks follow-up for stale open leads → CRM Task | C6.4 |
 | `referral.py` | Referral codes (D-103): code per Lead, `find_code`, CRM Lead `before_insert`/`validate` hooks resolving `referred_by`, migrate backfill | — |
 | `sources.py` | Channel list (D-100): Chatwoot channel → CRM Lead Source for new Leads, `source_campaign`, statuses for planned channels (Zalo, TikTok) | Add a channel = one row |
 | `dedupe.py`, `data_quality.py` | Email/phone normalisation and matching; data-quality label | Reused; C7.2 |

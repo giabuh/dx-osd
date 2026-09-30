@@ -20,33 +20,39 @@
       </div>
     </template>
     <template #default>
-      <div class="mb-4 flex items-center gap-2 text-ink-gray-5">
-        <OrganizationsIcon class="h-4 w-4" />
-        <label class="block text-base">{{ __('Organization') }}</label>
-      </div>
-      <div class="ml-6 text-ink-gray-9">
-        <div class="flex items-center justify-between text-base">
-          <div>{{ __('Choose Existing') }}</div>
-          <Switch v-model="existingOrganizationChecked" />
+      <!-- D-117: most students are people; the organization block is for company (B2B) customers only -->
+      <template v-if="lead.organization">
+        <div class="mb-4 flex items-center gap-2 text-ink-gray-5">
+          <OrganizationsIcon class="h-4 w-4" />
+          <label class="block text-base">{{ __('Organization') }}</label>
         </div>
-        <Link
-          v-if="existingOrganizationChecked"
-          class="form-control mt-2.5"
-          size="md"
-          :value="existingOrganization"
-          doctype="CRM Organization"
-          @change="(data) => (existingOrganization = data)"
-        />
-        <div v-else class="mt-2.5 text-base">
-          {{
-            __(
-              'New organization will be created based on the data in details section',
-            )
-          }}
+        <div class="ml-6 text-ink-gray-9">
+          <div class="flex items-center justify-between text-base">
+            <div>{{ __('Choose Existing') }}</div>
+            <Switch v-model="existingOrganizationChecked" />
+          </div>
+          <Link
+            v-if="existingOrganizationChecked"
+            class="form-control mt-2.5"
+            size="md"
+            :value="existingOrganization"
+            doctype="CRM Organization"
+            @change="(data) => (existingOrganization = data)"
+          />
+          <div v-else class="mt-2.5 text-base">
+            {{
+              __(
+                'New organization will be created based on the data in details section',
+              )
+            }}
+          </div>
         </div>
-      </div>
+      </template>
 
-      <div class="mb-4 mt-6 flex items-center gap-2 text-ink-gray-5">
+      <div
+        class="mb-4 flex items-center gap-2 text-ink-gray-5"
+        :class="{ 'mt-6': lead.organization }"
+      >
         <ContactsIcon class="h-4 w-4" />
         <label class="block text-base">{{ __('Contact') }}</label>
       </div>

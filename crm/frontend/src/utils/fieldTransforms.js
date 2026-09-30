@@ -4,14 +4,46 @@ import { evaluateExpression } from '@/utils/expressions'
  * Safely parse link_filters which can be a JSON string or already an object.
  * Returns the parsed object or null.
  */
-export function parseLinkFilters(linkFilters) {
+export function parseLinkFilters(linkFilters, doc = null) {
   if (!linkFilters) return null
-  if (typeof linkFilters === 'object') return linkFilters
-  try {
-    return JSON.parse(linkFilters)
-  } catch {
-    return null
+  let filters = linkFilters
+  if (typeof linkFilters !== 'object') {
+    try {
+      filters = JSON.parse(linkFilters)
+    } catch {
+      return null
+    }
   }
+  return doc ? resolveLinkFilters(filters, doc) : filters
+}
+
+const EVAL_DOC = /^eval:\s*doc\.(\w+)$/
+
+/**
+ * Fill filter values written as "eval: doc.<field>" (Frappe's dynamic link filter) from the document being
+ * edited, e.g. a Deal's class `[["Course Schedule", "course", "=", "eval: doc.enrol_course"]]`, in list or
+ * object form; a condition whose field is still empty is dropped (nothing to narrow by yet).
+ */
+export function resolveLinkFilters(filters, doc) {
+  const resolve = (value) => {
+    const m = typeof value === 'string' && value.match(EVAL_DOC)
+    return m ? { dynamic: true, value: doc?.[m[1]] } : { dynamic: false, value }
+  }
+  if (!filters) return filters
+  if (Array.isArray(filters)) {
+    return filters.flatMap((cond) => {
+      if (!Array.isArray(cond) || !cond.length) return [cond]
+      const r = resolve(cond[cond.length - 1])
+      if (!r.dynamic) return [cond]
+      return r.value ? [[...cond.slice(0, -1), r.value]] : []
+    })
+  }
+  const out = {}
+  for (const [key, value] of Object.entries(filters)) {
+    const r = resolve(value)
+    if (!r.dynamic || r.value) out[key] = r.value
+  }
+  return out
 }
 
 /**

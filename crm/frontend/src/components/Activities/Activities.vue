@@ -10,8 +10,11 @@
     :whatsappBox="whatsappBox"
     :modalRef="modalRef"
   />
-  <!-- Sao Việt: the Lead's Chatwoot conversation, read and answered here -->
-  <LeadChat v-if="title == 'Messages'" :lead="docname" />
+  <!-- Sao Việt: the Lead's Chatwoot conversation, read and answered here (a registration: its Lead's, D-117) -->
+  <LeadChat
+    v-if="title == 'Messages'"
+    :lead="doctype == 'CRM Deal' ? doc.lead : docname"
+  />
   <FadedScrollableDiv v-else class="flex flex-col h-full overflow-y-auto">
     <div
       v-if="all_activities?.loading"

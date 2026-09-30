@@ -2,8 +2,9 @@
 
 | Term | Vietnamese | Meaning in this spec |
 |---|---|---|
-| Lead | Khách tiềm năng | A CRM Lead record; one per real person (dedup) |
-| Deal | Cơ hội / Ghi danh | CRM Deal created when a lead enrols (C7.1) |
+| Lead | Khách hàng tiềm năng | A CRM Lead record; one per real person (dedup); carries the journey up to registration (D-116) |
+| Deal | Hồ sơ đăng ký (list: Học viên đăng ký) | CRM Deal created when a lead agrees to register: course, class, fee, deposit (D-117) |
+| Lead status | Trạng thái khách | Mới → Đủ thông tin → Đang tư vấn → Hẹn học thử → Đã đăng ký; Nuôi dưỡng; Không phù hợp / Rác (D-116) |
 | Area | Khu vực | Group node in CRM Territory (TP.HCM, Bình Dương, Đồng Nai, Vũng Tàu) |
 | Branch | Chi nhánh / Cơ sở | Leaf node in CRM Territory; stored on Lead as `territory` |
 | Course group | Nhóm khóa | e.g. Tin học văn phòng, Kế toán; consultants specialise by group |

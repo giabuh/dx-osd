@@ -47,16 +47,14 @@ def create_custom_fields():
 			"label": "Branch",
 			"fieldtype": "Select",
 			"options": "\nCS1 Bình Thạnh\nCS2 Quận 1\nCS3 Thủ Đức",
-			"in_list_view": 1,
-			"in_standard_filter": 1,
+			"hidden": 1,  # legacy: `territory` is the branch (D-116, mmm_custom.branches)
 			"insert_after": "course_interest",
 		}).insert(ignore_permissions=True)
 		print("Custom field branch created")
 	else:
 		doc = frappe.get_doc("Custom Field", "CRM Lead-branch")
 		doc.options = "\nCS1 Bình Thạnh\nCS2 Quận 1\nCS3 Thủ Đức"
-		doc.in_list_view = 1
-		doc.in_standard_filter = 1
+		doc.hidden, doc.in_list_view, doc.in_standard_filter = 1, 0, 0
 		doc.save(ignore_permissions=True)
 		print("Custom field branch updated")
 
@@ -119,8 +117,38 @@ def create_custom_field():
 	create_custom_fields()
 
 
+# Upstream B2B fields a training centre's Lead form does not need (D-116); `organization` stays for companies.
+REMOVE_FROM_LEAD = ("website", "annual_revenue", "no_of_employees", "industry", "job_title", "branch")
+
+
+def remove_fields(layout, names):
+	"""Drop `names` from every column of a CRM Fields Layout (sections, or tabs of sections); in place."""
+	if isinstance(layout, list):
+		for item in layout:
+			remove_fields(item, names)
+	elif isinstance(layout, dict):
+		if isinstance(layout.get("fields"), list):
+			layout["fields"] = [f for f in layout["fields"] if (f.get("fieldname") if isinstance(f, dict) else f) not in names]
+		for key in ("sections", "columns"):
+			remove_fields(layout.get(key), names)
+	return layout
+
+
+def layout_fields(layout):
+	"""Every fieldname a CRM Fields Layout shows."""
+	out = set()
+	if isinstance(layout, list):
+		for item in layout:
+			out |= layout_fields(item)
+	elif isinstance(layout, dict):
+		out |= {f.get("fieldname") if isinstance(f, dict) else f for f in layout.get("fields") or []}
+		for key in ("sections", "columns"):
+			out |= layout_fields(layout.get(key))
+	return out
+
+
 def update_crm_fields_layout():
-	"""Ensure course_interest and branch are visible in Frappe CRM UI layouts."""
+	"""The centre's fields on the Lead layouts (course, branch = territory, AI, level test…), without B2B fields."""
 	import json
 
 	layouts_to_update = {
@@ -135,19 +163,22 @@ def update_crm_fields_layout():
 		doc = frappe.get_doc("CRM Fields Layout", layout_name)
 		try:
 			layout = json.loads(doc.layout)
+			present = layout_fields(layout)  # a field shown in another section (territory) is not added twice
 			for section in layout:
 				if section.get("name") == target_section:
 					columns = section.get("columns", [])
 					if columns:
 						col_fields = columns[-1].setdefault("fields", [])
-						fields = ["course_interest", "branch", "data_quality"]
+						fields = ["course_interest", "territory", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
 							fields += ["source_campaign", "facebook_page", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
-							fields += ["quiz_detail", "voucher_code"]  # D-106
+							fields += ["quiz_detail", "voucher_code", "trial_date"]  # D-106, D-116
 						for f in fields:
-							if f not in col_fields:
+							if f not in present:
 								col_fields.append(f)
+								present.add(f)
+			remove_fields(layout, REMOVE_FROM_LEAD)
 			doc.layout = json.dumps(layout)
 			doc.save(ignore_permissions=True)
 			print(f"{layout_name} layout updated")
@@ -206,11 +237,13 @@ CATALOG_FIELDS = {
 		 "description": "Chủ đề khách làm sai trong bài test (D-106)", "insert_after": "placement_result"},
 		{"fieldname": "voucher_code", "label": "Voucher Code", "fieldtype": "Data", "length": 40, "read_only": 1,
 		 "description": "Mã ưu đãi bot tặng sau bài test (D-106)", "insert_after": "quiz_detail"},
+		# The trial class / level test date a booking set (D-102, D-116): follow-up checks in after it
+		{"fieldname": "trial_date", "label": "Trial Date", "fieldtype": "Date", "insert_after": "voucher_code"},
 		# Where the Lead first came from, next to the standard `source` (D-100)
 		{"fieldname": "source_campaign", "label": "Campaign", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "description": "Campaign or landing page reported by the channel", "insert_after": "source"},
 		# The Facebook page (Chatwoot inbox) the person messaged; one person on two pages is two Leads (pages.py)
-		{"fieldname": "facebook_page", "label": "Trang Facebook", "fieldtype": "Data", "length": 140, "read_only": 1,
+		{"fieldname": "facebook_page", "label": "Facebook Page", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "in_list_view": 1, "in_standard_filter": 1, "description": "Trang Facebook khách đã nhắn tin",
 		 "insert_after": "source_campaign"},
 		# Referral codes (D-103): this Lead's own code, the code a friend gave, and that friend
@@ -220,6 +253,40 @@ CATALOG_FIELDS = {
 		 "insert_after": "referral_code"},
 		{"fieldname": "referred_by", "label": "Referred By", "fieldtype": "Link", "options": "CRM Lead", "read_only": 1,
 		 "insert_after": "referred_by_code"},
+	],
+	# The registration record (D-117, mmm_custom.enrolment). Fields named like the Lead's are copied on "Ghi danh".
+	"CRM Deal": [
+		{"fieldname": "enrol_course", "label": "Enrolled Course", "fieldtype": "Link", "options": "CRM Product",
+		 "in_list_view": 1, "in_standard_filter": 1, "insert_after": "status"},
+		{"fieldname": "course_schedule", "label": "Class", "fieldtype": "Link", "options": "Course Schedule",
+		 "link_filters": '[["Course Schedule", "course", "=", "eval: doc.enrol_course"], ["Course Schedule", "status", "=", "Open"]]',
+		 "insert_after": "enrol_course"},
+		{"fieldname": "class_start_date", "label": "Class Start Date", "fieldtype": "Date", "read_only": 1,
+		 "in_list_view": 1, "insert_after": "course_schedule"},
+		{"fieldname": "tuition_fee", "label": "Tuition Fee", "fieldtype": "Currency", "options": "currency",
+		 "insert_after": "class_start_date"},
+		{"fieldname": "promotion", "label": "Promotion", "fieldtype": "Link", "options": "Course Promotion",
+		 "insert_after": "tuition_fee"},
+		{"fieldname": "discount_amount", "label": "Discount", "fieldtype": "Currency", "options": "currency",
+		 "read_only": 1, "insert_after": "promotion"},
+		{"fieldname": "final_fee", "label": "Final Fee", "fieldtype": "Currency", "options": "currency", "read_only": 1,
+		 "in_list_view": 1, "insert_after": "discount_amount"},
+		{"fieldname": "deposit_amount", "label": "Deposit", "fieldtype": "Currency", "options": "currency",
+		 "insert_after": "final_fee"},
+		{"fieldname": "deposit_date", "label": "Deposit Date", "fieldtype": "Date", "insert_after": "deposit_amount"},
+		{"fieldname": "paid_amount", "label": "Paid", "fieldtype": "Currency", "options": "currency",
+		 "description": "Tổng số đã đóng, gồm cả tiền cọc", "insert_after": "deposit_date"},
+		{"fieldname": "balance_due", "label": "Balance Due", "fieldtype": "Currency", "options": "currency",
+		 "read_only": 1, "insert_after": "paid_amount"},
+		{"fieldname": "payment_due_date", "label": "Payment Due Date", "fieldtype": "Date", "insert_after": "balance_due"},
+		{"fieldname": "course_interest", "label": "Course Interest", "fieldtype": "Data", "read_only": 1,
+		 "insert_after": "payment_due_date"},
+		{"fieldname": "placement_result", "label": "Level Test", "fieldtype": "Data", "read_only": 1,
+		 "insert_after": "course_interest"},
+		{"fieldname": "voucher_code", "label": "Voucher Code", "fieldtype": "Data", "length": 40, "read_only": 1,
+		 "insert_after": "placement_result"},
+		{"fieldname": "trial_date", "label": "Trial Date", "fieldtype": "Date", "read_only": 1,
+		 "insert_after": "voucher_code"},
 	],
 }
 

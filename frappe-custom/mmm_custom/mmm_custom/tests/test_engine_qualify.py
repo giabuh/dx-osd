@@ -7,7 +7,7 @@ from engine_fixtures import FakeJev, FakeRepo, demo_catalog, fill, render
 
 from mmm_custom.engine.effects import RecordingEffects
 from mmm_custom.engine.pipeline import parse_event, run_turn
-from mmm_custom.engine.qualify import NEW, QUALIFIED, UNQUALIFIED, lead_status
+from mmm_custom.engine.qualify import JUNK, NEW, QUALIFIED, UNQUALIFIED, lead_status
 from mmm_custom.engine.state import ConversationState
 
 CAT = demo_catalog()
@@ -34,9 +34,9 @@ class TestLeadStatus(unittest.TestCase):
         # Jev reads "chưa biết gì thì học được không" as purchase: too noisy to qualify on (live check 2026-09-27)
         self.assertEqual(lead_status({}, {"ai_intent": "purchase"}, CAT), NEW)
 
-    def test_existing_student_or_spam_is_unqualified(self):
+    def test_existing_student_is_unqualified_and_spam_is_junk(self):
         self.assertEqual(lead_status({}, {"ai_intent": "support"}, CAT), UNQUALIFIED)
-        self.assertEqual(lead_status({}, {"ai_intent": "spam"}, CAT), UNQUALIFIED)
+        self.assertEqual(lead_status({}, {"ai_intent": "spam"}, CAT), JUNK)
 
     def test_contact_details_beat_a_support_intent(self):
         slots = {"course": fill("VP-EXCEL"), "phone": PHONE}
@@ -62,7 +62,7 @@ class TestStatusInTheTurn(unittest.TestCase):
         turn = run_turn(parse_event(incoming("0901234567")), self.repo, self.fx, render)
         self.assertEqual(self.fx.of("save_lead")[-1]["fields"]["status"], QUALIFIED)
         self.assertEqual(self.repo.states["7"].ai["status"], QUALIFIED)
-        self.assertIn("tiềm năng", turn.reason)
+        self.assertIn("Đủ thông tin", turn.reason)
 
     def test_status_is_written_once(self):
         self.repo.jev = FakeJev({"intent": {"choice": "support", "confidence": 0.9}})

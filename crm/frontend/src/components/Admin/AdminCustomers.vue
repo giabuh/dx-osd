@@ -11,7 +11,7 @@
     </div>
     <ErrorMessage :message="error" />
 
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
       <!-- a literal <button>: :is="'button'" would resolve to the global frappe-ui Button (h-7) -->
       <button
         v-for="card in cards"
@@ -89,7 +89,7 @@
           Bảng xếp hạng tư vấn viên
         </div>
         <div class="text-p-sm text-ink-gray-5">
-          Xếp theo số ghi danh, rồi số khách tiềm năng
+          Xếp theo số khách đã đăng ký, rồi số khách đủ thông tin
         </div>
       </div>
       <ListView
@@ -235,9 +235,17 @@ const cards = computed(() => {
       open: () => openLeads({ mobile_no: ['is', 'set'] }),
     },
     {
-      title: 'Khách tiềm năng',
+      title: 'Đủ thông tin trở lên',
       value: t.qualified ?? 0,
-      open: () => openLeads({ status: 'Qualified' }),
+      open: () =>
+        openLeads({
+          status: ['in', ['Qualified', 'Contacted', 'Nurture', 'Trial Booked']],
+        }),
+    },
+    {
+      title: 'Hẹn học thử',
+      value: t.trial ?? 0,
+      open: () => openLeads({ status: 'Trial Booked' }),
     },
     {
       title: 'Khách nóng',
@@ -246,7 +254,7 @@ const cards = computed(() => {
     },
     { title: 'Khách doanh nghiệp', value: t.b2b ?? 0 },
     {
-      title: 'Đã ghi danh',
+      title: 'Đã đăng ký',
       value: t.converted ?? 0,
       open: () => openList('Deals', {}),
     },
@@ -299,8 +307,8 @@ const staffColumns = [
   { label: 'Tư vấn viên', key: 'full_name', width: 2 },
   { label: 'Chi nhánh', key: 'branch', width: 1.5 },
   { label: 'Khách được giao', key: 'leads', width: 1 },
-  { label: 'Tiềm năng', key: 'qualified', width: 1 },
-  { label: 'Ghi danh', key: 'converted', width: 1 },
+  { label: 'Đủ thông tin', key: 'qualified', width: 1 },
+  { label: 'Đã đăng ký', key: 'converted', width: 1 },
   { label: 'Tỷ lệ chốt', key: 'rate', width: 1.4 },
 ]
 

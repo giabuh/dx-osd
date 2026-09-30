@@ -123,7 +123,7 @@ const STAGES = [
   ['started', 'Làm bài'],
   ['done', 'Làm xong'],
   ['phone', 'Để lại SĐT'],
-  ['enrolled', 'Ghi danh'],
+  ['enrolled', 'Đã đăng ký'],
 ]
 
 const days = ref('30')

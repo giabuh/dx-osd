@@ -6,7 +6,7 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.desk import can_open_bot
-from mmm_custom.engine.qualify import QUALIFIED, UNQUALIFIED
+from mmm_custom.lifecycle import QUALIFIED, UNQUALIFIED, reached
 
 BOT_SOURCE = "Messenger Bot"
 
@@ -18,7 +18,7 @@ def summarize(leads, handoffs, coverages, today, bot_leads=frozenset()):
     day = str(today)[:10]
     bot_leads = [row for row in leads if row.get("source") == BOT_SOURCE or row.get("name") in bot_leads]
     is_today = lambda value: str(value or "")[:10] == day
-    qualified = [row for row in bot_leads if row.get("status") == QUALIFIED]
+    qualified = [row for row in bot_leads if reached(row.get("status"), QUALIFIED)]  # or a later step (D-116)
     latest = sorted(qualified, key=lambda row: str(row.get("creation") or ""), reverse=True)[:10]
     return {
         "new_today": sum(is_today(row.get("creation")) for row in bot_leads),
@@ -42,7 +42,7 @@ def summary():
     linked = set(frappe.get_all("Bot Conversation", filters={"is_sandbox": 0, "lead": ["is", "set"]}, pluck="lead"))
     or_filters = {"source": BOT_SOURCE, "name": ["in", list(linked)]} if linked else None
     leads = frappe.get_all("CRM Lead", filters=None if linked else {"source": BOT_SOURCE}, or_filters=or_filters,
-                           fields=["name", "lead_name", "first_name", "mobile_no", "course_interest", "territory", "branch",
+                           fields=["name", "lead_name", "first_name", "mobile_no", "course_interest", "territory",
                                    "lead_owner", "source", "status", "creation"], limit_page_length=0)
     rows = [dict(row) for row in leads]
     names = [row["name"] for row in rows]
