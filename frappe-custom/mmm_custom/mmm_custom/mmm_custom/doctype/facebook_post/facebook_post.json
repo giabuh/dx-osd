@@ -13,16 +13,28 @@
   "status",
   "day_of_week",
   "scheduled_time",
+  "column_break_main",
   "batch_id",
   "boss_directive",
-  "ai_feedback",
-  "column_break_main",
   "posted_at",
   "fb_post_id",
   "fb_post_url",
   "section_break_content",
   "content",
+  "ai_feedback",
+  "column_break_content",
   "image",
+  "section_break_analytics",
+  "likes_count",
+  "comments_count",
+  "shares_count",
+  "column_break_analytics",
+  "reach_count",
+  "leads_count",
+  "last_analytics_sync",
+  "ads_recommendation",
+  "section_break_comments",
+  "comments",
   "section_break_status",
   "error_message"
  ],
@@ -37,11 +49,11 @@
   },
   {
    "fieldname": "course",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Khóa học",
-   "options": "Tiếng Anh\nBơi lội\nToán tư duy\nChung",
+   "options": "CRM Product",
    "reqd": 1
   },
   {
@@ -69,6 +81,10 @@
    "label": "Lịch hẹn đăng"
   },
   {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "batch_id",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -79,16 +95,6 @@
    "fieldname": "boss_directive",
    "fieldtype": "Small Text",
    "label": "Chỉ đạo tuần (Boss Directive)"
-  },
-  {
-   "description": "Gợi ý thêm để AI điều chỉnh nội dung hoặc banner theo mong muốn",
-   "fieldname": "ai_feedback",
-   "fieldtype": "Small Text",
-   "label": "Gợi ý cho AI (Tùy chọn)"
-  },
-  {
-   "fieldname": "column_break_main",
-   "fieldtype": "Column Break"
   },
   {
    "fieldname": "posted_at",
@@ -119,9 +125,93 @@
    "label": "Nội dung bài viết (Caption)"
   },
   {
+   "description": "Gợi ý thêm để AI điều chỉnh nội dung hoặc banner theo mong muốn",
+   "fieldname": "ai_feedback",
+   "fieldtype": "Small Text",
+   "label": "Gợi ý cho AI (Tùy chọn)"
+  },
+  {
+   "fieldname": "column_break_content",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "image",
    "fieldtype": "Attach Image",
    "label": "Ảnh đăng tải (Banner)"
+  },
+  {
+   "fieldname": "section_break_analytics",
+   "fieldtype": "Section Break",
+   "label": "Hiệu quả chiến dịch (Analytics & Insights)"
+  },
+  {
+   "default": "0",
+   "fieldname": "likes_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Lượt thích (Likes)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "comments_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Bình luận (Comments)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "shares_count",
+   "fieldtype": "Int",
+   "label": "Lượt chia sẻ (Shares)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_analytics",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "reach_count",
+   "fieldtype": "Int",
+   "label": "Tiếp cận (Impressions)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "leads_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Số Lead CRM thu về",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_analytics_sync",
+   "fieldtype": "Datetime",
+   "label": "Lần cập nhật số liệu gần nhất",
+   "read_only": 1
+  },
+  {
+   "default": "Not Evaluated",
+   "fieldname": "ads_recommendation",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Đề xuất chạy Ads (AI)",
+   "options": "Not Evaluated\nRecommended\nReview\nNot Recommended",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_comments",
+   "fieldtype": "Section Break",
+   "label": "Bình luận Fanpage (Facebook Comments)"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Table",
+   "label": "Danh sách Bình luận",
+   "options": "Facebook Post Comment"
   },
   {
    "collapsible": 1,
@@ -185,5 +275,7 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "title_field": "title",
+ "search_fields": "title,course,status,batch_id,ads_recommendation"
 }

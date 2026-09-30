@@ -2,7 +2,25 @@
 // For license information, please see license.txt
 
 frappe.listview_settings["Facebook Post"] = {
-	add_fields: ["status", "course", "scheduled_time", "batch_id", "day_of_week"],
+	add_fields: [
+		"name",
+		"title",
+		"status",
+		"course",
+		"scheduled_time",
+		"batch_id",
+		"day_of_week",
+		"likes_count",
+		"comments_count",
+		"shares_count",
+		"reach_count",
+		"leads_count",
+		"image",
+		"content",
+		"fb_post_url",
+		"fb_post_id",
+		"ads_recommendation"
+	],
 	get_indicator: function (doc) {
 		if (doc.status === "Draft") {
 			return [__("Bản nháp"), "gray", "status,=,Draft"];
@@ -19,15 +37,75 @@ frappe.listview_settings["Facebook Post"] = {
 		}
 		return [__("Bản nháp"), "gray", "status,=,Draft"];
 	},
+	button: {
+		show: function (doc) {
+			return true;
+		},
+		get_label: function (doc) {
+			return __("Xem & Sửa");
+		},
+		get_description: function (doc) {
+			return __("Xem chi tiết và chỉnh sửa bài viết");
+		},
+		action: function (doc) {
+			frappe.set_route("Form", "Facebook Post", doc.name);
+		}
+	},
+	formatters: {
+		likes_count: function (val, df, doc) {
+			if (doc.status === "Posted") {
+				return `<span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: #1D4ED8; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 2px 8px; border-radius: 12px; font-size: 12px;" title="${val || 0} Lượt thích từ Facebook">👍 ${val || 0}</span>`;
+			}
+			return `<span style="color: #9CA3AF; font-size: 11px;">-</span>`;
+		},
+		comments_count: function (val, df, doc) {
+			if (doc.status === "Posted") {
+				return `<span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: #047857; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 2px 8px; border-radius: 12px; font-size: 12px;" title="${val || 0} Bình luận từ Facebook">💬 ${val || 0}</span>`;
+			}
+			return `<span style="color: #9CA3AF; font-size: 11px;">-</span>`;
+		},
+		leads_count: function (val, df, doc) {
+			if (val > 0) {
+				return `<span class="badge" style="background: #E6F4EA; color: #137333; font-weight: 700; padding: 3px 8px; font-size: 12px;" title="${val} Leads CRM thu về">🎯 ${val} Leads</span>`;
+			}
+			return `<span style="color: #9CA3AF; font-size: 11px;">0 Leads</span>`;
+		},
+		course: function (val, df, doc) {
+			return `<span class="badge" style="background: #EEF2FF; color: #4F46E5; font-weight: 600; padding: 3px 8px;">${frappe.utils.escape_html(val || 'Chung')}</span>`;
+		}
+	},
 	onload: function (listview) {
-		// 1. Agent: Lên kế hoạch tuần (Live Mission Control Modal)
-		listview.page.add_inner_button(__("🤖 Agent: Lên kế hoạch tuần"), function () {
+		// Explicitly configure table columns so Facebook interaction metrics are always visible
+		const get_df = frappe.meta.get_docfield.bind(null, "Facebook Post");
+		listview.columns = [
+			{ type: "Subject", df: get_df("title") },
+			{ type: "Status" },
+			{ type: "Field", df: get_df("course") },
+			{ type: "Field", df: get_df("likes_count") },
+			{ type: "Field", df: get_df("comments_count") },
+			{ type: "Field", df: get_df("leads_count") }
+		];
+		if (!listview.list_view_settings) listview.list_view_settings = {};
+		listview.list_view_settings.disable_comment_count = 1;
+		listview.render_header();
+
+		// Auto-clear stale filter if status is Pending Approval
+		if (listview.filter_area) {
+			let current_filters = listview.filter_area.get() || [];
+			let status_filter = current_filters.find(f => f[1] === "status");
+			if (status_filter && status_filter[3] === "Pending Approval") {
+				listview.filter_area.remove("status");
+			}
+		}
+
+		// 1. Lên kế hoạch tuần
+		listview.page.add_inner_button(__("Lên kế hoạch tuần"), function () {
 			open_agent_command_center(listview, "generate");
 		});
 
 		// 2. Duyệt tất cả tuần này
 		let approve_btn = listview.page.add_inner_button(
-			__("✅ Duyệt tất cả tuần này"),
+			__("Duyệt tất cả tuần này"),
 			function () {
 				frappe.confirm(
 					__(
@@ -60,10 +138,52 @@ frappe.listview_settings["Facebook Post"] = {
 			approve_btn.addClass("btn-primary");
 		}
 
-		// 3. Làm lại cả tuần (Rollback with Live Mission Control)
-		listview.page.add_inner_button(__("🔄 Làm lại cả tuần"), function () {
+		// 3. Làm lại cả tuần
+		listview.page.add_inner_button(__("Làm lại cả tuần"), function () {
 			open_agent_command_center(listview, "rollback");
 		});
+
+		// 4. Đồng bộ tương tác FB
+		listview.page.add_inner_button(__("Đồng bộ tương tác FB"), function () {
+			frappe.show_alert({ message: __("Đang đồng bộ số liệu tương tác từ Facebook..."), indicator: "blue" });
+			frappe.call({
+				method: "mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.sync_all_posted_analytics",
+				freeze: true,
+				freeze_message: __("Đang lấy số liệu tương tác (Thích, Bình luận, Chia sẻ, Leads)..."),
+				callback: function (r) {
+					if (r.message && r.message.status === "success") {
+						frappe.show_alert({
+							message: __(
+								`Đã cập nhật số liệu tương tác cho ${r.message.synced_count} bài viết!`
+							),
+							indicator: "green"
+						});
+						listview.refresh();
+					} else {
+						listview.refresh();
+					}
+				}
+			});
+		});
+
+		// 5. Báo cáo & Xếp hạng tổng thể
+		listview.page.add_inner_button(__("Báo cáo & Xếp hạng"), function () {
+			open_marketing_overview_modal(listview);
+		});
+	},
+	refresh: function (listview) {
+		const get_df = frappe.meta.get_docfield.bind(null, "Facebook Post");
+		listview.columns = [
+			{ type: "Subject", df: get_df("title") },
+			{ type: "Status" },
+			{ type: "Field", df: get_df("course") },
+			{ type: "Field", df: get_df("likes_count") },
+			{ type: "Field", df: get_df("comments_count") },
+			{ type: "Field", df: get_df("leads_count") }
+		];
+		listview.render_header(true);
+		render_kpi_summary_bar(listview);
+		enhance_list_rows(listview);
 	}
 };
 
@@ -480,3 +600,430 @@ function execute_multi_agent_pipeline(listview, dialog, directive, is_rollback) 
 		}
 	});
 }
+
+/**
+ * Render the Top KPI Summary Bar directly on the Facebook Post List View
+ */
+function render_kpi_summary_bar(listview) {
+	if (!listview || !listview.page || !listview.page.main) return;
+
+	let container = listview.page.main.find('.facebook-marketing-kpi-bar');
+	if (!container.length) {
+		container = $('<div class="facebook-marketing-kpi-bar" style="margin-bottom: 16px;"></div>');
+		let target = listview.page.main.find('.frappe-list');
+		if (target.length) {
+			target.before(container);
+		} else {
+			listview.page.main.prepend(container);
+		}
+	}
+
+	frappe.call({
+		method: "mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.get_marketing_overview",
+		callback: function (r) {
+			if (!r.message || r.message.status !== "success") return;
+			let kpis = r.message.kpis || {};
+			let total_eng = (kpis.total_likes || 0) + (kpis.total_comments || 0) + (kpis.total_shares || 0);
+
+			let current_filters = (listview.filter_area && listview.filter_area.get()) || [];
+			let active_status = "";
+			let active_ads = "";
+			for (let f of current_filters) {
+				if (f[1] === "status") {
+					active_status = f[3];
+				}
+				if (f[1] === "ads_recommendation") {
+					active_ads = f[3];
+				}
+			}
+
+			let html = `
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+				<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+					<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">ĐỘ PHỦ BÀI VIẾT</div>
+					<div style="font-size: 22px; font-weight: 700; color: #111827; margin: 4px 0;">${kpis.posted_count || 0} <span style="font-size: 13px; font-weight: 500; color: #6B7280;">/ ${kpis.total_posts || 0} bài</span></div>
+					<div style="font-size: 12px; color: #6B7280;">${kpis.scheduled_count || 0} lên lịch · ${kpis.pending_count || 0} chờ duyệt</div>
+				</div>
+
+				<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+					<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">TỔNG TƯƠNG TÁC</div>
+					<div style="font-size: 22px; font-weight: 700; color: #111827; margin: 4px 0;">${total_eng.toLocaleString()} <span style="font-size: 13px; font-weight: 500; color: #6B7280;">lượt</span></div>
+					<div style="font-size: 12px; color: #6B7280;">${kpis.total_likes || 0} Thích · ${kpis.total_comments || 0} Bình luận · ${kpis.total_shares || 0} Chia sẻ</div>
+				</div>
+
+				<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+					<div style="font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">CRM LEADS THU VỀ</div>
+					<div style="font-size: 22px; font-weight: 700; color: #059669; margin: 4px 0;">${kpis.total_leads || 0} <span style="font-size: 13px; font-weight: 500; color: #6B7280;">khách</span></div>
+					<div style="font-size: 12px; color: #6B7280;">Tiếp cận: ${(kpis.total_reach || 0).toLocaleString()} người</div>
+				</div>
+
+				<div class="kpi-action-card" style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 16px; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; justify-content: center;"
+					onmouseover="this.style.background='#F3F4F6'; this.style.borderColor='#D1D5DB';"
+					onmouseout="this.style.background='#F9FAFB'; this.style.borderColor='#E5E7EB';">
+					<div style="display: flex; align-items: center; justify-content: space-between;">
+						<div style="font-size: 11px; font-weight: 600; color: #4F46E5; text-transform: uppercase; letter-spacing: 0.5px;">BÁO CÁO TỔNG THỂ</div>
+						<span style="font-size: 14px; color: #4F46E5;">→</span>
+					</div>
+					<div style="font-size: 14px; font-weight: 600; color: #111827; margin: 4px 0;">Xem xếp hạng bài viết</div>
+					<div style="font-size: 12px; color: #6B7280;">Thống kê bài hút lead & tương tác cao</div>
+				</div>
+			</div>
+
+			<!-- Quick Status Filter Bar -->
+			<div class="facebook-status-filter-pills" style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 10px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 8px;">
+				<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+					<span style="font-size: 12px; font-weight: 600; color: #4B5563; margin-right: 4px;">Lọc nhanh:</span>
+					<button class="btn btn-xs filter-pill ${!active_status && !active_ads ? 'btn-primary' : 'btn-default'}" data-status="" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
+						Tất cả (${kpis.total_posts || 0})
+					</button>
+					<button class="btn btn-xs filter-pill ${active_ads === 'Recommended' ? 'btn-primary' : 'btn-default'}" data-ads-filter="Recommended" style="font-weight: 600; border-radius: 14px; padding: 3px 12px; border-color: #F59E0B; ${active_ads === 'Recommended' ? 'background: #D97706; color: white;' : 'background: #FFFBEB; color: #B45309;'}">
+						🔥 Khuyên chạy Ads (${kpis.recommended_ads_count || 0})
+					</button>
+					<button class="btn btn-xs filter-pill ${active_status === 'Posted' ? 'btn-primary' : 'btn-default'}" data-status="Posted" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
+						Đã đăng (${kpis.posted_count || 0})
+					</button>
+					<button class="btn btn-xs filter-pill ${active_status === 'Scheduled' ? 'btn-primary' : 'btn-default'}" data-status="Scheduled" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
+						Đã lên lịch (${kpis.scheduled_count || 0})
+					</button>
+					<button class="btn btn-xs filter-pill ${active_status === 'Pending Approval' ? 'btn-primary' : 'btn-default'}" data-status="Pending Approval" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
+						Chờ duyệt (${kpis.pending_count || 0})
+					</button>
+					<button class="btn btn-xs filter-pill ${active_status === 'Draft' ? 'btn-primary' : 'btn-default'}" data-status="Draft" style="font-weight: 500; border-radius: 14px; padding: 3px 12px;">
+						Bản nháp (${kpis.draft_count || 0})
+					</button>
+				</div>
+				<div style="font-size: 12px; color: #6B7280;">
+					Bấm vào bất kỳ bài viết nào để xem chi tiết & chỉnh sửa
+				</div>
+			</div>
+			`;
+			container.html(html);
+
+			container.find('.kpi-action-card').on('click', function () {
+				open_marketing_overview_modal(listview);
+			});
+
+			container.find('.filter-pill[data-status]').on('click', function () {
+				let target = $(this).attr('data-status');
+				if (listview.filter_area) {
+					listview.filter_area.remove("ads_recommendation");
+					listview.filter_area.remove("status");
+					if (target) {
+						listview.filter_area.add([["Facebook Post", "status", "=", target]]);
+					} else {
+						listview.refresh();
+					}
+				}
+			});
+
+			container.find('.filter-pill[data-ads-filter]').on('click', function () {
+				let target = $(this).attr('data-ads-filter');
+				if (listview.filter_area) {
+					listview.filter_area.remove("status");
+					listview.filter_area.remove("ads_recommendation");
+					if (active_ads === target) {
+						listview.refresh();
+					} else {
+						listview.filter_area.add([["Facebook Post", "ads_recommendation", "=", target]]);
+					}
+				}
+			});
+		}
+	});
+}
+
+/**
+ * Enhance List View rows with visual post preview (Thumbnail, Title, Caption snippet, Actions)
+ */
+function enhance_list_rows(listview) {
+	if (!listview || !listview.$result) return;
+
+	setTimeout(function () {
+		let rows = listview.$result.find('.list-row-container');
+		if (!rows.length) return;
+
+		rows.each(function (idx) {
+			let doc = listview.data && listview.data[idx];
+			if (!doc) return;
+			let $row = $(this);
+
+			if ($row.attr('data-enhanced-post') === String(doc.name)) return;
+			$row.attr('data-enhanced-post', String(doc.name));
+
+			$row.find('.list-row').css({
+				'min-height': '64px',
+				'padding-top': '8px',
+				'padding-bottom': '8px',
+				'align-items': 'center'
+			});
+
+			let $subject = $row.find('.list-subject');
+			if (!$subject.length) return;
+
+			let form_link = listview.get_form_link(doc);
+			let img_src = doc.image ? frappe.utils.escape_html(doc.image) : '';
+			let thumb_html = img_src
+				? `<a href="${form_link}" style="display: block; width: 48px; height: 48px; min-width: 48px; margin-right: 12px; border-radius: 6px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 1px 2px rgba(0,0,0,0.06); flex-shrink: 0;" title="${__('Xem chi tiết & Chỉnh sửa')}">
+					<img src="${img_src}" style="width: 100%; height: 100%; object-fit: cover;" alt="Banner" />
+				   </a>`
+				: `<a href="${form_link}" style="display: flex; width: 48px; height: 48px; min-width: 48px; margin-right: 12px; border-radius: 6px; background: #F3F4F6; border: 1px solid #E5E7EB; align-items: center; justify-content: center; color: #9CA3AF; flex-shrink: 0;" title="${__('Xem chi tiết & Chỉnh sửa')}">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+				   </a>`;
+
+			let raw_title = doc.title || ('Bài viết #' + doc.name);
+			let clean_content = (doc.content || '').replace(/\s+/g, ' ').trim();
+			let snippet = clean_content.length > 80 ? clean_content.substring(0, 80) + '...' : clean_content;
+
+			let info_html = `
+				<div style="display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; line-height: 1.4;">
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<a href="${form_link}" style="font-weight: 600; font-size: 13.5px; color: #111827; text-decoration: none;" class="ellipsis" title="${frappe.utils.escape_html(raw_title)}">
+							${frappe.utils.escape_html(raw_title)}
+						</a>
+						${doc.ads_recommendation === 'Recommended' ? `
+							<span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;" title="${__('Bài viết có tương tác tự nhiên cao, AI khuyên nên chạy Meta Ads')}">
+								🔥 Khuyên chạy Ads
+							</span>
+						` : ''}
+					</div>
+					${snippet ? `<div style="font-size: 12px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 440px; margin-top: 2px;" title="${frappe.utils.escape_html(clean_content)}">
+						${frappe.utils.escape_html(snippet)}
+					</div>` : ''}
+				</div>
+			`;
+
+			let $wrapper = $(`<div style="display: flex; align-items: center; min-width: 0; flex: 1;"></div>`);
+			$wrapper.append(thumb_html);
+			$wrapper.append(info_html);
+
+			$subject.find('span.ellipsis, a[data-name]').remove();
+			$subject.append($wrapper);
+
+			// Hide Frappe internal desk comment count to prevent confusion with Facebook comments
+			$row.find('.comment-count, .list-row-like, .level-right span.mx-2').hide();
+
+			if (doc.fb_post_url) {
+				let $actions = $row.find('.level-right');
+				if ($actions.length && !$actions.find('.fb-external-link').length) {
+					$actions.prepend(`
+						<a href="${doc.fb_post_url}" target="_blank" class="fb-external-link btn btn-default btn-xs" style="margin-right: 6px; color: #1877F2; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="${__('Xem trực tiếp trên Facebook')}">
+							<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+							FB ↗
+						</a>
+					`);
+				}
+			}
+		});
+	}, 50);
+}
+
+/**
+ * Open Executive Marketing Analytics & Top Performing Posts Modal
+ */
+function open_marketing_overview_modal(listview) {
+	let d = new frappe.ui.Dialog({
+		title: `<div style="display: flex; align-items: center; gap: 8px;">
+			<span style="font-weight: 700; font-size: 16px;">Báo cáo Tổng thể & Hiệu quả Facebook Marketing</span>
+		</div>`,
+		size: "large"
+	});
+
+	if (d.$wrapper) {
+		d.$wrapper.find(".modal-dialog").css("max-width", "880px");
+	}
+
+	d.show();
+	d.$wrapper.find('.modal-body').html(`
+		<div style="text-align: center; padding: 40px;">
+			<div class="spinner-border text-primary" role="status"></div>
+			<div style="margin-top: 12px; color: #6B7280; font-size: 13px;">Đang tải dữ liệu tổng thể...</div>
+		</div>
+	`);
+
+	frappe.call({
+		method: "mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.get_marketing_overview",
+		callback: function (r) {
+			if (!r.message || r.message.status !== "success") {
+				d.$wrapper.find('.modal-body').html(`<div class="alert alert-danger">Không thể tải dữ liệu báo cáo: ${r.message ? r.message.message : 'Lỗi'}</div>`);
+				return;
+			}
+
+			let kpis = r.message.kpis || {};
+			let top_leads = r.message.top_leads || [];
+			let top_eng = r.message.top_engagement || [];
+
+			let lead_rows = top_leads.map((p, idx) => {
+				let linkBtn = p.fb_post_url 
+					? `<a href="${p.fb_post_url}" target="_blank" class="btn btn-xs btn-default" style="font-size: 11px; padding: 2px 6px;">Xem trên FB</a>`
+					: `<span class="text-muted" style="font-size: 11px;">Chưa đăng</span>`;
+				return `
+					<tr style="border-bottom: 1px solid #F3F4F6;">
+						<td style="padding: 10px 8px; font-weight: 700; font-size: 13px; text-align: center; width: 44px; color: #4B5563;">${idx + 1}</td>
+						<td style="padding: 10px 8px;">
+							<div style="font-weight: 600; color: #111827; font-size: 13px;">${frappe.utils.escape_html(p.title || 'Bài viết #' + p.name)}</div>
+							<div style="font-size: 11px; color: #6B7280;">Khóa học: <span class="badge badge-light" style="font-weight: 600;">${p.course || 'Chung'}</span> • ${p.day_of_week || ''} ${p.ads_recommendation === 'Recommended' ? '<span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 10px; margin-left: 4px;">🔥 Khuyên Ads</span>' : ''}</div>
+						</td>
+						<td style="padding: 10px 8px; text-align: center;">
+							<span class="badge" style="background: #E6F4EA; color: #137333; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px;">
+								${p.leads_count || 0} Leads
+							</span>
+						</td>
+						<td style="padding: 10px 8px; font-size: 12px; color: #4B5563; text-align: center;">
+							${p.likes_count || 0} Thích · ${p.comments_count || 0} Bình luận
+						</td>
+						<td style="padding: 10px 8px; text-align: right;">
+							${linkBtn}
+						</td>
+					</tr>
+				`;
+			}).join('');
+
+			let eng_rows = top_eng.map((p, idx) => {
+				let linkBtn = p.fb_post_url 
+					? `<a href="${p.fb_post_url}" target="_blank" class="btn btn-xs btn-default" style="font-size: 11px; padding: 2px 6px;">Xem trên FB</a>`
+					: `<span class="text-muted" style="font-size: 11px;">Chưa đăng</span>`;
+				return `
+					<tr style="border-bottom: 1px solid #F3F4F6;">
+						<td style="padding: 10px 8px; font-weight: 700; font-size: 13px; text-align: center; width: 44px; color: #4B5563;">${idx + 1}</td>
+						<td style="padding: 10px 8px;">
+							<div style="font-weight: 600; color: #111827; font-size: 13px;">${frappe.utils.escape_html(p.title || 'Bài viết #' + p.name)}</div>
+							<div style="font-size: 11px; color: #6B7280;">Khóa học: <span class="badge badge-light" style="font-weight: 600;">${p.course || 'Chung'}</span> ${p.ads_recommendation === 'Recommended' ? '<span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-size: 10px; margin-left: 4px;">🔥 Khuyên Ads</span>' : ''}</div>
+						</td>
+						<td style="padding: 10px 8px; text-align: center;">
+							<span style="font-weight: 600; color: #111827; font-size: 13px;">${p.likes_count || 0}</span>
+						</td>
+						<td style="padding: 10px 8px; text-align: center;">
+							<span style="font-weight: 600; color: #111827; font-size: 13px;">${p.comments_count || 0}</span>
+						</td>
+						<td style="padding: 10px 8px; text-align: center;">
+							<span class="badge badge-light" style="font-size: 11px;">${p.leads_count || 0} Leads</span>
+						</td>
+						<td style="padding: 10px 8px; text-align: right;">
+							${linkBtn}
+						</td>
+					</tr>
+				`;
+			}).join('');
+
+			let modalHtml = `
+				<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+					<!-- Quick Metric Strip -->
+					<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;">
+						<div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; text-align: center;">
+							<div style="font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase;">Tổng bài viết</div>
+							<div style="font-size: 20px; font-weight: 700; color: #111827; margin-top: 2px;">${kpis.total_posts || 0}</div>
+							<div style="font-size: 11px; color: #6B7280;">${kpis.posted_count || 0} đã đăng</div>
+						</div>
+						<div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; text-align: center;">
+							<div style="font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase;">Lượt thích</div>
+							<div style="font-size: 20px; font-weight: 700; color: #111827; margin-top: 2px;">${(kpis.total_likes || 0).toLocaleString()}</div>
+							<div style="font-size: 11px; color: #6B7280;">Reactions</div>
+						</div>
+						<div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; text-align: center;">
+							<div style="font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase;">Bình luận</div>
+							<div style="font-size: 20px; font-weight: 700; color: #111827; margin-top: 2px;">${(kpis.total_comments || 0).toLocaleString()}</div>
+							<div style="font-size: 11px; color: #6B7280;">Bình luận</div>
+						</div>
+						<div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; text-align: center;">
+							<div style="font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase;">CRM Leads</div>
+							<div style="font-size: 20px; font-weight: 700; color: #059669; margin-top: 2px;">${kpis.total_leads || 0}</div>
+							<div style="font-size: 11px; color: #6B7280;">Khách tiềm năng</div>
+						</div>
+						<div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px; padding: 12px; text-align: center;">
+							<div style="font-size: 11px; color: #92400E; font-weight: 600; text-transform: uppercase;">Khuyên chạy Ads</div>
+							<div style="font-size: 20px; font-weight: 700; color: #D97706; margin-top: 2px;">${kpis.recommended_ads_count || 0}</div>
+							<div style="font-size: 11px; color: #B45309;">Bài tiềm năng cao</div>
+						</div>
+					</div>
+
+					<!-- Section: Top Leads -->
+					<div style="margin-bottom: 24px;">
+						<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+							<div style="font-weight: 600; font-size: 13px; color: #111827;">Top bài viết thu hút khách hàng (Leads)</div>
+							<span style="font-size: 12px; color: #6B7280;">Xếp theo số Lead trong CRM</span>
+						</div>
+						<div style="border: 1px solid #E5E7EB; border-radius: 6px; overflow: hidden; background: white;">
+							<table style="width: 100%; border-collapse: collapse;">
+								<thead>
+									<tr style="background: #F9FAFB; border-bottom: 1px solid #E5E7EB; font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">
+										<th style="padding: 8px; text-align: center;">Hạng</th>
+										<th style="padding: 8px; text-align: left;">Nội dung bài viết</th>
+										<th style="padding: 8px; text-align: center;">Leads</th>
+										<th style="padding: 8px; text-align: center;">Tương tác</th>
+										<th style="padding: 8px; text-align: right;">Facebook</th>
+									</tr>
+								</thead>
+								<tbody>
+									${lead_rows || '<tr><td colspan="5" style="text-align: center; padding: 16px; color: #9CA3AF;">Chưa có bài viết nào</td></tr>'}
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<!-- Section: Top Engagement -->
+					<div style="margin-bottom: 20px;">
+						<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+							<div style="font-weight: 600; font-size: 13px; color: #111827;">Top bài viết tương tác cao nhất</div>
+							<span style="font-size: 12px; color: #6B7280;">Xếp theo lượt Thích & Bình luận</span>
+						</div>
+						<div style="border: 1px solid #E5E7EB; border-radius: 6px; overflow: hidden; background: white;">
+							<table style="width: 100%; border-collapse: collapse;">
+								<thead>
+									<tr style="background: #F9FAFB; border-bottom: 1px solid #E5E7EB; font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">
+										<th style="padding: 8px; text-align: center;">Hạng</th>
+										<th style="padding: 8px; text-align: left;">Nội dung bài viết</th>
+										<th style="padding: 8px; text-align: center;">Thích</th>
+										<th style="padding: 8px; text-align: center;">Bình luận</th>
+										<th style="padding: 8px; text-align: center;">Leads</th>
+										<th style="padding: 8px; text-align: right;">Facebook</th>
+									</tr>
+								</thead>
+								<tbody>
+									${eng_rows || '<tr><td colspan="6" style="text-align: center; padding: 16px; color: #9CA3AF;">Chưa có bài viết nào</td></tr>'}
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<!-- Bottom Action Buttons -->
+					<div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid #E5E7EB; padding-top: 14px;">
+						<button class="btn btn-default btn-sm modal-sync-btn">
+							Đồng bộ số liệu từ Facebook
+						</button>
+						<button class="btn btn-primary btn-sm modal-plan-btn">
+							Lên kế hoạch tuần mới
+						</button>
+					</div>
+				</div>
+			`;
+
+			d.$wrapper.find('.modal-body').html(modalHtml);
+
+			d.$wrapper.find('.modal-sync-btn').on('click', function () {
+				frappe.show_alert({ message: __("Đang đồng bộ số liệu từ Facebook..."), indicator: "blue" });
+				frappe.call({
+					method: "mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.sync_all_posted_analytics",
+					freeze: true,
+					freeze_message: __("Đang lấy số liệu tương tác mới nhất..."),
+					callback: function (sync_r) {
+						if (sync_r.message && sync_r.message.status === "success") {
+							frappe.show_alert({
+								message: __(`Đã cập nhật ${sync_r.message.synced_count} bài viết!`),
+								indicator: "green"
+							});
+							d.hide();
+							listview.refresh();
+							open_marketing_overview_modal(listview);
+						}
+					}
+				});
+			});
+
+			d.$wrapper.find('.modal-plan-btn').on('click', function () {
+				d.hide();
+				open_agent_command_center(listview, "generate");
+			});
+		}
+	});
+}
+
