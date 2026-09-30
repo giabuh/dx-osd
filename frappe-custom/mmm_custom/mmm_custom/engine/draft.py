@@ -4,20 +4,13 @@ that reads everything and writes nothing, with effects that only record."""
 
 import copy
 
-try:
-    import frappe
-except ImportError:  # offline tests
-    frappe = None
-
 from mmm_custom.engine.decide import faq_question, fact_label
 from mmm_custom.engine.effects import RecordingEffects
 from mmm_custom.engine.pipeline import run_turn
-from mmm_custom.engine.state import value
 
 NOTE_HEADER = "💡 Jev gợi ý"
 NO_KNOWLEDGE = "⚠ Jev chưa có tri thức để trả lời câu này. Bạn trả lời giúp nhé."
 FOR_STAFF = "👤 Khách cần tư vấn viên ({why}). Bạn trả lời giúp nhé."
-STAFF_REASONS = {"wants_human": "muốn gặp người thật", "button": "khách chọn gặp tư vấn viên"}
 
 
 class DraftRepo:
@@ -61,7 +54,7 @@ def sources(turn, catalog):
     out = [f'FAQ "{faq_question(d.faq, catalog)}"'] if d.faq else []
     out += [fact_label(d.fact, catalog)] if d.fact else []
     if d.staff_reply:
-        out.append("câu trả lời NV" + ("" if d.staff_reply.get("approved") else " (chưa duyệt)"))
+        out.append("câu trả lời NV" + ("" if catalog.staff_reply(d.staff_reply["name"]).approved else " (chưa duyệt)"))
     out += [catalog.skills[k].title for k in d.skills if k in catalog.skills]
     if d.greet:
         out.append("chào hỏi")
@@ -75,17 +68,13 @@ def note(turn, catalog):
     if turn is None:
         return None
     d = turn.decision
-    answered = d.skills or d.faq or d.fact or d.staff_reply
-    why = STAFF_REASONS.get(turn.needs_staff) or (turn.needs_staff if turn.needs_staff not in (
-        "stuck", "hot", "required_filled", "skill") else "")
-    if why and not answered:
-        return FOR_STAFF.format(why=why)
-    if (turn.needs_staff == "stuck" or d.fallback) and not answered:
+    if turn.needs_staff and not d.answered:
+        return FOR_STAFF.format(why=turn.needs_staff)
+    if turn.no_answer:
         return NO_KNOWLEDGE
     if not turn.reply.messages:
         return None
-    course_slot = catalog.slot_for("course")
-    course = catalog.courses.get(value(d.slots, course_slot.key)) if course_slot else None
+    course = catalog.course_in(d.slots)
     head = [f"khóa {course.name}"] if course else []
     used = sources(turn, catalog)
     head += [f"dựa trên: {', '.join(used)}"] if used else []

@@ -225,11 +225,9 @@ def set_lead_owner(lead, user):
 
 def chatwoot_admin():
     """The Chatwoot client with the admin user token (agents, presence, conversation attributes)."""
-    from mmm_custom.chatwoot_client import ChatwootClient
+    from mmm_custom.lead_chat import admin_client
 
-    conf = frappe.conf
-    return ChatwootClient(conf.get("chatwoot_api_url") or "http://chatwoot-rails:3000", conf.get("chatwoot_api_token") or "",
-                          int(conf.get("chatwoot_account_id") or 1))
+    return admin_client()
 
 
 def mark_consultant_replied(conversation_id, now=None):
@@ -297,9 +295,13 @@ class FrappeRepo:
                              message=f"{key}: the bot runs on keywords only until tomorrow. Raise the budget in Lead Engine Settings.")
 
     def load_state(self, event):
-        name = frappe.db.get_value("Bot Conversation", {"conversation_id": event.conversation_id})
+        return self.state_of(event.conversation_id) or self.new_state(event)
+
+    def state_of(self, conversation_id):
+        """The stored state of a conversation, or None when the bot has no row for it."""
+        name = frappe.db.get_value("Bot Conversation", {"conversation_id": str(conversation_id)})
         if not name:
-            return self.new_state(event)
+            return None
         d = frappe.get_doc("Bot Conversation", name)
         return ConversationState(
             conversation_id=d.conversation_id, contact_id=d.contact_id or "", inbox_id=d.inbox_id or "",
@@ -415,15 +417,13 @@ class FrappeRepo:
         """Chatwoot agent ids that are online now (D-113), cached 30 s; None when Chatwoot cannot say."""
         cache, key = frappe.cache(), "mmm_custom:online_agents"
         cached = cache.get_value(key)
-        if cached is not None:
-            return set(cached)
-        try:
-            agents = chatwoot_admin().list_agents()
-        except Exception:
-            return None
-        online = [str(a["id"]) for a in agents if a.get("availability_status") == "online"]
-        cache.set_value(key, online, expires_in_sec=30)
-        return set(online)
+        if cached is None:
+            try:
+                cached = [str(a["id"]) for a in chatwoot_admin().list_agents() if a.get("availability_status") == "online"]
+            except Exception:
+                cached = "unknown"  # remembered too: an outage must not slow every handoff by the client timeout
+            cache.set_value(key, cached, expires_in_sec=30)
+        return None if cached == "unknown" else set(cached)
 
     def lead_owner(self, lead):
         return frappe.db.get_value("CRM Lead", lead, "lead_owner") or ""

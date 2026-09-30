@@ -147,9 +147,9 @@ def _course_faq(u, answers, questions, course, catalog):
 
 
 def _course_fact(u, answers, questions, course, catalog):
-    """Jev tied the message to a part of the course's own data (D-110); the course's FAQ, when one fits, wins."""
+    """Jev tied the message to a part of the course's own data (D-110); decide() prefers a fitting FAQ."""
     choice, p = _choice(answers, questions, COURSE_FACT)
-    if u.faq or not course or choice not in FACTS or p < float(catalog.settings["skill_act"]):
+    if not course or choice not in FACTS or p < float(catalog.settings["skill_act"]):
         return
     u.fact = {"course": course.code, "fact": choice, "confidence": round(p, 3)}
     u.matches.append({"fact": choice, "course": course.code, "kind": "jev", "confidence": round(p, 3)})
@@ -158,11 +158,10 @@ def _course_fact(u, answers, questions, course, catalog):
 def _staff_reply(u, answers, questions, catalog):
     """Jev picked a reply staff once wrote (D-114); only replies the question offered can be picked."""
     choice, p = _choice(answers, questions, STAFF_REPLY)
-    reply = next((r for r in catalog.staff_replies if r.name == choice), None)
-    if not reply or p < float(catalog.settings["skill_act"]):
+    if not catalog.staff_reply(choice) or p < float(catalog.settings["skill_act"]):
         return
-    u.staff_reply = {"name": reply.name, "topic": reply.topic, "approved": reply.approved, "confidence": round(p, 3)}
-    u.matches.append({"staff_reply": reply.name, "kind": "jev", "confidence": round(p, 3)})
+    u.staff_reply = {"name": choice, "confidence": round(p, 3)}
+    u.matches.append({"staff_reply": choice, "kind": "jev", "confidence": round(p, 3)})
 
 
 def _reply_to_bot(u, answers, questions, state, catalog):
@@ -189,9 +188,6 @@ def combine(u, answers, questions, state, catalog):
     course = faq_course(state, u, catalog)  # the course the FAQ question was built for
     out = copy.deepcopy(u)
     answers = answers if isinstance(answers, dict) else {}
-    if u.greeting:  # "hihi" is small talk: no button, skill or slot, whatever Jev reads into it (D-109)
-        _signals(out, answers, questions, catalog)
-        return out
     _slots(out, answers, questions, catalog, state)
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)

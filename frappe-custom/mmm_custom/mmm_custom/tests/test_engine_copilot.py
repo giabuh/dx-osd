@@ -6,38 +6,34 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeJev, FakeRepo, demo_catalog, demo_consultants, fill, render
+from engine_fixtures import ROBO, FakeJev, FakeRepo, demo_catalog, demo_consultants, event, fill, render
 
 from mmm_custom.engine import copilot, presence
 from mmm_custom.engine.effects import RecordingEffects
 from mmm_custom.engine.jev_questions import COURSE_FACT
-from mmm_custom.engine.pipeline import Event
+
 from mmm_custom.engine.routing import pick_consultant
 from mmm_custom.engine.state import ConversationState
 
 CAT = demo_catalog()
-ROBO = {"course": {**fill("TE-ROBO"), "parent": "Tin học trẻ em"}}
 WAIT = 5 * 60
 
-
-def event(text, message_id, conversation_id="2"):
-    return Event("customer_message", conversation_id, message_id, text, {"id": 9, "name": "Gia"}, "3")
 
 
 class TestMode(unittest.TestCase):
     def test_nobody_around_is_auto(self):
-        self.assertEqual(copilot.mode(ConversationState("1"), [], CAT.settings), copilot.AUTO)
+        self.assertEqual(copilot.mode(ConversationState("1"), lambda: [], CAT.settings), copilot.AUTO)
 
     def test_watching_claimed_or_written_is_assist(self):
         for state, viewers in ((ConversationState("1"), ["lan@crm"]), (ConversationState("1", claimed_by="4"), []),
                                (ConversationState("1", consultant_replied=True), [])):
-            self.assertEqual(copilot.mode(state, viewers, CAT.settings), copilot.ASSIST)
+            self.assertEqual(copilot.mode(state, lambda: viewers, CAT.settings), copilot.ASSIST)
 
     def test_assist_off_sandbox_or_closed_is_auto(self):
         off = demo_catalog(assist_disabled=1)
-        self.assertEqual(copilot.mode(ConversationState("1", claimed_by="4"), [], off.settings), copilot.AUTO)
-        self.assertEqual(copilot.mode(ConversationState("1", is_sandbox=True), ["x"], CAT.settings), copilot.AUTO)
-        self.assertEqual(copilot.mode(ConversationState("1", status="closed"), ["x"], CAT.settings), copilot.AUTO)
+        self.assertEqual(copilot.mode(ConversationState("1", claimed_by="4"), lambda: [], off.settings), copilot.AUTO)
+        self.assertEqual(copilot.mode(ConversationState("1", is_sandbox=True), lambda: ["x"], CAT.settings), copilot.AUTO)
+        self.assertEqual(copilot.mode(ConversationState("1", status="closed"), lambda: ["x"], CAT.settings), copilot.AUTO)
 
     def test_viewers_are_fresh_pings_only(self):
         self.assertEqual(presence.fresh({b"lan": 100.0, "4": 60.0, "bad": "x"}, now=120.0), ["lan"])
@@ -55,7 +51,7 @@ class TestHandle(unittest.TestCase):
         self.assertEqual((turn.state.fallback_due, self.fx.of("note")), (0.0, []))
 
     def test_someone_watching_gets_a_draft_and_the_timer_starts(self):
-        copilot.handle(event("khóa này kéo dài mấy tuần", 11), self.repo, self.fx, render, viewers=["lan@crm"])
+        copilot.handle(event("khóa này kéo dài mấy tuần", 11), self.repo, self.fx, render, viewers=lambda: ["lan@crm"])
         self.assertEqual(self.fx.of("send"), [])
         self.assertIn("học trong 2 tháng", self.fx.of("note")[0]["text"])
         state = self.repo.states["2"]
@@ -65,9 +61,9 @@ class TestHandle(unittest.TestCase):
         self.assertEqual(self.fx.of("assist_status")[-1]["bot_mode"], "assist")
 
     def test_a_second_message_keeps_the_first_deadline(self):
-        copilot.handle(event("khóa này kéo dài mấy tuần", 11), self.repo, self.fx, render, viewers=["lan"])
+        copilot.handle(event("khóa này kéo dài mấy tuần", 11), self.repo, self.fx, render, viewers=lambda: ["lan"])
         self.repo.clock += 120
-        copilot.handle(event("bé 8 tuổi học được không", 12), self.repo, self.fx, render, viewers=["lan"])
+        copilot.handle(event("bé 8 tuổi học được không", 12), self.repo, self.fx, render, viewers=lambda: ["lan"])
         state = self.repo.states["2"]
         self.assertEqual(state.fallback_due, self.repo.clock - 120 + WAIT)
         self.assertEqual([w["id"] for w in state.assist["waiting"]], [11, 12])
@@ -137,7 +133,7 @@ class TestBanner(unittest.TestCase):
     def test_claim_makes_the_bot_suggest_and_hand_back_answers_now(self):
         state = ConversationState("2", assist={"waiting": [{"id": 1, "text": "?"}]}, fallback_due=500.0)
         copilot.apply_banner(state, {"claimed_by": "4"}, now=100.0)
-        self.assertEqual(copilot.mode(state, [], CAT.settings), copilot.ASSIST)
+        self.assertEqual(copilot.mode(state, lambda: [], CAT.settings), copilot.ASSIST)
         copilot.apply_banner(state, {"claimed_by": ""}, now=200.0)
         self.assertEqual((state.claimed_by, state.consultant_replied, state.fallback_due), ("", False, 200.0))
 

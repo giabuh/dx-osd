@@ -19,6 +19,8 @@ HANDOFF_REASONS = {
     "stuck": "Bot chưa hiểu khách nhiều lượt liên tiếp",
 }
 IMMEDIATE = ("button", "wants_human", "skill")
+# Why a person must answer, in the words a staff draft note uses (D-110); other reasons need no note.
+STAFF_REASONS = {"wants_human": "muốn gặp người thật", "button": "khách chọn gặp tư vấn viên"}
 
 
 @dataclass
@@ -47,6 +49,11 @@ class Decision:
     phone_check: str = ""                       # a phone number with a digit missing: ask to check it (D-107)
     quiz_done: str = ""                         # level quiz finished this turn: ask the phone next (pipeline)
     voucher: dict = field(default_factory=dict)  # level-test reward sent this turn (pipeline, D-106)
+
+    @property
+    def answered(self):
+        """Something the customer asked is answered: a skill, the course's FAQ or data, or a staff reply."""
+        return bool(self.skills or self.faq or self.fact or self.staff_reply)
 
 
 FACT_LABELS = {"summary": "giới thiệu khóa", "syllabus": "nội dung học", "duration": "thời lượng", "audience": "đối tượng học",
@@ -152,18 +159,19 @@ def handoff_reason(u, skills, slots, stuck, catalog):
     return ""
 
 
-def decide(state, u, catalog):
+def decide(state, u, catalog, person_ok=False):
+    """`person_ok` (D-111): answer even though a person wrote in this conversation (the assist wait ran out)."""
     keep = dict(slots=copy.deepcopy(state.slots), stuck_turns=state.stuck_turns, pending_skill=state.pending_skill)
     if state.status == "closed":
         return Decision("silent", **keep, reason="Hội thoại đã đóng")
-    if state.consultant_replied:
+    if state.consultant_replied and not person_ok:
         return Decision("silent", **keep, reason="Tư vấn viên đã nhắn khách, bot im lặng")
     if u.spam and not state.lead:
         return Decision("silent", **keep, close=True, reason=f"Tin nhắn rác ({u.spam:.2f}): bot dừng, không tạo Lead")
 
     slots, new, changed = merge(state.slots, u, catalog)
     skills, waiting = pick_skills(state, u, slots, catalog)
-    faq = u.faq
+    faq = u.faq  # one answer from the course's knowledge: its FAQ, else a staff reply, else its data
     staff = {} if faq else u.staff_reply
     fact = {} if (faq or staff) else u.fact
     small_talk = u.greeting and not (new or changed or faq or staff or fact)
@@ -171,10 +179,11 @@ def decide(state, u, catalog):
         skills = []  # "hihi" / "chào em" asks nothing: greet back and invite, never hand off (D-109)
     alone = [k for k in skills if catalog.skills[k].config.get("alone")]
     if alone:  # e.g. a company asking for a quote: no retail fee or course FAQ on top (D-099)
-        skills, faq, staff, fact = alone, None, {}, {}
+        skills, faq, staff, fact = alone, {}, {}, {}
     know = faq or staff or fact
     if staff:  # staff's own answer to this very topic replaces the bot's (D-114)
-        skills = [k for k in skills if k != staff.get("topic")]
+        topic = catalog.staff_reply(staff["name"]).topic
+        skills = [k for k in skills if k != topic]
     if know:  # the course's own answer beats a generic template answer to the same question (D-085, D-110)
         skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     skills, squeezed = focus(skills, catalog)

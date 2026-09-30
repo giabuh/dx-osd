@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeJev, FakeRepo, demo_catalog, fill, render
+from engine_fixtures import ROBO as KNOWN, FakeJev, FakeRepo, demo_catalog, incoming, render
 
 from mmm_custom.engine.combine import combine
 from mmm_custom.engine.cost_guard import allow_jev
@@ -20,14 +20,8 @@ from mmm_custom.engine.text import fold, is_smalltalk
 from mmm_custom.engine.understand import understand
 
 CAT = demo_catalog()
-KNOWN = {"course": {**fill("TE-ROBO"), "parent": "Tin học trẻ em"}}
 REGISTER = {"Đăng ký giữ chỗ": {"type": "skill", "skill": "register"}, "Xem lịch khác": {"type": "ask", "slot": "branch"}}
 
-
-def incoming(text, message_id):
-    return {"event": "message_created", "id": message_id, "content": text, "message_type": "incoming",
-            "private": False, "sender": {"id": 9, "name": "Gia", "type": "contact"},
-            "conversation": {"id": 2, "inbox_id": 3, "meta": {"sender": {"id": 9, "name": "Gia", "custom_attributes": {}}}}}
 
 
 class TestIsSmalltalk(unittest.TestCase):
@@ -48,13 +42,10 @@ class TestUnderstanding(unittest.TestCase):
         self.assertFalse(u.tapped)
         self.assertEqual(allow_jev(u, s, CAT, 0.0), (False, "greeting"))
 
-    def test_jev_cannot_turn_a_greeting_into_a_button(self):
+    def test_jev_is_never_asked_about_a_greeting_even_with_buttons_or_library_replies(self):
         s = ConversationState("1", turns=3, slots=KNOWN, pending={"slot": "", "options": REGISTER})
         u = understand("hihi", s, CAT)
-        questions = build_questions(s, u, CAT)
-        out = combine(u, {REPLY_TO_BOT: {"choice": "0", "confidence": 0.95}, "skill:register": {"noul": 0.97}},
-                      questions, s, CAT)
-        self.assertEqual((out.skills, out.confirm), ([], {}))
+        self.assertEqual(allow_jev(u, s, CAT, 0.0, text="hihi"), (False, "greeting"))
 
     def test_typed_reply_mapped_to_a_handoff_skill_is_asked_back(self):
         s = ConversationState("1", turns=3, slots=KNOWN, pending={"slot": "", "options": REGISTER})

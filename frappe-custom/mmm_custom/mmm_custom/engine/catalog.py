@@ -7,7 +7,7 @@ tests build it offline from those files and `engine.repo` builds the same shape 
 from dataclasses import dataclass, field
 
 from mmm_custom.demo.loader import map_url
-from mmm_custom.engine.text import plain_text
+from mmm_custom.engine.text import plain_text, word_set
 
 # Used when Lead Engine Settings leaves a field empty (Frappe stores unset Int as 0).
 DEFAULT_SETTINGS = {
@@ -141,6 +141,7 @@ class StaffReply:
     group: str = ""
     topic: str = ""
     approved: bool = False  # only approved replies reach customers
+    example_words: tuple = ()  # word_set of each example, computed once per catalog
 
 
 @dataclass(frozen=True)
@@ -209,6 +210,14 @@ class Catalog:
 
     def slot(self, key):
         return next((s for s in self.slots if s.key == key), None)
+
+    def course_in(self, slots):
+        """The course a conversation's slots name, or None."""
+        slot = self.slot_for("course")
+        return self.courses.get((slots.get(slot.key) or {}).get("value")) if slot else None
+
+    def staff_reply(self, name):
+        return next((r for r in self.staff_replies if r.name == name), None)
 
     def slot_for(self, source):
         """The catalog slot holding courses ("course") or branches ("branch"), if configured."""
@@ -284,8 +293,9 @@ def build_catalog(data):
     settings = dict(DEFAULT_SETTINGS)
     settings.update({k: v for k, v in (data.get("settings") or {}).items() if v not in (None, "", 0)})
     replies = tuple(StaffReply(
-        name=r.get("name") or r.get("seed_id") or f"reply-{i}", reply=r["reply"], examples=_lines(r.get("customer_examples")),
+        name=r.get("name") or r["seed_id"], reply=r["reply"], examples=_lines(r.get("customer_examples")),
         course=r.get("course") or "", group=r.get("course_group") or "", topic=r.get("topic") or "",
-        approved=r.get("status") == "approved")
-        for i, r in enumerate(data.get("staff_replies") or []) if r.get("status") in ("approved", "new"))
+        approved=r.get("status") == "approved",
+        example_words=tuple(word_set(e) for e in _lines(r.get("customer_examples"))))
+        for r in data.get("staff_replies") or [] if r.get("status") in ("approved", "new"))
     return Catalog(groups, courses, areas, branches, slots, skills, settings, replies)

@@ -18,13 +18,13 @@ def library_has(u, state, catalog, text):
     from mmm_custom.engine import staff_replies
     from mmm_custom.engine.jev_questions import known_course
 
-    return bool(text) and bool(staff_replies.candidates(catalog, text, known_course(state, u, catalog), "",
-                                                        state.drafting, limit=1))
+    return bool(text) and staff_replies.any_candidate(catalog, text, known_course(state, u, catalog),
+                                                      drafting=state.drafting)
 
 
-def allow_jev(u, state, catalog, now, tokens_today=0, budget=0, text=""):
+def allow_jev(u, state, catalog, now, tokens_today=0, budget=0, text="", person_ok=False):
     settings = catalog.settings
-    if state.status == "closed" or state.consultant_replied:
+    if state.status == "closed" or (state.consultant_replied and not person_ok):
         return False, "bot_silent"  # decide() stays silent: a Jev call would be spent for nothing
     if u.tapped:
         return False, "button"

@@ -33,7 +33,9 @@ def seen(conversation_id, viewer, now=None):
     if not (conversation_id and viewer):
         return
     try:
-        frappe.cache().hset(_key(conversation_id), str(viewer), time.time() if now is None else now)
+        cache = frappe.cache()
+        cache.hset(_key(conversation_id), str(viewer), time.time() if now is None else now)
+        cache.expire(cache.make_key(_key(conversation_id)), 10 * VIEWER_TTL)  # conversations nobody opens again
     except Exception:  # a hint only: reading the chat must never fail on it
         pass
 

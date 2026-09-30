@@ -14,16 +14,15 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
-from mmm_custom.engine.text import fold
+from mmm_custom.engine.text import EMAIL_RE, PHONE_RE, fold, word_set
 
 MAX_CANDIDATES = 12
-PHONE_RE = re.compile(r"(?:\+?84|0)(?:[\s.\-]?\d){8,10}")
-EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 # 1.500.000đ · 1,500,000 đồng · 1,5 triệu · 1tr5 · 1.5tr · 1500k
 MONEY_RE = re.compile(r"(?<![\w.,])(?:(\d{1,3}(?:[.,]\d{3})+)\s*(?:đ|đồng|vnđ|vnd)?"
                       r"|(\d+(?:[.,]\d+)?)\s*(?:tr|triệu)(?:\s*(\d))?"
                       r"|(\d+)\s*k)(?![\w])", re.IGNORECASE)
-STAFF_PREFIXES = ("💡", "✍️", "⚠", "👤", "🤖", "⏰")  # private notes written by the bot, never staff replies
+DRAFT_PREFIXES = ("💡", "✍️")  # the bot's draft note (engine/draft.py) and the Gemini one (engine/llm_draft.py)
+STAFF_PREFIXES = DRAFT_PREFIXES + ("⚠", "👤", "🤖", "⏰")  # private notes written by the bot, never staff replies
 
 
 def mask(text):
@@ -61,13 +60,8 @@ def templatize(text, course=None):
     return out.strip(), unknown
 
 
-def words(text):
-    return {w for w in fold(text).split() if len(w) > 1}
-
-
-def similarity(a, b):
-    """Shared words over all words (Jaccard) of two messages, diacritics ignored."""
-    wa, wb = words(a), words(b)
+def similarity(wa, wb):
+    """Shared words over all words (Jaccard) of two text.word_set()s."""
     return len(wa & wb) / len(wa | wb) if wa and wb else 0.0
 
 
@@ -88,18 +82,26 @@ def fits(reply, course, group):
     return bool(course) or "course." not in reply.reply
 
 
-def candidates(catalog, text, course=None, group="", drafting=False, limit=MAX_CANDIDATES):
-    """The library replies worth showing Jev for this message, most similar first. Customers only ever get
+def _scored(catalog, text, course, group, drafting):
+    """(score, reply) for every usable library reply that shares a word with the message. Customers only ever get
     approved replies; staff drafts may also use new ones."""
-    scored = []
+    asked = word_set(text)
     for reply in catalog.staff_replies:
-        if not (reply.approved or drafting) or not fits(reply, course, group):
-            continue
-        score = max((similarity(text, e) for e in reply.examples), default=0.0)
-        if score > 0:
-            scored.append((score, reply.name, reply))
-    scored.sort(key=lambda x: (-x[0], x[1]))
-    return [r for _, _, r in scored[:limit]]
+        if (reply.approved or drafting) and fits(reply, course, group):
+            score = max((similarity(asked, words) for words in reply.example_words), default=0.0)
+            if score > 0:
+                yield score, reply
+
+
+def candidates(catalog, text, course=None, group="", drafting=False, limit=MAX_CANDIDATES):
+    """The library replies worth showing Jev for this message, most similar first."""
+    ranked = sorted(_scored(catalog, text, course, group, drafting), key=lambda p: (-p[0], p[1].name))
+    return [reply for _, reply in ranked[:limit]]
+
+
+def any_candidate(catalog, text, course=None, group="", drafting=False):
+    """Whether staff once answered something like this (stops at the first match)."""
+    return next(_scored(catalog, text, course, group, drafting), None) is not None
 
 
 def criterion(reply):
@@ -118,8 +120,8 @@ def customer_turn(messages, message_id):
         kind, private, content = m.get("message_type"), m.get("private"), m.get("content") or ""
         if kind in (1, "outgoing") and not private:
             break
-        if private and not draft and content.startswith(("💡", "✍️")):
-            draft, kind_of_draft = content.split("\n\n", 1)[-1], "llm" if content.startswith("✍️") else "bot"
+        if private and not draft and content.startswith(DRAFT_PREFIXES):
+            draft, kind_of_draft = content.split("\n\n", 1)[-1], "llm" if content.startswith(DRAFT_PREFIXES[1]) else "bot"
         if kind in (0, "incoming") and content:
             texts.append(content)
     return "\n".join(reversed(texts)), draft, kind_of_draft
@@ -127,12 +129,11 @@ def customer_turn(messages, message_id):
 
 def capture(conversation_id, message_id, text, consultant=""):
     """RQ job (bot_api, agent_message): keep a staff reply with what it answered, as a new library entry."""
-    from mmm_custom.engine.pipeline import Event
     from mmm_custom.engine.repo import FrappeRepo, chatwoot_admin
-    from mmm_custom.engine.state import value
+    from mmm_custom.engine.state import ConversationState
     from mmm_custom.engine.understand import understand
 
-    if not text or text.startswith(STAFF_PREFIXES) or len(words(text)) < 3:
+    if not text or text.startswith(STAFF_PREFIXES) or len(word_set(text)) < 3:
         return {"status": "ignored"}
     asked, draft, drafted_by = customer_turn(chatwoot_admin().list_messages(int(conversation_id)).get("payload") or [],
                                              int(message_id))
@@ -140,9 +141,8 @@ def capture(conversation_id, message_id, text, consultant=""):
         return {"status": "ignored", "reason": "nothing_asked"}
     repo = FrappeRepo()
     catalog = repo.catalog()
-    state = repo.load_state(Event("customer_message", str(conversation_id)))
-    course_slot = catalog.slot_for("course")
-    course = catalog.courses.get(value(state.slots, course_slot.key)) if course_slot else None
+    state = repo.state_of(conversation_id) or ConversationState(str(conversation_id))
+    course = catalog.course_in(state.slots)
     template, unknown = templatize(text, course)
     understood = understand(asked, state, catalog)
     doc = frappe.get_doc({
@@ -158,7 +158,6 @@ def capture(conversation_id, message_id, text, consultant=""):
 
 
 # ---------------------------------------------------------------- review screen ("Tri thức khóa học" → "Câu trả lời NV")
-ROLES = ("System Manager", "Sales Manager")
 FIELDS = ["name", "status", "course", "course_group", "topic", "customer_examples", "reply", "needs_check", "consultant",
           "source", "draft_outcome", "modified"]
 
@@ -169,7 +168,8 @@ def preview(reply, course, catalog, render):
     from mmm_custom.engine.render import RenderError, render_text
     from mmm_custom.engine.state import ConversationState
 
-    slots = {"course": {"value": course.code}} if course else {}
+    slot = catalog.slot_for("course")
+    slots = {slot.key: {"value": course.code}} if course and slot else {}
     try:
         return render_text(reply, base_context(slots, catalog, ConversationState("preview")), render), ""
     except RenderError as e:
@@ -177,19 +177,18 @@ def preview(reply, course, catalog, render):
 
 
 def outcome_stats(rows):
-    """{used, edited, ignored, total} over the drafts staff saw. Pure."""
+    """{used, edited, ignored, total} from rows counted per draft_outcome ({"draft_outcome", "n"}). Pure."""
     counts = {"used": 0, "edited": 0, "ignored": 0}
     for r in rows:
         if r.get("draft_outcome") in counts:
-            counts[r["draft_outcome"]] += 1
+            counts[r["draft_outcome"]] += int(r.get("n") or 0)
     return {**counts, "total": sum(counts.values())}
 
 
 @frappe.whitelist() if frappe else (lambda f: f)
 def library(product=None):
     """The staff replies of one course (and of its group), newest first, with a preview; plus the review queue size."""
-    import json
-
+    from mmm_custom.engine.knowledge import ROLES
     from mmm_custom.engine.render import frappe_renderer
     from mmm_custom.engine.repo import FrappeRepo
 
@@ -204,15 +203,16 @@ def library(product=None):
         if course and r.course_group == course.group and not r.course:
             r["scope"] = "group"
         r["preview"], r["error"] = preview(r.reply, course, catalog, frappe_renderer)
-    stats = outcome_stats(frappe.get_all("Staff Reply", filters={"draft_outcome": ["is", "set"]}, fields=["draft_outcome"]))
-    pending = frappe.db.count("Staff Reply", {"status": "new"})
-    return json.loads(json.dumps({"replies": rows, "pending": pending, "stats": stats}, default=str))
+    stats = outcome_stats(frappe.get_all("Staff Reply", filters={"draft_outcome": ["is", "set"]},
+                                         fields=["draft_outcome", "count(name) as n"], group_by="draft_outcome"))
+    return {"replies": rows, "pending": frappe.db.count("Staff Reply", {"status": "new"}), "stats": stats}
 
 
 @frappe.whitelist() if frappe else (lambda f: f)
 def review(name, status, reply=None):
     """Approve or reject a staff reply, optionally with an edited template. An approved reply must render and must
     not carry amounts the course data does not explain (needs_check), unless the manager edited them."""
+    from mmm_custom.engine.knowledge import ROLES
     from mmm_custom.engine.render import frappe_renderer
     from mmm_custom.engine.repo import FrappeRepo
 
@@ -237,3 +237,13 @@ def review(name, status, reply=None):
     doc.status = status
     doc.save(ignore_permissions=True)
     return {"name": doc.name, "status": doc.status, "reply": doc.reply}
+
+
+def on_change(doc, method=None):
+    """doc_events: reload the bot's library when a reply is reviewed or edited, not for each newly captured one
+    (those reach staff drafts at the next reload)."""
+    from mmm_custom.engine.repo import clear_catalog_cache
+
+    if not doc.flags.in_insert and (doc.has_value_changed("status") or doc.has_value_changed("reply")):
+        clear_catalog_cache()
+

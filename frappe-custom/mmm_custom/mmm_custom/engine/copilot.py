@@ -29,10 +29,11 @@ def wait_seconds(settings):
 
 
 def mode(state, viewers, settings):
-    """ASSIST while a person watches the conversation, has claimed it or has written in it."""
+    """ASSIST while a person watches the conversation, has claimed it or has written in it. `viewers` is called last,
+    only when nothing else decides (it may ask Chatwoot)."""
     if int(settings["assist_disabled"] or 0) or state.is_sandbox or state.status == "closed":
         return AUTO
-    return ASSIST if (viewers or state.claimed_by or state.consultant_replied) else AUTO
+    return ASSIST if (state.claimed_by or state.consultant_replied or viewers()) else AUTO
 
 
 def hold(state, event, now, settings):
@@ -63,33 +64,48 @@ def merged_event(state):
                  state.inbox_id)
 
 
-def status_attributes(state, assist_mode):
+def status_attributes(state):
     """What the assist banner in Chatwoot reads from the conversation's custom attributes (D-112)."""
+    assisting = state.claimed_by or state.consultant_replied or state.fallback_due
     due_at = datetime.fromtimestamp(state.fallback_due, timezone.utc).isoformat() if state.fallback_due else ""
-    return {"bot_mode": assist_mode, "bot_fallback_at": due_at, "claimed_by": state.claimed_by or ""}
+    return {"bot_mode": ASSIST if assisting else AUTO, "bot_fallback_at": due_at, "claimed_by": state.claimed_by or ""}
 
 
-def handle(event, repo, effects, render, viewers=()):
+def push_status(effects, state):
+    """Write the banner attributes when they changed (each write echoes back as a conversation_updated webhook).
+    The last written ones live in state.assist["banner"]; the caller saves the state."""
+    banner = status_attributes(state)
+    if state.assist.get("banner") == banner:
+        return False
+    effects.assist_status(state.conversation_id, banner)
+    state.assist = {**state.assist, "banner": banner}
+    return True
+
+
+def handle(event, repo, effects, render, viewers=lambda: ()):
     """One customer message: the bot answers it (AUTO), or drafts it for staff and starts the timer (ASSIST)."""
     catalog = repo.catalog()
     state = repo.load_state(event)
     if event.message_id and event.message_id <= state.last_message_id:
         return None  # redelivered webhook
-    if mode(state, viewers, catalog.settings) == AUTO:
-        if not state.assist.get("waiting"):
-            turn = run_turn(event, repo, effects, render)
-            if turn and turn.decision.type == "silent" and turn.state.status == "handed_off":
-                _suggest(event, repo, effects, render, catalog)  # handed off, nobody here yet: a note for later
-            return turn
-        hold(state, event, repo.now(), catalog.settings)  # the person left: answer what was waiting, too
-        repo.save_state(state)
-        turn = run_turn(merged_event(state), repo, effects, render, fallback=True)
-        effects.assist_status(state.conversation_id, status_attributes(turn.state if turn else state, AUTO))
+    assisting = mode(state, viewers, catalog.settings) == ASSIST
+    if not (assisting or state.assist.get("waiting")):
+        turn = run_turn(event, repo, effects, render)
+        if turn and turn.decision.type == "silent" and turn.state.status == "handed_off":
+            _suggest(event, repo, effects, render, catalog)  # handed off, nobody here yet: a note for later
         return turn
-    turn = _suggest(event, repo, effects, render, catalog, state)
+    draft = _suggest(event, repo, effects, render, catalog, state) if assisting else None
     hold(state, event, repo.now(), catalog.settings)
+    if assisting:
+        push_status(effects, state)
     repo.save_state(state)
-    effects.assist_status(state.conversation_id, status_attributes(state, ASSIST))
+    return draft if assisting else _answer_waiting(state, repo, effects, render)  # the person left: answer it all
+
+
+def _answer_waiting(state, repo, effects, render):
+    turn = run_turn(merged_event(state), repo, effects, render, fallback=True)
+    if turn and push_status(effects, turn.state):
+        repo.save_state(turn.state)
     return turn
 
 
@@ -97,7 +113,7 @@ def _suggest(event, repo, effects, render, catalog, state=None):
     """The bot's draft as a private note; when the bot has no answer, a checked Gemini draft instead (D-115)."""
     turn = draft_turn(event, repo, render)
     text = note(turn, catalog)
-    if text == NO_KNOWLEDGE and state is not None and turn is not None:
+    if text == NO_KNOWLEDGE and state is not None:
         text = _written(event, turn, repo, catalog, state) or text
     if text:
         effects.note(event.conversation_id, text)
@@ -105,6 +121,7 @@ def _suggest(event, repo, effects, render, catalog, state=None):
 
 
 def _written(event, turn, repo, catalog, state):
+    """A Gemini draft checked by Jev, from the course this turn knows; the call counts against state's budget."""
     from mmm_custom import llm
     from mmm_custom.engine import llm_draft
     from mmm_custom.engine.actions import applicable
@@ -112,28 +129,21 @@ def _written(event, turn, repo, catalog, state):
 
     if not llm.api_key():
         return None
-    course_slot = catalog.slot_for("course")
-    course = catalog.courses.get((turn.state.slots.get(course_slot.key) or {}).get("value")) if course_slot else None
-    today = repo.today()
+    course, today = catalog.course_in(turn.state.slots), repo.today()
     schedules = repo.open_schedules(course.code, None, None, today, 3) if course else []
-    promotions = [p for p in repo.active_promotions(today)
-                  if course and applicable(p, course_context(course, catalog), "")]
-    turn.state.assist = dict(state.assist)
-    written, _ = llm_draft.make(event.text, turn.state, catalog, repo.jev_client(), llm.generate, schedules, promotions,
-                                repo.now())
-    state.assist = {**state.assist, "llm_calls": turn.state.assist.get("llm_calls", [])}
+    promotions = [p for p in repo.active_promotions(today) if course and applicable(p, course_context(course, catalog), "")]
+    written, _, calls = llm_draft.make(event.text, turn.state, catalog, repo.jev_client(), llm.generate, schedules,
+                                       promotions, repo.now(), state.assist.get("llm_calls", []))
+    state.assist = {**state.assist, "llm_calls": calls}
     return written
 
 
 def answer(conversation_id, repo, effects, render):
     """The timer ran out: the bot answers the waiting messages (None when a person answered first)."""
-    state = repo.load_state(Event("customer_message", str(conversation_id)))
-    if not due(state, repo.now()):
+    state = repo.state_of(conversation_id)
+    if not state or not due(state, repo.now()):
         return None
-    turn = run_turn(merged_event(state), repo, effects, render, fallback=True)
-    if turn:
-        effects.assist_status(state.conversation_id, status_attributes(turn.state, ASSIST))
-    return turn
+    return _answer_waiting(state, repo, effects, render)
 
 
 TYPING_GRACE = 60  # a staff member typing pushes the bot's answer back this far (D-112)
@@ -142,11 +152,9 @@ TYPING_GRACE = 60  # a staff member typing pushes the bot's answer back this far
 def banner_changes(payload):
     """conversation_updated → what a staff member changed on the assist banner (D-112), pure:
     {"claimed_by": agent id or ""} for "Nhận xử lý" / "Trả lại cho Jev", {"reply_at": epoch} for "Để Jev trả lời ngay"."""
-    changed = {}
-    for item in payload.get("changed_attributes") or []:
-        if isinstance(item, dict):
-            changed.update(item)
-    change = changed.get("custom_attributes")
+    from mmm_custom.intelligence import changed_attributes
+
+    change = changed_attributes(payload).get("custom_attributes")
     if not isinstance(change, dict):
         return {}
     before, after = change.get("previous_value") or {}, change.get("current_value") or {}
@@ -190,7 +198,8 @@ def process(event):
     from mmm_custom.engine.render import frappe_renderer
     from mmm_custom.engine.repo import FrappeRepo
 
-    return handle(event, FrappeRepo(), chatwoot_effects(frappe.conf), frappe_renderer, viewers(event.conversation_id))
+    return handle(event, FrappeRepo(), chatwoot_effects(frappe.conf), frappe_renderer,
+                  lambda: viewers(event.conversation_id))
 
 
 def run_due():
@@ -214,22 +223,23 @@ def answer_due(conversation_id):
         frappe.db.commit()
 
 
-def _update(conversation_id, change):
+def _update(conversation_id, change=None):
+    """Apply a banner / typing change to a conversation's state and refresh the banner; without `change`, only the
+    refresh (after a staff message)."""
     from mmm_custom.engine.effects import chatwoot_effects
     from mmm_custom.engine.repo import FrappeRepo
 
     repo = FrappeRepo()
-    event = Event("customer_message", str(conversation_id))
-    if not frappe.db.exists("Bot Conversation", {"conversation_id": str(conversation_id)}):
+    state = repo.state_of(conversation_id)
+    if not state:
         return {"status": "ignored", "reason": "no_bot_conversation"}
-    state = repo.load_state(event)
-    before = (state.claimed_by, state.fallback_due, state.consultant_replied)
-    change(state, time.time())
-    if (state.claimed_by, state.fallback_due, state.consultant_replied) == before:
-        return {"status": "unchanged"}
-    repo.save_state(state)
-    chatwoot_effects(frappe.conf).assist_status(state.conversation_id, status_attributes(
-        state, ASSIST if (state.claimed_by or state.consultant_replied or state.fallback_due) else AUTO))
+    if change:
+        before = (state.claimed_by, state.fallback_due, state.consultant_replied)
+        change(state, time.time())
+        if (state.claimed_by, state.fallback_due, state.consultant_replied) == before:
+            return {"status": "unchanged"}
+    if push_status(chatwoot_effects(frappe.conf), state) or change:
+        repo.save_state(state)
     return {"status": "updated"}
 
 
@@ -251,13 +261,7 @@ def on_typing(payload):
 
 def refresh_status(conversation_id):
     """After a staff message: the banner stops counting down (queued by bot_api)."""
-    from mmm_custom.engine.effects import chatwoot_effects
-    from mmm_custom.engine.repo import FrappeRepo
-
-    if not frappe.db.exists("Bot Conversation", {"conversation_id": str(conversation_id)}):
-        return
-    state = FrappeRepo().load_state(Event("customer_message", str(conversation_id)))
-    chatwoot_effects(frappe.conf).assist_status(state.conversation_id, status_attributes(state, ASSIST))
+    return _update(conversation_id)
 
 
 def replacement(state, consultants, load, online, assignee_id, catalog):
@@ -289,7 +293,9 @@ def escalate(conversation_id):
     from mmm_custom.engine.repo import FrappeRepo, chatwoot_admin
 
     repo, client = FrappeRepo(), chatwoot_admin()
-    state = repo.load_state(Event("customer_message", str(conversation_id)))
+    state = repo.state_of(conversation_id)
+    if not state:
+        return {"status": "kept"}
     assignee = ((client.list_messages(int(conversation_id)).get("meta") or {}).get("assignee") or {}).get("id")
     picked = replacement(state, repo.consultants(), repo.consultant_load(), repo.online_agents(), assignee, repo.catalog())
     if not picked:

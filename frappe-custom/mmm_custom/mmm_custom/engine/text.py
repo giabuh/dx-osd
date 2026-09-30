@@ -8,6 +8,7 @@ import unicodedata
 WORD_RE = re.compile(r"[a-z0-9]+")
 TAG_RE = re.compile(r"<[^>]+>")
 PHONE_RE = re.compile(r"(?:\+?84|0)(?:[\s.\-]?\d){8,10}")
+EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 # Folded filler words ignored when collecting unmatched terms for learning signals (D-057).
 STOPWORDS = frozenset(
     "cho toi minh em anh chi hoc khoa muon can hoi co khong the nao duoc voi nha nhe vay sao thi nhu bao "
@@ -66,6 +67,11 @@ def content_words(folded_text, spans):
             continue
         out.append(word)
     return list(dict.fromkeys(out))
+
+
+def word_set(text):
+    """The words that carry meaning in a message, diacritics ignored (filler words dropped): for similarity."""
+    return frozenset(w for w in fold(text).split() if len(w) > 1 and w not in STOPWORDS)
 
 
 def is_smalltalk(folded_text):

@@ -6,24 +6,20 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeJev, FakeRepo, demo_catalog, fill, render
+from engine_fixtures import ROBO, FakeJev, FakeRepo, demo_catalog, event, fill, render
 
 from mmm_custom.engine import draft
 from mmm_custom.engine.combine import combine
 from mmm_custom.engine.decide import decide
 from mmm_custom.engine.jev_questions import COURSE_FACT, COURSE_FAQ, NONE, build_questions
-from mmm_custom.engine.pipeline import Event, parse_event, run_turn
+from mmm_custom.engine.pipeline import parse_event, run_turn
 from mmm_custom.engine.effects import RecordingEffects
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.state import ConversationState
 from mmm_custom.engine.understand import Understanding, understand
 
 CAT = demo_catalog()
-ROBO = {"course": {**fill("TE-ROBO"), "parent": "Tin học trẻ em"}}
 
-
-def event(text, message_id=10, conversation_id="2"):
-    return Event("customer_message", conversation_id, message_id, text, {"id": 9})
 
 
 class TestQuestion(unittest.TestCase):
@@ -60,7 +56,8 @@ class TestCombineAndDecide(unittest.TestCase):
         questions = build_questions(excel, Understanding(), CAT)
         out = combine(Understanding(), {COURSE_FAQ: {"choice": "1", "confidence": 0.95},
                                         COURSE_FACT: {"choice": "syllabus", "confidence": 0.95}}, questions, excel, CAT)
-        self.assertEqual((out.faq["index"], out.fact), (1, {}))
+        d = decide(excel, out, CAT)
+        self.assertEqual((d.faq["index"], d.fact), (1, {}))
 
     def test_syllabus_lists_the_lessons(self):
         d = decide(self.state, Understanding(fact={"course": "TE-ROBO", "fact": "syllabus", "confidence": 0.95}), CAT)

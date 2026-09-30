@@ -127,7 +127,7 @@ class TestReviewScreen(unittest.TestCase):
         self.assertTrue(sr.preview("Dạ {{ course.fee | nope }} ạ", CAT.courses["KT-MISA"], CAT, render)[1])
 
     def test_outcome_stats(self):
-        rows = [{"draft_outcome": "used"}, {"draft_outcome": "used"}, {"draft_outcome": "ignored"}, {"draft_outcome": None}]
+        rows = [{"draft_outcome": "used", "n": 2}, {"draft_outcome": "ignored", "n": 1}, {"draft_outcome": None, "n": 4}]
         self.assertEqual(sr.outcome_stats(rows), {"used": 2, "edited": 0, "ignored": 1, "total": 3})
 
 

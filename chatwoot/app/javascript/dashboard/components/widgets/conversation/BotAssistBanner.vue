@@ -16,7 +16,7 @@ const now = useNow({ interval: 15000 });
 
 const currentChat = useMapGetter('getSelectedChat');
 const currentUser = useMapGetter('getCurrentUser');
-const agents = useMapGetter('agents/getAgents');
+const agentById = useMapGetter('agents/getAgentById');
 
 const attributes = computed(() => currentChat.value?.custom_attributes || {});
 const dueAt = computed(() =>
@@ -34,8 +34,9 @@ const minutesLeft = computed(() =>
 );
 const claimerName = computed(() => {
   if (isMine.value) return currentUser.value?.name;
-  const agent = agents.value.find(a => String(a.id) === claimedBy.value);
-  return agent?.name || t('CONVERSATION.BOT_ASSIST.SOMEONE');
+  return (
+    agentById.value(claimedBy.value).name || t('CONVERSATION.BOT_ASSIST.SOMEONE')
+  );
 });
 const message = computed(() => {
   if (!isCounting.value) {

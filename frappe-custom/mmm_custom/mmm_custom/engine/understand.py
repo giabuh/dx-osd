@@ -36,7 +36,7 @@ class Understanding:
     has_number: bool = False                       # the message contains digits (ages, counts)
     faq: dict = field(default_factory=dict)        # {"course", "index", "confidence"}: a course FAQ to answer
     fact: dict = field(default_factory=dict)       # {"course", "fact", "confidence"}: a part of the course's data (D-110)
-    staff_reply: dict = field(default_factory=dict)  # {"name", "topic", "approved", "confidence"}: a library reply (D-114)
+    staff_reply: dict = field(default_factory=dict)  # {"name", "confidence"}: a library reply (D-114)
     level_unsure: float = 0.0                      # Jev: unsure of their level / basic vs advanced (D-106)
     declined: str = ""                             # the level quiz the customer put off ("Để sau")
     phone_suspect: str = ""                        # digits that look like a phone number with a digit missing

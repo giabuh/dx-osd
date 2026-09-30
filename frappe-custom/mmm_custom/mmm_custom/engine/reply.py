@@ -113,8 +113,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
                 paragraphs.append(text)
 
     if decision.greet:  # later in the conversation a short greeting back, not the bot's introduction (D-109)
-        again = state.turns and settings.get("regreet_template")
-        say(settings["regreet_template"] if again else settings["greeting_template"], ctx, "regreet" if again else "greeting")
+        say(settings["regreet_template"] if state.turns else settings["greeting_template"], ctx,
+            "regreet" if state.turns else "greeting")
     if decision.declined:
         say(settings["quiz_decline_template"], ctx, "quiz_decline")
     if decision.fallback:
@@ -127,7 +127,7 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
             say(course.faqs[index].answer, {**ctx, "course": course_context(course, catalog)}, COURSE_FAQ)
             reply.variants.append({"skill": COURSE_FAQ, "variant": str(index)})
     elif decision.staff_reply:  # …or what staff once answered to the same question (D-114)
-        reply_row = next((r for r in catalog.staff_replies if r.name == decision.staff_reply["name"]), None)
+        reply_row = catalog.staff_reply(decision.staff_reply["name"])
         if reply_row:
             say(reply_row.reply, ctx, STAFF_REPLY)
             reply.variants.append({"skill": STAFF_REPLY, "variant": reply_row.name})
@@ -135,7 +135,7 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         course = catalog.courses.get(decision.fact["course"])
         key = decision.fact["fact"]
         if course:
-            say(settings.get(f"fact_{key}_template") or "", {**ctx, "course": course_context(course, catalog)}, COURSE_FACT)
+            say(settings[f"fact_{key}_template"], {**ctx, "course": course_context(course, catalog)}, COURSE_FACT)
             reply.variants.append({"skill": COURSE_FACT, "variant": key})
 
     action_buttons, follow_ups = [], []

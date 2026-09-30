@@ -9,11 +9,12 @@ when the assist wait runs out (copilot.answer sends the hold line)."""
 import re
 
 from mmm_custom.engine.context import base_context
+from mmm_custom.engine.cost_guard import recent_calls
+from mmm_custom.engine.render import vnd
 from mmm_custom.engine.staff_replies import MONEY_RE, candidates, mask, money_value
-from mmm_custom.engine.state import value
+from mmm_custom.engine.tone import JINJA
 
 HEADER = "✍️ Nháp AI (Gemini) · đã đối chiếu dữ liệu khóa · kiểm tra trước khi gửi"
-HOUR = 3600
 SYSTEM = (
     "Bạn là tư vấn viên của một trung tâm đào tạo tin học ở Việt Nam, đang soạn NHÁP câu trả lời Messenger cho đồng "
     "nghiệp xem trước khi gửi khách. Xưng \"em\", gọi khách là \"anh/chị\" (phụ huynh: \"ba mẹ\"), mở đầu bằng \"Dạ\", "
@@ -31,7 +32,7 @@ def facts(state, catalog, schedules=(), promotions=()):
     course = ctx["course"]
     lines = [f"Trung tâm: {ctx['brand']['name']}. Hotline: {ctx['brand']['hotline']}"]
     if course:
-        lines += [f"Khóa: {course['name']} (nhóm {course['group']})", f"Học phí: {int(course['fee']):,}đ".replace(",", "."),
+        lines += [f"Khóa: {course['name']} (nhóm {course['group']})", f"Học phí: {vnd(course['fee'])}",
                   f"Thời lượng: {course['duration']}", f"Đối tượng: {course['audience']}"]
         if course["min_age"]:
             lines.append(f"Độ tuổi: {course['min_age']}–{course['max_age']} tuổi")
@@ -52,12 +53,13 @@ def facts(state, catalog, schedules=(), promotions=()):
     return [line for line in lines if line.strip()]
 
 
-def prompt(text, state, catalog, fact_lines, examples):
+def prompt(text, state, fact_lines, examples):
     history = "\n".join(f"{'Khách' if h.get('from') == 'customer' else 'Trung tâm'}: {mask(h.get('text', ''))}"
                         for h in state.history[-10:])
     style = "\n".join(f"- {e}" for e in examples) or "- (chưa có)"
-    return (f"DỮ LIỆU KHÓA HỌC:\n" + "\n".join(fact_lines) + f"\n\nVÍ DỤ CÂU TRẢ LỜI CỦA NHÂN VIÊN (chỉ học giọng văn):\n"
-            f"{style}\n\nHỘI THOẠI GẦN ĐÂY:\n{history or '(mới bắt đầu)'}\n\nTIN NHẮN MỚI CỦA KHÁCH:\n{mask(text)}\n\n"
+    data = "\n".join(fact_lines)
+    return (f"DỮ LIỆU KHÓA HỌC:\n{data}\n\nVÍ DỤ CÂU TRẢ LỜI CỦA NHÂN VIÊN (chỉ học giọng văn):\n{style}\n\n"
+            f"HỘI THOẠI GẦN ĐÂY:\n{history or '(mới bắt đầu)'}\n\nTIN NHẮN MỚI CỦA KHÁCH:\n{mask(text)}\n\n"
             "Soạn câu trả lời:")
 
 
@@ -95,32 +97,25 @@ def accepted(answers):
     return None not in (a, s, p) and a >= MIN_ANSWERS and s >= MIN_SUPPORTED and p <= MAX_PROMISE
 
 
-def allowed(state, settings, now):
-    """Within the per-conversation budget (llm_drafts_per_hour) and not turned off."""
-    if int(settings["llm_draft_disabled"] or 0):
-        return False
-    recent = [t for t in state.assist.get("llm_calls", []) if now - t < HOUR]
-    return len(recent) < int(settings["llm_drafts_per_hour"])
-
-
-def make(text, state, catalog, jev, generate, schedules=(), promotions=(), now=0.0):
-    """(note or None, why). Records the call in state.assist["llm_calls"] (the caller saves the state)."""
-    if not allowed(state, catalog.settings, now):
-        return None, "budget"
-    course_slot = catalog.slot_for("course")
-    course = catalog.courses.get(value(state.slots, course_slot.key)) if course_slot else None
+def make(text, state, catalog, jev, generate, schedules=(), promotions=(), now=0.0, calls=()):
+    """(note or None, why, the Gemini calls of the last hour including this one). The caller keeps the calls: they
+    cap drafts per conversation (llm_drafts_per_hour); llm_draft_disabled turns drafts off."""
+    calls = recent_calls(calls, now)
+    settings = catalog.settings
+    if int(settings["llm_draft_disabled"] or 0) or len(calls) >= int(settings["llm_drafts_per_hour"]):
+        return None, "budget", calls
+    calls = calls + [now]
     fact_lines = facts(state, catalog, schedules, promotions)
-    examples = [re.sub(r"\{\{.*?\}\}|\{%.*?%\}", "…", r.reply) for r in candidates(catalog, text, course, "", limit=4)]
-    state.assist = {**state.assist, "llm_calls": [t for t in state.assist.get("llm_calls", []) if now - t < HOUR] + [now]}
-    draft = generate(prompt(text, state, catalog, fact_lines, examples), SYSTEM)
+    examples = [JINJA.sub("…", r.reply) for r in candidates(catalog, text, catalog.course_in(state.slots), limit=4)]
+    draft = generate(prompt(text, state, fact_lines, examples), SYSTEM)
     if not draft:
-        return None, "no_draft"
+        return None, "no_draft", calls
     if not numbers_ok(draft, fact_lines):
-        return None, "numbers"
+        return None, "numbers", calls
     if jev is None:
-        return None, "no_jev"
+        return None, "no_jev", calls
     check = checks(text, draft, fact_lines)
     result = jev.ask(check["state"], check["questions"])
     if result.status != "ok" or not accepted(result.answers):
-        return None, "jev_rejected"
-    return f"{HEADER}\n\n{draft}", "ok"
+        return None, "jev_rejected", calls
+    return f"{HEADER}\n\n{draft}", "ok", calls

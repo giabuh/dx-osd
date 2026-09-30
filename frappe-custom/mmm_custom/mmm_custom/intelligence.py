@@ -31,6 +31,7 @@ except ImportError:
 from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.dedupe import normalize_phone
+from mmm_custom.engine.text import EMAIL_RE
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,6 @@ HOTNESS_CRITERIA = [
 LEAD_WAIT_SECONDS = (4, 8, 16)
 
 PHONE_RE = re.compile(r"(?:\+84|0)(?:[\s.-]?\d){9}")
-EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
 
 def ask_jev(api_key: str, state, questions: dict, model: str = "jev-latest", url: str = JEV_URL) -> dict:
@@ -184,16 +184,19 @@ def _find_lead(contact: dict) -> str | None:
     return None
 
 
+def _bot_conversation(conversation_id, status) -> bool:
+    return bool(frappe.db.exists("Bot Conversation",
+                                 {"conversation_id": str(conversation_id), "status": status, "is_sandbox": 0}))
+
+
 def bot_active(conversation_id) -> bool:
     """An active bot conversation supplies its own Jev intent and hotness signals."""
-    return bool(frappe.db.exists("Bot Conversation",
-                                 {"conversation_id": str(conversation_id), "status": "active", "is_sandbox": 0}))
+    return _bot_conversation(conversation_id, "active")
 
 
 def bot_handles(conversation_id) -> bool:
     """The lead engine owns this conversation (D-111): it drafts the staff suggestions itself, per message."""
-    return bool(frappe.db.exists("Bot Conversation", {"conversation_id": str(conversation_id), "is_sandbox": 0,
-                                                      "status": ["!=", "closed"]}))
+    return _bot_conversation(conversation_id, ["!=", "closed"])
 
 
 def has_human_assignee(conversation: dict) -> bool:
@@ -211,14 +214,19 @@ def customer_waiting(conversation: dict) -> bool:
     return last.get("message_type") in (0, "incoming") or (last.get("sender") or {}).get("type") == "agent_bot"
 
 
-def assignment_trigger(payload: dict):
-    """conversation_updated → the conversation id when it was just assigned to a staff member while the
-    customer waits for an answer (D-108); otherwise None. Pure."""
+def changed_attributes(payload: dict) -> dict:
+    """conversation_updated → {attribute: {"previous_value", "current_value"}}. Pure."""
     changed = {}
     for item in payload.get("changed_attributes") or []:
         if isinstance(item, dict):
             changed.update(item)
-    change = changed.get("assignee_id")
+    return changed
+
+
+def assignment_trigger(payload: dict):
+    """conversation_updated → the conversation id when it was just assigned to a staff member while the
+    customer waits for an answer (D-108); otherwise None. Pure."""
+    change = changed_attributes(payload).get("assignee_id")
     if not isinstance(change, dict):
         return None
     current = change.get("current_value")

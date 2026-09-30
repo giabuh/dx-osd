@@ -96,12 +96,14 @@ after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.e
 
 # Lead engine (spec 2026-09-26-edu-lead-engine): any edit to catalog, slot, skill or settings data
 # clears the engine's cached catalog snapshot so the next customer message sees it.
-_LEAD_ENGINE_DATA = ("Course Group", "CRM Product", "CRM Territory", "Bot Slot", "Bot Skill", "Lead Engine Settings",
-                     "Staff Reply")
+_LEAD_ENGINE_DATA = ("Course Group", "CRM Product", "CRM Territory", "Bot Slot", "Bot Skill", "Lead Engine Settings")
 doc_events = {
 	dt: {"on_update": "mmm_custom.engine.repo.clear_catalog_cache", "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 	for dt in _LEAD_ENGINE_DATA
 }
+# Staff reply library (D-114): every staff message adds a row; only a review decision or an edit reaches the bot.
+doc_events["Staff Reply"] = {"on_update": "mmm_custom.engine.staff_replies.on_change",
+                             "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 # Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
 doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update",
                           # Referral codes (D-103)

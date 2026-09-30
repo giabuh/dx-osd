@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeJev, FakeRepo, demo_catalog, fill, render
+from engine_fixtures import ROBO, FakeJev, FakeRepo, demo_catalog, render
 
 from mmm_custom import llm
 from mmm_custom.engine import copilot, llm_draft
@@ -16,7 +16,6 @@ from mmm_custom.engine.pipeline import Event
 from mmm_custom.engine.state import ConversationState
 
 CAT = demo_catalog()
-ROBO = {"course": {**fill("TE-ROBO"), "parent": "Tin học trẻ em"}}
 GOOD = {"answers_question": {"noul": 0.93}, "supported": {"noul": 0.9}, "unapproved_promise": {"noul": 0.05}}
 DRAFT = "Dạ khóa Robotics cơ bản học trong 2 tháng, học phí 2.400.000đ ạ. Em kiểm tra thêm và báo ba mẹ ngay ạ."
 
@@ -49,14 +48,14 @@ class TestChecks(unittest.TestCase):
 class TestMake(unittest.TestCase):
     def test_a_checked_draft_becomes_a_note(self):
         generate, jev, s = MagicMock(return_value=DRAFT), FakeJev(GOOD), state()
-        text, why = llm_draft.make("bé học robot có cần mang máy không", s, CAT, jev, generate, now=100.0)
+        text, why, calls = llm_draft.make("bé học robot có cần mang máy không", s, CAT, jev, generate, now=100.0)
         self.assertEqual(why, "ok")
         self.assertTrue(text.startswith(llm_draft.HEADER))
         prompt, system = generate.call_args[0]
         self.assertIn("DỮ LIỆU KHÓA HỌC", prompt)
         self.assertIn("Robotics cơ bản", prompt)
         self.assertIn("không bịa", system)
-        self.assertEqual(s.assist["llm_calls"], [100.0])
+        self.assertEqual(calls, [100.0])
 
     def test_rejected_by_jev_or_by_the_numbers(self):
         self.assertEqual(llm_draft.make("?", state(), CAT, FakeJev({**GOOD, "supported": {"noul": 0.2}}),
@@ -67,8 +66,8 @@ class TestMake(unittest.TestCase):
         self.assertEqual(llm_draft.make("?", state(), CAT, None, lambda p, s: DRAFT)[1], "no_jev")
 
     def test_budget_per_conversation_and_switch(self):
-        s = state(assist={"llm_calls": [float(t) for t in range(6)]})
-        self.assertEqual(llm_draft.make("?", s, CAT, FakeJev(GOOD), lambda p, x: DRAFT, now=100.0)[1], "budget")
+        self.assertEqual(llm_draft.make("?", state(), CAT, FakeJev(GOOD), lambda p, x: DRAFT, now=100.0,
+                                        calls=[float(t) for t in range(6)])[1], "budget")
         self.assertEqual(llm_draft.make("?", state(), demo_catalog(llm_draft_disabled=1), FakeJev(GOOD),
                                         lambda p, x: DRAFT)[1], "budget")
 

@@ -48,21 +48,15 @@ def _choice(instructions, criteria):
     return {"type": "choice", "instructions": instructions, "criteria": {**criteria, NONE: NONE_TEXT}}
 
 
-def faq_course(state, u, catalog):
-    """The course whose FAQs Jev reads: the one named in this message, else the one already known."""
-    slot = catalog.slot_for("course")
-    if not slot:
-        return None
-    course = catalog.courses.get((u.fills.get(slot.key) or state.slots.get(slot.key) or {}).get("value"))
-    return course if course and course.faqs else None
-
-
 def known_course(state, u, catalog):
     """The course named in this message, else the one already known."""
-    slot = catalog.slot_for("course")
-    if not slot:
-        return None
-    return catalog.courses.get((u.fills.get(slot.key) or state.slots.get(slot.key) or {}).get("value"))
+    return catalog.course_in({**state.slots, **u.fills})
+
+
+def faq_course(state, u, catalog):
+    """The course whose FAQs Jev reads, when it has any."""
+    course = known_course(state, u, catalog)
+    return course if course and course.faqs else None
 
 
 def course_facts(course):
@@ -134,7 +128,8 @@ def build_questions(state, u, catalog, skills=True, text=""):
         if facts:
             q[COURSE_FACT] = _choice(f"What does the customer's latest message ask about the course '{known.name}'?",
                                      {key: FACTS[key][1] for key in facts})
-        group = u.parents.get("course") or (state.slots.get("course") or {}).get("parent", "")
+        slot = catalog.slot_for("course")
+        group = (u.parents.get(slot.key) or (state.slots.get(slot.key) or {}).get("parent", "")) if slot else ""
         library = staff_replies.candidates(catalog, text, known, group, state.drafting) if text else []
         if library:
             q[STAFF_REPLY] = _choice("Which of these replies that staff once wrote answers the customer's latest "

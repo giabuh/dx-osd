@@ -12,7 +12,7 @@ except ImportError:  # offline tests
 from mmm_custom.engine.combine import combine
 from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.cost_guard import allow_jev, recent_calls
-from mmm_custom.engine.decide import decide
+from mmm_custom.engine.decide import STAFF_REASONS, decide
 from mmm_custom.engine.handoff import plan_handoff
 from mmm_custom.engine.jev import JevResult
 from mmm_custom.engine.jev_questions import MAX_HISTORY, build_questions, jev_state
@@ -54,7 +54,8 @@ class Turn:
     stuck_before: int = 0
     reason: str = ""
     jev: object = None
-    needs_staff: str = ""  # draft only: why a person has to answer (a handoff skill or reason), for the note
+    needs_staff: str = ""  # draft / fallback: why a person has to answer, in the words staff read
+    no_answer: bool = False  # draft / fallback: the bot has nothing from its knowledge for this message
 
 
 def _dict(value):
@@ -82,12 +83,12 @@ def parse_event(payload):
     return Event("ignore", cid)
 
 
-def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0):
+def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0, person_ok=False):
     """Always run keywords; call Jev only when available and within the cost guard."""
     u = understand(text, state, catalog)
     if jev is None:
         return u, JevResult("disabled")
-    allowed, why = allow_jev(u, state, catalog, now, tokens_today, budget, text)
+    allowed, why = allow_jev(u, state, catalog, now, tokens_today, budget, text, person_ok)
     if not allowed:
         return u, JevResult("skipped_cost_guard", error=why)
     state.jev_calls = recent_calls(state.jev_calls, now) + [now]
@@ -279,31 +280,28 @@ def run_turn(event, repo, effects, render, draft=False, fallback=False):
     if not draft and event.message_id and event.message_id <= state.last_message_id:
         return None  # redelivered webhook: this message was already answered
     person = fallback and bool(state.consultant_replied or state.claimed_by)
-    replied = state.consultant_replied
-    if fallback:
-        state.consultant_replied = False  # restored before saving: only this answer overrides D-059
+    if fallback:  # the waiting messages are answered by this turn
         state.assist = {**state.assist, "waiting": []}
         state.fallback_due = 0.0
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),
                 state.status, state.turns, state.stuck_turns)
     jev = repo.jev_client()
     tokens, budget = repo.jev_budget() if jev else (0, 0)
-    turn.understanding, turn.jev = understand_turn(event.text, state, catalog, jev, repo.now(), tokens, budget)
+    turn.understanding, turn.jev = understand_turn(event.text, state, catalog, jev, repo.now(), tokens, budget,
+                                                   person_ok=fallback)
     if turn.jev.input_tokens:
         repo.add_jev_tokens(turn.jev.input_tokens)
     if turn.jev.error == "daily_budget":
         repo.warn_budget()
-    turn.decision = decide(state, turn.understanding, catalog)
+    turn.decision = decide(state, turn.understanding, catalog, person_ok=fallback)
     if draft or person:  # staff are already there: keep only what the bot can answer, never a handoff
         d = turn.decision
         handing = [k for k in d.skills if catalog.skills[k].action == "handoff"]
         d.skills = [k for k in d.skills if k not in handing]
-        if handing or d.type == "handoff":
-            turn.needs_staff = catalog.skills[handing[0]].title if handing else d.handoff_reason
-        if d.type == "handoff" or (handing and d.type == "answer" and not (d.skills or d.faq or d.fact)):
-            d.type = "answer" if (d.skills or d.faq or d.fact or d.staff_reply) else "silent"
-        if person and d.fallback and not (d.skills or d.faq or d.fact or d.staff_reply):
-            d.type, turn.needs_staff = "silent", "stuck"  # "em chưa hiểu" after a wait is worse than the hold line
+        turn.needs_staff = catalog.skills[handing[0]].title if handing else STAFF_REASONS.get(d.handoff_reason, "")
+        turn.no_answer = not d.answered and (d.fallback or d.handoff_reason == "stuck")
+        if d.type == "handoff" or (handing and d.type == "answer") or (person and turn.no_answer):
+            d.type = "answer" if d.answered else "silent"  # "em chưa hiểu" after a wait is worse than the hold line
     apply_quiz_results(turn.decision, catalog)
     issue_reward(turn.decision, state, catalog, repo, repo.today())
     turn.reason = turn.decision.reason
@@ -326,7 +324,6 @@ def run_turn(event, repo, effects, render, draft=False, fallback=False):
             repo.add_jev_tokens(call["input_tokens"])
     turn.reply.errors[:0] = errors
     if fallback and turn.decision.type == "silent" and state.status != "closed":
-        turn.needs_staff = turn.needs_staff or "timeout"
         if not state.assist.get("held"):  # once until a person writes: "đã báo tư vấn viên, chờ chút nhé"
             turn.reply = hold_reply(state, catalog, render, turn.reply)
             state.assist["held"] = True
@@ -346,7 +343,6 @@ def run_turn(event, repo, effects, render, draft=False, fallback=False):
         except Exception as e:
             turn.reply.errors.append({"type": "spam_failed", "detail": str(e)[:300]})
     write_lead(turn, effects, catalog)
-    state.consultant_replied = replied or state.consultant_replied
     if plan:
         state.consultant = plan.consultant_name
         try:
