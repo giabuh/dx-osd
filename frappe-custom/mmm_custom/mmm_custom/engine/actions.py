@@ -111,7 +111,9 @@ def level_quiz(a):
     slot = cfg.get("slot", "quiz_progress")
     goal = value(a.slots, "goal") or ""
     answers = quiz.progress(value(a.slots, slot), key)
-    base = {"subject": cfg.get("subject", ""), "last_correct": quiz.last_correct(cfg, answers, goal)}
+    resumed = bool(a.ctx.get("resumed"))  # asked again after a side question: nothing was just answered
+    base = {"subject": cfg.get("subject", ""), "resumed": resumed, "unclear": bool(a.ctx.get("unclear")),
+            "last_correct": None if resumed else quiz.last_correct(cfg, answers, goal)}
     res = quiz.result(cfg, answers, goal)
     if res is None:
         _, q = quiz.next_question(cfg, answers, goal)
@@ -127,6 +129,7 @@ def level_quiz(a):
     option = level_slot.option(res["level"]) if level_slot else None
     trials = _trial_buttons(a, course)
     return {"quiz": {**base, "done": True, **res, "missed_text": ", ".join(res["missed"]),
+                     "focus": quiz.lesson_for(res["missed"], course.syllabus if course else ()),
                      "level_label": option.label if option else "", "trials": len(trials),
                      "course_name": course.name if course else "", "course_fee": course.fee if course else 0},
             "_buttons": trials}

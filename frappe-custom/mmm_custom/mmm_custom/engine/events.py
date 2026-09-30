@@ -2,8 +2,9 @@
 
     lead_engine_events = {"handed_off": ["my_app.crm.notify_manager"]}
 
-Events: slot_filled, skill_done, handed_off, lead_updated. Each handler receives one dict with the
-event name under "event". A failing handler is logged and never breaks the bot turn.
+Events: slot_filled, skill_done, handed_off, lead_updated, assist_timeout (D-111: nobody answered in time).
+Each handler receives one dict with the event name under "event". A failing handler is logged and never breaks
+the bot turn.
 """
 
 try:
@@ -11,7 +12,7 @@ try:
 except ImportError:  # offline tests
     frappe = None
 
-EVENTS = ("slot_filled", "skill_done", "handed_off", "lead_updated")
+EVENTS = ("slot_filled", "skill_done", "handed_off", "lead_updated", "assist_timeout")
 
 
 def emit(event, payload, get_hooks=None, get_attr=None, log_error=None):

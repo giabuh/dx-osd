@@ -13,6 +13,7 @@ class BaseActionCableConnector {
     presenceInterval = PRESENCE_INTERVAL
   ) {
     const websocketURL = websocketHost ? `${websocketHost}/cable` : undefined;
+    const connector = this;
 
     this.consumer = createConsumer(websocketURL);
     this.subscription = this.consumer.subscriptions.create(
@@ -24,7 +25,7 @@ class BaseActionCableConnector {
       },
       {
         updatePresence() {
-          this.perform('update_presence');
+          this.perform('update_presence', connector.presenceData());
         },
         received: this.onReceived,
         disconnected: () => {
@@ -45,6 +46,12 @@ class BaseActionCableConnector {
       }, presenceInterval);
     };
     this.triggerPresenceInterval();
+  }
+
+  // Extra data sent with each presence ping; the dashboard adds the conversation the agent is looking at.
+  // eslint-disable-next-line class-methods-use-this
+  presenceData() {
+    return {};
   }
 
   checkConnection() {

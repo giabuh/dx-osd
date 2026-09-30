@@ -5,7 +5,7 @@ option in catalog_rules.SLOT_TYPES / the Bot Slot DocType."""
 import re
 
 from mmm_custom.engine.state import value
-from mmm_custom.engine.text import find_phone, find_phrases
+from mmm_custom.engine.text import extract_name, find_phone, find_phone_candidate, find_phrases
 
 REGISTRY = {}
 
@@ -118,6 +118,8 @@ class PhoneSlot(SlotType):
         if phone:
             _fill(u, slot, phone)
             u.matches.append({"slot": slot.key, "kind": "phone", "values": [phone]})
+        else:  # "039182384": say the number looks short instead of silently dropping it (D-107)
+            u.phone_suspect = find_phone_candidate(text) or ""
 
     def buttons(self, slot, slots, catalog):
         return [] if slot.required else [{"title": "Bỏ qua", "action": {"type": "skip", "slot": slot.key}}]
@@ -159,3 +161,19 @@ class TextSlot(SlotType):
         answer = " ".join((text or "").split())[:60]
         if answer and len(answer.split()) <= 6:
             _fill(u, slot, answer)
+
+
+@register("person_name")
+class PersonNameSlot(SlotType):
+    """The customer's name (D-107): "mình tên Hùng" anywhere in the chat, or a bare answer when asked;
+    only the name is kept, capitalised, and anything that is not a name ("$A$1", a phone) is refused."""
+
+    late = True
+
+    def understand(self, slot, text, folded, pending, catalog, u):
+        if slot.key in u.fills:
+            return
+        name = extract_name(text, asked=pending and not (u.skills or u.parents or u.ambiguous))
+        if name:
+            _fill(u, slot, name)
+            u.matches.append({"slot": slot.key, "kind": "name", "values": [name]})

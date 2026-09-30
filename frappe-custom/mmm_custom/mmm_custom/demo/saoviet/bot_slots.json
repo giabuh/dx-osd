@@ -105,7 +105,7 @@
  {
   "slot_key": "customer_name",
   "label": "Tên khách",
-  "slot_type": "text",
+  "slot_type": "person_name",
   "catalog_source": "",
   "required": 0,
   "sort_order": 60,
@@ -122,7 +122,7 @@
   "catalog_source": "",
   "required": 1,
   "sort_order": 70,
-  "ask_template": "Dạ để tư vấn viên liên hệ nhanh, {{ brand.you }} cho {{ brand.me }} xin số điện thoại nhé ạ?",
+  "ask_template": "Dạ {% if slots.trial_class %}{{ brand.me }} giữ chỗ buổi học thử {{ slots.trial_class }} cho {{ brand.you }} rồi ạ. Để tư vấn viên xác nhận, {% else %}để tư vấn viên liên hệ nhanh, {% endif %}{{ brand.you }} cho {{ brand.me }} xin số điện thoại nhé ạ?",
   "options": [],
   "depends_on_slot": "",
   "depends_on_value": "",

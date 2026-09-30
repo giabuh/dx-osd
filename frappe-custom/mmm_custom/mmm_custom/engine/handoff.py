@@ -58,7 +58,8 @@ def plan_handoff(state, decision, catalog, repo, render):
     hotness = decision.ai.get("hotness", {})
     hot = hotness.get("value") == "hot" and hotness.get("confidence", 0) >= float(catalog.settings["handoff_noul"])
     b2b = is_b2b(state.answered + decision.skills, catalog)
-    consultant, why = pick_consultant(branch, repo.consultants(), repo.consultant_load(), owner, group, hot, b2b)
+    consultant, why = pick_consultant(branch, repo.consultants(), repo.consultant_load(), owner, group, hot, b2b,
+                                      repo.online_agents())
     if b2b and consultant and consultant.get("handles_b2b"):
         team = B2B_TEAM
     else:

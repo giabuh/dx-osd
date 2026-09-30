@@ -7,14 +7,22 @@ tests build it offline from those files and `engine.repo` builds the same shape 
 from dataclasses import dataclass, field
 
 from mmm_custom.demo.loader import map_url
-from mmm_custom.engine.text import plain_text
+from mmm_custom.engine.text import plain_text, word_set
 
 # Used when Lead Engine Settings leaves a field empty (Frappe stores unset Int as 0).
 DEFAULT_SETTINGS = {
     "brand_name": "", "bot_name": "", "address_customer": "anh/chị", "address_self": "em",
     "hotline": "", "zalo": "", "website": "", "email": "", "signoff": "",
     "greeting_template": "", "fallback_template": "", "handoff_template": "", "summary_template": "",
+    "regreet_template": "Dạ {{ brand.me }} chào {{ brand.you }} ạ!{% if course.name %} {{ brand.you | capitalize }} cần "
+                        "{{ brand.me }} tư vấn thêm về học phí, lịch khai giảng hay nội dung khóa {{ course.name }} ạ?{% endif %}",
     "max_skills_per_reply": 3, "max_stuck_turns": 2, "log_retention_days": 180,
+    # Staff assist (D-111): while a person watches, claimed or wrote in a conversation the bot only suggests; what
+    # nobody answers within assist_wait_minutes it answers itself. assist_disabled = 1 → the bot always answers.
+    "assist_disabled": 0, "assist_wait_minutes": 5,
+    # Gemini drafts for staff when the bot has no answer (D-115); needs gemini_api_key in the site config.
+    "llm_draft_disabled": 0, "llm_drafts_per_hour": 6,
+    "hold_template": "Dạ {{ brand.me }} đã báo tư vấn viên, {{ brand.you }} chờ {{ brand.me }} một chút nhé ạ.",
     "jev_live": 0, "jev_timeout": 8, "catalog_act": 0.95, "catalog_confirm": 0.55, "choice_act": 0.80,
     "choice_confirm": 0.50, "skill_act": 0.90, "skill_confirm": 0.60, "handoff_noul": 0.70, "spam_threshold": 0.80,
     "jev_calls_per_hour": 20, "jev_daily_token_budget": 0, "playground_daily_token_budget": 0,
@@ -25,7 +33,7 @@ DEFAULT_SETTINGS = {
                            "nhỏ {{ quiz.total }} câu, chừng 1 phút thôi nhé ạ 😊 Làm xong {{ brand.me }} tặng {{ brand.you }} "
                            "một buổi học thử miễn phí và mã ưu đãi ạ.",
     "quiz_decline_template": "Dạ không sao ạ, khi nào tiện {{ brand.you }} cứ nhắn {{ brand.me }} làm bài test nhé ạ.",
-    "quiz_phone_template": "Dạ {{ brand.you }} cho {{ brand.me }} xin số điện thoại để {{ brand.me }} gửi lộ trình học chi tiết "
+    "quiz_phone_template": "Dạ {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} cho {{ brand.me }} xin số điện thoại để {{ brand.me }} gửi lộ trình học chi tiết "
                            "và giữ mã ưu đãi cho {{ brand.you }} nhé ạ.",
     "quiz_voucher_template": "Dạ {{ brand.me }} gửi {{ brand.you }} lộ trình khóa {{ course.name }} ạ:"
                              "{% for s in course.syllabus[:5] %}\n• {{ s }}{% endfor %}"
@@ -36,6 +44,19 @@ DEFAULT_SETTINGS = {
     "quiz_reminder_template": "Dạ {{ brand.you }} ơi, bài test {{ quiz.subject }} chỉ còn {{ quiz.left }} câu nữa là xong rồi ạ, "
                               "{{ brand.you }} làm tiếp để nhận quà nhé 🎁\nCâu {{ quiz.step }}/{{ quiz.total }}: {{ quiz.question }}",
     "quiz_remind_after_hours": 2,
+    # Answers from a course's own data when Jev ties the question to it (D-110, engine/jev_questions.FACTS).
+    "fact_summary_template": "Dạ khóa {{ course.name }} ạ: {{ course.summary }}",
+    "fact_syllabus_template": "Dạ khóa {{ course.name }} học các nội dung chính sau ạ:"
+                              "{% for s in course.syllabus[:8] %}\n• {{ s }}{% endfor %}",
+    "fact_duration_template": "Dạ khóa {{ course.name }} học trong {{ course.duration }} ạ.",
+    "fact_audience_template": "Dạ khóa {{ course.name }} dành cho {{ course.audience }}"
+                              "{% if course.min_age %} (từ {{ course.min_age }}{% if course.max_age %} đến {{ course.max_age }}{% endif %}"
+                              " tuổi){% endif %} ạ.",
+    "fact_certificate_template": "Dạ học xong khóa {{ course.name }}, {{ brand.you }} được cấp {{ course.certificate }} ạ.",
+    "fact_next_template": "Dạ học xong khóa {{ course.name }}, {{ brand.you }} có thể học tiếp "
+                          "{{ course.next_courses | join(', ') }} ạ.",
+    "phone_check_template": "Dạ số {{ phone_suspect }} hình như chưa đủ 10 số, {{ brand.you }} kiểm tra lại giúp "
+                            "{{ brand.me }} nhé ạ.",
 }
 
 
@@ -111,6 +132,19 @@ class Course:
 
 
 @dataclass(frozen=True)
+class StaffReply:
+    """One entry of the staff reply library (D-114)."""
+    name: str
+    reply: str             # template: course data as placeholders
+    examples: tuple = ()   # what customers wrote
+    course: str = ""       # course code, or "" for a whole group / any customer
+    group: str = ""
+    topic: str = ""
+    approved: bool = False  # only approved replies reach customers
+    example_words: tuple = ()  # word_set of each example, computed once per catalog
+
+
+@dataclass(frozen=True)
 class Area:
     name: str
     button: str
@@ -172,9 +206,18 @@ class Catalog:
     slots: list
     skills: dict
     settings: dict
+    staff_replies: tuple = ()  # the staff reply library (D-114)
 
     def slot(self, key):
         return next((s for s in self.slots if s.key == key), None)
+
+    def course_in(self, slots):
+        """The course a conversation's slots name, or None."""
+        slot = self.slot_for("course")
+        return self.courses.get((slots.get(slot.key) or {}).get("value")) if slot else None
+
+    def staff_reply(self, name):
+        return next((r for r in self.staff_replies if r.name == name), None)
 
     def slot_for(self, source):
         """The catalog slot holding courses ("course") or branches ("branch"), if configured."""
@@ -249,4 +292,10 @@ def build_catalog(data):
         for k in data.get("bot_skills") or [] if _active(k)}
     settings = dict(DEFAULT_SETTINGS)
     settings.update({k: v for k, v in (data.get("settings") or {}).items() if v not in (None, "", 0)})
-    return Catalog(groups, courses, areas, branches, slots, skills, settings)
+    replies = tuple(StaffReply(
+        name=r.get("name") or r["seed_id"], reply=r["reply"], examples=_lines(r.get("customer_examples")),
+        course=r.get("course") or "", group=r.get("course_group") or "", topic=r.get("topic") or "",
+        approved=r.get("status") == "approved",
+        example_words=tuple(word_set(e) for e in _lines(r.get("customer_examples"))))
+        for r in data.get("staff_replies") or [] if r.get("status") in ("approved", "new"))
+    return Catalog(groups, courses, areas, branches, slots, skills, settings, replies)

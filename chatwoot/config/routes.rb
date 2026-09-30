@@ -135,6 +135,8 @@ Rails.application.routes.draw do
               get :register_facebook_page
               post :facebook_pages
               post :reauthorize_page
+              post :connect_facebook_page
+              post :disconnect_facebook_page
             end
           end
           resources :canned_responses, only: [:index, :create, :update, :destroy]
@@ -190,6 +192,7 @@ Rails.application.routes.draw do
               post :toggle_status
               post :toggle_priority
               post :toggle_typing_status
+              get :viewers
               post :update_last_seen
               post :unread
               post :custom_attributes

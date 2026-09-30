@@ -36,6 +36,25 @@ def fill(value, source="keyword"):
     return {"value": value, "source": source, "confidence": 1.0}
 
 
+# A conversation that already knows the course: Robotics cơ bản.
+ROBO = {"course": {**fill("TE-ROBO"), "parent": "Tin học trẻ em"}}
+
+
+def incoming(text, message_id, conversation_id=2, contact_id=9, name="Gia"):
+    """An Agent Bot webhook payload for a customer message."""
+    return {"event": "message_created", "id": message_id, "content": text, "message_type": "incoming",
+            "private": False, "sender": {"id": contact_id, "name": name, "type": "contact"},
+            "conversation": {"id": conversation_id, "inbox_id": 3,
+                             "meta": {"sender": {"id": contact_id, "name": name, "custom_attributes": {}}}}}
+
+
+def event(text, message_id=10, conversation_id="2"):
+    """A parsed customer message."""
+    from mmm_custom.engine.pipeline import Event
+
+    return Event("customer_message", conversation_id, message_id, text, {"id": 9, "name": "Gia"}, "3")
+
+
 class FakeJev:
     """Answers from a dict or a function of the questions."""
 
@@ -94,6 +113,13 @@ class FakeRepo:
 
     def save_state(self, state):
         self.states[state.conversation_id] = copy.deepcopy(state)
+
+    def state_of(self, conversation_id):
+        state = self.states.get(str(conversation_id))
+        return copy.deepcopy(state) if state else None
+
+    def online_agents(self):
+        return None
 
     def open_schedules(self, course, branch, shift, today, limit):
         rows = [s for s in self.schedules if s["course"] == course and s["date"] >= today

@@ -1,4 +1,4 @@
-# Current State — Code Map (as of 2026-09-27, C1 + C2 + C3 done)
+# Current State — Code Map (as of 2026-09-30, C1 + C2 + C3 done; staff assist D-109…D-115)
 
 What exists today, where it lives, and which layer changes it. Line numbers drift; re-check with
 `grep -n` before relying on one.
@@ -21,9 +21,9 @@ for real customers until a later labelled gate passes.
 | File | What it does today | Changed by |
 |---|---|---|
 | `api.py` `chatwoot_sync` | Chatwoot webhook → HMAC + anti-replay → 3-tier dedup → create/update CRM Lead, note log; courses detected from the catalog (`detect_courses`) → Lead `products` + `course_interest` summary; forwards `message_created` to `intelligence.enqueue_analysis` | C3.2 |
-| `bot_api.py` `agent_bot_webhook` | Agent Bot webhook: HMAC → `engine.pipeline.parse_event` → customer message enqueued (`job_id` = message id, deduplicated); human agent message → `consultant_replied`; resolved → conversation closed | — |
+| `bot_api.py` `agent_bot_webhook` | Agent Bot webhook: HMAC → `engine.pipeline.parse_event` → customer message enqueued (`job_id` = message id, deduplicated) → `engine.copilot.process`; human agent message → `consultant_replied`, assist timer stopped, banner refreshed and the text captured into the staff reply library (D-111, D-114); resolved → conversation closed | — |
 | `engine/catalog.py`, `state.py` | Immutable catalog snapshot, Jev/cost/advisor settings, and `ConversationState` with bounded history and call timestamps | C4+ reads |
-| `engine/text.py`, `slot_types.py`, `understand.py` | Keyword tier: diacritic folding, phrase and phone matching, exact quick replies and confirmation responses; an explicit "not X, Y" correction reopens a filled catalog slot | C4+ reads |
+| `engine/text.py`, `slot_types.py`, `understand.py`, `reply_match.py` | Keyword tier: diacritic folding, phrase and phone matching (a number with a digit missing is read back, D-107), customer names (`person_name`), quick replies tapped or typed (folded titles, quiz letters, yes/no to the test offer, trial dates, D-107) and confirmation responses; an explicit "not X, Y" correction reopens a filled catalog slot | C4+ reads |
 | `engine/jev.py`, `jev_questions.py`, `combine.py` | TypeSafe Jev client; questions generated from live slots, course catalog and skills; keyword/Jev merge with act, confirm and low bands | C4+ reads |
 | `engine/cost_guard.py`, `evaluate.py`, `eval/utterances.json` | Per-conversation and daily budget checks; 104 labelled utterances and D-033 go-live gate | C4+ reads |
 | `engine/advisor.py` | Audience/age/group shortlist and bounded Jev composite ranking, with a data-only fallback | C4+ reads |
@@ -42,6 +42,11 @@ for real customers until a later labelled gate passes.
 | `engine/quiz.py`, `offers.py`, `voucher.py`, `tone.py` | Level quizzes (D-104, adaptive D-106): easy → hard per goal, early stop, survey mode, missed topics; `offers.py` decides when Jev offers the test (course known, level not) and tracks `Bot Conversation.quiz_offers`; after the result the phone is asked, then `pipeline.issue_reward` sends the syllabus and a voucher code (Lead `quiz_detail`, `voucher_code`); `tone.py` checks every customer-facing template (Dạ … ạ, brand pronouns, ≤ 1 emoji) | Add a quiz = one Bot Skill, or the Bài test tab |
 | `quiz_reminders.py`, `mmm_custom/doctype/quiz_attempt/` | One Quiz Attempt per conversation and quiz (offered → started → done, phone, voucher); cron every 15 min reminds a customer who stopped half-way once, 2–20 h after their last message (D-106) | — |
 | `quiz_admin.py`, `crm/frontend/src/components/Admin/AdminQuizzes.vue`, `QuizDialog.vue` | `/crm/admin/quizzes`: funnel per quiz (offered, took it, finished, phone, enrolled, back after reminder) and the quiz editor (questions, levels, topics, goals, score bands, bot wording, checked by `quiz.validate` + `tone.problems`) (D-106) | — |
+| `engine/copilot.py`, `presence.py` | Staff assist (D-111…D-113): AUTO (bot answers) vs ASSIST (a person watches — Chatwoot fork `GET …/viewers` or the Lead-page chat —, claimed or wrote): draft note + `Bot Conversation.assist` queue + `fallback_due_at`; cron every minute `run_due` → `run_turn(fallback=True)`; banner buttons and typing via the account webhook; `assist_timeout` → `escalate` to someone on duty | Lead Engine Settings: `assist_*`, `hold_template` |
+| `engine/draft.py` | The bot's own answer for staff (D-110): `run_turn(draft=True)` on a write-nothing repo, never a handoff; the note names its sources | — |
+| `engine/staff_replies.py`, `mmm_custom/doctype/staff_reply/`, `demo/saoviet/staff_replies.json` | Staff reply library (D-114): capture + mask + templatize, retrieval for Jev's `staff_reply` choice, review endpoints for `/crm/admin/knowledge` (AdminKnowledge.vue), 567-reply seed | Approve in "Tri thức khóa học" |
+| `llm.py`, `engine/llm_draft.py` | Gemini draft for staff when the bot has no answer (D-115), checked by Jev and by `numbers_ok`; never sent to customers | `gemini_api_key`, `llm_draft_*` |
+| `chatwoot/` (fork) | `RoomChannel#update_presence` records the open conversation (`OnlineStatusTracker.update_conversation_viewer`), `ConversationsController#viewers`, `BotAssistBanner.vue` above the reply box (D-112) | — |
 | `engine/scenarios.py`, `engine/eval/scenarios.json` | Acceptance scenarios (D-098): scripted chats → expected team, consultant kind, Lead fields; dry runs offline (unit test) and on live data (`bench execute mmm_custom.engine.scenarios.report`, API `run_all`) | Add a scenario per new routing rule |
 | `engine/customers.py`, `crm/frontend/src/components/Admin/AdminCustomers.vue`, `AdminScenarios.vue` | Customer dashboard (D-101) and the scenario runner tab | — |
 | `engine/dashboard.py` | Role-gated summary of bot Lead creation, qualification, handoffs, knowledge coverage and latest qualified Leads | — |

@@ -23,14 +23,16 @@ VARIANTS = (("start", "Câu mở đầu (câu 1)"), ("default", "Các câu tiế
 DEFAULT_TEMPLATES = {
     "start": "Dạ {{ brand.me }} gửi {{ brand.you }} bài test {{ quiz.subject }} nhỏ {{ quiz.total }} câu nhé ạ 😊 "
              "{{ brand.you | capitalize }} cứ bấm chọn đáp án là được ạ.\nCâu 1/{{ quiz.total }}: {{ quiz.question }}",
-    "default": "Dạ {% if quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, "
+    "default": "Dạ {% if quiz.unclear %}{{ brand.you }} chọn giúp em một đáp án bên dưới nhé ạ. "
+               "{% elif quiz.resumed %}em ghi nhận rồi ạ, {{ brand.you }} làm tiếp bài test giúp em nhé. "
+               "{% elif quiz.last_correct %}chính xác rồi ạ 👏 {% elif quiz.last_correct == false %}câu vừa rồi hơi khó, "
                "không sao đâu ạ. {% endif %}Câu {{ quiz.step }}/{{ quiz.total }} ạ: {{ quiz.question }}",
     "result": "Dạ {{ brand.you }} làm đúng {{ quiz.score }}/{{ quiz.total }} câu ạ. Trình độ hiện tại của {{ brand.you }} là "
               "{{ quiz.level_label }}, {{ brand.me }} gợi ý khóa {{ quiz.course_name }} ({{ quiz.course_fee | vnd }}) ạ."
               "{% if quiz.trials %} {{ brand.me | capitalize }} giữ sẵn một buổi học thử miễn phí, {{ brand.you }} chọn "
               "ngày bên dưới nhé ạ.{% endif %}",
 }
-WHEN = {"start": "not quiz.done and quiz.step == 1", "default": "", "result": "quiz.done"}
+WHEN = {"start": "not quiz.done and quiz.step == 1 and not quiz.resumed", "default": "", "result": "quiz.done"}
 
 
 def _int(value, default=0):

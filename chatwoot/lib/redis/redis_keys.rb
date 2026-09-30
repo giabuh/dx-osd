@@ -62,6 +62,8 @@ module Redis::RedisKeys
   ONLINE_PRESENCE_CONTACTS = 'ONLINE_PRESENCE::%<account_id>d::CONTACTS'.freeze
   # sorted set storing online presense of account users
   ONLINE_PRESENCE_USERS = 'ONLINE_PRESENCE::%<account_id>d::USERS'.freeze
+  # sorted set of user ids looking at a conversation, scored by their last ping (DX-OSD staff assist)
+  CONVERSATION_VIEWERS = 'CONVERSATION_VIEWERS::%<account_id>d::%<conversation_id>d'.freeze
 
   ## Authorization Status Keys
   # Used to track token expiry and such issues for facebook slack integrations etc

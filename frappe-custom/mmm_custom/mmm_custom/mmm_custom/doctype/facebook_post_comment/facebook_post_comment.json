@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "creation": "2026-09-29 18:50:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "comment_id",
+  "from_name",
+  "comment_time",
+  "sentiment",
+  "column_break_1",
+  "comment_message"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "comment_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mã bình luận (FB ID)",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "from_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Người bình luận",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "comment_time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Thời gian",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "sentiment",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Phân loại",
+   "options": "Quan tâm khóa học\nHỏi học phí / lịch\nTích cực\nSpam / Khác"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 4,
+   "fieldname": "comment_message",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Nội dung bình luận",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-29 18:50:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Facebook Post Comment",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

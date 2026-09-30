@@ -14,6 +14,7 @@ except ImportError:  # offline tests
 from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.crm_links import chatwoot_base
 from mmm_custom.desk import can_open_bot
+from mmm_custom.engine import presence
 
 whitelist = frappe.whitelist if frappe else (lambda **kw: (lambda fn: fn))
 
@@ -110,6 +111,7 @@ def chat(lead):
     conversation = conversation_of(lead, client)
     if not conversation:
         return {"conversation": None, "messages": [], "can_reply": False, "chatwoot_url": None}
+    presence.seen(conversation, frappe.session.user)  # the Lead page chat is open: the bot drafts, not answers (D-112)
     payload = client.list_messages(conversation).get("payload") or []
     return {"conversation": conversation, "messages": [to_message(m) for m in payload],
             "can_reply": bool(own_token(frappe.session.user) or can_open_bot()),

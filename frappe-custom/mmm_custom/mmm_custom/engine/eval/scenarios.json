@@ -452,5 +452,128 @@
     "quiz_detail": "Pivot Table"
    }
   }
+ },
+ {
+  "id": "S20",
+  "title": "Khách gửi SĐT thiếu số rồi sửa lại, kèm tên",
+  "why": "Số 9 chữ số được hỏi lại thay vì bỏ qua; câu có số của khách không bị hiểu là hỏi hotline; tên chỉ lấy phần tên",
+  "messages": [
+   "học excel ở dĩ an",
+   "em tự học",
+   "ok",
+   "a",
+   "b",
+   "a",
+   "a",
+   "lọc thủ công",
+   "ok số điện thoại tôi là 039182384",
+   "à nhầm 0391823845 nhé, mình tên Hùng"
+  ],
+  "expect": {
+   "handoff": true,
+   "reply_has": [
+    "đúng 4/5 câu",
+    "Phần Pivot Table",
+    "039182384 hình như chưa đủ 10 số",
+    "cảm ơn anh/chị Hùng"
+   ],
+   "reply_lacks": [
+    "hotline/Zalo của trung tâm"
+   ],
+   "slots": {
+    "phone": "+84391823845",
+    "customer_name": "Hùng",
+    "level": "basic"
+   },
+   "lead": {
+    "first_name": "Hùng",
+    "mobile_no": "+84391823845"
+   }
+  }
+ },
+ {
+  "id": "S21",
+  "title": "Khách hỏi xen giữa bài test",
+  "why": "Bot ghi nhận câu khách rồi quay lại đúng câu đang dở, không khen nhầm, không lưu đáp án làm tên",
+  "messages": [
+   "học excel ở dĩ an",
+   "em tự học",
+   "Làm bài test",
+   "SUM",
+   "học buổi tối được không",
+   "$A$1"
+  ],
+  "expect": {
+   "handoff": false,
+   "reply_has": [
+    "em ghi nhận rồi ạ, anh/chị làm tiếp bài test",
+    "Câu 3/5"
+   ],
+   "slots": {
+    "preferred_shift": "evening",
+    "quiz_progress": "excel_quiz:0,1"
+   },
+   "slots_empty": [
+    "customer_name"
+   ]
+  }
+ },
+ {
+  "id": "S22",
+  "title": "Khách gõ ngày học thử thay vì bấm nút",
+  "why": "\"học thử thứ 7 ngày 3/10\" giữ đúng buổi đó như khi bấm nút",
+  "setup": {
+   "schedules": [
+    {
+     "course": "VP-EXCEL",
+     "branch": "CN Dĩ An",
+     "date": "2026-10-03",
+     "shift": "Tối 17:00–21:00",
+     "weekdays": "T3, T5, T7",
+     "seats_left": 6
+    },
+    {
+     "course": "VP-EXCEL",
+     "branch": "CN Dĩ An",
+     "date": "2026-10-06",
+     "shift": "Tối 17:00–21:00",
+     "weekdays": "T3, T5, T7",
+     "seats_left": 6
+    }
+   ]
+  },
+  "messages": [
+   "học excel ở dĩ an",
+   "có học thử không",
+   "học thử thứ 7 ngày 3/10",
+   "0901234567"
+  ],
+  "expect": {
+   "handoff": true,
+   "reply_has": [
+    "giữ chỗ buổi học thử"
+   ],
+   "slots": {
+    "trial_class": "Excel từ cơ bản đến nâng cao · Thứ 7, 03/10 · Tối 17:00–21:00 · CN Dĩ An"
+   }
+  }
+ },
+ {
+  "id": "S23",
+  "title": "Khách trả lời lời mời bằng chữ",
+  "why": "\"ok\" bắt đầu bài test, \"thôi không làm nữa\" dừng nhẹ nhàng; không bao giờ chuyển tư vấn viên vì bot \"không hiểu\"",
+  "messages": [
+   "học excel ở dĩ an",
+   "em tự học",
+   "ok",
+   "thôi không làm nữa"
+  ],
+  "expect": {
+   "handoff": false,
+   "reply_has": [
+    "Câu 1/5",
+    "Dạ không sao ạ"
+   ]
+  }
  }
 ]

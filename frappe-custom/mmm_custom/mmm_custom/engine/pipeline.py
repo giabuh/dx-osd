@@ -12,7 +12,7 @@ except ImportError:  # offline tests
 from mmm_custom.engine.combine import combine
 from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.cost_guard import allow_jev, recent_calls
-from mmm_custom.engine.decide import decide
+from mmm_custom.engine.decide import STAFF_REASONS, decide
 from mmm_custom.engine.handoff import plan_handoff
 from mmm_custom.engine.jev import JevResult
 from mmm_custom.engine.jev_questions import MAX_HISTORY, build_questions, jev_state
@@ -54,6 +54,8 @@ class Turn:
     stuck_before: int = 0
     reason: str = ""
     jev: object = None
+    needs_staff: str = ""  # draft / fallback: why a person has to answer, in the words staff read
+    no_answer: bool = False  # draft / fallback: the bot has nothing from its knowledge for this message
 
 
 def _dict(value):
@@ -76,20 +78,21 @@ def parse_event(payload):
         return Event("customer_message", cid, int(payload.get("id") or 0), (payload.get("content") or "")[:MAX_TEXT],
                      contact, str(inbox), channel_key(conv), campaign_of(conv))
     if mtype in (1, "outgoing") and sender.get("type") == "user":
-        return Event("agent_message", cid, int(payload.get("id") or 0))
+        return Event("agent_message", cid, int(payload.get("id") or 0), (payload.get("content") or "")[:MAX_TEXT],
+                     {"id": sender.get("id"), "name": sender.get("name") or ""})
     return Event("ignore", cid)
 
 
-def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0):
+def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0, person_ok=False):
     """Always run keywords; call Jev only when available and within the cost guard."""
     u = understand(text, state, catalog)
     if jev is None:
         return u, JevResult("disabled")
-    allowed, why = allow_jev(u, state, catalog, now, tokens_today, budget)
+    allowed, why = allow_jev(u, state, catalog, now, tokens_today, budget, text, person_ok)
     if not allowed:
         return u, JevResult("skipped_cost_guard", error=why)
     state.jev_calls = recent_calls(state.jev_calls, now) + [now]
-    questions = build_questions(state, u, catalog)
+    questions = build_questions(state, u, catalog, text=text)
     result = jev.ask(jev_state(text, state, catalog), questions)
     if result.status != "ok":
         return u, result
@@ -102,7 +105,10 @@ def apply_decision(state, decision, reply, event, catalog):
     state.pending_skill = reply.pending_skill or decision.pending_skill
     state.answered = list(dict.fromkeys(state.answered + [k for k in decision.skills if k != reply.pending_skill]))
     if decision.type != "silent":
+        resumes = int(state.pending.get("resumes") or 0) + 1 if decision.resume else 0
         state.pending = {"slot": reply.ask or ("" if reply.hold else decision.ask), "options": reply.options()}
+        if resumes:
+            state.pending["resumes"] = resumes
         if decision.confirm:
             state.pending["confirm"] = decision.confirm
     if reply.ask:
@@ -263,22 +269,39 @@ def book_trials(turn, effects, catalog, plan=None):
             turn.reply.errors.append({"type": "trial_failed", "detail": str(e)[:300]})
 
 
-def run_turn(event, repo, effects, render):
+def run_turn(event, repo, effects, render, draft=False, fallback=False):
+    """One customer message → understanding, decision, reply, side effects. `draft` (D-110): what the bot would
+    answer for staff to see; it never hands off and the caller passes a repo and effects that write nothing.
+    `fallback` (D-111): nobody answered the waiting messages in time, so the bot answers them now, even after a
+    person wrote; with a person involved it never hands off again and, with nothing to say, sends the hold line."""
     catalog = repo.catalog()
     state = repo.load_state(event)
     state.channel, state.campaign = event.channel or state.channel, event.campaign or state.campaign
-    if event.message_id and event.message_id <= state.last_message_id:
+    if not draft and event.message_id and event.message_id <= state.last_message_id:
         return None  # redelivered webhook: this message was already answered
+    person = fallback and bool(state.consultant_replied or state.claimed_by)
+    if fallback:  # the waiting messages are answered by this turn
+        state.assist = {**state.assist, "waiting": []}
+        state.fallback_due = 0.0
     turn = Turn(event, state, None, None, None, copy.deepcopy(state.slots), copy.deepcopy(state.pending),
                 state.status, state.turns, state.stuck_turns)
     jev = repo.jev_client()
     tokens, budget = repo.jev_budget() if jev else (0, 0)
-    turn.understanding, turn.jev = understand_turn(event.text, state, catalog, jev, repo.now(), tokens, budget)
+    turn.understanding, turn.jev = understand_turn(event.text, state, catalog, jev, repo.now(), tokens, budget,
+                                                   person_ok=fallback)
     if turn.jev.input_tokens:
         repo.add_jev_tokens(turn.jev.input_tokens)
     if turn.jev.error == "daily_budget":
         repo.warn_budget()
-    turn.decision = decide(state, turn.understanding, catalog)
+    turn.decision = decide(state, turn.understanding, catalog, person_ok=fallback)
+    if draft or person:  # staff are already there: keep only what the bot can answer, never a handoff
+        d = turn.decision
+        handing = [k for k in d.skills if catalog.skills[k].action == "handoff"]
+        d.skills = [k for k in d.skills if k not in handing]
+        turn.needs_staff = catalog.skills[handing[0]].title if handing else STAFF_REASONS.get(d.handoff_reason, "")
+        turn.no_answer = not d.answered and (d.fallback or d.handoff_reason == "stuck")
+        if d.type == "handoff" or (handing and d.type == "answer") or (person and turn.no_answer):
+            d.type = "answer" if d.answered else "silent"  # "em chưa hiểu" after a wait is worse than the hold line
     apply_quiz_results(turn.decision, catalog)
     issue_reward(turn.decision, state, catalog, repo, repo.today())
     turn.reason = turn.decision.reason
@@ -300,6 +323,12 @@ def run_turn(event, repo, effects, render):
         if call.get("input_tokens"):
             repo.add_jev_tokens(call["input_tokens"])
     turn.reply.errors[:0] = errors
+    if fallback and turn.decision.type == "silent" and state.status != "closed":
+        if not state.assist.get("held"):  # once until a person writes: "đã báo tư vấn viên, chờ chút nhé"
+            turn.reply = hold_reply(state, catalog, render, turn.reply)
+            state.assist["held"] = True
+        effects.emit("assist_timeout", {"conversation_id": state.conversation_id, "lead": state.lead,
+                                        "is_sandbox": state.is_sandbox, "needs": turn.needs_staff})
     if turn.reply.messages:
         try:
             effects.send(state.conversation_id, turn.reply)
@@ -337,17 +366,30 @@ def run_turn(event, repo, effects, render):
     return turn
 
 
+def hold_reply(state, catalog, render, reply):
+    """The hold line (Lead Engine Settings.hold_template) as the whole reply."""
+    from mmm_custom.engine.context import base_context
+    from mmm_custom.engine.render import RenderError, render_text
+
+    try:
+        text = render_text(catalog.settings["hold_template"], base_context(state.slots, catalog, state), render)
+    except RenderError as e:
+        reply.errors.append({"type": "render_error", "source": "hold", "detail": str(e)[:300]})
+        return reply
+    reply.messages = [text] if text else []
+    return reply
+
+
 def process_event(payload):
-    """RQ job (enqueued by bot_api.agent_bot_webhook with job_id = message id, deduplicated)."""
+    """RQ job (enqueued by bot_api.agent_bot_webhook with job_id = message id, deduplicated). The bot answers, or
+    drafts for the staff member who is there (engine/copilot.py, D-111)."""
     from frappe.utils.synchronization import filelock
 
-    from mmm_custom.engine.effects import chatwoot_effects
-    from mmm_custom.engine.render import frappe_renderer
-    from mmm_custom.engine.repo import FrappeRepo
+    from mmm_custom.engine import copilot
 
     event = parse_event(payload)
     if event.kind != "customer_message" or not event.conversation_id:
         return
     with filelock(f"lead_engine_conversation_{event.conversation_id}", timeout=60):
-        run_turn(event, FrappeRepo(), chatwoot_effects(frappe.conf), frappe_renderer)
+        copilot.process(event)
         frappe.db.commit()

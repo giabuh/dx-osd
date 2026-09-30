@@ -16,6 +16,7 @@ import ArticleSearchPopover from 'dashboard/routes/dashboard/helpcenter/componen
 import CopilotEditorSection from './CopilotEditorSection.vue';
 import MessageSignatureMissingAlert from './MessageSignatureMissingAlert.vue';
 import ReplyBoxBanner from './ReplyBoxBanner.vue';
+import BotAssistBanner from './BotAssistBanner.vue';
 import QuotedEmailPreview from './QuotedEmailPreview.vue';
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import WootMessageEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
@@ -71,6 +72,7 @@ export default {
     AttachmentPreview,
     AudioRecorder,
     ReplyBoxBanner,
+    BotAssistBanner,
     EmojiIconPicker,
     MessageSignatureMissingAlert,
     ReplyBottomPanel,
@@ -1334,6 +1336,7 @@ export default {
 </script>
 
 <template>
+  <BotAssistBanner />
   <ReplyBoxBanner :message="message" :is-on-private-note="isOnPrivateNote" />
   <div class="reply-box" :class="replyBoxClass">
     <ReplyTopPanel

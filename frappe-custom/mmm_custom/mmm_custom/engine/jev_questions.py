@@ -3,9 +3,13 @@ English carrying the Vietnamese names and aliases customers use. Keys:
     parent:<slot>  course group / area          slot:<slot>  course, branch, choice or number value
     skill:<key>    one noul per Bot Skill        intent · hotness · wants_human (D-032)
     course_faq     which FAQ of the known course the message asks (D-085)
+    course_fact    which part of the known course's own data the message asks: content, length, audience… (D-110)
+    staff_reply    which reply staff once wrote answers the message, among the most similar ones (D-114)
     level_unsure   unsure of their level, asked only while a level test can be offered (D-106)
+    reply_to_bot   which of the buttons the bot just offered a typed message means (D-107)
 """
 
+from mmm_custom.engine import staff_replies
 from mmm_custom.engine.context import shown_slots
 from mmm_custom.engine.decide import slot_active
 from mmm_custom.engine.offers import LEVEL_UNSURE, available
@@ -16,6 +20,19 @@ NONE = "none"
 NONE_TEXT = "None of these, or not said in the chat"
 MAX_HISTORY = 20  # 10 turns of customer + bot lines (D-061, D-074)
 COURSE_FAQ = "course_faq"
+COURSE_FACT = "course_fact"
+STAFF_REPLY = "staff_reply"
+REPLY_TO_BOT = "reply_to_bot"
+# Parts of a course's own data the bot can answer from (D-110): key -> (Course attribute, what the customer asks).
+# Fee and schedules are skills of their own (fee_quote, schedule_lookup) with promotions and open classes.
+FACTS = {
+    "summary": ("summary", "What the course is, what it is about overall"),
+    "syllabus": ("syllabus", "The lessons, topics or programme the course teaches"),
+    "duration": ("duration", "How long the course takes: weeks, months, number of sessions"),
+    "audience": ("audience", "Who the course is for: level needed, beginners, age"),
+    "certificate": ("certificate", "Whether a certificate or diploma is given at the end"),
+    "next": ("next_courses", "What to study after this course"),
+}
 
 
 def _named(name, aliases=()):
@@ -31,13 +48,20 @@ def _choice(instructions, criteria):
     return {"type": "choice", "instructions": instructions, "criteria": {**criteria, NONE: NONE_TEXT}}
 
 
+def known_course(state, u, catalog):
+    """The course named in this message, else the one already known."""
+    return catalog.course_in({**state.slots, **u.fills})
+
+
 def faq_course(state, u, catalog):
-    """The course whose FAQs Jev reads: the one named in this message, else the one already known."""
-    slot = catalog.slot_for("course")
-    if not slot:
-        return None
-    course = catalog.courses.get((u.fills.get(slot.key) or state.slots.get(slot.key) or {}).get("value"))
+    """The course whose FAQs Jev reads, when it has any."""
+    course = known_course(state, u, catalog)
     return course if course and course.faqs else None
+
+
+def course_facts(course):
+    """The FACTS this course has data for, in FACTS order."""
+    return [key for key, (attr, _) in FACTS.items() if course and getattr(course, attr)]
 
 
 def jev_state(text, state, catalog):
@@ -69,7 +93,7 @@ def _catalog_questions(slot, state, u, catalog):
     return out
 
 
-def build_questions(state, u, catalog, skills=True):
+def build_questions(state, u, catalog, skills=True, text=""):
     q = {}
     for slot in catalog.slots:
         if slot.on_demand and state.pending.get("slot") != slot.key:
@@ -99,6 +123,24 @@ def build_questions(state, u, catalog, skills=True):
         if course:
             q[COURSE_FAQ] = _choice(f"Which of these questions about the course '{course.name}' does the customer's latest message ask?",
                                     {str(i): _named(f.question, f.examples) for i, f in enumerate(course.faqs)})
+        known = known_course(state, u, catalog)
+        facts = course_facts(known)
+        if facts:
+            q[COURSE_FACT] = _choice(f"What does the customer's latest message ask about the course '{known.name}'?",
+                                     {key: FACTS[key][1] for key in facts})
+        slot = catalog.slot_for("course")
+        group = (u.parents.get(slot.key) or (state.slots.get(slot.key) or {}).get("parent", "")) if slot else ""
+        library = staff_replies.candidates(catalog, text, known, group, state.drafting) if text else []
+        if library:
+            q[STAFF_REPLY] = _choice("Which of these replies that staff once wrote answers the customer's latest "
+                                     "message in this Vietnamese chat? Choose none unless it fits the question.",
+                                     {r.name: staff_replies.criterion(r) for r in library})
+    options = list((state.pending.get("options") or {}))
+    if options and not u.tapped:  # a typed answer the keyword tier could not tie to a button (D-107)
+        q[REPLY_TO_BOT] = _choice("The bot's last message offered these buttons. Which one does the customer's latest "
+                                  "message choose, in their own words (agreeing, refusing, a date, an answer)? "
+                                  "Choose none when they ask or say something else.",
+                                  {str(i): title for i, title in enumerate(options)})
     q["intent"] = {"type": "choice", "instructions": "What does the customer want in this Vietnamese chat with a training centre?",
                    "criteria": INTENTS}
     q["hotness"] = {"type": "score", "instructions": "How close is the customer to enrolling, based on the whole chat?",

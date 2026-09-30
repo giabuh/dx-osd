@@ -13,6 +13,7 @@
   "website",
   "email",
   "greeting_template",
+  "regreet_template",
   "fallback_template",
   "signoff",
   "engine_section",
@@ -22,6 +23,12 @@
   "max_stuck_turns",
   "handoff_template",
   "summary_template",
+  "assist_section",
+  "assist_disabled",
+  "assist_wait_minutes",
+  "hold_template",
+  "llm_draft_disabled",
+  "llm_drafts_per_hour",
   "jev_section",
   "jev_live",
   "jev_timeout",
@@ -51,7 +58,8 @@
   "quiz_voucher_template",
   "voucher_prefix",
   "quiz_reminder_template",
-  "quiz_remind_after_hours"
+  "quiz_remind_after_hours",
+  "phone_check_template"
  ],
  "fields": [
   {
@@ -101,6 +109,12 @@
    "fieldname": "greeting_template",
    "fieldtype": "Small Text",
    "label": "Greeting Template"
+  },
+  {
+   "description": "Sent when the customer only greets later in the conversation (\"hihi\", \"chào em\"). Empty: the built-in greeting back.",
+   "fieldname": "regreet_template",
+   "fieldtype": "Small Text",
+   "label": "Greeting Back Template"
   },
   {
    "fieldname": "fallback_template",
@@ -155,6 +169,12 @@
    "label": "Summary Template",
    "description": "Private note for the consultant; gets answered, next_step, why, reason"
   },
+  {"fieldname": "assist_section", "fieldtype": "Section Break", "label": "Staff assist (D-111)"},
+  {"fieldname": "assist_disabled", "fieldtype": "Check", "label": "Bot always answers itself", "description": "Tick to turn staff assist off: the bot answers every message, even while a staff member watches or has written."},
+  {"fieldname": "assist_wait_minutes", "fieldtype": "Int", "label": "Assist wait (minutes)", "description": "While a staff member watches, claimed or wrote in a conversation the bot only suggests; what nobody answers within this many minutes it answers itself. Default 5"},
+  {"fieldname": "hold_template", "fieldtype": "Small Text", "label": "Hold Template", "description": "Sent when the wait is over and the bot has no answer from its knowledge"},
+  {"fieldname": "llm_draft_disabled", "fieldtype": "Check", "label": "No Gemini drafts for staff", "description": "When the bot has no answer, staff get a Gemini draft checked by Jev against the course data (needs gemini_api_key). Tick to turn it off. Customers never get generated text."},
+  {"fieldname": "llm_drafts_per_hour", "fieldtype": "Int", "label": "Gemini drafts per conversation per hour", "description": "Default 6"},
   {"fieldname": "jev_section", "fieldtype": "Section Break", "label": "Jev understanding"},
   {"fieldname": "jev_live", "fieldtype": "Check", "label": "Jev answers real customers", "description": "Turn on only after the evaluation gate passes."},
   {"fieldname": "jev_timeout", "fieldtype": "Int", "label": "Jev timeout (seconds)", "description": "Default 8"},
@@ -184,11 +204,12 @@
   {"fieldname": "quiz_voucher_template", "fieldtype": "Small Text", "label": "Test reward template", "description": "Sent once the phone is known; gets course (name, syllabus) and voucher (code, title, final_fee; code empty when no promotion applies)"},
   {"fieldname": "voucher_prefix", "fieldtype": "Data", "label": "Voucher code prefix", "description": "e.g. SV → SV-EXCEL-7K3Q. Default UD"},
   {"fieldname": "quiz_reminder_template", "fieldtype": "Small Text", "label": "Unfinished test reminder template", "description": "Sent once to a customer who stopped half-way; gets quiz (subject, left, step, total, question) and the question's buttons"},
-  {"fieldname": "quiz_remind_after_hours", "fieldtype": "Int", "label": "Remind after (hours of silence)", "description": "Default 2; never later than 20 hours (Messenger's 24-hour window)"}
+  {"fieldname": "quiz_remind_after_hours", "fieldtype": "Int", "label": "Remind after (hours of silence)", "description": "Default 2; never later than 20 hours (Messenger's 24-hour window)"},
+  {"fieldname": "phone_check_template", "fieldtype": "Small Text", "label": "Phone looks wrong template", "description": "When the customer sends a number with a digit missing or extra; gets phone_suspect"}
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-09-27 12:00:00.000000",
+ "modified": "2026-09-30 11:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Lead Engine Settings",

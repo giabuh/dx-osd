@@ -103,7 +103,13 @@ def agent_bot_webhook():
                        job_id=f"lead_engine_msg_{event.message_id}", deduplicate=True, payload=payload)
         return {"status": "queued"}
     if event.kind == "agent_message" and event.conversation_id:
-        mark_consultant_replied(event.conversation_id)  # D-059: never talk over a person
+        mark_consultant_replied(event.conversation_id)  # D-059/D-111: the bot suggests from now on, the timer stops
+        frappe.enqueue("mmm_custom.engine.copilot.refresh_status", queue="short", conversation_id=event.conversation_id,
+                       job_id=f"assist_status_{event.conversation_id}", deduplicate=True, enqueue_after_commit=True)
+        if event.text:  # the staff reply library learns from every answer (D-114)
+            frappe.enqueue("mmm_custom.engine.staff_replies.capture", queue="long", conversation_id=event.conversation_id,
+                           message_id=event.message_id, text=event.text, consultant=event.contact.get("name") or "",
+                           job_id=f"staff_reply_{event.message_id}", deduplicate=True, enqueue_after_commit=True)
         return {"status": "consultant_replied"}
     if event.kind == "resolved" and event.conversation_id:
         close_conversation(event.conversation_id)

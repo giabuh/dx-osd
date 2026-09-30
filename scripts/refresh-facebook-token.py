@@ -5,9 +5,13 @@ scripts/refresh-facebook-token.py
 Utility to validate, exchange, and save Facebook Page Access Tokens.
 Updates both .env and Frappe CRM site_config.json automatically.
 
+Single-page developer tool. To receive messages from several pages, connect them from the CRM admin
+(/crm/admin/channels), which does the same token exchange for every page you pick.
+
 Usage:
     python scripts/refresh-facebook-token.py --token <NEW_PAGE_ACCESS_TOKEN>
-    python scripts/refresh-facebook-token.py --user-token <USER_TOKEN> --app-id <APP_ID> --app-secret <APP_SECRET>
+    python scripts/refresh-facebook-token.py --user-token <USER_TOKEN> --app-id <APP_ID> --app-secret <APP_SECRET> \
+        --page-id <PAGE_ID>
 """
 
 import argparse
@@ -20,7 +24,7 @@ import requests
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-PAGE_ID = "1334466483083776"
+PAGE_ID = os.environ.get("FACEBOOK_PAGE_ID", "")
 
 
 def update_env_file(key: str, value: str):
@@ -102,12 +106,13 @@ def main():
     parser.add_argument("--user-token", help="User Access Token to convert into permanent Page Token")
     parser.add_argument("--app-id", help="Facebook App ID")
     parser.add_argument("--app-secret", help="Facebook App Secret")
+    parser.add_argument("--page-id", default=PAGE_ID, help="Page to refresh (default: FACEBOOK_PAGE_ID)")
     args = parser.parse_args()
 
     page_token = args.token
 
     if args.user_token and args.app_id and args.app_secret:
-        page_token = get_permanent_page_token(args.user_token, args.app_id, args.app_secret, PAGE_ID)
+        page_token = get_permanent_page_token(args.user_token, args.app_id, args.app_secret, args.page_id)
 
     if not page_token:
         print("❌ No token provided or token generation failed.")

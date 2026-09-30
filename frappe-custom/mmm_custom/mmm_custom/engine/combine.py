@@ -8,7 +8,8 @@ At most one confirmation per turn, in slot order."""
 import copy
 
 from mmm_custom.engine.context import display
-from mmm_custom.engine.jev_questions import COURSE_FAQ, NONE, faq_course
+from mmm_custom.engine.jev_questions import (COURSE_FACT, COURSE_FAQ, FACTS, NONE, REPLY_TO_BOT, STAFF_REPLY, faq_course,
+                                             known_course)
 from mmm_custom.engine.offers import LEVEL_UNSURE
 from mmm_custom.intelligence import HOTNESS
 
@@ -145,6 +146,42 @@ def _course_faq(u, answers, questions, course, catalog):
         u.matches.append({"faq": course.code, "index": int(choice), "kind": "jev", "confidence": round(p, 3)})
 
 
+def _course_fact(u, answers, questions, course, catalog):
+    """Jev tied the message to a part of the course's own data (D-110); decide() prefers a fitting FAQ."""
+    choice, p = _choice(answers, questions, COURSE_FACT)
+    if not course or choice not in FACTS or p < float(catalog.settings["skill_act"]):
+        return
+    u.fact = {"course": course.code, "fact": choice, "confidence": round(p, 3)}
+    u.matches.append({"fact": choice, "course": course.code, "kind": "jev", "confidence": round(p, 3)})
+
+
+def _staff_reply(u, answers, questions, catalog):
+    """Jev picked a reply staff once wrote (D-114); only replies the question offered can be picked."""
+    choice, p = _choice(answers, questions, STAFF_REPLY)
+    if not catalog.staff_reply(choice) or p < float(catalog.settings["skill_act"]):
+        return
+    u.staff_reply = {"name": choice, "confidence": round(p, 3)}
+    u.matches.append({"staff_reply": choice, "kind": "jev", "confidence": round(p, 3)})
+
+
+def _reply_to_bot(u, answers, questions, state, catalog):
+    """Jev tied a typed message to one of the offered buttons: act as if it was tapped."""
+    from mmm_custom.engine.understand import apply_action
+
+    choice, p = _choice(answers, questions, REPLY_TO_BOT)
+    actions = list((state.pending.get("options") or {}).values())
+    if choice is None or p < float(catalog.settings["choice_act"]) or int(choice) >= len(actions):
+        return
+    action = actions[int(choice)]
+    skill = catalog.skills.get(action.get("skill")) if action.get("type") == "skill" else None
+    if skill and (skill.action == "handoff" or skill.handoff_after):
+        # a typed reply never hands off on its own: "Đăng ký giữ chỗ" is asked back first (D-109)
+        ask_confirm(u, {"kind": "skill", "skill": skill.key, "label": skill.title})
+        return
+    apply_action(u, action)
+    u.matches.append({"button": int(choice), "kind": "jev", "confidence": round(p, 3)})
+
+
 def combine(u, answers, questions, state, catalog):
     if u.tapped:
         return u  # buttons (and typed answers to a confirmation) are never overridden
@@ -155,5 +192,8 @@ def combine(u, answers, questions, state, catalog):
     _parents(out, answers, questions, catalog)
     _skills(out, answers, questions, catalog)
     _course_faq(out, answers, questions, course, catalog)
+    _course_fact(out, answers, questions, known_course(state, u, catalog), catalog)
+    _staff_reply(out, answers, questions, catalog)
+    _reply_to_bot(out, answers, questions, state, catalog)
     _signals(out, answers, questions, catalog)
     return out

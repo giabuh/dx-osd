@@ -76,7 +76,11 @@ def load_rows():
         s["follow_ups"] = follow_ups.get(s.skill_key, [])
     settings_doc = frappe.get_single("Lead Engine Settings").as_dict()
     settings = {k: v for k, v in settings_doc.items() if k in DEFAULT_SETTINGS or k.endswith("_template")}
+    replies = frappe.get_all("Staff Reply", filters={"status": ["in", ["approved", "new"]]}, fields=[
+        "name", "status", "course", "course_group", "topic", "customer_examples", "reply"],
+        order_by="modified desc", limit=5000)
     return {
+        "staff_replies": [dict(r) for r in replies],
         "areas": _territories(), "course_groups": [dict(g) for g in groups], "courses": courses,
         "bot_slots": [{**s, "options": options.get(s.slot_key, [])} for s in slots],
         "bot_skills": [dict(s) for s in skills], "settings": settings,
@@ -219,15 +223,29 @@ def set_lead_owner(lead, user):
     doc.save(ignore_permissions=True)
 
 
-def mark_consultant_replied(conversation_id):
-    """D-059: a human answered — the bot stays silent in this conversation from now on. A conversation the
-    bot never saw gets a row too, so the bot does not talk over an agent who is already chatting."""
+def chatwoot_admin():
+    """The Chatwoot client with the admin user token (agents, presence, conversation attributes)."""
+    from mmm_custom.lead_chat import admin_client
+
+    return admin_client()
+
+
+def mark_consultant_replied(conversation_id, now=None):
+    """A person answered (D-059, D-111): from now on the bot only suggests in this conversation, and what the
+    customer was waiting for is answered, so the fallback timer stops. A conversation the bot never saw gets a
+    row too, so the bot does not talk over an agent who is already chatting."""
+    from mmm_custom.engine.copilot import human_replied
+
+    now = time.time() if now is None else now
     name = frappe.db.get_value("Bot Conversation", {"conversation_id": conversation_id})
     if name:
-        frappe.db.set_value("Bot Conversation", name, "consultant_replied", 1)
+        assist = _json(frappe.db.get_value("Bot Conversation", name, "assist"))
+        frappe.db.set_value("Bot Conversation", name, {"consultant_replied": 1, "fallback_due_at": 0,
+                                                        "assist": json.dumps(human_replied(assist, now), ensure_ascii=False)})
     else:
         frappe.get_doc({"doctype": "Bot Conversation", "conversation_id": conversation_id, "status": "active",
-                        "consultant_replied": 1, "slots": "{}", "pending": "{}"}).insert(ignore_permissions=True)
+                        "consultant_replied": 1, "slots": "{}", "pending": "{}",
+                        "assist": json.dumps(human_replied({}, now))}).insert(ignore_permissions=True)
 
 
 def close_conversation(conversation_id):
@@ -277,9 +295,13 @@ class FrappeRepo:
                              message=f"{key}: the bot runs on keywords only until tomorrow. Raise the budget in Lead Engine Settings.")
 
     def load_state(self, event):
-        name = frappe.db.get_value("Bot Conversation", {"conversation_id": event.conversation_id})
+        return self.state_of(event.conversation_id) or self.new_state(event)
+
+    def state_of(self, conversation_id):
+        """The stored state of a conversation, or None when the bot has no row for it."""
+        name = frappe.db.get_value("Bot Conversation", {"conversation_id": str(conversation_id)})
         if not name:
-            return self.new_state(event)
+            return None
         d = frappe.get_doc("Bot Conversation", name)
         return ConversationState(
             conversation_id=d.conversation_id, contact_id=d.contact_id or "", inbox_id=d.inbox_id or "",
@@ -289,7 +311,8 @@ class FrappeRepo:
             consultant=d.consultant or "", is_sandbox=bool(d.is_sandbox), is_returning=bool(d.is_returning),
             turns=d.turns or 0, answered=json.loads(d.answered_skills) if d.answered_skills else [],
             history=d.history if isinstance(d.history, list) else (json.loads(d.history) if d.history else []),
-            ai=_json(d.ai_signals), offers=_json(d.get("quiz_offers")),
+            ai=_json(d.ai_signals), offers=_json(d.get("quiz_offers")), claimed_by=d.get("claimed_by") or "",
+            fallback_due=float(d.get("fallback_due_at") or 0), assist=_json(d.get("assist")),
             jev_calls=d.jev_calls if isinstance(d.jev_calls, list) else (json.loads(d.jev_calls) if d.jev_calls else []))
 
     def new_state(self, event):
@@ -325,6 +348,8 @@ class FrappeRepo:
             "ai_signals": json.dumps(state.ai, ensure_ascii=False),
             "quiz_offers": json.dumps(state.offers),
             "jev_calls": json.dumps(state.jev_calls),
+            "claimed_by": state.claimed_by or None, "fallback_due_at": state.fallback_due or 0,
+            "assist": json.dumps(state.assist, ensure_ascii=False),
         }
         name = frappe.db.get_value("Bot Conversation", {"conversation_id": state.conversation_id})
         if name:
@@ -387,6 +412,18 @@ class FrappeRepo:
         rows = frappe.get_all("Bot Conversation", filters={"status": "handed_off", "is_sandbox": 0, "consultant": ["is", "set"]},
                               fields=["consultant", "count(name) as open"], group_by="consultant")
         return {r.consultant: r.open for r in rows}
+
+    def online_agents(self):
+        """Chatwoot agent ids that are online now (D-113), cached 30 s; None when Chatwoot cannot say."""
+        cache, key = frappe.cache(), "mmm_custom:online_agents"
+        cached = cache.get_value(key)
+        if cached is None:
+            try:
+                cached = [str(a["id"]) for a in chatwoot_admin().list_agents() if a.get("availability_status") == "online"]
+            except Exception:
+                cached = "unknown"  # remembered too: an outage must not slow every handoff by the client timeout
+            cache.set_value(key, cached, expires_in_sec=30)
+        return None if cached == "unknown" else set(cached)
 
     def lead_owner(self, lead):
         return frappe.db.get_value("CRM Lead", lead, "lead_owner") or ""

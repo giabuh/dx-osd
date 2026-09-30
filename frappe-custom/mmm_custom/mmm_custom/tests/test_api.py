@@ -146,6 +146,18 @@ class TestChatwootSyncApi(unittest.TestCase):
         enqueue.assert_called_once_with(payload)
         self.assertEqual(res, {"status": "queued"})
 
+    def test_conversation_updated_goes_to_the_assignment_suggestion(self):
+        valid_ts = str(int(time.time()))
+        payload = {"event": "conversation_updated", "id": 5, "changed_attributes": []}
+        body = json.dumps(payload).encode("utf-8")
+        sig = compute_signature(self.secret, valid_ts, body)
+        self._setup_request(ts=valid_ts, sig=sig, body_bytes=body)
+        with patch.object(api_mod, "frappe", self.mock_frappe), \
+                patch.object(api_mod, "enqueue_on_assignment", return_value={"status": "queued"}) as enqueue:
+            res = chatwoot_sync()
+        enqueue.assert_called_once_with(payload)
+        self.assertEqual(res, {"status": "queued"})
+
     def test_existing_crm_lead_id_in_crm(self):
         valid_ts = str(int(time.time()))
         payload = {

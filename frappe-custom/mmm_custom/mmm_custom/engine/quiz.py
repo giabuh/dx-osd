@@ -140,6 +140,22 @@ def result(config, answers, goal=""):
             "stopped_early": len(answers) < limit(config, goal)}
 
 
+FILLER = frozenset({"ham", "cua", "cac", "va", "cong", "cu", "trong"})
+
+
+def lesson_for(missed, syllabus):
+    """{topic, lesson}: the first missed topic the recommended course teaches, and that syllabus line, so
+    the result can say where the gap is covered; None when no line mentions a missed topic. Pure."""
+    from mmm_custom.engine.text import fold
+
+    for topic in missed:
+        words = [w for w in fold(topic).split() if len(w) >= 3 and w not in FILLER]
+        for line in syllabus:
+            if words and all(w in fold(line).split() for w in words):
+                return {"topic": topic, "lesson": line}
+    return None
+
+
 def summary(config, res, level_label=""):
     """One line for the Lead, e.g. "Excel: 4/5 · Biết cơ bản"."""
     text = f"{config.get('subject') or 'Test'}: {res['score']}/{res['total']}"

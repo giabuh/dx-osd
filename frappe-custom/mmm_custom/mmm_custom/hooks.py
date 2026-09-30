@@ -101,6 +101,9 @@ doc_events = {
 	dt: {"on_update": "mmm_custom.engine.repo.clear_catalog_cache", "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 	for dt in _LEAD_ENGINE_DATA
 }
+# Staff reply library (D-114): every staff message adds a row; only a review decision or an edit reaches the bot.
+doc_events["Staff Reply"] = {"on_update": "mmm_custom.engine.staff_replies.on_change",
+                             "on_trash": "mmm_custom.engine.repo.clear_catalog_cache"}
 # Learning signal: a person corrected the branch/course the bot set on a Lead (D-057).
 doc_events["CRM Lead"] = {"on_update": "mmm_custom.engine.learning.on_lead_update",
                           # Referral codes (D-103)
@@ -119,6 +122,10 @@ doc_events["Consultant"] = {"on_update": "mmm_custom.staff_sync.enqueue_sync",
 jinja = {"filters": ["mmm_custom.engine.render.vnd", "mmm_custom.engine.render.date_vi"]}
 
 # Other apps subscribe to engine events with their own `lead_engine_events` hook (see engine/events.py).
+# [I] The consultant a conversation is handed to finds a reply suggestion waiting (D-108).
+lead_engine_events = {"handed_off": ["mmm_custom.intelligence.on_handed_off"],
+                      # Nobody answered in time and the assignee is off duty: someone on duty gets it (D-113).
+                      "assist_timeout": ["mmm_custom.engine.copilot.on_timeout"]}
 
 # [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
 # It does nothing unless the site config has typesafe_api_key.
@@ -131,9 +138,14 @@ scheduler_events = {
 		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
 		# Level tests left half-way get one reminder (D-106).
 		"*/15 * * * *": ["mmm_custom.quiz_reminders.run"],
+		# Staff assist: the bot answers what nobody answered within assist_wait_minutes (D-111).
+		"* * * * *": ["mmm_custom.engine.copilot.run_due"],
 	},
+	# Synchronize Facebook post metrics (likes, comments, shares, leads) every hour
+	"hourly": ["mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.sync_all_posted_analytics"],
 	# AI Decision Log retention (Lead Engine Settings.log_retention_days, default 180).
-	"daily": ["mmm_custom.engine.log.purge_old_logs"],
+	# Connected Facebook pages: is each page token still accepted (channels tab shows the status).
+	"daily": ["mmm_custom.engine.log.purge_old_logs", "mmm_custom.channels.facebook.check_health"],
 }
 
 

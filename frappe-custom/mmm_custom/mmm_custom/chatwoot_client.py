@@ -95,6 +95,14 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
+    def conversation_viewers(self, conversation_id: int, timeout: float = 2) -> list[int]:
+        """Agents looking at the conversation right now (DX-OSD Chatwoot fork, staff assist). A short timeout: the
+        answer is a hint on the path of every customer message."""
+        resp = requests.get(f"{self._base}/conversations/{conversation_id}/viewers", headers=self._headers,
+                            timeout=timeout)
+        resp.raise_for_status()
+        return resp.json().get("viewers") or []
+
     def list_agents(self) -> list[dict]:
         """List all agents in the account."""
         resp = requests.get(
@@ -217,6 +225,22 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
+    # Channel connections (mmm_custom.channels.facebook); endpoints of our Chatwoot fork, admin token only.
+
+    def connect_facebook_page(self, page_id: str, page_access_token: str, user_access_token: str = "",
+                              inbox_name: str = "") -> dict:
+        """Create the page's channel and inbox, or renew the token of one connected before. Returns the inbox."""
+        resp = requests.post(f"{self._base}/callbacks/connect_facebook_page", headers=self._headers, json={
+            "page_id": page_id, "page_access_token": page_access_token, "user_access_token": user_access_token,
+            "inbox_name": inbox_name}, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
+    def disconnect_facebook_page(self, page_id: str) -> None:
+        resp = requests.post(f"{self._base}/callbacks/disconnect_facebook_page", headers=self._headers,
+                             json={"page_id": page_id}, timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+
     # Handoff (mmm_custom.engine.effects.ChatwootEffects.handoff).
 
     def assign_team(self, conversation_id: int, team_id: int) -> dict:
@@ -225,9 +249,11 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
-    def set_conversation_attributes(self, conversation_id: int, attributes: dict) -> dict:
+    def set_conversation_attributes(self, conversation_id: int, attributes: dict, merge: bool = False) -> dict:
+        """Replace the conversation's custom attributes, or with `merge` update only the keys sent."""
+        body = {"custom_attributes": attributes, **({"merge": True} if merge else {})}
         resp = requests.post(f"{self._base}/conversations/{conversation_id}/custom_attributes", headers=self._headers,
-                             json={"custom_attributes": attributes}, timeout=REQUEST_TIMEOUT)
+                             json=body, timeout=REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
 
