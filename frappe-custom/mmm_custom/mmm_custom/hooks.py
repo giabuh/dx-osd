@@ -134,8 +134,8 @@ lead_engine_events = {"handed_off": ["mmm_custom.intelligence.on_handed_off"],
                       # Nobody answered in time and the assignee is off duty: someone on duty gets it (D-113).
                       "assist_timeout": ["mmm_custom.engine.copilot.on_timeout"]}
 
-# [I] AI follow-up agent: 08:00 site time, so salespeople find the Tasks when their day starts.
-# It does nothing unless the site config has typesafe_api_key.
+# Nurturing by Lead status (D-116): 08:00 site time, so consultants find the Tasks when their day starts.
+# The rules run without AI; with typesafe_api_key Jev picks call / message for quiet Leads.
 # Autopilot publisher: runs every 5 minutes to publish scheduled Facebook posts.
 scheduler_events = {
 	"cron": {

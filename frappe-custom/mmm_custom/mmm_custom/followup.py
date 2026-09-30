@@ -1,9 +1,17 @@
-"""[I] Intelligence layer: daily cold-lead follow-up agent (optional, TypeSafe Jev).
+"""Daily nurturing (D-116, roadmap C6.4): every open Lead gets the next step its status calls for, as a CRM
+Task for the Lead owner, at 08:00 so consultants find it when their day starts.
 
-For open Leads with no change in `ai_followup_stale_days` (default 3), Jev picks the next
-action and a CRM Task is created for the Lead owner. Leads that already have an open Task
-are skipped, so it never piles up duplicates. It never changes a Lead itself — closing a
-Lead stays a human decision. Off unless the site config has `typesafe_api_key`.
+| Status        | When                                         | Task                                              |
+| Qualified     | no Task, quiet `qualified_call_hours` (24 h)  | Gọi tư vấn khách đủ thông tin (High)              |
+| New/Contacted | no Task, quiet `stale_days` (3)               | [I] Jev picks call / message / review close;      |
+|               |                                              | without an AI key: Nhắn tin chăm sóc lại (Medium) |
+| Trial Booked  | the trial date has passed                     | Sau học thử: chốt đăng ký / hẹn lại (High)        |
+| Nurture       | no Task, every `nurture_every_days` (14)      | Chăm sóc định kỳ with the next class, up to       |
+|               |                                              | `nurture_max_touches` (4); then Xem xét đóng      |
+
+The rules are pure (`rule_task`); a Lead with an open Task is left alone, except the after-trial check (the trial
+Task itself is usually still open). It never changes a Lead: moving it on stays a person's decision. Settings:
+`lead_nurture` in the site config; `ai_followup_stale_days` / `ai_followup_statuses` still work.
 """
 
 import logging
@@ -17,6 +25,7 @@ except ImportError:
     frappe = MagicMock()
 
 from mmm_custom.intelligence import DEFAULT_THRESHOLD, JEV_URL, ask_jev
+from mmm_custom.lifecycle import CONTACTED, NEW, NURTURE, QUALIFIED, TRIAL_BOOKED
 
 logger = logging.getLogger(__name__)
 
@@ -30,69 +39,143 @@ TASKS = {
     "call": {"title": "Gọi lại khách", "priority": "High"},
     "message": {"title": "Nhắn tin chăm sóc lại khách", "priority": "Medium"},
     "review_close": {"title": "Xem xét đóng Lead", "priority": "Low"},
+    "qualified_call": {"title": "Gọi tư vấn khách đủ thông tin", "priority": "High"},
+    "after_trial": {"title": "Sau học thử: chốt đăng ký / hẹn lại", "priority": "High"},
+    "nurture": {"title": "Chăm sóc định kỳ", "priority": "Medium"},
+    "nurture_done": {"title": "Xem xét đóng khách nuôi dưỡng", "priority": "Low"},
 }
+DEFAULTS = {"qualified_call_hours": 24, "stale_days": 3, "nurture_every_days": 14, "nurture_max_touches": 4,
+            "max_leads": 200}
 OPEN_TASK_STATUSES = ["Backlog", "Todo", "In Progress"]
+RULE_STATUSES = [NEW, QUALIFIED, CONTACTED, TRIAL_BOOKED, NURTURE]
 LEAD_FIELDS = ["name", "lead_name", "status", "source", "lead_owner", "modified", "mobile_no", "email",
-               "course_interest", "territory", "ai_intent", "ai_hotness"]
+               "course_interest", "territory", "ai_intent", "ai_hotness", "trial_date", "preferred_shift"]
+
+
+def settings(conf):
+    cfg = {**DEFAULTS, **(conf.get("lead_nurture") or {})}
+    if conf.get("ai_followup_stale_days") is not None:  # 0 is valid: every open Lead
+        cfg["stale_days"] = conf["ai_followup_stale_days"]
+    cfg["stale_statuses"] = conf.get("ai_followup_statuses") or [NEW, CONTACTED]
+    return cfg
+
+
+def _date(value):
+    return value.date() if isinstance(value, datetime) else value
+
+
+def rule_task(lead, now, cfg, tasks, next_class=""):
+    """The Task a Lead's status calls for today, or None. `tasks`: the Lead's CRM Tasks (title, status, creation).
+    New/Contacted return {"kind": "stale"}: Jev (or the default message) decides what it becomes."""
+    status, quiet = lead.get("status"), now - lead["modified"]
+    open_task = any(t["status"] in OPEN_TASK_STATUSES for t in tasks)
+    titled = lambda kind: [t for t in tasks if (t.get("title") or "").startswith(TASKS[kind]["title"])]
+    if status == TRIAL_BOOKED:
+        trial = _date(lead.get("trial_date"))
+        if trial and trial < now.date() and not [t for t in titled("after_trial") if _date(t["creation"]) >= trial]:
+            return {"kind": "after_trial",
+                    "why": f"Buổi học thử / test ngày {trial:%d/%m} đã qua: hỏi cảm nhận, chốt đăng ký hoặc hẹn buổi khác."}
+        return None
+    if open_task:
+        return None
+    if status == QUALIFIED and quiet >= timedelta(hours=int(cfg["qualified_call_hours"])):
+        return {"kind": "qualified_call", "why": "Khách đã có khóa quan tâm và số điện thoại nhưng chưa ai gọi tư vấn."}
+    if status in cfg["stale_statuses"] and quiet >= timedelta(days=int(cfg["stale_days"])):
+        return {"kind": "stale"}
+    if status == NURTURE:
+        touches = titled("nurture")
+        last = max([t["creation"] for t in touches], default=lead["modified"])
+        if now - last < timedelta(days=int(cfg["nurture_every_days"])):
+            return None
+        if len(touches) >= int(cfg["nurture_max_touches"]):
+            if titled("nurture_done"):
+                return None
+            return {"kind": "nurture_done",
+                    "why": f"Đã chăm sóc {len(touches)} lần mà khách chưa quay lại: xem xét đóng (Không phù hợp + lý do)."}
+        why = f"Lần {len(touches) + 1}/{cfg['nurture_max_touches']}: gửi thông tin mới, hỏi thăm nhu cầu."
+        return {"kind": "nurture", "why": f"{why} {next_class}".strip(), "n": len(touches) + 1}
+    return None
+
+
+def _tasks(lead):
+    return frappe.get_all("CRM Task", filters={"reference_doctype": "CRM Lead", "reference_docname": lead},
+                          fields=["title", "status", "creation"], order_by="creation asc")
+
+
+def _next_class(lead, today):
+    """"Lớp gần nhất: Thứ 7 04/10 · Tối · CN Q7" for the Lead's first course, or ""."""
+    from mmm_custom.engine.repo import FrappeRepo
+
+    course = frappe.db.get_value("CRM Products", {"parenttype": "CRM Lead", "parent": lead["name"]}, "product_code",
+                                 order_by="idx asc")
+    if not course:
+        return ""
+    rows = FrappeRepo().open_schedules(course, lead.get("territory") or "", "", today, 1)
+    if not rows:
+        return ""
+    r = rows[0]
+    return f"Lớp {course} gần nhất: {r['weekday']} {r['date']:%d/%m} · {r['shift'] or ''} · {r['branch'] or ''}."
+
+
+def _create_task(lead, kind, why, now, title_suffix=""):
+    task = TASKS[kind]
+    frappe.get_doc({
+        "doctype": "CRM Task",
+        "title": f"{task['title']}{title_suffix}: {lead.get('lead_name') or lead['name']}"[:140],
+        "description": why,
+        "priority": task["priority"],
+        "status": "Todo",
+        "assigned_to": lead.get("lead_owner"),
+        "reference_doctype": "CRM Lead",
+        "reference_docname": lead["name"],
+        "due_date": now + timedelta(days=1),
+    }).insert(ignore_permissions=True)
+
+
+def _ask_jev(conf, lead, now):
+    notes = frappe.get_all("FCRM Note", filters={"reference_doctype": "CRM Lead", "reference_docname": lead["name"]},
+                           fields=["title", "content"], order_by="creation desc", limit=5)
+    days = (now - lead["modified"]).days  # date math stays in code; Jev is weak at arithmetic
+    state = {"lead": {**{k: str(v) for k, v in lead.items() if v is not None}, "days_since_update": days},
+             "recent_notes": notes}
+    return ask_jev(conf["typesafe_api_key"], state, {
+        "next_action": {"type": "choice", "instructions": "What should the salesperson do next with this quiet sales lead?",
+                        "criteria": NEXT_ACTIONS},
+    }, model=conf.get("typesafe_model") or "jev-latest", url=conf.get("typesafe_api_url") or JEV_URL)["next_action"]
 
 
 def plan_followups(now: datetime | None = None) -> dict:
     conf = getattr(frappe, "conf", None) or {}
-    api_key = conf.get("typesafe_api_key")
-    if not api_key:
-        return {"status": "ai_disabled"}
-    # Frappe stores datetimes in the site timezone; now_datetime() is in the same zone.
-    now = now or frappe.utils.now_datetime()
-    stale_days = int(conf.get("ai_followup_stale_days", 3))  # 0 is valid: every open Lead
+    now = now or frappe.utils.now_datetime()  # site timezone, like the stored datetimes
+    cfg = settings(conf)
     threshold = float(conf.get("typesafe_confidence_threshold") or DEFAULT_THRESHOLD)
-    open_statuses = conf.get("ai_followup_statuses") or ["New", "Contacted", "Nurture"]
-
-    leads = frappe.get_all(
-        "CRM Lead",
-        filters={"status": ["in", open_statuses], "modified": ["<", now - timedelta(days=stale_days)]},
-        fields=LEAD_FIELDS,
-        order_by="modified asc",
-        limit=int(conf.get("ai_followup_max_leads", 20)),
-    )
+    jev_left = int(conf.get("ai_followup_max_leads", 20)) if conf.get("typesafe_api_key") else 0
+    leads = frappe.get_all("CRM Lead", filters={"status": ["in", RULE_STATUSES], "converted": 0},
+                           fields=LEAD_FIELDS, order_by="modified asc", limit=int(cfg["max_leads"]))
     results = []
     for lead in leads:
-        if frappe.get_all(
-            "CRM Task",
-            filters={"reference_doctype": "CRM Lead", "reference_docname": lead["name"], "status": ["in", OPEN_TASK_STATUSES]},
-            pluck="name",
-        ):
-            results.append({"lead": lead["name"], "action": "skipped", "reason": "open task exists"})
+        tasks = _tasks(lead["name"])
+        nurture = lead.get("status") == NURTURE
+        rule = rule_task(lead, now, cfg, tasks, _next_class(lead, now.date()) if nurture and not any(
+            t["status"] in OPEN_TASK_STATUSES for t in tasks) else "")
+        if not rule:
             continue
-        notes = frappe.get_all(
-            "FCRM Note",
-            filters={"reference_doctype": "CRM Lead", "reference_docname": lead["name"]},
-            fields=["title", "content"],
-            order_by="creation desc",
-            limit=5,
-        )
-        # Date math stays in code; Jev is weak at arithmetic.
-        days_since_update = (now - lead["modified"]).days
-        state = {"lead": {**{k: str(v) for k, v in lead.items() if v is not None}, "days_since_update": days_since_update}, "recent_notes": notes}
-        answer = ask_jev(api_key, state, {
-            "next_action": {"type": "choice", "instructions": "What should the salesperson do next with this quiet sales lead?", "criteria": NEXT_ACTIONS},
-        }, model=conf.get("typesafe_model") or "jev-latest", url=conf.get("typesafe_api_url") or JEV_URL)["next_action"]
-        choice, confidence = answer["choice"], answer.get("confidence") or 0
-        if confidence < threshold or choice == "wait":
-            results.append({"lead": lead["name"], "action": "none", "choice": choice, "confidence": confidence})
-            continue
-        task = TASKS[choice]
-        frappe.get_doc({
-            "doctype": "CRM Task",
-            "title": f"{task['title']}: {lead.get('lead_name') or lead['name']}",
-            "description": f"AI (độ tin cậy {confidence:.2f}): Lead không có cập nhật {days_since_update} ngày. {NEXT_ACTIONS[choice]}.",
-            "priority": task["priority"],
-            "status": "Todo",
-            "assigned_to": lead.get("lead_owner"),
-            "reference_doctype": "CRM Lead",
-            "reference_docname": lead["name"],
-            "due_date": now + timedelta(days=1),
-        }).insert(ignore_permissions=True)
-        results.append({"lead": lead["name"], "action": "task_created", "choice": choice, "confidence": confidence})
+        kind, why = rule["kind"], rule.get("why", "")
+        if kind == "stale":
+            days = (now - lead["modified"]).days
+            if jev_left:
+                jev_left -= 1
+                answer = _ask_jev(conf, lead, now)
+                choice, confidence = answer["choice"], answer.get("confidence") or 0
+                if confidence < threshold or choice == "wait":
+                    results.append({"lead": lead["name"], "action": "none", "choice": choice, "confidence": confidence})
+                    continue
+                kind, why = choice, f"AI (độ tin cậy {confidence:.2f}): Lead không có cập nhật {days} ngày. {NEXT_ACTIONS[choice]}."
+            else:
+                kind, why = "message", f"Khách không có cập nhật {days} ngày: nhắn hỏi thăm, gửi thông tin khóa học."
+        suffix = f" (lần {rule['n']})" if kind == "nurture" else ""
+        _create_task(lead, kind, why, now, suffix)
+        results.append({"lead": lead["name"], "action": "task_created", "choice": kind})
     frappe.db.commit()
     return {"status": "done", "checked": len(leads), "results": results}
 
@@ -100,5 +183,5 @@ def plan_followups(now: datetime | None = None) -> dict:
 def run_daily():
     """Scheduler entry point (hooks.py scheduler_events)."""
     result = plan_followups()
-    logger.info("AI follow-up: %s", result)
+    logger.info("Follow-up: %s", result)
     return result
