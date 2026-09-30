@@ -1,7 +1,7 @@
 # Copyright (c) 2023, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-from frappe.desk.form.assign_to import add as assign
+from frappe.desk.form.assign_to import _add
 from frappe.desk.form.assign_to import remove as unassign
 from frappe.model.document import Document
 
@@ -44,13 +44,15 @@ class CRMTask(Document):
 
 	def assign_to(self):
 		if self.assigned_to:
-			assign(
+			# a Task the system inserts with ignore_permissions (the bot's jobs run as Guest) is assigned the same way
+			_add(
 				{
 					"assign_to": [self.assigned_to],
 					"doctype": self.doctype,
 					"name": self.name,
 					"description": self.title or self.description,
-				}
+				},
+				ignore_permissions=bool(self.flags.ignore_permissions),
 			)
 
 	@staticmethod
