@@ -179,14 +179,14 @@ Status: ⬜ not started · 🖊️ design in progress · 📝 designed · 🔨 i
 | C5.5 | Course cards (image + buttons) on Messenger — vendored Chatwoot edit (D-041) | M | ⬜ |
 
 **C6 — No lead left behind** · milestone: no lead goes overdue unnoticed
-| C6.1 | Lead statuses for a training centre + lost reasons (D-116) | S | 🔨 |
+| C6.1 | Lead statuses for a training centre + lost reasons (D-116) | S | ✅ |
 | C6.2 | First-response SLA + manager alert (CRM SLA) | S | ⬜ |
 | C6.3 | Consultation/trial appointments + date/time understanding + reminders (D-042) — trial booking from class buttons in code (D-102); free-text dates and reminders not yet | M | 🔨 |
-| C6.4 | Course-aware re-engagement, 24h-window aware (upgrade `followup.py`, D-116) | M | 🔨 |
+| C6.4 | Course-aware re-engagement, 24h-window aware (upgrade `followup.py`, D-116) — status rules with the next class done; 24h Messenger window not handled (tasks are for staff) | M | 🔨 |
 | C6.5 | Unified lead score | M | ⬜ |
 
 **C7 — Close the enrolment** · milestone: from chat to enrolment with fee
-| C7.1 | Lead → Deal: enrol course, fee, promotion (D-117) | M | 🔨 |
+| C7.1 | Lead → Deal: enrol course, fee, promotion (D-117) | M | ✅ |
 | C7.2 | Duplicate merge proposals, human-approved (never auto-merge) | M | ⬜ |
 
 **C8 — More lead sources**
