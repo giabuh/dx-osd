@@ -86,14 +86,17 @@ status on every save (`lifecycle.on_lead_update`).
 
 | # | Key | Label | Type | Probability |
 |---|---|---|---|---|
-| 1 | Pending Payment | Chờ đóng phí | Open | 50 |
-| 2 | Deposit Paid | Đã đặt cọc | Ongoing | 80 |
-| 3 | Won | Đã nhập học | Won | 100 |
-| 4 | Lost | Hủy đăng ký | Lost | 0 |
+| 1 | Awaiting Confirmation | Chờ xác nhận | Open | 20 |
+| 2 | Pending Payment | Chờ đóng phí | Open | 50 |
+| 3 | Deposit Paid | Đã đặt cọc | Ongoing | 80 |
+| 4 | Won | Đã nhập học | Won | 100 |
+| 5 | Lost | Hủy đăng ký | Lost | 0 |
+
+Awaiting Confirmation is the draft the bot or Jev makes (D-118, spec `2026-09-30-registration-drafts-design.md`).
 
 Deal custom fields: `enrol_course` (CRM Product), `course_schedule` (Course Schedule of that course), 
 `class_start_date` (from the schedule), `tuition_fee`, `promotion` (Course Promotion), `discount_amount`,
-`final_fee`, `deposit_amount`, `deposit_date`, `paid_amount`, `balance_due`, `payment_due_date`; plus
+`final_fee`, `deposit_amount`, `deposit_date`, `paid_amount`, `balance_due` (no payment due date, D-120); plus
 `course_interest`, `placement_result`, `voucher_code`, which `create_deal` copies from the Lead because the
 field names match.
 
@@ -118,7 +121,7 @@ before. A Lead with an open Task is skipped, except the after-trial check.
 | New / Contacted | no change for 3 days | Jev's call/message; without AI "Nhắn tin chăm sóc lại khách" |
 | Trial Booked | trial date passed | Sau học thử: chốt đăng ký / hẹn lại (High) |
 | Nurture | every 14 days, 4 touches | Chăm sóc định kỳ, with the next class of the course; then "Xem xét đóng" |
-| Deal Pending Payment | 3 days quiet or `payment_due_date` passed | Nhắc đóng phí |
+| Deal Pending Payment | 3 days quiet | Nhắc đóng phí |
 
 Settings: `lead_nurture` in site config (`qualified_call_hours`, `stale_days`, `nurture_every_days`,
 `nurture_max_touches`, `payment_stale_days`); `ai_followup_statuses` still overrides the New/Contacted list.
