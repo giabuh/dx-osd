@@ -388,7 +388,7 @@ msgstr "Thêm bộ lọc"
 
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:430
 msgid "Add Lead or Deal"
-msgstr "Thêm Lead Hoặc Deal"
+msgstr "Thêm khách hàng tiềm năng hoặc hồ sơ đăng ký"
 
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:377
 #: frontend/src/components/Modals/EventModal.vue:166
@@ -713,7 +713,7 @@ msgstr ""
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.js:9
 msgid "Are you sure you want to reset 'Create Quotation from CRM Deal' Form Script?"
-msgstr "Bạn có chắc chắn muốn đặt lại 'Tạo Báo Giá từ CRM Deal' Form Script?"
+msgstr "Bạn có chắc chắn muốn đặt lại 'Tạo Báo Giá từ hồ sơ đăng ký' Form Script?"
 
 #: frontend/src/components/Settings/DashboardSettings.vue:236
 msgid "Are you sure you want to set the currency as {0}? This cannot be changed later."
@@ -878,13 +878,13 @@ msgstr ""
 
 #: frontend/src/components/Settings/DashboardSettings.vue:49
 msgid "Auto Update Expected Deal Value"
-msgstr "Tự Động Cập Nhật Giá Trị Deal Dự Kiến"
+msgstr "Tự động cập nhật học phí dự kiến"
 
 #. Label of the auto_update_expected_deal_value (Check) field in DocType 'FCRM
 #. Settings'
 #: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json
 msgid "Auto update Expected Deal Value"
-msgstr "Tự Động Cập Nhật Giá Trị Deal Dự Kiến"
+msgstr "Tự động cập nhật học phí dự kiến"
 
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRules.vue:11
 msgid "Auto-assign leads/deals to the right sales user based on predefined conditions"
@@ -920,7 +920,7 @@ msgstr ""
 #: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json
 #: frontend/src/components/Settings/DashboardSettings.vue:53
 msgid "Automatically update \"Expected Deal Value\" based on the total value of associated products in a deal"
-msgstr "Tự động cập nhật \"Giá Trị Deal Dự Kiến\" dựa trên tổng giá trị của các sản phẩm liên quan trong một deal"
+msgstr "Tự động cập nhật \"Học phí dự kiến\" theo tổng giá trị các khóa học trong hồ sơ đăng ký"
 
 #: frontend/src/components/Settings/Settings.vue:190
 msgid "Automation & Rules"
@@ -948,23 +948,23 @@ msgstr "Thời gian trung bình từ khi tạo lead đến khi đóng deal"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:77
 msgid "Avg Deal Value"
-msgstr "Giá Trị Deal Trung Bình"
+msgstr "Học phí trung bình"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:74
 msgid "Avg Ongoing Deal Value"
-msgstr "Giá Trị Deal Đang Diễn Ra Trung Bình"
+msgstr "Học phí trung bình (đang xử lý)"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:83
 msgid "Avg Time to Close a Deal"
-msgstr "Thời Gian Trung Bình Để Đóng Deal"
+msgstr "Thời gian trung bình để chốt hồ sơ"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:79
 msgid "Avg Time to Close a Lead"
-msgstr "Thời Gian Trung Bình Để Đóng Lead"
+msgstr "Thời gian trung bình để chốt khách"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:76
 msgid "Avg Won Deal Value"
-msgstr "Giá Trị Deal Thắng Trung Bình"
+msgstr "Học phí trung bình (đã nhập học)"
 
 #: crm/api/dashboard.py:418
 msgid "Avg. deal value"
@@ -1095,12 +1095,12 @@ msgstr "Bảng Điều Khiển CRM"
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 msgid "CRM Deal"
-msgstr "CRM Deal"
+msgstr "Hồ sơ đăng ký"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_deal_status/crm_deal_status.json
 msgid "CRM Deal Status"
-msgstr "Trạng Thái Deal CRM"
+msgstr "Trạng thái hồ sơ đăng ký"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_dropdown_item/crm_dropdown_item.json
@@ -1150,7 +1150,7 @@ msgstr "Lời Mời CRM"
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 msgid "CRM Lead"
-msgstr "CRM Lead"
+msgstr "Khách hàng tiềm năng"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_lead_source/crm_lead_source.json
@@ -1160,12 +1160,12 @@ msgstr "Nguồn Lead CRM"
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_lead_status/crm_lead_status.json
 msgid "CRM Lead Status"
-msgstr "Trạng Thái Lead CRM"
+msgstr "Trạng thái khách hàng tiềm năng"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_lost_reason/crm_lost_reason.json
 msgid "CRM Lost Reason"
-msgstr "Lý Do Mất Lead CRM"
+msgstr "Lý do mất khách"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_notification/crm_notification.json
@@ -1839,19 +1839,19 @@ msgstr "Chuyển đổi"
 #: frontend/src/components/Layouts/AppSidebar.vue:396
 #: frontend/src/components/Layouts/AppSidebar.vue:404
 msgid "Convert lead to deal"
-msgstr "Chuyển đổi khách hàng tiềm năng thành Deal"
+msgstr "Ghi danh khách hàng tiềm năng"
 
 #: frontend/src/components/ListBulkActions.vue:78
 #: frontend/src/components/ListBulkActions.vue:195
 #: frontend/src/components/Modals/ConvertToDealModal.vue:7
 #: frontend/src/pages/Lead.vue:38
 msgid "Convert to Deal"
-msgstr "Chuyển thành Deal"
+msgstr "Ghi danh"
 
 #. Label of the converted (Check) field in DocType 'CRM Lead'
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 msgid "Converted"
-msgstr "Đã chuyển đổi"
+msgstr "Đã đăng ký"
 
 #: frontend/src/components/ListBulkActions.vue:94
 msgid "Converted Successfully"
@@ -1899,7 +1899,7 @@ msgstr "Tạo"
 
 #: frontend/src/components/Modals/DealModal.vue:8
 msgid "Create Deal"
-msgstr "Tạo Deal"
+msgstr "Tạo hồ sơ đăng ký"
 
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:514
 #: frontend/src/pages/Calendar.vue:7
@@ -2047,7 +2047,7 @@ msgstr "Hàng ngày"
 
 #: crm/api/dashboard.py:639
 msgid "Daily performance of leads, deals, and wins"
-msgstr "Hiệu suất hàng ngày của khách hàng tiềm năng, Deal và thắng lợi"
+msgstr "Hằng ngày: khách hàng tiềm năng, đăng ký và nhập học"
 
 #: frontend/src/components/Settings/ThemeSwitcher.vue:89
 msgid "Dark"
@@ -2115,7 +2115,7 @@ msgstr "Ngày"
 #: frontend/src/components/Telephony/ExotelCallUI.vue:200
 #: frontend/src/pages/Tasks.vue:132
 msgid "Deal"
-msgstr "Deal"
+msgstr "Hồ sơ đăng ký"
 
 #. Label of the deal_owner (Link) field in DocType 'CRM Deal'
 #: crm/fcrm/doctype/crm_deal/crm_deal.json frontend/src/pages/Contact.vue:541
@@ -2129,21 +2129,21 @@ msgstr "Chủ giao dịch"
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.json
 #: frontend/src/components/Settings/ERPNextSettings.vue:241
 msgid "Deal Status"
-msgstr "Trạng thái Deal"
+msgstr "Trạng thái đăng ký"
 
 #. Label of a shortcut in the Frappe CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Deal Statuses"
-msgstr "Trạng thái Deal"
+msgstr "Trạng thái đăng ký"
 
 #. Label of the deal_value (Currency) field in DocType 'CRM Deal'
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 msgid "Deal Value"
-msgstr "Giá trị Deal"
+msgstr "Giá trị hồ sơ"
 
 #: crm/api/dashboard.py:1023
 msgid "Deal generation channel analysis"
-msgstr "Phân tích kênh tạo Deal"
+msgstr "Phân tích kênh tạo hồ sơ đăng ký"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:522
 msgid "Deal status is required"
@@ -2151,7 +2151,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:1078 crm/api/dashboard.py:1141
 msgid "Deal value"
-msgstr "Giá trị Deal"
+msgstr "Giá trị hồ sơ"
 
 #. Label of a shortcut in the Frappe CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
@@ -2167,39 +2167,39 @@ msgstr "Hồ sơ theo Giai đoạn Đang xử lý & Đã nhập học"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:96
 msgid "Deals by Salesperson"
-msgstr "Deals theo Nhân viên kinh doanh"
+msgstr "Học viên đăng ký theo tư vấn viên"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:103
 msgid "Deals by Source"
-msgstr "Deals theo Nguồn"
+msgstr "Học viên đăng ký theo nguồn"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:101
 msgid "Deals by Stage"
-msgstr "Deals theo Giai đoạn"
+msgstr "Học viên đăng ký theo trạng thái"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:95
 msgid "Deals by Territory"
-msgstr "Deals theo Khu vực"
+msgstr "Học viên đăng ký theo chi nhánh"
 
 #: crm/api/dashboard.py:846
 msgid "Deals by ongoing & won stage"
-msgstr "Deals theo giai đoạn đang diễn ra & đã thắng"
+msgstr "Học viên đăng ký: đang xử lý và đã nhập học"
 
 #: crm/api/dashboard.py:1130
 msgid "Deals by salesperson"
-msgstr "Deals theo nhân viên kinh doanh"
+msgstr "Học viên đăng ký theo tư vấn viên"
 
 #: crm/api/dashboard.py:1022
 msgid "Deals by source"
-msgstr "Deals theo nguồn"
+msgstr "Học viên đăng ký theo nguồn"
 
 #: crm/api/dashboard.py:895
 msgid "Deals by stage"
-msgstr "Deals theo giai đoạn"
+msgstr "Học viên đăng ký theo trạng thái"
 
 #: crm/api/dashboard.py:1067
 msgid "Deals by territory"
-msgstr "Deals theo khu vực"
+msgstr "Học viên đăng ký theo chi nhánh"
 
 #: frontend/src/components/Settings/EmailTemplate/EditEmailTemplate.vue:111
 #: frontend/src/components/Settings/EmailTemplate/NewEmailTemplate.vue:111
@@ -3225,7 +3225,7 @@ msgstr "Ngày đóng dự kiến"
 #. Label of the expected_deal_value (Currency) field in DocType 'CRM Deal'
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 msgid "Expected Deal Value"
-msgstr "Giá trị Deal dự kiến"
+msgstr "Học phí dự kiến"
 
 #: crm/fcrm/doctype/crm_deal/crm_deal.py:253
 msgid "Expected closure date is required."
@@ -3646,7 +3646,7 @@ msgstr "Đã thực hiện"
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 #: crm/fcrm/doctype/crm_sales_hierarchy/crm_sales_hierarchy.json
 msgid "Full Name"
-msgstr "Tên đầy đủ"
+msgstr "Họ tên"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:92
 msgid "Funnel Conversion"
@@ -4189,7 +4189,7 @@ msgstr "Có vẻ như hiện tại không có {0} nào. Bạn có thể tạo th
 #. Settings'
 #: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json
 msgid "It will make deal's \"Expected Closure Date\" & \"Expected Deal Value\" mandatory to get accurate forecasting insights"
-msgstr "Điều này sẽ khiến \"Ngày đóng dự kiến\" & \"Giá trị Deal dự kiến\" của deal trở thành bắt buộc để có được thông tin chi tiết dự báo chính xác"
+msgstr "Điều này sẽ khiến \"Ngày đóng dự kiến\" & \"Học phí dự kiến\" của hồ sơ đăng ký trở thành bắt buộc để dự báo chính xác"
 
 #: crm/api/doc.py:806
 msgid "Items are required"
@@ -4320,7 +4320,7 @@ msgstr "90 ngày qua"
 #: frontend/src/pages/Organization.vue:518
 #: frontend/src/pages/Organization.vue:546
 msgid "Last Modified"
-msgstr ""
+msgstr "Cập nhật lần cuối"
 
 #: frontend/src/components/Filter.vue:657
 msgid "Last Month"
@@ -4397,13 +4397,13 @@ msgstr "Bố cục"
 #: frontend/src/components/Telephony/ExotelCallUI.vue:200
 #: frontend/src/pages/Tasks.vue:133
 msgid "Lead"
-msgstr "Chì"
+msgstr "Khách hàng tiềm năng"
 
 #. Label of the lead_data (Code) field in DocType 'Failed Lead Sync Log'
 #: crm/lead_syncing/doctype/failed_lead_sync_log/failed_lead_sync_log.json
 #: frontend/src/components/Settings/LeadSyncing/FailureLogs.vue:40
 msgid "Lead Data"
-msgstr "Dữ liệu Lead"
+msgstr "Dữ liệu khách hàng"
 
 #. Label of the lead_details_tab (Tab Break) field in DocType 'CRM Deal'
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
@@ -4433,7 +4433,7 @@ msgstr "Nguồn Lead"
 #. Label of a shortcut in the Frappe CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Lead Statuses"
-msgstr "Trạng thái Lead"
+msgstr "Trạng thái khách hàng"
 
 #. Name of a DocType
 #: crm/lead_syncing/doctype/lead_sync_source/lead_sync_source.json
@@ -4470,7 +4470,7 @@ msgstr "Nguồn đồng bộ Lead đã được xóa thành công"
 
 #: crm/api/dashboard.py:788
 msgid "Lead to deal conversion pipeline"
-msgstr "Pipeline chuyển đổi Lead sang Deal"
+msgstr "Phễu từ khách hàng tiềm năng đến đăng ký"
 
 #. Label of a shortcut in the Frappe CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
@@ -4615,7 +4615,7 @@ msgstr "Biểu tượng"
 #: crm/fcrm/doctype/crm_deal_status/crm_deal_status.json
 #: crm/fcrm/doctype/crm_lead_status/crm_lead_status.json
 msgid "Lost"
-msgstr "Không theo học"
+msgstr "Hủy đăng ký"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:94
 msgid "Lost Deal Reasons"
@@ -4634,7 +4634,7 @@ msgstr "Chi tiết thất bại"
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 #: frontend/src/components/Modals/LostReasonModal.vue:28
 msgid "Lost Notes"
-msgstr "Ghi chú thất bại"
+msgstr "Ghi chú lý do"
 
 #: frontend/src/components/Modals/LostReasonModal.vue:84
 msgid "Lost Notes are required when Lost Reason is \"Other\""
@@ -4649,7 +4649,7 @@ msgstr "Ghi chú thất bại là bắt buộc khi Lý do thất bại là \"Kh�
 #: frontend/src/components/Modals/LostReasonModal.vue:2
 #: frontend/src/components/Modals/LostReasonModal.vue:14
 msgid "Lost Reason"
-msgstr "Lý do bị mất"
+msgstr "Lý do"
 
 #: frontend/src/components/Modals/LostReasonModal.vue:80
 msgid "Lost Reason is required"
@@ -4701,7 +4701,7 @@ msgstr "Đặt {0} làm phương tiện gọi mặc định"
 
 #: frontend/src/components/Settings/DashboardSettings.vue:35
 msgid "Makes \"Expected Closure Date\" and \"Expected Deal Value\" mandatory for deal value forecasting"
-msgstr "Khiến \"Ngày đóng dự kiến\" và \"Giá trị Deal dự kiến\" trở thành bắt buộc để dự báo giá trị deal"
+msgstr "Khiến \"Ngày đóng dự kiến\" và \"Học phí dự kiến\" trở thành bắt buộc để dự báo học phí"
 
 #: frontend/src/components/Settings/Users.vue:11
 msgid "Manage CRM users by adding or inviting them, and assign roles to control their access and permissions"
@@ -4848,7 +4848,7 @@ msgstr "Cài đặt Ứng dụng di động"
 #: frontend/src/pages/MobileOrganization.vue:478
 #: frontend/src/pages/Organization.vue:508
 msgid "Mobile No."
-msgstr "Số di động"
+msgstr "Số điện thoại"
 
 #: frontend/src/components/Modals/ContactModal.vue:117
 #: frontend/src/components/Modals/DealModal.vue:201
@@ -4929,7 +4929,7 @@ msgstr ""
 
 #: frontend/src/components/Modals/ViewModal.vue:30
 msgid "My Open Deals"
-msgstr "Deals đang mở của tôi"
+msgstr "Hồ sơ đăng ký đang mở của tôi"
 
 #. Label of the title (Data) field in DocType 'CRM Dashboard'
 #. Label of the name1 (Data) field in DocType 'CRM Dropdown Item'
@@ -5295,19 +5295,19 @@ msgstr "Chưa đồng bộ"
 
 #: crm/fcrm/doctype/crm_deal/crm_deal.py:355
 msgid "Not allowed to add contact to Deal"
-msgstr "Không được phép thêm liên hệ vào Deal"
+msgstr "Không được phép thêm liên hệ vào hồ sơ đăng ký"
 
 #: crm/fcrm/doctype/crm_lead/crm_lead.py:497
 msgid "Not allowed to convert Lead to Deal"
-msgstr "Không được phép chuyển đổi Lead thành Deal"
+msgstr "Không được phép ghi danh khách hàng này"
 
 #: crm/fcrm/doctype/crm_deal/crm_deal.py:366
 msgid "Not allowed to remove contact from Deal"
-msgstr "Không được phép xóa liên hệ khỏi Deal"
+msgstr "Không được phép xóa liên hệ khỏi hồ sơ đăng ký"
 
 #: crm/fcrm/doctype/crm_deal/crm_deal.py:377
 msgid "Not allowed to set primary contact for Deal"
-msgstr "Không được phép đặt liên hệ chính cho Deal"
+msgstr "Không được phép đặt liên hệ chính cho hồ sơ đăng ký"
 
 #: frontend/src/components/Filter.vue:274
 #: frontend/src/components/Filter.vue:295
@@ -5430,11 +5430,11 @@ msgstr "Định dạng số"
 
 #: crm/api/dashboard.py:1075 crm/api/dashboard.py:1138
 msgid "Number of deals"
-msgstr "Số lượng Deals"
+msgstr "Số hồ sơ đăng ký"
 
 #: crm/api/dashboard.py:1131
 msgid "Number of deals and total value per salesperson"
-msgstr "Số lượng Deals và tổng giá trị theo nhân viên kinh doanh"
+msgstr "Số hồ sơ và tổng học phí theo tư vấn viên"
 
 #: frontend/src/components/Settings/DefaultsSettings.vue:95
 msgid "Number of decimal places for non-currency numeric fields"
@@ -5484,11 +5484,11 @@ msgstr "Đang diễn ra"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:73
 msgid "Ongoing Deals"
-msgstr "Deals Đang diễn ra"
+msgstr "Hồ sơ đang xử lý"
 
 #: crm/api/dashboard.py:189
 msgid "Ongoing deals"
-msgstr "Deals đang diễn ra"
+msgstr "Hồ sơ đang xử lý"
 
 #: crm/api/user.py:62 crm/api/user.py:95
 msgid "Only System Managers can assign the Sales Manager role"
@@ -5590,7 +5590,7 @@ msgstr ""
 #: frontend/src/pages/Organization.vue:487
 #: frontend/src/pages/Organization.vue:541
 msgid "Organization"
-msgstr "Học viên / Tổ chức"
+msgstr "Tổ chức / Doanh nghiệp"
 
 #. Label of the organization_details_section (Section Break) field in DocType
 #. 'CRM Deal'
@@ -5657,7 +5657,7 @@ msgstr "Đi"
 #. Label of the log_owner (Link) field in DocType 'CRM Status Change Log'
 #: crm/fcrm/doctype/crm_status_change_log/crm_status_change_log.json
 msgid "Owner"
-msgstr "Chủ sở hữu"
+msgstr "Phụ trách"
 
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:146
 msgid "Owner: {0}"
@@ -5676,7 +5676,7 @@ msgstr "Tên trang"
 #. Label of the parent_crm_territory (Link) field in DocType 'CRM Territory'
 #: crm/fcrm/doctype/crm_territory/crm_territory.json
 msgid "Parent CRM Territory"
-msgstr "CRM Lãnh thổ Cha"
+msgstr "Khu vực cha"
 
 #: frontend/src/components/Settings/Profile/ProfileSettings.vue:114
 #: frontend/src/components/Settings/emailConfig.js:71
@@ -7462,7 +7462,7 @@ msgstr "Mẫu"
 #. Label of a shortcut in the Frappe CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Territories"
-msgstr "Các Lãnh thổ"
+msgstr "Chi nhánh"
 
 #. Label of the territory (Link) field in DocType 'CRM Deal'
 #. Label of the territory (Link) field in DocType 'CRM Lead'
@@ -7471,17 +7471,17 @@ msgstr "Các Lãnh thổ"
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 #: crm/fcrm/doctype/crm_organization/crm_organization.json
 msgid "Territory"
-msgstr "Lãnh thổ"
+msgstr "Chi nhánh"
 
 #. Label of the territory_manager (Link) field in DocType 'CRM Territory'
 #: crm/fcrm/doctype/crm_territory/crm_territory.json
 msgid "Territory Manager"
-msgstr "Quản lý lãnh thổ"
+msgstr "Quản lý chi nhánh"
 
 #. Label of the territory_name (Data) field in DocType 'CRM Territory'
 #: crm/fcrm/doctype/crm_territory/crm_territory.json
 msgid "Territory Name"
-msgstr "Tên lãnh thổ"
+msgstr "Tên chi nhánh"
 
 #: crm/templates/emails/helpdesk_invitation.html:16
 msgid "Thanks"
@@ -8943,7 +8943,7 @@ msgid "Proposal & Tuition"
 msgstr "Báo học phí & Ưu đãi"
 
 msgid "Pending Payment"
-msgstr "Chờ đóng phí / Đặt cọc"
+msgstr "Chờ đóng phí"
 
 msgid "All Views"
 msgstr "Danh mục làm việc"
@@ -8999,3 +8999,219 @@ msgstr "Số lượng khách hàng tiềm năng theo từng cơ sở"
 #. Sao Việt: Lead page tab with the customer's Chatwoot conversation
 msgid "Messages"
 msgstr "Tin nhắn"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Qualified"
+msgstr "Đủ thông tin"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Contacted"
+msgstr "Đang tư vấn"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Trial Booked"
+msgstr "Hẹn học thử / test"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Nurture"
+msgstr "Nuôi dưỡng"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Unqualified"
+msgstr "Không phù hợp"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Junk"
+msgstr "Rác / Spam"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Deposit Paid"
+msgstr "Đã đặt cọc"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Mobile No"
+msgstr "Số điện thoại"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Existing Student"
+msgstr "Học viên cũ cần hỗ trợ"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Spam"
+msgstr "Spam"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Schedule Mismatch"
+msgstr "Lịch học không phù hợp"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Location Too Far"
+msgstr "Chi nhánh xa"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Postponed"
+msgstr "Hoãn sang khóa sau"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Pricing"
+msgstr "Học phí cao"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Competition"
+msgstr "Chọn trung tâm khác"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Budget Constraints"
+msgstr "Chưa đủ ngân sách"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Missing Features"
+msgstr "Khóa học chưa đáp ứng nhu cầu"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Long Sales Cycle"
+msgstr "Tư vấn kéo dài, khách không còn quan tâm"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "No Decision-Maker"
+msgstr "Không phải người quyết định"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Unresponsive Prospect"
+msgstr "Không liên lạc được"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Poor Fit"
+msgstr "Không phù hợp với khóa học"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Course Interest"
+msgstr "Khóa quan tâm"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Branch"
+msgstr "Chi nhánh"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Hotness"
+msgstr "Độ nóng"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Data Quality"
+msgstr "Chất lượng dữ liệu"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "AI Intent"
+msgstr "Ý định (AI)"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "AI Hotness"
+msgstr "Độ nóng (AI)"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Learner"
+msgstr "Người học"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Learner Age"
+msgstr "Tuổi người học"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Preferred Shift"
+msgstr "Ca học mong muốn"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Level Test"
+msgstr "Kết quả test trình độ"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Level Test: To Review"
+msgstr "Test trình độ: cần ôn"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Voucher Code"
+msgstr "Mã ưu đãi"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Campaign"
+msgstr "Chiến dịch"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Referral Code"
+msgstr "Mã giới thiệu"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Referred By Code"
+msgstr "Mã người giới thiệu"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Referred By"
+msgstr "Người giới thiệu"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Chatwoot Contact ID"
+msgstr "ID liên hệ Chatwoot"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Trial Date"
+msgstr "Ngày học thử"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Enrolled Course"
+msgstr "Khóa đăng ký"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Class"
+msgstr "Lớp khai giảng"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Class Start Date"
+msgstr "Ngày khai giảng"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Tuition Fee"
+msgstr "Học phí"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Promotion"
+msgstr "Ưu đãi"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Discount"
+msgstr "Giảm giá"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Final Fee"
+msgstr "Học phí sau ưu đãi"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Deposit"
+msgstr "Tiền cọc"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Deposit Date"
+msgstr "Ngày đặt cọc"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Paid"
+msgstr "Đã đóng"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Balance Due"
+msgstr "Còn phải đóng"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Payment Due Date"
+msgstr "Hạn đóng phí"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Student"
+msgstr "Học viên"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Registration"
+msgstr "Đăng ký học"
+
+#. mmm_custom: customer lifecycle (D-116, D-117)
+msgid "Fee"
+msgstr "Học phí"

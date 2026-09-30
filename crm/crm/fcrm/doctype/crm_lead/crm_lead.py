@@ -419,15 +419,16 @@ class CRMLead(Document):
 	@staticmethod
 	def default_list_data():
 		# Sao Việt: the same context the admin customer dashboard shows (branch, course, source, hotness).
+		# English labels, translated by vi.po like every other column (D-116).
 		columns = [
 			{"label": "Full Name", "type": "Data", "key": "lead_name", "width": "12rem"},
-			{"label": "Chi nhánh", "type": "Link", "key": "territory", "options": "CRM Territory", "width": "9rem"},
-			{"label": "Khóa quan tâm", "type": "Data", "key": "course_interest", "width": "12rem"},
+			{"label": "Territory", "type": "Link", "key": "territory", "options": "CRM Territory", "width": "9rem"},
+			{"label": "Course Interest", "type": "Data", "key": "course_interest", "width": "12rem"},
 			{"label": "Source", "type": "Link", "key": "source", "options": "CRM Lead Source", "width": "8rem"},
-			{"label": "Độ nóng", "type": "Select", "key": "ai_hotness", "width": "6rem"},
+			{"label": "Hotness", "type": "Select", "key": "ai_hotness", "width": "6rem"},
 			{"label": "Status", "type": "Link", "options": "CRM Lead Status", "key": "status", "width": "8rem"},
 			{"label": "Mobile No.", "type": "Data", "key": "mobile_no", "width": "10rem"},
-			{"label": "Phụ trách", "type": "Link", "options": "User", "key": "lead_owner", "width": "10rem"},
+			{"label": "Owner", "type": "Link", "options": "User", "key": "lead_owner", "width": "10rem"},
 			{"label": "Last Modified", "type": "Datetime", "key": "modified", "width": "8rem"},
 		]
 		rows = [
@@ -457,7 +458,7 @@ class CRMLead(Document):
 		return {
 			"column_field": "status",
 			"title_field": "lead_name",
-			"kanban_fields": '["organization", "email", "mobile_no", "_assign", "modified"]',
+			"kanban_fields": '["course_interest", "territory", "mobile_no", "_assign", "modified"]',
 		}
 
 
