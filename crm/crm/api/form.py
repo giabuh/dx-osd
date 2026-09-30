@@ -155,10 +155,11 @@ def _default_status(document_type: str) -> str | None:
 	"""The status a new Lead/Deal defaults to — mirrors the doctype controllers so
 	the hidden 'Status' field is pre-filled with the value the CRM would use."""
 	status_dt = "CRM Lead Status" if document_type == "CRM Lead" else "CRM Deal Status"
-	preferred = "New" if document_type == "CRM Lead" else "Qualification"
-	if frappe.db.exists(status_dt, preferred):
-		return preferred
-	rows = frappe.get_all(status_dt, {"type": "Open"}, pluck="name")
+	preferred = ("New",) if document_type == "CRM Lead" else ("Pending Payment", "Qualification")
+	for status in preferred:
+		if frappe.db.exists(status_dt, status):
+			return status
+	rows = frappe.get_all(status_dt, {"type": "Open"}, pluck="name", order_by="position asc")
 	return rows[0] if rows else None
 
 

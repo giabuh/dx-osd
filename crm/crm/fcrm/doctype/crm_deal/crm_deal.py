@@ -112,10 +112,13 @@ class CRMDeal(Document):
 
 	def validate_status(self):
 		if self.is_new() and not self.status:
-			if frappe.db.exists("CRM Deal Status", "Qualification"):
-				self.status = "Qualification"
+			# D-117: a Deal is a registration record and starts waiting for the fee
+			for status in ("Pending Payment", "Qualification"):
+				if frappe.db.exists("CRM Deal Status", status):
+					self.status = status
+					break
 			else:
-				self.status = frappe.get_all("CRM Deal Status", {"type": "Open"}, pluck="name")[0]
+				self.status = frappe.get_all("CRM Deal Status", {"type": "Open"}, pluck="name", order_by="position asc")[0]
 
 	def set_primary_contact(self, contact=None):
 		if not self.contacts:

@@ -477,8 +477,11 @@ def convert_to_deal(
 	lead = frappe.get_cached_doc("CRM Lead", lead)
 	if frappe.get_cached_value("CRM Lead Status", lead.status, "type") == "Lost":
 		frappe.throw(_("Cannot convert a lead with status {0}").format(lead.status))
-	if frappe.db.exists("CRM Lead Status", "Qualified"):
-		lead.db_set("status", "Qualified")
+	# D-116: a registered Lead is "Converted" (Đã đăng ký); sites without that status keep upstream's "Qualified"
+	for status in ("Converted", "Qualified"):
+		if frappe.db.exists("CRM Lead Status", status):
+			lead.db_set("status", status)
+			break
 	lead.db_set("converted", 1)
 	if lead.sla and frappe.db.exists("CRM Communication Status", "Replied"):
 		lead.db_set("communication_status", "Replied")

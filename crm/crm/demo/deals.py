@@ -25,19 +25,19 @@ def create_demo_deals(lead_names, demo_users):
 	# leads[10] Karen, [11] Leo → 2 lost deals
 	d_alice = convert_to_deal(
 		lead=lead_names[0],
-		deal={"status": "Demo/Making", "deal_value": 120000, "probability": 50, "deal_owner": session_user},
+		deal={"status": "Pending Payment", "deal_value": 120000, "probability": 50, "deal_owner": session_user},
 	)
 	d_david = convert_to_deal(
 		lead=lead_names[3],
-		deal={"status": "Proposal/Quotation", "deal_value": 45000, "probability": 70, "deal_owner": owner_1},
+		deal={"status": "Deposit Paid", "deal_value": 45000, "probability": 80, "deal_owner": owner_1},
 	)
 	d_henry = convert_to_deal(
 		lead=lead_names[7],
-		deal={"status": "Negotiation", "deal_value": 85000, "probability": 60, "deal_owner": owner_2},
+		deal={"status": "Deposit Paid", "deal_value": 85000, "probability": 80, "deal_owner": owner_2},
 	)
 	d_iris = convert_to_deal(
 		lead=lead_names[8],
-		deal={"status": "Qualification", "deal_value": 60000, "probability": 35, "deal_owner": session_user},
+		deal={"status": "Pending Payment", "deal_value": 60000, "probability": 50, "deal_owner": session_user},
 	)
 	d_jack = convert_to_deal(
 		lead=lead_names[9],
@@ -288,19 +288,19 @@ def _create_deal_versions(deal_names, session_user, owner_1, owner_2, now):
 		{
 			"deal": deal_names[4],  # Jack
 			"owner": owner_1,
-			"changed": [["status", "Ready to Close", "Won"]],
+			"changed": [["status", "Deposit Paid", "Won"]],
 			"days_ago": 3,
 		},
 		{
 			"deal": deal_names[5],  # Karen
 			"owner": owner_2,
-			"changed": [["status", "Proposal/Quotation", "Lost"]],
+			"changed": [["status", "Deposit Paid", "Lost"]],
 			"days_ago": 9,
 		},
 		{
 			"deal": deal_names[6],  # Leo
 			"owner": session_user,
-			"changed": [["status", "Demo/Making", "Lost"]],
+			"changed": [["status", "Pending Payment", "Lost"]],
 			"days_ago": 13,
 		},
 	]
