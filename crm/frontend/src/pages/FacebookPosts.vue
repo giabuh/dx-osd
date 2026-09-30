@@ -337,6 +337,33 @@
               </a>
             </div>
 
+            <!-- Facebook Engagement Metrics -->
+            <div
+              v-if="post.status === 'Posted' || post.likes_count || post.comments_count"
+              class="mb-3 p-2 rounded-lg bg-surface-gray-2 border border-outline-gray-2 flex items-center justify-between text-xs text-ink-gray-7 flex-wrap gap-2"
+            >
+              <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1 font-semibold text-blue-600" title="Lượt thích">
+                  <LucideThumbsUp class="size-3.5" />
+                  {{ post.likes_count || 0 }}
+                </span>
+                <span class="flex items-center gap-1 font-semibold text-amber-600" title="Bình luận">
+                  <LucideMessageSquare class="size-3.5" />
+                  {{ post.comments_count || 0 }}
+                </span>
+                <span v-if="post.leads_count" class="flex items-center gap-1 font-semibold text-emerald-600" title="Khách tiềm năng (Leads)">
+                  <LucideSparkles class="size-3.5" />
+                  {{ post.leads_count }} leads
+                </span>
+              </div>
+              <span
+                v-if="post.ads_recommendation === 'Recommended'"
+                class="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded"
+              >
+                Đề xuất Ads
+              </span>
+            </div>
+
             <!-- Error message if failed -->
             <div
               v-if="post.error_message"
@@ -348,7 +375,7 @@
 
           <!-- Card Actions Footer -->
           <div class="pt-3 border-t border-outline-gray-1 flex items-center justify-between gap-1 flex-wrap">
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 flex-wrap">
               <!-- Approve button if Pending -->
               <Button
                 v-if="post.status === 'Pending Approval'"
@@ -381,6 +408,30 @@
               >
                 {{ __('Đăng ngay') }}
               </Button>
+
+              <!-- Sync Comments and Analytics buttons if Posted -->
+              <template v-if="post.status === 'Posted'">
+                <Button
+                  variant="subtle"
+                  size="sm"
+                  :iconLeft="LucideMessageSquare"
+                  :loading="syncingCommentsMap[post.name]"
+                  :title="__('Đồng bộ bình luận từ Facebook Fanpage')"
+                  @click="syncPostComments(post)"
+                >
+                  {{ __('Đồng bộ BL') }}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  :iconLeft="LucideBarChart2"
+                  :loading="syncingAnalyticsMap[post.name]"
+                  :title="__('Cập nhật số liệu tương tác')"
+                  @click="syncPostAnalytics(post)"
+                >
+                  <span class="hidden sm:inline">{{ __('Số liệu') }}</span>
+                </Button>
+              </template>
             </div>
 
             <div class="flex items-center gap-1">
@@ -432,7 +483,7 @@
               <textarea
                 v-model="generateForm.boss_directive"
                 rows="3"
-                class="w-full rounded-lg border border-outline-gray-2 p-2.5 text-xs text-ink-gray-9 focus:ring-1 focus:ring-blue-500"
+                class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 :placeholder="__('Ví dụ: Chiến dịch tuyển sinh tháng 10 - Giảm 30% học phí khóa bơi cho bé, tặng 1 buổi học thử Tiếng Anh cho phụ huynh đăng ký sớm...')"
               />
               <p class="text-[11px] text-ink-gray-5 mt-1">
@@ -502,7 +553,7 @@
               <textarea
                 v-model="rollbackForm.new_directive"
                 rows="3"
-                class="w-full rounded-lg border border-outline-gray-2 p-2.5 text-xs text-ink-gray-9 focus:ring-1 focus:ring-amber-500"
+                class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2.5 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none"
                 :placeholder="__('Ví dụ: Đổi chủ đề tuần này sang Tuần lễ vàng học bơi sinh tồn...')"
               />
             </div>
@@ -526,158 +577,433 @@
       </template>
     </Dialog>
 
-    <!-- MODAL 3: XEM & SỬA BÀI VIẾT (EDIT & AI REWRITE) -->
-    <Dialog v-model:open="showEditModal" :size="'2xl'">
+    <!-- MODAL 3: XEM & SỬA BÀI VIẾT (EDIT & AI REWRITE & COMMENTS) -->
+    <Dialog v-model:open="showEditModal" :size="'4xl'">
       <template #body>
-        <div class="bg-surface-elevation-1 px-5 py-5 sm:p-6" v-if="editingPost">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-              <Badge
-                :label="getStatusLabel(editingPost.status)"
-                :theme="getStatusTheme(editingPost.status)"
-                variant="subtle"
-              />
-              <h3 class="text-base font-semibold text-ink-gray-9">
-                {{ editingPost.name }} - {{ editingPost.title }}
-              </h3>
+        <div class="bg-surface-elevation-1 flex flex-col max-h-[85vh] overflow-hidden rounded-xl" v-if="editingPost">
+          <!-- Fixed Top Header -->
+          <div class="px-5 pt-4 pb-3 border-b border-outline-gray-2 shrink-0 bg-surface-elevation-1">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <Badge
+                  :label="getStatusLabel(editingPost.status)"
+                  :theme="getStatusTheme(editingPost.status)"
+                  variant="subtle"
+                />
+                <h3 class="text-base font-semibold text-ink-gray-9 truncate max-w-md">
+                  #{{ editingPost.name }} - {{ editingPost.title }}
+                </h3>
+              </div>
+              <div class="flex items-center gap-2">
+                <a
+                  v-if="editingPost.fb_post_url"
+                  :href="editingPost.fb_post_url"
+                  target="_blank"
+                  class="text-xs text-blue-500 hover:underline flex items-center gap-1 font-medium"
+                >
+                  <LucideExternalLink class="size-3" />
+                  {{ __('Facebook') }}
+                </a>
+                <a
+                  :href="'/app/facebook-post/' + editingPost.name"
+                  target="_blank"
+                  class="text-xs text-ink-gray-5 hover:text-ink-gray-8 flex items-center gap-1 font-medium"
+                >
+                  <LucideExternalLink class="size-3" />
+                  Desk
+                </a>
+                <Button variant="ghost" icon="lucide-x" @click="showEditModal = false" />
+              </div>
             </div>
+
+            <!-- Navigation Tabs -->
             <div class="flex items-center gap-2">
-              <a
-                :href="'/app/facebook-post/' + editingPost.name"
-                target="_blank"
-                class="text-xs text-ink-gray-5 hover:text-ink-gray-8 flex items-center gap-1"
+              <button
+                type="button"
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                :class="activeModalTab === 'content' ? 'bg-surface-gray-3 text-ink-gray-9 shadow-xs' : 'text-ink-gray-6 hover:bg-surface-gray-2'"
+                @click="activeModalTab = 'content'"
               >
-                <LucideExternalLink class="size-3" />
-                Mở trong Desk
-              </a>
-              <Button variant="ghost" icon="lucide-x" @click="showEditModal = false" />
+                <LucideEdit class="size-3.5" />
+                <span>{{ __('Nội dung & Thiết lập') }}</span>
+              </button>
+              <button
+                type="button"
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                :class="activeModalTab === 'comments' ? 'bg-surface-gray-3 text-ink-gray-9 shadow-xs' : 'text-ink-gray-6 hover:bg-surface-gray-2'"
+                @click="activeModalTab = 'comments'"
+              >
+                <LucideMessageSquare class="size-3.5" />
+                <span>{{ __('Bình luận Facebook') }}</span>
+                <span
+                  class="px-1.5 py-0.2 rounded-full text-[10px]"
+                  :class="activeModalTab === 'comments' ? 'bg-surface-base text-ink-gray-9 font-bold' : 'bg-surface-gray-2 text-ink-gray-6'"
+                >
+                  {{ editingPost.comments?.length || editingPost.comments_count || 0 }}
+                </span>
+              </button>
+              <button
+                v-if="editingPost.status === 'Posted' || editingPost.fb_post_id"
+                type="button"
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                :class="activeModalTab === 'analytics' ? 'bg-surface-gray-3 text-ink-gray-9 shadow-xs' : 'text-ink-gray-6 hover:bg-surface-gray-2'"
+                @click="activeModalTab = 'analytics'"
+              >
+                <LucideBarChart2 class="size-3.5" />
+                <span>{{ __('Số liệu & Meta Ads') }}</span>
+              </button>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <!-- Left Column: Properties & Schedule -->
-            <div class="space-y-3">
-              <div>
-                <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Tiêu đề') }}</label>
-                <input
-                  v-model="editingPost.title"
-                  type="text"
-                  class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
-                />
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
+          <!-- Scrollable Middle Body -->
+          <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            <!-- TAB 1: NỘI DUNG & THIẾT LẬP -->
+            <div v-show="activeModalTab === 'content'" class="space-y-4 text-xs">
+              <!-- Top Metadata & Scheduling Card -->
+              <div class="p-3.5 rounded-xl border border-outline-gray-2 bg-surface-gray-1 space-y-2.5">
                 <div>
-                  <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Khóa học') }}</label>
-                  <select
-                    v-model="editingPost.course"
-                    class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
-                  >
-                    <option value="Tiếng Anh">Tiếng Anh</option>
-                    <option value="Bơi lội">Bơi lội</option>
-                    <option value="Toán tư duy">Toán tư duy</option>
-                    <option value="Chung">Chung</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Thứ trong tuần') }}</label>
-                  <select
-                    v-model="editingPost.day_of_week"
-                    class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
-                  >
-                    <option value="Thứ Hai">Thứ Hai</option>
-                    <option value="Thứ Ba">Thứ Ba</option>
-                    <option value="Thứ Tư">Thứ Tư</option>
-                    <option value="Thứ Năm">Thứ Năm</option>
-                    <option value="Thứ Sáu">Thứ Sáu</option>
-                    <option value="Thứ Bảy">Thứ Bảy</option>
-                    <option value="Chủ Nhật">Chủ Nhật</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Thời gian đăng') }}</label>
+                  <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Tiêu đề bài viết') }}</label>
                   <input
-                    v-model="editingPost.scheduled_time"
+                    v-model="editingPost.title"
                     type="text"
-                    placeholder="YYYY-MM-DD HH:MM:SS"
-                    class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
+                    class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    placeholder="Tiêu đề bài viết..."
                   />
                 </div>
-                <div>
-                  <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Trạng thái') }}</label>
-                  <select
-                    v-model="editingPost.status"
-                    class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
-                  >
-                    <option value="Draft">Draft (Bản nháp)</option>
-                    <option value="Pending Approval">Pending Approval (Chờ duyệt)</option>
-                    <option value="Scheduled">Scheduled (Đã lên lịch)</option>
-                    <option value="Posted">Posted (Đã đăng)</option>
-                    <option value="Failed">Failed (Lỗi)</option>
-                    <option value="Cancelled">Cancelled (Đã hủy)</option>
-                  </select>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div>
+                    <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Khóa học') }}</label>
+                    <select
+                      v-model="editingPost.course"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option v-for="c in availableCourses" :key="c.name" :value="c.name">
+                        {{ c.name }} - {{ c.product_name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Thứ trong tuần') }}</label>
+                    <select
+                      v-model="editingPost.day_of_week"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="Thứ Hai">Thứ Hai</option>
+                      <option value="Thứ Ba">Thứ Ba</option>
+                      <option value="Thứ Tư">Thứ Tư</option>
+                      <option value="Thứ Năm">Thứ Năm</option>
+                      <option value="Thứ Sáu">Thứ Sáu</option>
+                      <option value="Thứ Bảy">Thứ Bảy</option>
+                      <option value="Chủ Nhật">Chủ Nhật</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Thời gian đăng') }}</label>
+                    <input
+                      v-model="editingPost.scheduled_time"
+                      type="text"
+                      placeholder="YYYY-MM-DD HH:MM:SS"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Trạng thái') }}</label>
+                    <select
+                      v-model="editingPost.status"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="Draft">Draft (Bản nháp)</option>
+                      <option value="Pending Approval">Pending Approval (Chờ duyệt)</option>
+                      <option value="Scheduled">Scheduled (Đã lên lịch)</option>
+                      <option value="Posted">Posted (Đã đăng)</option>
+                      <option value="Failed">Failed (Lỗi)</option>
+                      <option value="Cancelled">Cancelled (Đã hủy)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <!-- Content Adjustment Panel -->
-              <div class="p-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 space-y-2">
-                <div class="flex items-center gap-1.5 font-medium text-xs text-ink-gray-7">
-                  <LucideEdit class="size-3.5 text-ink-gray-6" />
-                  <span>{{ __('Gợi ý điều chỉnh') }}</span>
+              <!-- Balanced 2-Column Split: Content & Banner -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Left Column: Caption & AI Feedback Adjustment -->
+                <div class="space-y-3 flex flex-col justify-between">
+                  <div>
+                    <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Nội dung bài viết (Caption)') }}</label>
+                    <textarea
+                      v-model="editingPost.content"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-3 text-xs font-sans leading-relaxed focus:ring-1 focus:ring-blue-500 focus:outline-none h-[220px] resize-y"
+                      placeholder="Nhập nội dung bài viết..."
+                    />
+                  </div>
+
+                  <!-- Content Adjustment Panel -->
+                  <div class="p-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 space-y-2">
+                    <div class="flex items-center gap-1.5 font-medium text-xs text-ink-gray-7">
+                      <LucideEdit class="size-3.5 text-ink-gray-6" />
+                      <span>{{ __('Gợi ý điều chỉnh cho AI') }}</span>
+                    </div>
+                    <input
+                      v-model="editingPost.ai_feedback"
+                      type="text"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Ví dụ: Thêm ưu đãi giảm 500k, viết ngắn gọn hơn..."
+                    />
+                    <div class="flex items-center gap-2">
+                      <Button
+                        variant="subtle"
+                        size="sm"
+                        :iconLeft="LucideRefreshCcw"
+                        :loading="rewritingContent"
+                        @click="handleAiRewriteContent"
+                      >
+                        {{ __('Viết lại nội dung') }}
+                      </Button>
+                      <Button
+                        variant="subtle"
+                        size="sm"
+                        :iconLeft="LucideImage"
+                        :loading="generatingBanner"
+                        @click="handleAiGenerateBanner"
+                      >
+                        {{ __('Tạo lại banner') }}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <input
-                  v-model="editingPost.ai_feedback"
-                  type="text"
-                  class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs bg-white"
-                  placeholder="Ví dụ: Thêm ưu đãi giảm 500k, viết ngắn gọn hơn..."
-                />
+
+                <!-- Right Column: Banner Display & Actions -->
+                <div class="space-y-2 flex flex-col">
+                  <div class="flex items-center justify-between">
+                    <label class="font-medium text-ink-gray-8">{{ __('Banner bài viết') }}</label>
+                    <button
+                      v-if="editingPost.image"
+                      type="button"
+                      class="text-[11px] text-blue-500 hover:underline flex items-center gap-1 font-medium"
+                      @click="openImagePreview(editingPost.image)"
+                    >
+                      <LucideExternalLink class="size-3" />
+                      {{ __('Xem kích thước gốc') }}
+                    </button>
+                  </div>
+
+                  <div
+                    class="flex-1 min-h-[300px] rounded-xl overflow-hidden border border-outline-gray-2 bg-surface-gray-2 flex items-center justify-center p-2 cursor-pointer hover:border-blue-400 transition-colors group relative"
+                    @click="editingPost.image && openImagePreview(editingPost.image)"
+                    :title="editingPost.image ? 'Bấm để xem ảnh phóng to' : ''"
+                  >
+                    <template v-if="editingPost.image">
+                      <img
+                        :src="editingPost.image"
+                        class="w-full h-auto max-h-[320px] object-contain rounded-lg mx-auto"
+                        alt="Banner Facebook"
+                      />
+                      <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1.5 rounded-xl">
+                        <LucideExternalLink class="size-4" />
+                        <span>{{ __('Bấm để xem ảnh phóng to') }}</span>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="text-center py-12 text-ink-gray-5">
+                        <LucideImage class="size-10 mx-auto text-ink-gray-4 mb-2" />
+                        <p class="text-xs">{{ __('Chưa có banner đính kèm') }}</p>
+                        <Button
+                          variant="subtle"
+                          size="sm"
+                          class="mt-2"
+                          :loading="generatingBanner"
+                          @click.stop="handleAiGenerateBanner"
+                        >
+                          {{ __('Tạo banner bằng AI') }}
+                        </Button>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: BÌNH LUẬN FACEBOOK -->
+            <div v-show="activeModalTab === 'comments'" class="space-y-4">
+              <div class="flex items-center justify-between bg-surface-gray-1 p-3 rounded-lg border border-outline-gray-1">
+                <div>
+                  <h4 class="text-xs font-semibold text-ink-gray-9 flex items-center gap-1.5">
+                    <LucideMessageSquare class="size-3.5 text-amber-500" />
+                    {{ __('Bình luận từ Facebook Fanpage') }} ({{ editingPost.comments?.length || 0 }})
+                  </h4>
+                  <p class="text-[11px] text-ink-gray-5">
+                    {{ __('Tự động phân loại: Quan tâm khóa học, Hỏi học phí / lịch, Tích cực, Spam / Khác') }}
+                  </p>
+                </div>
+                <Button
+                  variant="solid"
+                  size="sm"
+                  :iconLeft="LucideRefreshCcw"
+                  :loading="syncingCommentsMap[editingPost.name]"
+                  @click="syncPostComments(editingPost)"
+                >
+                  {{ __('Đồng bộ bình luận từ Facebook') }}
+                </Button>
+              </div>
+
+              <!-- Comments List -->
+              <div v-if="editingPost.comments && editingPost.comments.length" class="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
+                <div
+                  v-for="comment in editingPost.comments"
+                  :key="comment.name || comment.comment_id"
+                  class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 hover:bg-surface-gray-2 transition-colors flex flex-col gap-1.5 shadow-xs"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold uppercase">
+                        {{ (comment.from_name || 'K')[0] }}
+                      </div>
+                      <span class="text-xs font-semibold text-ink-gray-9">{{ comment.from_name || 'Khách Facebook' }}</span>
+                      <span v-if="comment.comment_time" class="text-[11px] text-ink-gray-4">
+                        {{ formatDateTime(comment.comment_time) }}
+                      </span>
+                    </div>
+                    <Badge
+                      :label="comment.sentiment || 'Chưa phân loại'"
+                      :theme="getSentimentTheme(comment.sentiment)"
+                      variant="subtle"
+                    />
+                  </div>
+                  <div class="text-xs text-ink-gray-8 pl-8 whitespace-pre-wrap font-sans">
+                    {{ comment.comment_message }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div
+                v-else
+                class="py-12 text-center rounded-xl border border-dashed border-outline-gray-2 bg-surface-gray-1"
+              >
+                <LucideMessageSquare class="size-8 mx-auto text-ink-gray-4 mb-2" />
+                <p class="text-xs text-ink-gray-7 font-medium">
+                  {{ __('Chưa có bình luận nào được lưu cho bài viết này.') }}
+                </p>
+                <p class="text-[11px] text-ink-gray-5 mt-0.5 mb-3">
+                  {{ __('Bấm nút "Đồng bộ bình luận từ Facebook" để tải toàn bộ phản hồi mới nhất của phụ huynh/học viên.') }}
+                </p>
+                <Button
+                  v-if="editingPost.status === 'Posted'"
+                  variant="subtle"
+                  size="sm"
+                  :iconLeft="LucideRefreshCcw"
+                  :loading="syncingCommentsMap[editingPost.name]"
+                  @click="syncPostComments(editingPost)"
+                >
+                  {{ __('Tải bình luận ngay') }}
+                </Button>
+              </div>
+            </div>
+
+            <!-- TAB 3: SỐ LIỆU TƯƠNG TÁC & META ADS -->
+            <div v-show="activeModalTab === 'analytics'" class="space-y-4">
+              <div class="flex items-center justify-between bg-surface-gray-1 p-3 rounded-lg border border-outline-gray-1">
+                <div>
+                  <h4 class="text-xs font-semibold text-ink-gray-9">{{ __('Hiệu quả tương tác Facebook Fanpage') }}</h4>
+                  <p class="text-[11px] text-ink-gray-5" v-if="editingPost.last_analytics_sync">
+                    {{ __('Đồng bộ lần cuối:') }} {{ formatDateTime(editingPost.last_analytics_sync) }}
+                  </p>
+                </div>
                 <div class="flex items-center gap-2">
                   <Button
                     variant="subtle"
                     size="sm"
-                    :iconLeft="LucideRefreshCcw"
-                    :loading="rewritingContent"
-                    @click="handleAiRewriteContent"
+                    :iconLeft="LucideBarChart2"
+                    :loading="syncingAnalyticsMap[editingPost.name]"
+                    @click="syncPostAnalytics(editingPost)"
                   >
-                    {{ __('Viết lại nội dung') }}
+                    {{ __('Cập nhật số liệu') }}
                   </Button>
-                  <Button
+                  <a
+                    v-if="editingPost.fb_post_url"
+                    :href="editingPost.fb_post_url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline px-2 py-1 font-medium"
+                  >
+                    <LucideExternalLink class="size-3" />
+                    {{ __('Xem trên Facebook') }}
+                  </a>
+                </div>
+              </div>
+
+              <!-- Metric KPI Cards -->
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
+                  <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
+                    <LucideThumbsUp class="size-3 text-blue-500" />
+                    {{ __('Lượt thích') }}
+                  </div>
+                  <div class="text-lg font-bold text-ink-gray-9">{{ editingPost.likes_count || 0 }}</div>
+                </div>
+                <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
+                  <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
+                    <LucideMessageSquare class="size-3 text-amber-500" />
+                    {{ __('Bình luận') }}
+                  </div>
+                  <div class="text-lg font-bold text-ink-gray-9">{{ editingPost.comments_count || 0 }}</div>
+                </div>
+                <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
+                  <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
+                    <LucideShare2 class="size-3 text-purple-500" />
+                    {{ __('Chia sẻ') }}
+                  </div>
+                  <div class="text-lg font-bold text-ink-gray-9">{{ editingPost.shares_count || 0 }}</div>
+                </div>
+                <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
+                  <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
+                    <LucideUsers class="size-3 text-cyan-500" />
+                    {{ __('Tiếp cận') }}
+                  </div>
+                  <div class="text-lg font-bold text-ink-gray-9">{{ editingPost.reach_count || 0 }}</div>
+                </div>
+                <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
+                  <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
+                    <LucideSparkles class="size-3 text-emerald-500" />
+                    {{ __('Leads') }}
+                  </div>
+                  <div class="text-lg font-bold text-emerald-600">{{ editingPost.leads_count || 0 }}</div>
+                </div>
+              </div>
+
+              <!-- Meta Ads Recommendation card -->
+              <div class="p-4 rounded-xl border border-outline-gray-2 bg-surface-gray-1 space-y-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <LucideSparkles class="size-4 text-ink-gray-7" />
+                    <span class="text-xs font-semibold text-ink-gray-9">{{ __('Đánh giá tiềm năng chạy Meta Ads') }}</span>
+                  </div>
+                  <Badge
+                    :label="editingPost.ads_recommendation || 'Not Evaluated'"
+                    :theme="editingPost.ads_recommendation === 'Recommended' ? 'green' : (editingPost.ads_recommendation === 'Review' ? 'amber' : 'gray')"
                     variant="subtle"
-                    size="sm"
-                    :iconLeft="LucideImage"
-                    :loading="generatingBanner"
-                    @click="handleAiGenerateBanner"
-                  >
-                    {{ __('Tạo lại banner') }}
-                  </Button>
+                  />
                 </div>
+                <p class="text-xs text-ink-gray-6">
+                  <span v-if="editingPost.ads_recommendation === 'Recommended'">
+                    🎉 <strong>Khuyên dùng:</strong> Bài viết đạt tương tác tự nhiên tốt và có khách hàng quan tâm. Nên phân bổ ngân sách chạy Ads chuyển đổi / tin nhắn để tối ưu chi phí CPL.
+                  </span>
+                  <span v-else-if="editingPost.ads_recommendation === 'Review'">
+                    ⚖️ <strong>Cân nhắc:</strong> Bài viết bắt đầu có tương tác nhưng cần theo dõi thêm hoặc chỉnh sửa lại lời kêu gọi hành động (CTA) trước khi scale Ads.
+                  </span>
+                  <span v-else>
+                    ℹ️ Chưa đủ dữ liệu tương tác để đánh giá hoặc bài viết có điểm tương tác thấp. Nên kiểm tra nội dung và giờ đăng.
+                  </span>
+                </p>
               </div>
-
-              <!-- Attached Banner preview -->
-              <div v-if="editingPost.image">
-                <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Banner đính kèm') }}</label>
-                <div class="rounded-lg overflow-hidden border border-outline-gray-1 max-h-40">
-                  <img :src="editingPost.image" class="w-full h-full object-cover" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Column: Content Caption -->
-            <div class="space-y-2 flex flex-col h-full">
-              <label class="block font-medium text-ink-gray-8">{{ __('Nội dung bài viết (Caption)') }}</label>
-              <textarea
-                v-model="editingPost.content"
-                rows="14"
-                class="flex-1 w-full rounded-lg border border-outline-gray-2 p-2.5 text-xs text-ink-gray-9 font-sans leading-relaxed resize-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Nhập nội dung bài viết..."
-              />
             </div>
           </div>
 
-          <div class="mt-6 flex items-center justify-between border-t border-outline-gray-1 pt-3">
+          <!-- Fixed Bottom Footer -->
+          <div class="px-5 py-3 border-t border-outline-gray-2 flex items-center justify-between shrink-0 bg-surface-elevation-1">
             <div class="flex items-center gap-2">
               <Button
                 v-if="['Pending Approval', 'Scheduled', 'Draft'].includes(editingPost.status)"
@@ -695,6 +1021,7 @@
                 @click="showEditModal = false"
               />
               <Button
+                v-if="activeModalTab === 'content'"
                 variant="solid"
                 :label="__('Lưu thay đổi')"
                 :loading="savingPost"
@@ -733,7 +1060,7 @@
               <input
                 v-model="createForm.title"
                 type="text"
-                class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
+                class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 placeholder="Ví dụ: Khai giảng lớp Tiếng Anh tháng 10..."
               />
             </div>
@@ -743,19 +1070,18 @@
                 <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Khóa học') }} *</label>
                 <select
                   v-model="createForm.course"
-                  class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
+                  class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="Tiếng Anh">Tiếng Anh</option>
-                  <option value="Bơi lội">Bơi lội</option>
-                  <option value="Toán tư duy">Toán tư duy</option>
-                  <option value="Chung">Chung</option>
+                  <option v-for="c in availableCourses" :key="c.name" :value="c.name">
+                    {{ c.name }} - {{ c.product_name }}
+                  </option>
                 </select>
               </div>
               <div>
                 <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Thứ trong tuần') }}</label>
                 <select
                   v-model="createForm.day_of_week"
-                  class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
+                  class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
                   <option value="Thứ Hai">Thứ Hai</option>
                   <option value="Thứ Ba">Thứ Ba</option>
@@ -774,7 +1100,7 @@
                 v-model="createForm.scheduled_time"
                 type="text"
                 placeholder="YYYY-MM-DD HH:MM:SS"
-                class="w-full rounded-lg border border-outline-gray-2 p-2 text-xs"
+                class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
@@ -783,7 +1109,7 @@
               <textarea
                 v-model="createForm.content"
                 rows="6"
-                class="w-full rounded-lg border border-outline-gray-2 p-2.5 text-xs text-ink-gray-9 leading-relaxed"
+                class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2.5 text-xs leading-relaxed focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 placeholder="Nhập nội dung bài viết..."
               />
             </div>
@@ -807,7 +1133,7 @@
     </Dialog>
 
     <!-- IMAGE PREVIEW MODAL -->
-    <Dialog v-model:open="showImageModal" :size="'3xl'">
+    <Dialog v-model:open="showImageModal" :size="'4xl'">
       <template #body>
         <div class="p-4 bg-surface-elevation-1 flex flex-col items-center">
           <div class="w-full flex justify-end mb-2">
@@ -840,14 +1166,29 @@ import LucidePlus from '~icons/lucide/plus'
 import LucideEdit from '~icons/lucide/edit'
 import LucideTrash2 from '~icons/lucide/trash-2'
 import LucideExternalLink from '~icons/lucide/external-link'
+import LucideMessageSquare from '~icons/lucide/message-square'
+import LucideBarChart2 from '~icons/lucide/bar-chart-2'
+import LucideThumbsUp from '~icons/lucide/thumbs-up'
+import LucideShare2 from '~icons/lucide/share-2'
+import LucideUsers from '~icons/lucide/users'
+import LucideSparkles from '~icons/lucide/sparkles'
 
 // State
 const posts = ref([])
 const loading = ref(false)
+const availableCourses = ref([
+  { name: 'DH-PTS', product_name: 'Photoshop cơ bản' },
+  { name: 'TE-ROBO', product_name: 'Robotics STEM' },
+  { name: 'VP-EXCEL', product_name: 'Tin học văn phòng & Excel' },
+  { name: 'LT-PY', product_name: 'Python cơ bản' },
+  { name: 'AI-BASIC', product_name: 'AI cho người mới bắt đầu' },
+  { name: 'MKT-FB', product_name: 'Quảng cáo Facebook Ads' },
+  { name: 'Chung', product_name: 'Tuyển sinh chung EduFlow' },
+])
 const weeklyMatrix = ref([
-  { day: 0, day_of_week: 'Thứ Hai', time: '08:30:00', course: 'Tiếng Anh', default_title: 'Khai giảng Tiếng Anh giao tiếp' },
-  { day: 2, day_of_week: 'Thứ Tư', time: '11:30:00', course: 'Toán tư duy', default_title: 'Phát triển tư duy logic' },
-  { day: 4, day_of_week: 'Thứ Sáu', time: '19:30:00', course: 'Bơi lội', default_title: 'Khóa bơi sinh tồn cho bé' },
+  { day: 0, day_of_week: 'Thứ Hai', time: '08:30:00', course: 'DH-PTS', default_title: 'Khóa học Photoshop thực chiến' },
+  { day: 2, day_of_week: 'Thứ Tư', time: '11:30:00', course: 'VP-EXCEL', default_title: 'Làm chủ Excel & Báo cáo tự động' },
+  { day: 4, day_of_week: 'Thứ Sáu', time: '19:30:00', course: 'TE-ROBO', default_title: 'Khai giảng Robotics STEM cho bé' },
   { day: 6, day_of_week: 'Chủ Nhật', time: '09:00:00', course: 'Chung', default_title: 'Tuyển sinh & Học bổng EduFlow' },
 ])
 
@@ -874,6 +1215,8 @@ const savingPost = ref(false)
 const creatingPost = ref(false)
 const rewritingContent = ref(false)
 const generatingBanner = ref(false)
+const syncingCommentsMap = ref({})
+const syncingAnalyticsMap = ref({})
 
 const batchActions = computed(() => [
   {
@@ -902,6 +1245,7 @@ const showEditModal = ref(false)
 const showCreateModal = ref(false)
 const showImageModal = ref(false)
 const previewImageUrl = ref('')
+const activeModalTab = ref('content') // 'content', 'comments', 'analytics'
 
 // Form states
 const generateForm = ref({ boss_directive: '' })
@@ -909,7 +1253,7 @@ const rollbackForm = ref({ new_directive: '' })
 const editingPost = ref(null)
 const createForm = ref({
   title: '',
-  course: 'Tiếng Anh',
+  course: 'DH-PTS',
   day_of_week: 'Thứ Hai',
   scheduled_time: '',
   content: '',
@@ -936,7 +1280,27 @@ function getCountForFilter(key) {
   return posts.value.filter(p => p.status === key).length
 }
 
-// Fetch posts list
+// Fetch posts list & courses
+async function fetchCourses() {
+  try {
+    const res = await call('frappe.client.get_list', {
+      doctype: 'CRM Product',
+      fields: ['name', 'product_name'],
+      limit_page_length: 60,
+    })
+    if (res && res.length) {
+      const map = new Map()
+      res.forEach(item => map.set(item.name, item))
+      availableCourses.value.forEach(item => {
+        if (!map.has(item.name)) map.set(item.name, item)
+      })
+      availableCourses.value = Array.from(map.values())
+    }
+  } catch (error) {
+    console.error('Lỗi tải danh mục khóa học:', error)
+  }
+}
+
 async function fetchPosts() {
   loading.value = true
   try {
@@ -957,6 +1321,13 @@ async function fetchPosts() {
         'fb_post_url',
         'content',
         'image',
+        'likes_count',
+        'comments_count',
+        'shares_count',
+        'reach_count',
+        'leads_count',
+        'ads_recommendation',
+        'last_analytics_sync',
         'error_message',
         'modified',
       ],
@@ -1000,6 +1371,25 @@ function getSlotCardClass(slot) {
 // Badges & Themes
 function getCourseBadgeClass(course) {
   switch (course) {
+    case 'DH-PTS':
+    case 'DH-PTS-NC':
+    case 'DH-AI':
+      return 'bg-purple-100 text-purple-800'
+    case 'TE-ROBO':
+      return 'bg-amber-100 text-amber-800'
+    case 'VP-EXCEL':
+    case 'KT-EXCEL':
+      return 'bg-emerald-100 text-emerald-800'
+    case 'LT-PY':
+    case 'CNTT-PY':
+    case 'LT-WEB':
+      return 'bg-blue-100 text-blue-800'
+    case 'AI-BASIC':
+    case 'AI-N8N':
+    case 'AI-VIBE':
+      return 'bg-indigo-100 text-indigo-800'
+    case 'MKT-FB':
+      return 'bg-rose-100 text-rose-800'
     case 'Tiếng Anh':
       return 'bg-blue-100 text-blue-800'
     case 'Bơi lội':
@@ -1189,9 +1579,91 @@ async function deletePost(post) {
 }
 
 // Edit & AI Rewrite Handlers
-function openEditModal(post) {
+async function openEditModal(post) {
   editingPost.value = JSON.parse(JSON.stringify(post))
+  activeModalTab.value = 'content'
   showEditModal.value = true
+  try {
+    const fullDoc = await call('frappe.client.get', {
+      doctype: 'Facebook Post',
+      name: post.name,
+    })
+    if (fullDoc) {
+      editingPost.value = fullDoc
+      if (fullDoc.course && !availableCourses.value.find(c => c.name === fullDoc.course)) {
+        availableCourses.value.push({ name: fullDoc.course, product_name: fullDoc.course })
+      }
+    }
+  } catch (error) {
+    console.error('Lỗi tải chi tiết bài viết:', error)
+  }
+}
+
+// Sync Comments & Analytics Handlers
+async function syncPostComments(post) {
+  if (!post || !post.name) return
+  syncingCommentsMap.value[post.name] = true
+  try {
+    const res = await call('mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.sync_post_comments', {
+      post_name: post.name,
+    })
+    if (res && res.status === 'success') {
+      toast.success ? toast.success(`Đã đồng bộ ${res.comments_count} bình luận từ Facebook!`) : toast.info(`Đã đồng bộ ${res.comments_count} bình luận!`)
+      if (editingPost.value && editingPost.value.name === post.name) {
+        editingPost.value.comments = res.comments
+        editingPost.value.comments_count = res.comments_count
+      }
+      const p = posts.value.find(x => x.name === post.name)
+      if (p) {
+        p.comments_count = res.comments_count
+      }
+    }
+  } catch (error) {
+    console.error('Lỗi đồng bộ bình luận:', error)
+    toast.error ? toast.error('Lỗi đồng bộ bình luận: ' + (error.message || error)) : null
+  } finally {
+    syncingCommentsMap.value[post.name] = false
+  }
+}
+
+async function syncPostAnalytics(post) {
+  if (!post || !post.name) return
+  syncingAnalyticsMap.value[post.name] = true
+  try {
+    const res = await call('mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.sync_post_analytics', {
+      post_name: post.name,
+    })
+    if (res && res.status === 'success') {
+      toast.success ? toast.success('Đã cập nhật số liệu tương tác từ Facebook!') : toast.info('Đã cập nhật số liệu!')
+      if (editingPost.value && editingPost.value.name === post.name) {
+        const fullDoc = await call('frappe.client.get', {
+          doctype: 'Facebook Post',
+          name: post.name,
+        })
+        if (fullDoc) editingPost.value = fullDoc
+      }
+      await fetchPosts()
+    }
+  } catch (error) {
+    console.error('Lỗi cập nhật số liệu:', error)
+    toast.error ? toast.error('Lỗi cập nhật số liệu: ' + (error.message || error)) : null
+  } finally {
+    syncingAnalyticsMap.value[post.name] = false
+  }
+}
+
+function getSentimentTheme(sentiment) {
+  switch (sentiment) {
+    case 'Quan tâm khóa học':
+      return 'blue'
+    case 'Hỏi học phí / lịch':
+      return 'amber'
+    case 'Tích cực':
+      return 'green'
+    case 'Spam / Khác':
+    default:
+      return 'gray'
+  }
 }
 
 async function savePostChanges() {
@@ -1292,7 +1764,7 @@ async function handleAiGenerateBanner() {
 function openCreateModal() {
   createForm.value = {
     title: '',
-    course: 'Tiếng Anh',
+    course: availableCourses.value[0]?.name || 'DH-PTS',
     day_of_week: 'Thứ Hai',
     scheduled_time: '',
     content: '',
@@ -1349,5 +1821,6 @@ function openImagePreview(url) {
 
 onMounted(() => {
   fetchPosts()
+  fetchCourses()
 })
 </script>
