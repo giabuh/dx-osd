@@ -4,11 +4,26 @@ class OnlineStatusTracker
   # Widget pings every 60s, so contacts need a longer presence window
   CONTACT_PRESENCE_DURATION = ENV.fetch('CONTACT_PRESENCE_DURATION', 90).to_i.seconds
 
+  # DX-OSD staff assist: an agent counts as looking at a conversation for this long after the last ping
+  VIEWER_DURATION = 45.seconds
+
   # presence : sorted set with timestamp as the score & object id as value
 
   # obj_type: Contact | User
   def self.update_presence(account_id, obj_type, obj_id)
     ::Redis::Alfred.zadd(presence_key(account_id, obj_type), Time.now.to_i, obj_id)
+  end
+
+  def self.update_conversation_viewer(account_id, conversation_id, user_id)
+    key = format(::Redis::Alfred::CONVERSATION_VIEWERS, account_id: account_id, conversation_id: conversation_id)
+    ::Redis::Alfred.zadd(key, Time.now.to_i, user_id)
+    ::Redis::Alfred.expire(key, VIEWER_DURATION.to_i * 2)
+  end
+
+  # user ids that pinged from this conversation within VIEWER_DURATION (display id, as the API and webhooks use)
+  def self.get_conversation_viewers(account_id, conversation_id)
+    key = format(::Redis::Alfred::CONVERSATION_VIEWERS, account_id: account_id, conversation_id: conversation_id)
+    ::Redis::Alfred.zrangebyscore(key, (Time.zone.now - VIEWER_DURATION).to_i, '+inf').map(&:to_i)
   end
 
   def self.get_presence(account_id, obj_type, obj_id)

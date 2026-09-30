@@ -28,6 +28,13 @@ const getFilteredUnreadCountsRefreshRetryDelay = () =>
   Math.random() * FILTERED_UNREAD_COUNTS_REFRESH_RETRY_JITTER_MS;
 
 class ActionCableConnector extends BaseActionCableConnector {
+  // DX-OSD staff assist: the open conversation while the tab is visible, so the bot knows someone is watching it
+  presenceData() {
+    const conversationId = this.app?.$store.getters.getSelectedChat?.id;
+    if (!conversationId || document.visibilityState !== 'visible') return {};
+    return { conversation_id: conversationId };
+  }
+
   constructor(app, pubsubToken) {
     const { websocketURL = '' } = window.chatwootConfig || {};
     super(app, pubsubToken, websocketURL);

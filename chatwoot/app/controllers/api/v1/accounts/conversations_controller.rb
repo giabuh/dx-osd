@@ -103,6 +103,11 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     head :ok
   end
 
+  # DX-OSD staff assist: agents looking at this conversation right now
+  def viewers
+    render json: { viewers: ::OnlineStatusTracker.get_conversation_viewers(Current.account.id, @conversation.display_id) }
+  end
+
   def toggle_typing_status
     typing_status_manager = ::Conversations::TypingStatusManager.new(@conversation, Current.user, params)
     typing_status_manager.toggle_typing_status

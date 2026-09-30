@@ -604,12 +604,13 @@ const actions = {
 
   updateCustomAttributes: async (
     { commit },
-    { conversationId, customAttributes }
+    { conversationId, customAttributes, merge = false }
   ) => {
     try {
       const response = await ConversationApi.updateCustomAttributes({
         conversationId,
         customAttributes,
+        merge,
       });
       const { custom_attributes } = response.data;
       commit(types.UPDATE_CONVERSATION_CUSTOM_ATTRIBUTES, {

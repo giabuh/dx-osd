@@ -9,8 +9,9 @@ class RoomChannel < ApplicationCable::Channel
     broadcast_presence
   end
 
-  def update_presence
+  def update_presence(data = {})
     update_subscription
+    update_conversation_viewer(data['conversation_id'])
     broadcast_presence
   end
 
@@ -33,6 +34,14 @@ class RoomChannel < ApplicationCable::Channel
     return if @current_account.blank?
 
     ::OnlineStatusTracker.update_presence(@current_account.id, @current_user.class.name, @current_user.id)
+  end
+
+  # DX-OSD staff assist: the dashboard sends the conversation the agent has open (tab visible)
+  def update_conversation_viewer(conversation_id)
+    return if conversation_id.blank? || @current_account.blank? || !@current_user.is_a?(User)
+    return unless @current_account.conversations.exists?(display_id: conversation_id)
+
+    ::OnlineStatusTracker.update_conversation_viewer(@current_account.id, conversation_id.to_i, @current_user.id)
   end
 
   def pubsub_token

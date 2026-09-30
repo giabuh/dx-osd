@@ -39,7 +39,8 @@ target_url = 'http://crm-frappe:8000/api/method/mmm_custom.api.chatwoot_sync'
 Webhook.where(account: account).where("url LIKE ?", '%/mmm_custom.api.chatwoot_sync').where.not(url: target_url).destroy_all
 webhook = Webhook.find_or_initialize_by(account: account, url: target_url)
 # message_created feeds the optional [I] AI agents; conversation_updated tells them a staff member took a conversation
-webhook.subscriptions = ['conversation_created', 'message_created', 'conversation_updated']
+# and carries the assist banner's buttons; conversation_typing_on holds the bot back while a staff member types (D-112)
+webhook.subscriptions = ['conversation_created', 'message_created', 'conversation_updated', 'conversation_typing_on']
 webhook.webhook_type = :account_type
 webhook.secret = SecureRandom.hex(32) if webhook.secret.blank?
 webhook.save!

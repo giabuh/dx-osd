@@ -95,6 +95,13 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
+    def conversation_viewers(self, conversation_id: int) -> list[int]:
+        """Agents looking at the conversation right now (DX-OSD Chatwoot fork, staff assist)."""
+        resp = requests.get(f"{self._base}/conversations/{conversation_id}/viewers", headers=self._headers,
+                            timeout=REQUEST_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json().get("viewers") or []
+
     def list_agents(self) -> list[dict]:
         """List all agents in the account."""
         resp = requests.get(

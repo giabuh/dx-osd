@@ -192,6 +192,7 @@ Rails.application.routes.draw do
               post :toggle_status
               post :toggle_priority
               post :toggle_typing_status
+              get :viewers
               post :update_last_seen
               post :unread
               post :custom_attributes

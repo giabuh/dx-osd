@@ -69,12 +69,14 @@ class TestAgentBotWebhook(unittest.TestCase):
     def test_invalid_json(self):
         self.assertEqual(self.post(None, raw=b"{not json")["status"], "error")
 
-    def test_human_agent_message_silences_the_bot(self):
+    def test_human_agent_message_stops_the_timer_and_refreshes_the_banner(self):
         with patch.object(bot_api_mod, "mark_consultant_replied") as mark:
             self.assertEqual(self.post(incoming(message_type="outgoing", sender_type="user")),
                              {"status": "consultant_replied"})
         mark.assert_called_once_with("5")
-        self.fr.enqueue.assert_not_called()
+        self.fr.enqueue.assert_called_once()
+        self.assertEqual(self.fr.enqueue.call_args[0][0], "mmm_custom.engine.copilot.refresh_status")
+        self.assertEqual(self.fr.enqueue.call_args.kwargs["conversation_id"], "5")
 
     def test_resolved_conversation_is_closed(self):
         with patch.object(bot_api_mod, "close_conversation") as close:

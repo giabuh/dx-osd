@@ -219,6 +219,15 @@ def set_lead_owner(lead, user):
     doc.save(ignore_permissions=True)
 
 
+def chatwoot_admin():
+    """The Chatwoot client with the admin user token (agents, presence, conversation attributes)."""
+    from mmm_custom.chatwoot_client import ChatwootClient
+
+    conf = frappe.conf
+    return ChatwootClient(conf.get("chatwoot_api_url") or "http://chatwoot-rails:3000", conf.get("chatwoot_api_token") or "",
+                          int(conf.get("chatwoot_account_id") or 1))
+
+
 def mark_consultant_replied(conversation_id, now=None):
     """A person answered (D-059, D-111): from now on the bot only suggests in this conversation, and what the
     customer was waiting for is answered, so the fallback timer stops. A conversation the bot never saw gets a
@@ -397,6 +406,20 @@ class FrappeRepo:
         rows = frappe.get_all("Bot Conversation", filters={"status": "handed_off", "is_sandbox": 0, "consultant": ["is", "set"]},
                               fields=["consultant", "count(name) as open"], group_by="consultant")
         return {r.consultant: r.open for r in rows}
+
+    def online_agents(self):
+        """Chatwoot agent ids that are online now (D-113), cached 30 s; None when Chatwoot cannot say."""
+        cache, key = frappe.cache(), "mmm_custom:online_agents"
+        cached = cache.get_value(key)
+        if cached is not None:
+            return set(cached)
+        try:
+            agents = chatwoot_admin().list_agents()
+        except Exception:
+            return None
+        online = [str(a["id"]) for a in agents if a.get("availability_status") == "online"]
+        cache.set_value(key, online, expires_in_sec=30)
+        return set(online)
 
     def lead_owner(self, lead):
         return frappe.db.get_value("CRM Lead", lead, "lead_owner") or ""
