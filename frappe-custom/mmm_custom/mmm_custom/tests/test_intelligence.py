@@ -93,6 +93,50 @@ def conversation(contact_attrs=None, contact_id=42):
     }
 
 
+class TestEnrolDecision(unittest.TestCase):
+    ENROL = {"choice": "enrol", "confidence": 0.9}
+
+    def plan(self, enrol, **kw):
+        return decide_actions({**CONFIDENT, "enrol": enrol}, 0.7, EMPTY_LEAD, **kw)
+
+    def test_a_sure_yes_plans_a_draft(self):
+        self.assertTrue(self.plan(self.ENROL)["enrol"])
+
+    def test_below_the_enrol_floor_or_not_yet_plans_nothing(self):
+        self.assertFalse(self.plan({"choice": "enrol", "confidence": 0.8})["enrol"])
+        self.assertFalse(self.plan({"choice": "not_yet", "confidence": 0.99})["enrol"])
+        self.assertTrue(self.plan({"choice": "enrol", "confidence": 0.8}, enrol_floor=0.75)["enrol"])
+
+    def test_no_answer_or_spam_plans_nothing(self):
+        self.assertFalse(decide_actions(CONFIDENT, 0.7, EMPTY_LEAD)["enrol"])
+        spam = {**CONFIDENT, "intent": {"choice": "spam", "confidence": 0.9}, "enrol": self.ENROL}
+        self.assertFalse(decide_actions(spam, 0.7, EMPTY_LEAD)["enrol"])
+
+    def test_the_floor_never_drops_below_the_site_threshold(self):
+        answers = {**CONFIDENT, "enrol": {"choice": "enrol", "confidence": 0.8}}
+        self.assertFalse(decide_actions(answers, 0.9, EMPTY_LEAD, enrol_floor=0.5)["enrol"])
+
+
+class TestEnrolEligible(unittest.TestCase):
+    def ok(self, **kw):
+        args = dict(status="Contacted", phone=True, course="VP-EXCEL", has_live_deal=False, enabled=True)
+        return intel.enrol_eligible(**{**args, **kw})
+
+    def test_an_open_lead_with_a_course_and_a_phone_and_no_registration(self):
+        self.assertTrue(self.ok())
+        self.assertTrue(self.ok(status="Converted"))  # an existing student adding a course
+
+    def test_the_question_is_only_worth_asking_when_a_draft_could_be_made(self):
+        for kw in ({"status": "Unqualified"}, {"status": "Junk"}, {"status": None}, {"phone": False},
+                   {"course": ""}, {"has_live_deal": True}, {"enabled": False}):
+            self.assertFalse(self.ok(**kw), kw)
+
+    def test_the_enrol_question_is_added_on_demand(self):
+        self.assertNotIn("enrol", build_questions({"phones": [], "emails": []}))
+        q = build_questions({"phones": [], "emails": []}, ask_enrol=True)["enrol"]
+        self.assertEqual(list(q["criteria"]), ["enrol", "not_yet"])
+
+
 class TestEnqueue(unittest.TestCase):
     def setUp(self):
         self.frappe = MagicMock()
@@ -268,6 +312,37 @@ class TestAnalyzeConversation(unittest.TestCase):
         self.assertEqual(self.client.send_private_note.call_args[0][1], DRAFT)
         self.assertEqual(self.draft.call_args[0][0], 5)
 
+    def eligible_lead(self):
+        def get_value(doctype, filters, fieldname=None, **kw):
+            if doctype == "CRM Products":
+                return "VP-EXCEL"
+            return {"mobile_no": "0901234567", "email": "", "status": "Contacted"}
+        self.frappe.db.get_value.side_effect = get_value
+        self.frappe.db.exists.side_effect = lambda doctype, *a: doctype == "CRM Lead"  # no live registration
+
+    def test_a_sure_yes_drafts_a_registration_and_tells_the_consultant(self):
+        self.eligible_lead()
+        answers = {**CONFIDENT, "enrol": {"choice": "enrol", "confidence": 0.95}}
+        with patch("mmm_custom.enrolment.create_draft", return_value="CRM-DEAL-1") as draft:
+            result, ask, _ = self.run_job(answers, draft=None)
+        self.assertIn("enrol", ask.call_args[0][2])
+        draft.assert_called_once_with("LEAD-1", "VP-EXCEL", source="jev")
+        self.assertIn("draft_registration", result["applied"])
+        self.assertIn("CRM-DEAL-1", self.client.send_private_note.call_args[0][1])
+
+    def test_an_ineligible_lead_is_not_even_asked(self):
+        result, ask, _ = self.run_job(CONFIDENT, draft=None)
+        self.assertNotIn("enrol", ask.call_args[0][2])
+        self.assertNotIn("draft_registration", result["applied"])
+
+    def test_a_failing_draft_never_breaks_the_analysis(self):
+        self.eligible_lead()
+        answers = {**CONFIDENT, "enrol": {"choice": "enrol", "confidence": 0.95}}
+        with patch("mmm_custom.enrolment.create_draft", side_effect=RuntimeError("db")):
+            result, _, _ = self.run_job(answers, draft=None)
+        self.assertEqual(result["status"], "analyzed")
+        self.assertNotIn("draft_registration", result["applied"])
+
     def test_jev_url_can_point_at_a_proxy(self):
         self.frappe.conf["typesafe_api_url"] = "http://proxy.local/v1/systemone"
         _, ask, _ = self.run_job(CONFIDENT)
@@ -286,7 +361,7 @@ class TestAnalyzeConversation(unittest.TestCase):
     def test_waits_for_the_lead_created_by_the_racing_conversation_webhook(self):
         # First look: contact not linked yet; after one wait the sync webhook has linked it.
         self.client.list_messages.side_effect = [conversation({}), conversation({"crm_lead_id": "LEAD-1"})]
-        self.frappe.db.get_value.side_effect = [None, {"mobile_no": "", "email": ""}]
+        self.frappe.db.get_value.side_effect = [None, {"mobile_no": "", "email": ""}, None]  # lead lookup, lead, course
         sleep = MagicMock()
         result, _, _ = self.run_job(CONFIDENT, sleep=sleep)
         sleep.assert_called_once_with(4)

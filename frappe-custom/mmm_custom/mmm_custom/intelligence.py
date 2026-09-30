@@ -32,11 +32,17 @@ from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.dedupe import normalize_phone
 from mmm_custom.engine.text import EMAIL_RE
+from mmm_custom.lifecycle import LIVE_DEAL
 
 logger = logging.getLogger(__name__)
 
 JEV_URL = "https://api.typesafe.ai/v1/systemone"
 DEFAULT_THRESHOLD = 0.7
+DEFAULT_ENROL_FLOOR = 0.85  # a draft registration is a bigger step than a label: Jev must be surer
+ENROL_CRITERIA = {
+    "enrol": "The customer clearly says they want to register / sign up (and pay) for a course now",
+    "not_yet": "Asking, comparing, booking a free trial or level test, or still undecided",
+}
 
 # Keys must match the ai_intent / ai_hotness Select options created in setup.py.
 INTENTS = {
@@ -80,7 +86,15 @@ def find_candidates(texts: list[str]) -> dict:
     return {"phones": phones, "emails": emails}
 
 
-def build_questions(candidates: dict) -> dict:
+def enrol_eligible(status, phone, course, has_live_deal, enabled=True) -> bool:
+    """Is a draft registration possible for this Lead (D-118)? Only then is Jev asked, so no tokens go on chats that
+    could not become one: an open (or already registered) Lead with a course and a phone and no live registration."""
+    from mmm_custom.lifecycle import CONVERTED, OPEN_LEAD
+
+    return bool(enabled and phone and course and not has_live_deal and status in (*OPEN_LEAD, CONVERTED))
+
+
+def build_questions(candidates: dict, ask_enrol: bool = False) -> dict:
     questions = {
         "intent": {
             "type": "choice",
@@ -105,16 +119,19 @@ def build_questions(candidates: dict) -> dict:
         questions["phone"] = pick(candidates["phones"], "phone numbers")
     if candidates["emails"]:
         questions["email"] = pick(candidates["emails"], "email addresses")
+    if ask_enrol:
+        questions["enrol"] = {"type": "choice", "instructions": "Has the customer decided to register for a course?",
+                              "criteria": ENROL_CRITERIA}
     return questions
 
 
-def decide_actions(answers: dict, threshold: float, lead: dict) -> dict:
+def decide_actions(answers: dict, threshold: float, lead: dict, enrol_floor: float = DEFAULT_ENROL_FLOOR) -> dict:
     """Pure decision step: turn Jev's answers into the changes to apply, gated on confidence."""
 
     def sure(answer):
         return bool(answer) and (answer.get("confidence") or 0) >= threshold
 
-    plan = {"lead_update": {}, "labels": [], "skipped": []}
+    plan = {"lead_update": {}, "labels": [], "skipped": [], "enrol": False}
 
     if sure(answers.get("intent")):
         plan["lead_update"]["ai_intent"] = answers["intent"]["choice"]
@@ -131,6 +148,9 @@ def decide_actions(answers: dict, threshold: float, lead: dict) -> dict:
         plan["skipped"].append("hotness")
 
     is_spam = plan["lead_update"].get("ai_intent") == "spam"
+    enrol = answers.get("enrol")
+    if enrol and enrol.get("choice") == "enrol" and not is_spam:
+        plan["enrol"] = (enrol.get("confidence") or 0) >= max(threshold, enrol_floor)
     for key, field in (("phone", "mobile_no"), ("email", "email")):
         answer = answers.get(key)
         # Spam ads carry their own phone numbers; never copy those onto the Lead.
@@ -286,6 +306,19 @@ def enqueue_analysis(payload: dict) -> dict:
     return {"status": "queued", "conversation_id": conversation["id"]}
 
 
+def _draft_registration(lead_id, course):
+    """The draft registration and its Task (D-118), or "" when it failed: the analysis never breaks on it."""
+    from mmm_custom import enrolment
+
+    try:
+        deal = enrolment.create_draft(lead_id, course, source="jev")
+        frappe.db.commit()
+        return deal
+    except Exception:
+        logger.exception("AI: draft registration for %s failed", lead_id)
+        return ""
+
+
 def analyze_conversation(conversation_id: int, suggest_reply: bool = True, sleep=time.sleep) -> dict:
     """Background job: read the conversation, ask Jev, apply the confident decisions."""
     conf = _conf()
@@ -310,14 +343,20 @@ def analyze_conversation(conversation_id: int, suggest_reply: bool = True, sleep
         if not m.get("private") and m.get("message_type") in (0, 1) and m.get("content")
     ][-20:]
     candidates = find_candidates([m["text"] for m in chat if m["from"] == "customer"])
-    lead = frappe.db.get_value("CRM Lead", lead_id, ["mobile_no", "email"], as_dict=True) or {}
+    lead = frappe.db.get_value("CRM Lead", lead_id, ["mobile_no", "email", "status"], as_dict=True) or {}
+    course = frappe.db.get_value("CRM Products", {"parenttype": "CRM Lead", "parent": lead_id}, "product_code",
+                                 order_by="idx asc")
+    ask_enrol = enrol_eligible(
+        lead.get("status"), lead.get("mobile_no") or candidates["phones"], course,
+        frappe.db.exists("CRM Deal", {"lead": lead_id, "status": ["in", list(LIVE_DEAL)]}),
+        int(conf.get("ai_enrol_drafts", 1)) != 0)
 
     answers = ask_jev(
-        api_key, {"chat": chat}, build_questions(candidates),
+        api_key, {"chat": chat}, build_questions(candidates, ask_enrol),
         model=conf.get("typesafe_model") or "jev-latest", url=conf.get("typesafe_api_url") or JEV_URL,
     )
     threshold = float(conf.get("typesafe_confidence_threshold") or DEFAULT_THRESHOLD)
-    plan = decide_actions(answers, threshold, lead)
+    plan = decide_actions(answers, threshold, lead, float(conf.get("ai_enrol_floor") or DEFAULT_ENROL_FLOOR))
 
     applied = []
     if plan["lead_update"]:
@@ -343,6 +382,13 @@ def analyze_conversation(conversation_id: int, suggest_reply: bool = True, sleep
                 applied.append("duplicate_flagged")
             compute_data_quality(lead_id)
     frappe.db.commit()
+
+    draft_deal = _draft_registration(lead_id, course) if plan["enrol"] else ""
+    if draft_deal:
+        applied.append("draft_registration")
+        client.send_private_note(
+            conversation_id, f"📝 Jev: khách muốn đăng ký khóa {course} — đã tạo hồ sơ đăng ký nháp {draft_deal}. "
+                             "Gọi xác nhận lớp và học phí trên CRM.")
 
     if plan["labels"]:
         client.add_labels(conversation_id, plan["labels"])
