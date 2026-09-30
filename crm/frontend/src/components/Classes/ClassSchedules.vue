@@ -17,30 +17,33 @@
       />
     </div>
     <div class="flex flex-wrap items-end gap-3">
-      <FormControl
-        v-model="filters.course"
-        class="w-64"
-        type="select"
-        label="Khóa học"
-        :options="courseFilter"
-        @change="load"
-      />
-      <FormControl
-        v-model="filters.branch"
-        class="w-48"
-        type="select"
-        label="Chi nhánh"
-        :options="branchFilter"
-        @change="load"
-      />
-      <FormControl
-        v-model="filters.status"
-        class="w-36"
-        type="select"
-        label="Trạng thái"
-        :options="statusFilter"
-        @change="load"
-      />
+      <div class="w-64">
+        <FormControl
+          v-model="filters.course"
+          type="select"
+          label="Khóa học"
+          :options="courseFilter"
+          @change="load"
+        />
+      </div>
+      <div class="w-48">
+        <FormControl
+          v-model="filters.branch"
+          type="select"
+          label="Chi nhánh"
+          :options="branchFilter"
+          @change="load"
+        />
+      </div>
+      <div class="w-36">
+        <FormControl
+          v-model="filters.status"
+          type="select"
+          label="Trạng thái"
+          :options="statusFilter"
+          @change="load"
+        />
+      </div>
       <FormControl
         v-model="filters.include_past"
         type="checkbox"
