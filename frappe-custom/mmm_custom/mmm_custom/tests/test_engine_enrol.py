@@ -139,6 +139,12 @@ class TestDialogue(unittest.TestCase):
         self.assertEqual((c.state().status, enrol_flow.phase(c.state().slots, CAT)), ("active", "open"))
         self.assertEqual((c.fx.of("handoff"), c.fx.of("enrol")), ([], []))
 
+    def test_the_dk_abbreviation_starts_the_dialogue(self):
+        c = Chat()
+        t = c.say("e muon dk khoa excel")
+        self.assertEqual(t.decision.skills, ["register"])
+        self.assertEqual(enrol_flow.phase(c.state().slots, CAT), "open")
+
     def test_a_hot_customer_is_not_handed_off_before_the_class_and_phone(self):
         jev = FakeJev(lambda q: {"hotness": {"score": 2, "confidence": 0.95},
                                  "skill:register": {"noul": 0.95}})

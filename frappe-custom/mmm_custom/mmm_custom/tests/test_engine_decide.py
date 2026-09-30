@@ -122,5 +122,21 @@ class TestDecide(unittest.TestCase):
         self.assertEqual(d.ask, "preferred_shift")
 
 
+
+class TestSingleChild(unittest.TestCase):
+    def test_an_area_with_one_branch_fills_the_branch(self):
+        area = next(a for a in CAT.areas if len(CAT.branches_in(a)) == 1)
+        d = decide(ConversationState("1", slots={"course": fill("VP-EXCEL")}), Understanding(parents={"branch": area}), CAT)
+        self.assertEqual(d.slots["branch"]["value"], CAT.branches_in(area)[0].name)
+        self.assertIn("branch", d.new_slots)
+        self.assertNotEqual(d.ask, "branch")
+
+    def test_an_area_with_several_branches_still_asks(self):
+        area = next(a for a in CAT.areas if len(CAT.branches_in(a)) > 1)
+        d = decide(ConversationState("1", slots={"course": fill("VP-EXCEL")}), Understanding(parents={"branch": area}), CAT)
+        self.assertNotIn("value", d.slots["branch"])
+        self.assertEqual(d.ask, "branch")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 from mmm_custom.engine import enrol_flow
 from mmm_custom.engine.offers import BUTTON_ACTIONS, MAX_RESUMES, focus, paused_quiz, quiz_offer, subject
+from mmm_custom.engine.slot_types import REGISTRY
 from mmm_custom.engine.state import filled, value
 
 HANDOFF_REASONS = {
@@ -101,8 +102,15 @@ def merge(slots, u, catalog):
                 entry.pop("value", None)  # an explicit "not X, Y" must not leave X silently stored
             entry["candidates"] = list(candidates)
             changed.append(key)
+    fills = dict(u.fills)
+    for key in u.parents:  # an area with one branch (a group with one course) needs no second question
+        slot, entry = catalog.slot(key), out.get(key) or {}
+        if slot and slot.type == "catalog" and not filled(out, key) and key not in fills and entry.get("parent"):
+            only = [v for v, _, parent in REGISTRY["catalog"].items(slot, out, catalog) if parent == entry["parent"]]
+            if len(only) == 1:
+                fills[key] = {"value": only[0], "source": "parent", "confidence": 1.0}
     new = []
-    for key, fill in u.fills.items():
+    for key, fill in fills.items():
         slot, entry = catalog.slot(key), out.setdefault(key, {})
         if entry.get("value") != fill["value"]:
             entry.update(fill)

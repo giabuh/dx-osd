@@ -697,8 +697,8 @@
   "skill_key": "register",
   "title": "đăng ký học",
   "jev_description": "The customer wants to register or reserve a seat",
-  "examples": "mình muốn đăng ký\ngiữ chỗ lớp tối cho mình",
-  "aliases": "dang ky, ghi danh, giu cho",
+  "examples": "mình muốn đăng ký\ngiữ chỗ lớp tối cho mình\ne muon dk khoa excel\ncho mình đky lớp photoshop",
+  "aliases": "dang ky, ghi danh, giu cho, dk, dky, dki",
   "parameters": [
    "course"
   ],
