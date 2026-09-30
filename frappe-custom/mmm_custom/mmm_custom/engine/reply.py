@@ -153,6 +153,8 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         if out.get("_ask"):
             reply.ask, reply.pending_skill = reply.ask or out["_ask"], reply.pending_skill or key
             continue
+        if out.get("_skip"):
+            continue
         skill_ctx = {**ctx, **{k: v for k, v in out.items() if not k.startswith("_")}}
         template = choose_template(skill, skill_ctx, render)
         if template:

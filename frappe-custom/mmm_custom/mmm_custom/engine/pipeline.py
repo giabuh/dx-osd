@@ -299,7 +299,9 @@ def run_turn(event, repo, effects, render, draft=False, fallback=False):
         handing = [k for k in d.skills if catalog.skills[k].action == "handoff"]
         d.skills = [k for k in d.skills if k not in handing]
         turn.needs_staff = catalog.skills[handing[0]].title if handing else STAFF_REASONS.get(d.handoff_reason, "")
-        turn.no_answer = not d.answered and (d.fallback or d.handoff_reason == "stuck")
+        # a hand-off for having everything required hides that a question the customer asked went unanswered
+        asked = d.handoff_reason == "required_filled" and turn.understanding.question
+        turn.no_answer = not d.answered and (d.fallback or d.handoff_reason == "stuck" or asked)
         if d.type == "handoff" or (handing and d.type == "answer") or (person and turn.no_answer):
             d.type = "answer" if d.answered else "silent"  # "em chưa hiểu" after a wait is worse than the hold line
     apply_quiz_results(turn.decision, catalog)

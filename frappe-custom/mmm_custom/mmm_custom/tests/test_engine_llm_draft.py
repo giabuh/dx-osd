@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import ROBO, FakeJev, FakeRepo, demo_catalog, render
+from engine_fixtures import ROBO, FakeJev, FakeRepo, demo_catalog, fill, render
 
 from mmm_custom import llm
 from mmm_custom.engine import copilot, llm_draft
@@ -87,6 +87,19 @@ class TestInAssistMode(unittest.TestCase):
         self.ask()
         self.assertTrue(self.fx.of("note")[0]["text"].startswith(llm_draft.HEADER))
         self.assertEqual(len(self.repo.states["2"].assist["llm_calls"]), 1)
+
+    def test_also_once_everything_required_is_known(self):
+        full = {**ROBO, "branch": fill("CN Dĩ An"), "phone": fill("+84399981234")}
+        self.repo.save_state(ConversationState("2", turns=3, slots=full, last_message_id=10, consultant_replied=True))
+        self.ask()
+        self.assertTrue(self.fx.of("note")[0]["text"].startswith(llm_draft.HEADER),
+                        "a question after the hand-off still gets a draft, not silence")
+
+    def test_no_note_for_a_plain_ok_once_everything_required_is_known(self):
+        full = {**ROBO, "branch": fill("CN Dĩ An"), "phone": fill("+84399981234")}
+        self.repo.save_state(ConversationState("2", turns=3, slots=full, last_message_id=10, consultant_replied=True))
+        copilot.handle(Event("customer_message", "2", 11, "ok em", {"id": 9}), self.repo, self.fx, render)
+        self.assertEqual(self.fx.of("note"), [])
 
     def test_the_customer_never_gets_it(self):
         self.ask()

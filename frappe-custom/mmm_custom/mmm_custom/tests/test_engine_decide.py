@@ -23,6 +23,20 @@ class TestDecide(unittest.TestCase):
         self.assertEqual((d.type, d.ask, d.greet, d.fallback, d.stuck_turns), ("ask_slot", "course", True, False, 0))
         self.assertEqual(d.slots["course"]["asked"], 1)
 
+    def test_a_customer_giving_a_short_number_is_not_asked_about_our_hotline(self):
+        hotline = {"kind": "skill", "skill": "hotline", "label": "hotline, Zalo"}
+        u = Understanding(confirm=hotline, phone_suspect="039182384")
+        d = decide(state(turns=3, slots={"course": fill("VP-EXCEL")}), u, CAT)
+        self.assertEqual((d.type, d.confirm, d.phone_check), ("ask_slot", {}, "039182384"))
+
+    def test_a_hot_customer_with_a_short_number_is_asked_to_check_it_first(self):
+        hot = {"value": "hot", "confidence": 0.95}
+        u = Understanding(phone_suspect="039182384", hotness=hot)
+        d = decide(state(turns=3, slots={"course": fill("VP-EXCEL")}), u, CAT)
+        self.assertEqual((d.type, d.phone_check), ("ask_slot", "039182384"))
+        d = decide(state(turns=3, slots={"course": fill("VP-EXCEL")}), Understanding(hotness=hot), CAT)
+        self.assertEqual((d.type, d.handoff_reason), ("handoff", "hot"))
+
     def test_a_skill_marked_alone_drops_the_other_answers(self):
         u = Understanding(skills=["fee_quote", "corporate_training"], fills={"course": fill("VP-EXCEL")})
         d = decide(state(turns=1), u, CAT)

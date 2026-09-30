@@ -23,10 +23,13 @@ COURSE_FAQ = "course_faq"
 COURSE_FACT = "course_fact"
 STAFF_REPLY = "staff_reply"
 REPLY_TO_BOT = "reply_to_bot"
+# "cho mình làm bài test" is "let me take the test", not "for my child": Jev read it as the child option (0.75).
+CHOICE_HINT = ("Choose an option only when the chat says it. In Vietnamese \"cho mình / cho em / cho tôi\" followed "
+               "by a verb means \"let me …\", not an answer to this question.")
 # Parts of a course's own data the bot can answer from (D-110): key -> (Course attribute, what the customer asks).
 # Fee and schedules are skills of their own (fee_quote, schedule_lookup) with promotions and open classes.
 FACTS = {
-    "summary": ("summary", "What the course is, what it is about overall"),
+    "summary": ("summary", "Whether the centre has this course and what it is about overall (\"có khóa … không\")"),
     "syllabus": ("syllabus", "The lessons, topics or programme the course teaches"),
     "duration": ("duration", "How long the course takes: weeks, months, number of sessions"),
     "audience": ("audience", "Who the course is for: level needed, beginners, age"),
@@ -107,7 +110,8 @@ def build_questions(state, u, catalog, skills=True, text=""):
         if slot.type == "catalog":
             q.update(_catalog_questions(slot, state, u, catalog))
         elif slot.type == "choice":
-            q[f"slot:{slot.key}"] = _choice(f"What does the customer answer for '{slot.label}' in this Vietnamese chat?",
+            q[f"slot:{slot.key}"] = _choice(f"What does the customer answer for '{slot.label}' in this Vietnamese chat? "
+                                            f"{CHOICE_HINT}",
                                             {o.value: _named(o.label, o.aliases) for o in slot.options})
         elif slot.type == "number":
             q[f"slot:{slot.key}"] = _choice(f"Which number does the customer give for '{slot.label}'?",

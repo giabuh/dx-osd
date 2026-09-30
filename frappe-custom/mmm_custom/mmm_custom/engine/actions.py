@@ -3,7 +3,7 @@ arithmetic are code here, never Jev (D-003). A new action = one function decorat
 @action("name") + the Select option in catalog_rules.ACTION_TYPES / the Bot Skill DocType.
 
 An action returns extra template context; keys starting with "_" are instructions for the composer
-(`_attachments`, `_buttons`), not template data."""
+(`_attachments`, `_buttons`, `_skip`: nothing to say), not template data."""
 
 from dataclasses import dataclass
 
@@ -215,6 +215,8 @@ def recommend_courses(a):
                 return {**out, "_ask": ask}
         if ranked:
             picked, scores = [c for c, _ in ranked[:top]], dict((c.code, s) for c, s in ranked)
+    if not picked:  # no course fits the learner's audience and age: no "em gợi ý các khóa này" over an empty list
+        return {**out, "_skip": True}
     buttons = [{"title": c.button, "action": {"type": "slot", "slot": course_slot.key, "value": c.code}}
                for c in picked] if course_slot else []
     out.update(recommendations=[{"course": c.name, "code": c.code, "fee": c.fee, "score": scores.get(c.code)}

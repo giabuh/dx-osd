@@ -19,7 +19,7 @@ from mmm_custom.engine.render import render_text
 from mmm_custom.engine.reply import compose
 from mmm_custom.engine.state import ConversationState
 from mmm_custom.engine.tone import problems
-from mmm_custom.engine.understand import understand
+from mmm_custom.engine.understand import Understanding, understand
 
 CAT = demo_catalog()
 SEED = load_dataset()["staff_replies"]
@@ -102,6 +102,12 @@ class TestJevChoosesAStaffReply(unittest.TestCase):
         self.assertEqual((d.type, d.staff_reply["name"]), ("answer", name))
         text = " ".join(compose(d, self.state, CAT, render).messages)
         self.assertIn("2 đợt", text)
+
+    def test_never_replaces_the_live_trial_classes(self):
+        trial = next(r for r in CAT.staff_replies if r.topic == "trial_class" and r.course == "KT-MISA")
+        u = Understanding(skills=["trial_class"], staff_reply={"name": trial.name, "confidence": 0.95})
+        d = decide(self.state, u, CAT)
+        self.assertEqual((d.skills, d.staff_reply), (["trial_class"], {}), "open classes and booking buttons stay")
 
     def test_an_unsure_pick_is_ignored(self):
         out = combine(self.u, {STAFF_REPLY: {"choice": self.pick("payment"), "confidence": 0.7}}, self.questions,

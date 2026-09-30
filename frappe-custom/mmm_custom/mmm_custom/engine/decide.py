@@ -56,7 +56,10 @@ class Decision:
         return bool(self.skills or self.faq or self.fact or self.staff_reply)
 
 
-FACT_LABELS = {"summary": "giới thiệu khóa", "syllabus": "nội dung học", "duration": "thời lượng", "audience": "đối tượng học",
+# Skills answered from the site's live data and buttons (open classes, booking, the level test): a reply staff
+# once wrote on the same topic has none of that, so it never replaces them (D-114).
+LIVE_ACTIONS = ("schedule_lookup", "trial_offer", "book_trial", "level_quiz")
+FACT_LABELS = {"summary": "giới thiệu", "syllabus": "nội dung học", "duration": "thời lượng", "audience": "đối tượng học",
                "certificate": "chứng chỉ", "next": "khóa học tiếp theo"}
 
 
@@ -173,6 +176,9 @@ def decide(state, u, catalog, person_ok=False):
     skills, waiting = pick_skills(state, u, slots, catalog)
     faq = u.faq  # one answer from the course's knowledge: its FAQ, else a staff reply, else its data
     staff = {} if faq else u.staff_reply
+    if staff and any(k == catalog.staff_reply(staff["name"]).topic and catalog.skills[k].action in LIVE_ACTIONS
+                     for k in skills):
+        staff = {}
     fact = {} if (faq or staff) else u.fact
     small_talk = u.greeting and not (new or changed or faq or staff or fact)
     if small_talk:
@@ -188,7 +194,8 @@ def decide(state, u, catalog, person_ok=False):
         skills = [k for k in skills if catalog.skills[k].action != "answer_template"]
     skills, squeezed = focus(skills, catalog)
     phone = next((s.key for s in catalog.slots if s.type == "phone"), "")
-    if phone in u.fills or u.phone_suspect or u.gives_contact:  # their number, not a question about ours (D-107)
+    gives_phone = phone in u.fills or u.phone_suspect or u.gives_contact  # their number, not a question about ours (D-107)
+    if gives_phone:
         skills = [k for k in skills if not catalog.skills[k].config.get("not_when_customer_gives_phone")]
     phone_check = u.phone_suspect if phone and not filled(slots, phone) else ""
     paused = paused_quiz(state.pending)
@@ -219,7 +226,12 @@ def decide(state, u, catalog, person_ok=False):
     confirm = u.confirm
     if confirm.get("kind") == "skill" and (new or changed or skills or waiting or know):
         confirm = {}  # the turn already answers or asks something: a "did you mean…?" on top is noise
+    if confirm.get("kind") == "skill" and gives_phone and \
+            catalog.skills[confirm["skill"]].config.get("not_when_customer_gives_phone"):
+        confirm = {}  # "số điện thoại tôi là …" is never "did you mean our hotline?" (D-107)
     why = "" if small_talk else handoff_reason(u, skills, slots, stuck, catalog)
+    if why == "hot" and phone_check:
+        why = ""  # a hot customer with a mistyped number: get a number the consultant can call first (D-107)
     if why and (why in IMMEDIATE or not confirm):
         return Decision("handoff", **common, handoff_reason=why, reason=HANDOFF_REASONS[why])
     if confirm:
