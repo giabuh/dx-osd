@@ -127,8 +127,10 @@ def _choices():
                             fields=["value", "label"], order_by="idx asc")
     goals = frappe.get_all("Bot Slot Option", filters={"parent": "goal", "parenttype": "Bot Slot"},
                            fields=["value", "label"], order_by="idx asc")
-    courses = frappe.get_all("CRM Product", filters={"disabled": 0}, fields=["name as code", "product_name as name",
-                                                                           "course_group as group"], order_by="name asc")
+    # "group" is a reserved SQL word, so rename course_group here instead of aliasing it in the query.
+    courses = [{"code": c.name, "name": c.product_name, "group": c.course_group}
+               for c in frappe.get_all("CRM Product", filters={"disabled": 0},
+                                       fields=["name", "product_name", "course_group"], order_by="name asc")]
     groups = frappe.get_all("Course Group", pluck="name", order_by="sort_order asc")
     return {"levels": levels, "goals": goals, "courses": courses, "groups": groups}
 
