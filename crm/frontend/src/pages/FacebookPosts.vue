@@ -172,8 +172,20 @@
                   {{ getSlotPost(slot).course }}
                 </span>
               </div>
-              <div class="text-xs text-ink-gray-7 line-clamp-2">
+              <img
+                v-if="getSlotPost(slot)?.image"
+                :src="getSlotPost(slot).image"
+                :alt="getSlotPost(slot).title"
+                class="w-full h-28 object-cover object-top rounded-md border border-outline-gray-1 mb-2"
+              />
+              <div class="text-xs font-medium text-ink-gray-8 line-clamp-2">
                 {{ getSlotPost(slot)?.title || __('Chưa lên kế hoạch') }}
+              </div>
+              <div v-if="getSlotPost(slot)?.content" class="mt-1 text-[11px] text-ink-gray-6 line-clamp-3 whitespace-pre-line">
+                {{ getSlotPost(slot).content }}
+              </div>
+              <div v-else-if="getSlotPost(slot)" class="mt-1 text-[11px] text-ink-gray-4 italic">
+                {{ __('Chưa có nội dung') }}
               </div>
               <div v-if="getSlotPost(slot)?.plan_reason" class="mt-1 text-[11px] text-ink-gray-5 line-clamp-2" :title="getSlotPost(slot).plan_reason">
                 {{ __('Vì sao') }}: {{ getSlotPost(slot).plan_reason }}
@@ -1397,9 +1409,9 @@ function getCourseBadgeClass(course) {
     case 'AI-BASIC':
     case 'AI-N8N':
     case 'AI-VIBE':
-      return 'bg-indigo-100 text-indigo-800'
+      return 'bg-purple-100 text-purple-800'
     case 'MKT-FB':
-      return 'bg-rose-100 text-rose-800'
+      return 'bg-teal-100 text-teal-800'
     case 'Tiếng Anh':
       return 'bg-blue-100 text-blue-800'
     case 'Bơi lội':

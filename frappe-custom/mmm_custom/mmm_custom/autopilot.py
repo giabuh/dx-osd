@@ -67,6 +67,10 @@ WEEKLY_MATRIX = [
 ]
 
 
+def _today():
+    return date.today()
+
+
 @frappe.whitelist()
 def get_weekly_matrix():
     """Return the predefined weekly slots matrix."""
@@ -97,7 +101,8 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
 
     created_posts = []
     # The week's courses from CRM data: open classes, promotions, what earlier posts brought (D-123)
-    plan = plan_week(base_monday, n=len(WEEKLY_MATRIX))
+    # Classes and results are judged from today: a class that started on Monday is not "coming up" on Thursday.
+    plan = plan_week(max(_today(), base_monday), n=len(WEEKLY_MATRIX))
 
     for slot, course in zip(WEEKLY_MATRIX, plan):
         slot_date = base_monday + timedelta(days=slot["day_offset"])

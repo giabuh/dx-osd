@@ -141,6 +141,15 @@ class TestAutopilotEngine(unittest.TestCase):
         self.assertEqual(created_docs[3].day_of_week, "Chủ Nhật")
         self.assertEqual(created_docs[3].scheduled_time, "2026-10-04 09:00:00")
 
+    def test_plan_is_judged_from_today_not_from_monday(self):
+        """On a Thursday the week's classes are those still to come, not the ones that started on Monday."""
+        seen = []
+        with patch("mmm_custom.autopilot.plan_week", lambda today, n=4: seen.append(today) or PLAN),                 patch("mmm_custom.autopilot.frappe") as mock_frappe,                 patch("mmm_custom.autopilot._today", lambda: autopilot.date(2026, 10, 1)):  # a Thursday
+            mock_frappe.new_doc.side_effect = lambda doctype: MagicMock()
+            autopilot.generate_weekly_batch(target_date="2026-10-01")
+            autopilot.generate_weekly_batch(target_date="2026-10-12")  # a later week starts on its Monday
+        self.assertEqual(seen, [autopilot.date(2026, 10, 1), autopilot.date(2026, 10, 12)])
+
     @patch("mmm_custom.autopilot.frappe")
     def test_generate_weekly_batch_no_directive(self, mock_frappe):
         created_docs = []

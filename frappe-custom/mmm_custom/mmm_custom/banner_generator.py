@@ -87,6 +87,21 @@ COURSE_META = {
             ("3. Dashboard", "báo cáo quản trị đa chiều", (16, 185, 129)),
         ],
     },
+    "accounting": {
+        "key": "accounting",
+        "theme": (30, 64, 175),     # Ledger Blue
+        "accent": (255, 204, 0),    # Bright Gold CTA
+        "brand_name": "Sao Việt KẾ TOÁN",
+        "hook_1": "TỪ SỔ SÁCH RỐI RẮM",
+        "hook_2": "ĐẾN BÁO CÁO CHUẨN",
+        "subtitle": "Định khoản chuẩn – Làm sổ sách thực tế – Quyết toán thuế tự tin",
+        "cta": "NHẬN ƯU ĐÃI KHÓA HỌC",
+        "steps": [
+            ("1. Nguyên lý", "hạch toán & định khoản", (30, 64, 175)),
+            ("2. Thực hành", "chứng từ, sổ sách, MISA", (234, 88, 12)),
+            ("3. Báo cáo", "thuế & báo cáo tài chính", (16, 185, 129)),
+        ],
+    },
     "programming": {
         "key": "programming",
         "theme": (30, 41, 59),      # Slate Tech
@@ -251,8 +266,12 @@ def get_course_meta(course):
     if any(k in norm for k in ["lập trình", "web", "mobile", "vba", "coding", "python"]) or norm.startswith("lt-"):
         return COURSE_META["programming"]
 
-    # Office, Excel & Accounting
-    if any(k in norm for k in ["excel", "word", "powerpoint", "mos", "ic3", "văn phòng", "kế toán", "misa", "thuế"]) or norm.startswith("vp-") or norm.startswith("kt-"):
+    # Accounting (its own poster: "Làm chủ Excel" on an accounting course was wrong)
+    if any(k in norm for k in ["kế toán", "misa", "thuế", "ke toan"]) or norm.startswith("kt-") and "excel" not in norm:
+        return COURSE_META["accounting"]
+
+    # Office & Excel
+    if any(k in norm for k in ["excel", "word", "powerpoint", "mos", "ic3", "văn phòng"]) or norm.startswith("vp-") or norm.startswith("kt-"):
         return COURSE_META["excel"]
 
     # AI & Automation
