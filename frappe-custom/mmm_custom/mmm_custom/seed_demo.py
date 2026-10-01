@@ -14,42 +14,46 @@ def _day(today, offset, time=""):
     return f"{day} {time}" if time else day
 
 
-def demo_tasks(today):
-    """The demo tasks with `start_date` / `due_date` worked out from `today` ("start" / "due" are day offsets)."""
+def demo_tasks(today, extra=None):
+    """The demo tasks (plus `extra`) with `start_date` / `due_date` worked out from `today` ("start" / "due" are day
+    offsets)."""
     return [{**{k: v for k, v in t.items() if k not in ("start", "due", "due_time")},
-             "start_date": _day(today, t["start"]), "due_date": _day(today, t["due"], t["due_time"])} for t in TASKS]
+             "start_date": _day(today, t["start"]), "due_date": _day(today, t["due"], t["due_time"])}
+            for t in [*TASKS, *(extra or [])]]
 
 
+# Tasks point at sample Leads by email (`lead`, resolved at seed time: record names differ per site) and are
+# assigned to the demo consultants, so a fresh demo site has no dangling references.
 TASKS = [
     {
-        "title": "Gọi điện tư vấn lộ trình học cho học viên Hoàng Thành",
+        "title": "Gọi điện tư vấn lộ trình học cho học viên Nguyễn Thị Hạnh",
         "priority": "High",
         "status": "In Progress",
         "assigned_to": "mai.hcm-bt@demo.saoviet.invalid",
         "start": -1, "due": 0, "due_time": "17:00:00",
         "reference_doctype": "CRM Lead",
-        "reference_docname": "CRM-LEAD-2026-00019",
-        "description": "<p>Học viên quan tâm khóa <strong>Luyện thi MOS quốc tế</strong>. Cần gọi điện kiểm tra trình độ đầu vào, gửi đề thi thử và xếp lịch học tại cơ sở Bình Thạnh.</p>",
+        "lead": "hanh.nguyen@demo.saoviet.invalid",
+        "description": "<p>Học viên quan tâm khóa <strong>Revit kiến trúc</strong>. Cần gọi điện kiểm tra trình độ đầu vào, gửi lộ trình và xếp lịch học tại cơ sở Bình Thạnh.</p>",
     },
     {
-        "title": "Gửi tài liệu & bảng báo giá ưu đãi tháng 9 cho phụ huynh",
+        "title": "Gửi tài liệu & bảng báo giá ưu đãi tháng này cho phụ huynh",
         "priority": "High",
         "status": "Todo",
-        "assigned_to": "Administrator",
+        "assigned_to": "huy.hcm-q7@demo.saoviet.invalid",
         "start": -1, "due": 1, "due_time": "11:30:00",
         "reference_doctype": "CRM Deal",
-        "reference_docname": "CRM-DEAL-2026-00007",
-        "description": "<p>Gửi brochure chi tiết khóa học Bơi lội & Toán tư duy, kèm voucher giảm giá 30% qua Zalo/Email cho phụ huynh.</p>",
+        "lead": "thu.kim@demo.saoviet.invalid",
+        "description": "<p>Gửi brochure chi tiết khóa Scratch cho bé, kèm ưu đãi Tin học cho bé giảm 20% qua Zalo/Email cho phụ huynh.</p>",
     },
     {
-        "title": "Chuẩn bị phòng học và giáo cụ khai giảng khóa mới (CS Quận 1)",
+        "title": "Chuẩn bị phòng học và giáo cụ khai giảng khóa mới (CN Quận 7)",
         "priority": "Medium",
         "status": "Todo",
-        "assigned_to": "nam.quan1@eduflow.vn",
+        "assigned_to": "tuan.hcm-q7@demo.saoviet.invalid",
         "start": 0, "due": 2, "due_time": "18:00:00",
         "reference_doctype": "CRM Lead",
-        "reference_docname": "CRM-LEAD-2026-00027",
-        "description": "<p>Kiểm tra hệ thống máy chiếu, bàn ghế và tài liệu in ấn cho lớp Tiếng Anh giao tiếp khai giảng cuối tuần.</p>",
+        "lead": "viet.tu@demo.saoviet.invalid",
+        "description": "<p>Kiểm tra hệ thống máy chiếu, máy tính và tài liệu in ấn cho lớp Kế toán khai giảng cuối tuần.</p>",
     },
     {
         "title": "Kiểm tra báo cáo chi phí chiến dịch Facebook Ads đợt tuyển sinh tuần 39",
@@ -58,7 +62,7 @@ TASKS = [
         "assigned_to": "Administrator",
         "start": -2, "due": 0, "due_time": "15:00:00",
         "reference_doctype": None,
-        "reference_docname": None,
+        "lead": None,
         "description": "<p>Rà soát số lượng Lead thu về từ chiến dịch quảng cáo Facebook, đối soát CPL (Cost Per Lead) và tỷ lệ chuyển đổi của các bài viết Fanpage.</p>",
     },
     {
@@ -68,33 +72,60 @@ TASKS = [
         "assigned_to": "mai.hcm-bt@demo.saoviet.invalid",
         "start": -3, "due": -2, "due_time": "12:00:00",
         "reference_doctype": "CRM Deal",
-        "reference_docname": "CRM-DEAL-2026-00007",
-        "description": "<p>Đã cấp mã học viên, xuất hóa đơn điện tử và gửi tin nhắn chào mừng học viên gia nhập hệ thống EduFlow.</p>",
+        "lead": "thanh.dang@demo.saoviet.invalid",
+        "description": "<p>Đã cấp mã học viên, xuất hóa đơn điện tử và gửi tin nhắn chào mừng học viên gia nhập Tin học Sao Việt.</p>",
     },
     {
         "title": "Lên kế hoạch nội dung bài viết và banner tuần 40 (Autopilot)",
         "priority": "High",
         "status": "Backlog",
-        "assigned_to": "phuc.thuduc@eduflow.vn",
+        "assigned_to": "phuc.hcm-td@demo.saoviet.invalid",
         "start": 1, "due": 4, "due_time": "17:00:00",
         "reference_doctype": None,
-        "reference_docname": None,
+        "lead": None,
         "description": "<p>Chỉ đạo AI tạo đợt bài tuần mới BATCH-2026-W40 với chủ đề: 'Tuần lễ vàng học thử miễn phí'.</p>",
     },
 ]
 
 
+def resolve_reference(task, lead_by_email, deal_by_lead):
+    """The (reference_doctype, reference_docname) a task points at: its `lead` email resolved to the sample Lead, or to
+    that Lead's registration when the task's reference_doctype is CRM Deal. ("", "") when there is none or the record
+    is missing (the task is then created without a reference)."""
+    email = task.get("lead")
+    if not email:
+        return "", ""
+    lead = lead_by_email.get(email)
+    if task.get("reference_doctype") == "CRM Deal":
+        deal = deal_by_lead.get(lead)
+        return ("CRM Deal", deal) if deal else ("", "")
+    return ("CRM Lead", lead) if lead else ("", "")
+
+
 @frappe.whitelist() if frappe else (lambda fn: fn)
-def seed_tasks():
+def seed_tasks(extra=None):
+    """Create the demo tasks (and `extra` ones, same shape) once; matched by title, a re-run only moves the dates."""
+    emails = {t["lead"] for t in [*TASKS, *(extra or [])] if t.get("lead")}
+    lead_by_email = dict(frappe.get_all("CRM Lead", filters={"email": ["in", list(emails)]},
+                                        fields=["email", "name"], as_list=True)) if emails else {}
+    deal_by_lead = {}
+    for row in frappe.get_all("CRM Deal", filters={"lead": ["in", list(lead_by_email.values())]},
+                              fields=["lead", "name"], order_by="creation asc") if lead_by_email else []:
+        deal_by_lead.setdefault(row.lead, row.name)
     created, moved = [], []
-    for t in demo_tasks(frappe.utils.today()):
+    for t in demo_tasks(frappe.utils.today(), extra):
         existing = frappe.db.get_value("CRM Task", {"title": t["title"]})
         if existing:
-            frappe.db.set_value("CRM Task", existing, {"start_date": t["start_date"], "due_date": t["due_date"]},
-                                update_modified=False)
-            moved.append(existing)
+            have = frappe.db.get_value("CRM Task", existing, ["start_date", "due_date"], as_dict=True)
+            if str(have.start_date)[:10] != t["start_date"][:10] or str(have.due_date)[:19] != t["due_date"][:19]:
+                frappe.db.set_value("CRM Task", existing, {"start_date": t["start_date"], "due_date": t["due_date"]},
+                                    update_modified=False)
+                moved.append(existing)
             continue
-        doc = frappe.get_doc({"doctype": "CRM Task", **t})
+        doctype, docname = resolve_reference(t, lead_by_email, deal_by_lead)
+        values = {k: v for k, v in t.items() if k != "lead"}
+        values.update(reference_doctype=doctype or None, reference_docname=docname or None)
+        doc = frappe.get_doc({"doctype": "CRM Task", **values})
         doc.insert(ignore_permissions=True)
         created.append(doc.name)
 

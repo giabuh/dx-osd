@@ -890,6 +890,8 @@ def sync_all_posted_analytics():
         for name in posts:
             try:
                 doc = frappe.get_doc("Facebook Post", name)
+                if str(doc.fb_post_id or "").startswith("demo-"):
+                    continue  # sample post (scripts/seed-demo.sh): there is nothing on Facebook to read
                 doc.sync_analytics()
                 synced_count += 1
             except Exception as e:

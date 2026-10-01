@@ -267,6 +267,7 @@ def run(dry_run=False):
     posts = frappe.get_all("Facebook Post", filters={"status": "Posted", "fb_post_id": ["is", "set"],
                                                      "posted_at": [">=", cutoff]},
                            fields=["name", "title", "course", "fb_post_id"])
+    posts = [p for p in posts if not str(p.fb_post_id).startswith("demo-")]  # sample posts (scripts/seed-demo.sh)
     sender = DrySender() if dry_run else GraphSender(page_id, token)
     now, rows = datetime.now(timezone.utc), []
     for post in posts:
