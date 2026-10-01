@@ -1,4 +1,4 @@
-"""Task dispatch with a manager's approval (D-124, spec 2026-10-01-task-dispatch-design.md): the system finds
+"""Task dispatch with a manager's approval (D-126, spec 2026-10-01-task-dispatch-design.md): the system finds
 CRM Tasks about customers that sit with the wrong person (nobody, someone who left, someone off duty with an
 urgent task, someone swamped) and PROPOSES who should take them; a manager approves, changes or rejects each
 proposal in /crm/admin/tasks. Nothing is assigned without that decision.

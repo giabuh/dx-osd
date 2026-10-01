@@ -460,7 +460,7 @@ def compose_commercial_banner(hero_image, course, title=None, feedback=None, app
       - High-impact commercial hero photo of student & project
       - 3 Transformation Roadmap Cards connected by yellow vector arrows
       - Giant bright golden-yellow CTA button with target icon 🎯
-      - Modern footer with Hotline and branches: `footer` from CRM data (marketing_plan.footer_text, D-123);
+      - Modern footer with Hotline and branches: `footer` from CRM data (marketing_plan.footer_text, D-125);
         without it a neutral line, never invented contact details. `has_offer`: an active promotion applies.
     """
     W, H = 1080, 1920

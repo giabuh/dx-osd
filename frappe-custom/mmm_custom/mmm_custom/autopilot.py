@@ -38,7 +38,7 @@ except ImportError:
 
 
 # 4 weekly post slots (Mon, Wed, Fri, Sun): day, time and the caption angle of facebook_post.generate_ai_content.
-# Which course goes in each slot is decided every week from CRM data (marketing_plan.plan_week, D-123).
+# Which course goes in each slot is decided every week from CRM data (marketing_plan.plan_week, D-125).
 WEEKLY_MATRIX = [
     {
         "day": 0,
@@ -123,7 +123,7 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
     batch_id = f"BATCH-{iso_year}-W{iso_week:02d}"
 
     created_posts = []
-    # The week's courses from CRM data: open classes, promotions, what earlier posts brought (D-123)
+    # The week's courses from CRM data: open classes, promotions, what earlier posts brought (D-125)
     # Classes and results are judged from today: a class that started on Monday is not "coming up" on Thursday.
     offer_slot = next((i for i, s in enumerate(slots) if s["day_of_week"] == "Chủ Nhật"), len(slots) - 1)
     plan = plan_week(max(_today(), base_monday), n=len(slots), offer_slot=offer_slot) if slots else []

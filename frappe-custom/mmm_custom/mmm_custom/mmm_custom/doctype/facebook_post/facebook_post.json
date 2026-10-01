@@ -104,7 +104,7 @@
    "fieldtype": "Small Text",
    "label": "Vì sao chọn khóa này",
    "read_only": 1,
-   "description": "Lý do Planner chọn khóa cho tuần này từ dữ liệu CRM (D-123)"
+   "description": "Lý do Planner chọn khóa cho tuần này từ dữ liệu CRM (D-125)"
   },
   {
    "fieldname": "posted_at",
@@ -145,7 +145,7 @@
    "fieldtype": "Small Text",
    "label": "Cảnh báo nội dung",
    "read_only": 1,
-   "description": "Số tiền, mức giảm hoặc số điện thoại trong bài không có trong dữ liệu CRM (D-123)"
+   "description": "Số tiền, mức giảm hoặc số điện thoại trong bài không có trong dữ liệu CRM (D-125)"
   },
   {
    "fieldname": "column_break_content",

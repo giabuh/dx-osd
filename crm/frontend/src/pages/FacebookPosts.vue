@@ -1219,7 +1219,7 @@ const availableCourses = ref([
   { name: 'Chung', product_name: 'Tuyển sinh chung EduFlow' },
 ])
 const weeklyMatrix = ref([
-  // Courses are chosen each week from CRM data (marketing_plan.plan_week, D-123); a slot is day, time and angle.
+  // Courses are chosen each week from CRM data (marketing_plan.plan_week, D-125); a slot is day, time and angle.
   { day: 0, day_of_week: 'Thứ Hai', time: '08:30:00' },
   { day: 2, day_of_week: 'Thứ Tư', time: '11:30:00' },
   { day: 4, day_of_week: 'Thứ Sáu', time: '19:30:00' },
@@ -1390,7 +1390,7 @@ async function fetchPosts() {
 }
 
 // Matrix Helpers
-// A post still waiting for approval whose publishing time has passed (D-125): approving the week skips it,
+// A post still waiting for approval whose publishing time has passed (D-127): approving the week skips it,
 // because the publisher would post it the moment it became Scheduled.
 function isPastDue(post) {
   if (!post || post.status !== 'Pending Approval' || !post.scheduled_time) return false

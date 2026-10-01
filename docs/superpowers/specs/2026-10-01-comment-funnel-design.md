@@ -1,6 +1,6 @@
 # Comment funnel: from a post comment to a Lead that knows its post — Design Spec
 
-Decision D-122 (`2026-09-26-edu-lead-engine/decisions.md`). Organic posts only (no paid ads).
+Decision D-124 (`2026-09-26-edu-lead-engine/decisions.md`). Organic posts only (no paid ads).
 
 ## Purpose
 

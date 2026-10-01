@@ -53,9 +53,9 @@ class TestLeadLayout(unittest.TestCase):
         tabs = [{"name": "t", "sections": [{"name": "s", "columns": [{"name": "c", "fields": [
             "organization", "annual_revenue", "no_of_employees", "territory"]}]}]}]
         self.assertEqual(setup_mod.remove_fields(side, setup_mod.REMOVE_FROM_LEAD)[0]["columns"][0]["fields"],
-                         ["organization", "territory", "source", "lead_owner"])
+                         ["territory", "source", "lead_owner"])  # a customer is a person: no organization (D-122)
         self.assertEqual(setup_mod.remove_fields(tabs, setup_mod.REMOVE_FROM_LEAD)[0]["sections"][0]["columns"][0]["fields"],
-                         ["organization", "territory"])
+                         ["territory"])
 
     def test_layout_fields_sees_every_section(self):
         tabs = [{"sections": [{"columns": [{"fields": ["a", "territory"]}]}, {"columns": [{"fields": ["b"]}]}]}]
@@ -65,7 +65,7 @@ class TestLeadLayout(unittest.TestCase):
         quick = json.loads('[{"name": "organization_section", "columns": [{"name": "a", "fields": ["organization", "territory"]},'
                            ' {"name": "b", "fields": ["website", "annual_revenue"]}]}]')
         out = setup_mod.remove_fields(quick, setup_mod.REMOVE_FROM_LEAD)
-        self.assertEqual([c["fields"] for c in out[0]["columns"]], [["organization", "territory"], []])
+        self.assertEqual([c["fields"] for c in out[0]["columns"]], [["territory"], []])
 
 
 if __name__ == "__main__":

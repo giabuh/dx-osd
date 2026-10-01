@@ -90,7 +90,7 @@ BEFORE_THE_WEEK = autopilot.datetime(2026, 9, 27, 12, 0)
 @patch("mmm_custom.autopilot.plan_week", lambda *a, **k: PLAN)
 class TestAutopilotEngine(unittest.TestCase):
     def test_get_weekly_matrix(self):
-        """A slot is day, time and caption angle; the course comes from marketing_plan.plan_week (D-123)."""
+        """A slot is day, time and caption angle; the course comes from marketing_plan.plan_week (D-125)."""
         matrix = autopilot.get_weekly_matrix()
         self.assertEqual([(s["day_of_week"], s["time"]) for s in matrix],
                          [("Thứ Hai", "08:30:00"), ("Thứ Tư", "11:30:00"), ("Thứ Sáu", "19:30:00"),

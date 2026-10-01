@@ -9234,3 +9234,30 @@ msgstr "Khóa học & Lớp"
 
 msgid "Please provide a reason for marking this {0} as lost"
 msgstr "Vui lòng nhập lý do đóng {0} này"
+
+#. Sao Việt (D-122): an empty field on the customer page's side panel
+msgid "Not set yet"
+msgstr "Chưa có"
+
+#. Sao Việt (D-122): customer page side panel groups
+msgid "Learning Needs"
+msgstr "Nhu cầu học"
+
+msgid "Registrations"
+msgstr "Hồ sơ đăng ký"
+
+msgid "Bot & Level Test"
+msgstr "Bot và bài test"
+
+msgid "Source & Referral"
+msgstr "Nguồn và giới thiệu"
+
+#. Sao Việt (D-123): who studies, their goal and level
+msgid "Learner Name"
+msgstr "Tên người học"
+
+msgid "Learning Goal"
+msgstr "Mục tiêu học"
+
+msgid "Current Level"
+msgstr "Trình độ hiện tại"

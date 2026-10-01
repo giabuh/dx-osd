@@ -204,7 +204,7 @@ class FacebookPost(Document):
             "- Viết như một chuyên gia tâm huyết đang trò chuyện trực tiếp với người đọc, chân thật và cuốn hút."
         )
 
-        # Brand, branches, hotline, fee, offer, next class and the level-test keyword come from CRM data (D-123)
+        # Brand, branches, hotline, fee, offer, next class and the level-test keyword come from CRM data (D-125)
         from mmm_custom.marketing_plan import caption_rules, ensure_cta, post_facts, unsupported_claims
 
         facts = post_facts(self.course) if self.course else {}
@@ -469,7 +469,7 @@ class FacebookPost(Document):
             except Exception:
                 pass
 
-            # 3. Leads this post brought: the comment funnel sets CRM Lead.facebook_post (D-122)
+            # 3. Leads this post brought: the comment funnel sets CRM Lead.facebook_post (D-124)
             if hasattr(frappe, "db") and hasattr(frappe.db, "count") and type(frappe.db).__name__ not in ("MagicMock", "Mock"):
                 try:
                     self.leads_count = frappe.db.count("CRM Lead", {"facebook_post": self.name})
@@ -557,7 +557,7 @@ class FacebookPost(Document):
 
                 from mmm_custom.comment_funnel import classify, sentiment as sentiment_of
 
-                sentiment = sentiment_of(classify(msg))  # the comment funnel's classifier (D-122)
+                sentiment = sentiment_of(classify(msg))  # the comment funnel's classifier (D-124)
                 self.append("comments", {
                     "comment_id": cid,
                     "from_name": from_name,

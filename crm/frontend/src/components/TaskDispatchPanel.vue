@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-// Task dispatch (D-124): the system proposes who should take a task, a manager decides. Only managers see this;
+// Task dispatch (D-126): the system proposes who should take a task, a manager decides. Only managers see this;
 // the server checks the role again on every call (mmm_custom.task_dispatch).
 import { adminCall, displayTime } from '@/components/Admin/adminApi'
 import { sessionStore } from '@/stores/session'

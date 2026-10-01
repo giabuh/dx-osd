@@ -11,3 +11,5 @@ mmm_custom.patches.v1_1.education_lifecycle
 mmm_custom.patches.v1_2.simplify_registration
 mmm_custom.patches.v1_2.draft_registration
 mmm_custom.patches.v1_2.enrol_dialogue
+mmm_custom.patches.v1_3.customer_page
+mmm_custom.patches.v1_3.registration_page

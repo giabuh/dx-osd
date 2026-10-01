@@ -2,7 +2,7 @@
  "actions": [],
  "autoname": "hash",
  "creation": "2026-10-01 09:00:00.000000",
- "description": "One row per comment the comment funnel handled: intent, replies, the customer's page-scoped id and the Lead it brought (D-122)",
+ "description": "One row per comment the comment funnel handled: intent, replies, the customer's page-scoped id and the Lead it brought (D-124)",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [

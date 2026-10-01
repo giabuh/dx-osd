@@ -1,6 +1,6 @@
 # Weekly plan from CRM data — Design Spec
 
-Decision D-123 (`2026-09-26-edu-lead-engine/decisions.md`). Builds on the comment funnel (D-122).
+Decision D-125 (`2026-09-26-edu-lead-engine/decisions.md`). Builds on the comment funnel (D-124).
 
 ## Purpose
 
@@ -15,7 +15,7 @@ What the weekly autopilot (`autopilot.py`, spec `2026-09-27-autonomous-marketing
   ("EduFlow Academy", "CS1 Bình Thạnh / CS2 Quận 1 / CS3 Thủ Đức", "0901.888.666"). The CRM says
   "Tin Học Sao Việt", 13 branches, 0931 144 858.
 - Captions ask to "inbox the page"; nothing invites the comment keyword that starts the level test (D-106),
-  so the comment funnel (D-122) is not opened by the post itself.
+  so the comment funnel (D-124) is not opened by the post itself.
 
 ## Design
 

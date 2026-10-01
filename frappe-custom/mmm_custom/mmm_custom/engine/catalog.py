@@ -57,7 +57,7 @@ DEFAULT_SETTINGS = {
                           "{{ course.next_courses | join(', ') }} ạ.",
     "phone_check_template": "Dạ số {{ phone_suspect }} hình như chưa đủ 10 số, {{ brand.you }} kiểm tra lại giúp "
                             "{{ brand.me }} nhé ạ.",
-    # Comment funnel (D-122, mmm_custom/comment_funnel.py): replies under our Facebook posts, from CRM data.
+    # Comment funnel (D-124, mmm_custom/comment_funnel.py): replies under our Facebook posts, from CRM data.
     "comment_public_template": "Dạ {{ brand.me }} cảm ơn {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} "
                                "ạ, {{ brand.me }} đã nhắn tin riêng cho {{ brand.you }}{% if course.name %} thông tin khóa "
                                "{{ course.name }}{% endif %}, {{ brand.you }} xem hộp thư Messenger giúp {{ brand.me }} nhé ạ.",

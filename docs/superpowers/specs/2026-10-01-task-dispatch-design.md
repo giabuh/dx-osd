@@ -1,6 +1,6 @@
 # Task dispatch with a manager's approval — Design Spec
 
-Decision D-124 (`2026-09-26-edu-lead-engine/decisions.md`). Human in the loop: the system proposes, a manager decides.
+Decision D-126 (`2026-09-26-edu-lead-engine/decisions.md`). Human in the loop: the system proposes, a manager decides.
 
 ## Purpose
 
