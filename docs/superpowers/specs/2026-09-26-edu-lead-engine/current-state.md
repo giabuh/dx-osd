@@ -1,4 +1,4 @@
-# Current State — Code Map (as of 2026-09-30, C1 + C2 + C3 done; staff assist D-109…D-115; customer lifecycle D-116/D-117)
+# Current State — Code Map (as of 2026-10-01, C1 + C2 + C3 done; staff assist D-109…D-115; customer lifecycle D-116/D-117; customer page D-122/D-123)
 
 What exists today, where it lives, and which layer changes it. Line numbers drift; re-check with
 `grep -n` before relying on one.
@@ -62,7 +62,7 @@ for real customers until a later labelled gate passes.
 | `sources.py` | Channel list (D-100): Chatwoot channel → CRM Lead Source for new Leads, `source_campaign`, statuses for planned channels (Zalo, TikTok) | Add a channel = one row |
 | `dedupe.py`, `data_quality.py` | Email/phone normalisation and matching; data-quality label | Reused; C7.2 |
 | `chatwoot_client.py` | Chatwoot REST v1 wrapper; C1 added inbox/agent/team methods | Reused/extended |
-| `setup.py` | Custom fields on CRM Lead via `after_install` + patches (`patches.txt`); catalog custom fields on CRM Territory/CRM Product in `CATALOG_FIELDS`, applied idempotently by `create_catalog_fields()` on install and every migrate (`after_migrate` hook) | Add new catalog fields to `CATALOG_FIELDS` |
+| `setup.py` | Custom fields on CRM Lead via `after_install` + patches (`patches.txt`); catalog custom fields on CRM Territory/CRM Product in `CATALOG_FIELDS`, applied idempotently by `create_catalog_fields()` on install and every migrate (`after_migrate` hook); the grouped Lead side panel `LEAD_SIDE_PANEL` written once by `update_lead_side_panel` (sentinel `needs_section`, D-122), `REMOVE_FROM_LEAD` includes `organization`, `link_goal_level_slots` (goal / level → `learning_goal` / `current_level`, D-123) | Add new catalog fields to `CATALOG_FIELDS` |
 | `catalog_rules.py` | Pure validation rules + Select option constants (`SLOT_TYPES`, `ACTION_TYPES`, …) used by DocType controllers | C2 registries must use the same constants |
 | `mmm_custom/doctype/` | Bot Conversation adds `history`, `ai_signals`, `jev_calls`; AI Decision Log adds `jev_extra`; Bot Slot adds `ask_on_demand`; Lead Engine Settings adds Jev/cost/advisor sections; existing C1–C2 DocTypes and child tables remain | C4+ reads |
 | `demo/loader.py`, `demo/saoviet/*.json` | Idempotent Sao Việt demo loader (`bench execute mmm_custom.demo.loader.load`, optional `anchor`); `purge_demo()` | — |
@@ -71,6 +71,7 @@ for real customers until a later labelled gate passes.
 | `staff_switch.py`, `crm/frontend/src/components/StaffSwitchBanner.vue` | Demo staff switch: a System Manager views the CRM as an active consultant (Frappe impersonation, Activity Log, `disable_staff_switch`), banner with the way back; "Xem như" on `/crm/admin/staff` (D-105) | — |
 | `scope.py`, `crm/crm/permissions/org_hierarchy.py` | Branch scope: consultants see every Lead/Deal of their branch (central team: no territory; B2B: the B2B team's) through the `crm_record_scope` hook (D-105) | — |
 | `lead_chat.py`, `crm/frontend/src/components/Activities/LeadChat.vue` | Lead page "Tin nhắn" tab: the Lead's Chatwoot conversation, read and answered under the consultant's own Chatwoot token (`Consultant.chatwoot_access_token`, fetched by `staff_sync` through the Platform App) (D-105) | — |
+| `customer_profile.py`, `crm/frontend/src/components/Customer/` | Customer page (D-122): `profile` (registrations, the bot's conversation, level tests, referrals; Lead read permission) and `class_card` (seats left); `LeadSidePanel.vue` wraps `SidePanelLayout` (`showEmpty`, `highlight`, `after-fields` slot, `custom` sections) on both Lead pages; `ClassCard.vue` and `FeeProgress.vue` on the Deal pages. Tabs on Lead/Deal pages: Tin nhắn first, Hoạt động last, no Data / Attachments; URLs open `#messages` (`router.js`) | — |
 | `lead_views.py`, `crm/crm/fcrm/doctype/crm_lead/crm_lead.py` | Leads list default columns (branch, course, source, hotness badge) and quick filters; `?filters=` links from `/crm/admin/customers` (D-105) | — |
 | `crm_links.py` | Chatwoot ↔ CRM links: contact attribute `ho_so_crm` (link type, written by `effects.save_lead` from `crm_public_url`; `backfill_contact_links` for older contacts) and the "Mở cuộc chat" CRM Form Script on the Lead page (`open_chat_url`, created on migrate) | — |
 | `demo/chatwoot_seed.py` | Runs `staff_sync.sync_all()` for the loaded demo consultants | Supersedes `scripts/seed-branch-agents.py` |
@@ -83,7 +84,7 @@ Chatwoot: 44 agents, 15 teams.
 
 ## CRM Lead custom fields (from `setup.py`)
 
-`chatwoot_contact_id` (Data, unique) · `source_campaign` (Data, D-100) · `referral_code`, `referred_by_code`, `referred_by` (D-103) · `placement_result` (D-104) · `quiz_detail`, `voucher_code` (D-106) · `course_interest` (Data, summary) · `learner_type`, `learner_age`, `preferred_shift` (C2.4) · `branch` (Select, **3 hardcoded
+`chatwoot_contact_id` (Data, unique) · `source_campaign` (Data, D-100) · `referral_code`, `referred_by_code`, `referred_by` (D-103) · `placement_result` (D-104) · `quiz_detail`, `voucher_code` (D-106) · `course_interest` (Data, summary) · `learner_type`, `learner_name`, `learner_age`, `preferred_shift` (C2.4, D-123) · `learning_goal`, `current_level` (D-123) · `branch` (Select, **3 hardcoded
 options**, no longer written) · `data_quality` (Select) · `ai_intent` (Select) · `ai_hotness` (Select).
 
 ## Standard Frappe CRM pieces we will reuse (vendored `crm/`, not edited)
