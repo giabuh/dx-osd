@@ -132,6 +132,7 @@
   />
 </template>
 <script setup>
+import MessageCircleIcon from '~icons/lucide/message-circle'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Icon from '@/components/Icon.vue'
@@ -142,7 +143,6 @@ import CommentIcon from '@/components/Icons/CommentIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
-import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import LostReasonModal from '@/components/Modals/LostReasonModal.vue'
@@ -294,6 +294,7 @@ usePageMeta(() => {
 })
 
 const tabs = computed(() => {
+  // Sao Việt (D-122): same order as the desktop Lead page, after the side panel's Details tab
   let tabOptions = [
     {
       name: 'Details',
@@ -302,9 +303,9 @@ const tabs = computed(() => {
       condition: () => isMobileView.value,
     },
     {
-      name: 'Activity',
-      label: __('Activity'),
-      icon: ActivityIcon,
+      name: 'Messages',
+      label: __('Messages'),
+      icon: MessageCircleIcon,
     },
     {
       name: 'Emails',
@@ -315,11 +316,6 @@ const tabs = computed(() => {
       name: 'Comments',
       label: __('Comments'),
       icon: CommentIcon,
-    },
-    {
-      name: 'Data',
-      label: __('Data'),
-      icon: DetailsIcon,
     },
     {
       name: 'Calls',
@@ -337,15 +333,15 @@ const tabs = computed(() => {
       icon: NoteIcon,
     },
     {
-      name: 'Attachments',
-      label: __('Attachments'),
-      icon: AttachmentIcon,
-    },
-    {
       name: 'WhatsApp',
       label: __('WhatsApp'),
       icon: WhatsAppIcon,
       condition: () => whatsappEnabled.value,
+    },
+    {
+      name: 'Activity',
+      label: __('Activity'),
+      icon: ActivityIcon,
     },
   ]
   return tabOptions.filter((tab) => (tab.condition ? tab.condition() : true))

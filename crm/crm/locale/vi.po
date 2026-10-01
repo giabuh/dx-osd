@@ -9230,3 +9230,7 @@ msgstr "Khóa học & Lớp"
 
 msgid "Please provide a reason for marking this {0} as lost"
 msgstr "Vui lòng nhập lý do đóng {0} này"
+
+#. Sao Việt (D-122): an empty field on the customer page's side panel
+msgid "Not set yet"
+msgstr "Chưa có"

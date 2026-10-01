@@ -1,5 +1,8 @@
 <template>
-  <div class="sections flex flex-col overflow-y-auto">
+  <div
+    class="sections flex flex-col overflow-y-auto"
+    :class="{ 'show-empty': showEmpty }"
+  >
     <template v-for="(section, i) in _sections" :key="section.name">
       <div v-if="section.visible" class="section flex flex-col">
         <div
@@ -37,9 +40,10 @@
                   <div
                     v-if="field.visible"
                     class="field flex gap-2 px-3 leading-5 first:mt-3"
-                    :class="
-                      isTextareaField(field) ? 'items-start' : 'items-center'
-                    "
+                    :class="[
+                      isTextareaField(field) ? 'items-start' : 'items-center',
+                      { 'rounded bg-surface-amber-1': isMissing(field) },
+                    ]"
                   >
                     <Tooltip
                       v-if="!['Button', 'HTML'].includes(field.fieldtype)"
@@ -50,7 +54,14 @@
                         class="w-[35%] min-w-20 shrink-0 flex items-center gap-0.5"
                         :class="{ 'pt-[9px]': isTextareaField(field) }"
                       >
-                        <div class="truncate text-sm text-ink-gray-5">
+                        <div
+                          class="truncate text-sm"
+                          :class="
+                            isMissing(field)
+                              ? 'text-ink-amber-3'
+                              : 'text-ink-gray-5'
+                          "
+                        >
                           {{ __(field.label) }}
                         </div>
                         <div
@@ -99,7 +110,13 @@
                           class="flex h-7 cursor-pointer items-center px-2 py-1 text-ink-gray-5"
                         >
                           <Tooltip :text="__(field.tooltip)">
-                            <div>{{ doc[field.fieldname] }}</div>
+                            <div
+                              v-if="showEmpty && isNull(doc[field.fieldname])"
+                              class="text-ink-gray-4"
+                            >
+                              {{ __('Not set yet') }}
+                            </div>
+                            <div v-else>{{ doc[field.fieldname] }}</div>
                           </Tooltip>
                         </div>
                         <PrimaryDropdown
@@ -461,6 +478,10 @@ const props = defineProps({
   docname: { type: String, required: true },
   preview: { type: Boolean, default: false },
   addContact: { type: Function, default: null },
+  // Sao Việt (D-122): show every field, an empty read-only one as "Chưa có", so staff see what is missing
+  showEmpty: { type: Boolean, default: false },
+  // fieldnames that are still needed: an empty one is marked
+  highlight: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['beforeFieldChange', 'afterFieldChange', 'reload'])
@@ -600,6 +621,7 @@ function parsedSection(section, editButtonAdded) {
   } else {
     section.visible =
       isContactSection ||
+      section.custom || // drawn by the page through the default slot (D-122)
       section.columns?.[0].fields.filter((f) => f.visible).length
   }
 
@@ -616,6 +638,7 @@ function isFieldVisible(field, scriptHidden) {
     field.read_only || field.fieldtype === 'Read Only' ? true : false
 
   let hideEmptyReadOnlyField =
+    !props.showEmpty &&
     isNull(doc.value[field.fieldname]) &&
     Number(window.sysdefaults?.hide_empty_read_only_fields ?? 1)
 
@@ -628,6 +651,13 @@ function isFieldVisible(field, scriptHidden) {
       !readOnlyField) &&
     (!field.depends_on || field.display_via_depends_on) &&
     !field.hidden
+  )
+}
+
+function isMissing(field) {
+  return (
+    props.highlight.includes(field.fieldname) &&
+    isNull(doc.value[field.fieldname])
   )
 }
 
@@ -722,6 +752,10 @@ function checkChange(value, df) {
   max-height: 300px;
 }
 .sections .section:last-of-type .column {
+  max-height: none;
+}
+/* one scroll for the whole panel instead of one per section */
+.sections.show-empty .section .column {
   max-height: none;
 }
 </style>
