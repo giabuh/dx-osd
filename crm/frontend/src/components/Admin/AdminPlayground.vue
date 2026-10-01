@@ -136,8 +136,15 @@
                   :theme="inspector.heat.theme"
                   size="md"
                 />
-                <span v-else class="text-p-sm text-ink-gray-5"
-                  >Chưa rõ (cần Jev)</span
+                <span
+                  v-if="inspector.heat && inspector.heatEarlier"
+                  class="text-p-sm text-ink-gray-5"
+                  >theo tin trước</span
+                >
+                <span
+                  v-if="!inspector.heat"
+                  class="text-p-sm text-ink-gray-5"
+                  >{{ useJev ? 'Chưa rõ' : 'Chưa rõ (cần Jev)' }}</span
                 >
               </span>
             </div>
@@ -313,7 +320,10 @@ function view(result) {
   const summary = result.summary || {}
   const u = result.understanding || {}
   const jev = result.jev || {}
-  const intent = INTENTS[u.intent?.value]
+  // A turn that skips Jev (a tapped button, a phone number) keeps what the conversation already knows
+  const known = result.state?.ai || {}
+  const intent = INTENTS[u.intent?.value || known.ai_intent]
+  const heat = HEAT[u.hotness?.value] || HEAT[known.ai_hotness] || null
   const sources = [
     ...(summary.tapped ? ['Khách bấm nút'] : []),
     ...(summary.keywords || []).map((name) => `Từ khóa: ${name}`),
@@ -321,7 +331,8 @@ function view(result) {
   ]
   return {
     wants: summary.skills?.length ? summary.skills.join(', ') : intent || '—',
-    heat: HEAT[u.hotness?.value] || null,
+    heat,
+    heatEarlier: Boolean(heat) && !HEAT[u.hotness?.value],
     type: result.decision?.type,
     decision: summary.decision || result.decision?.type || '—',
     reason: result.decision?.reason || '—',

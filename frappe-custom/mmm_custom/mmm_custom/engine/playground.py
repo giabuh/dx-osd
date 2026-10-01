@@ -97,7 +97,7 @@ def inspect(turn, effects, catalog=None):
         "events": effects.of("emit"),
         "effects": [call for call in effects.calls if call[0] not in ("send", "emit")],
         "state": {"status": s.status, "slots": s.slots, "lead": s.lead, "consultant": s.consultant,
-                  "is_returning": s.is_returning},
+                  "is_returning": s.is_returning, "ai": s.ai},
     }
     if catalog is not None:
         result["summary"] = {
