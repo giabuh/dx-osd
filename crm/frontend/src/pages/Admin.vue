@@ -44,6 +44,7 @@ import AdminKnowledge from '@/components/Admin/AdminKnowledge.vue'
 import AdminPlayground from '@/components/Admin/AdminPlayground.vue'
 import AdminQuizzes from '@/components/Admin/AdminQuizzes.vue'
 import AdminChannels from '@/components/Admin/AdminChannels.vue'
+import AdminTasks from '@/components/Admin/AdminTasks.vue'
 import { adminCall } from '@/components/Admin/adminApi'
 import { Breadcrumbs, Tabs, usePageMeta } from 'frappe-ui'
 import { computed, markRaw, onMounted, ref } from 'vue'
@@ -64,6 +65,12 @@ const tabs = [
     label: 'Khách hàng',
     icon: 'lucide-users-round',
     component: markRaw(AdminCustomers),
+  },
+  {
+    name: 'tasks',
+    label: 'Giao việc',
+    icon: 'lucide-list-todo',
+    component: markRaw(AdminTasks),
   },
   {
     name: 'branches',

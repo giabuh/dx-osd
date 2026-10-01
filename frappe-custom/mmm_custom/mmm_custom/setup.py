@@ -228,6 +228,18 @@ CATALOG_FIELDS = {
 		{"fieldname": "faqs", "label": "Course FAQs", "fieldtype": "Table", "options": "Course FAQ", "description": "Questions customers ask about this course; Jev picks the matching one and the bot sends its answer", "insert_after": "syllabus"},
 	],
 	# Bot Slot lead_field targets that are not standard CRM Lead fields.
+	# Task dispatch (D-124): the system proposes who should take a task, a manager decides. Not shown on the Task page.
+	"CRM Task": [
+		{"fieldname": "proposed_to", "label": "Proposed To", "fieldtype": "Link", "options": "User", "read_only": 1,
+		 "hidden": 1, "insert_after": "assigned_to"},
+		{"fieldname": "proposal_reason", "label": "Proposal Reason", "fieldtype": "Small Text", "read_only": 1,
+		 "hidden": 1, "insert_after": "proposed_to"},
+		{"fieldname": "proposal_status", "label": "Proposal Status", "fieldtype": "Select",
+		 "options": "\nPending\nRejected", "read_only": 1, "hidden": 1, "search_index": 1,
+		 "insert_after": "proposal_reason"},
+		{"fieldname": "proposal_at", "label": "Proposal At", "fieldtype": "Datetime", "read_only": 1, "hidden": 1,
+		 "insert_after": "proposal_status"},
+	],
 	"CRM Lead": [
 		{"fieldname": "learner_type", "label": "Learner", "fieldtype": "Data", "insert_after": "course_interest"},
 		{"fieldname": "learner_age", "label": "Learner Age", "fieldtype": "Int", "insert_after": "learner_type"},

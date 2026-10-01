@@ -152,6 +152,8 @@ lead_engine_events = {"handed_off": ["mmm_custom.intelligence.on_handed_off"],
 scheduler_events = {
 	"cron": {
 		"0 8 * * *": ["mmm_custom.followup.run_daily"],
+		# Task dispatch (D-124): proposals for a manager to approve, after the follow-up rules made the day's tasks.
+		"15 8 * * *": ["mmm_custom.task_dispatch.run_scheduled"],
 		# Heals failed staff syncs and gives newly connected Facebook pages the bot.
 		"*/10 * * * *": ["mmm_custom.staff_sync.sync_all"],
 		# Comment funnel (D-122): answers new comments on our posts; off unless site config comment_funnel_enabled.
