@@ -204,9 +204,12 @@ class FacebookPost(Document):
             "- Viết như một chuyên gia tâm huyết đang trò chuyện trực tiếp với người đọc, chân thật và cuốn hút."
         )
 
-        clean_hashtag = re.sub(r'[^a-zA-Z0-9_]', '', course_name)
+        # Brand, branches, hotline, fee, offer, next class and the level-test keyword come from CRM data (D-125)
+        from mmm_custom.marketing_plan import caption_rules, ensure_cta, post_facts, unsupported_claims
+
+        facts = post_facts(self.course) if self.course else {}
         prompt = (
-            f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm EduFlow Academy.\n"
+            f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm {facts.get('brand') or 'đào tạo'}.\n"
             f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n\n"
             f"{angle_section}\n\n"
             f"{anti_cliche_rules}\n\n"
@@ -214,9 +217,7 @@ class FacebookPost(Document):
             f"- Ngắn gọn dưới 150 từ, tiếng Việt, giọng văn cuốn hút, tự nhiên\n"
             f"- Kèm emoji sinh động ở tiêu đề, các gạch đầu dòng và phần kêu gọi hành động (ví dụ: 🚀, 💡, 🎯, 👨‍🏫, 🌟, 📚, ✨)\n"
             f"- Nêu bật 3 lợi ích chính dạng gạch đầu dòng rõ ràng, thu hút\n"
-            f"- Đề cập rõ 3 cơ sở: CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức (kèm hotline 0901.888.666)\n"
-            f"- Kêu gọi hành động rõ ràng: nhắn tin/inbox fanpage để nhận tư vấn và ưu đãi\n"
-            f"- Kèm hashtag: #EduFlow #EduFlowAcademy #{clean_hashtag}\n"
+            f"{caption_rules(facts, course_name)}"
             f"- Tuyệt đối KHÔNG dùng markdown (không dùng **, ##), trả về chữ thuần."
         )
 
@@ -274,7 +275,10 @@ class FacebookPost(Document):
                             frappe.log_error(title="Gemini API Error", message=str(e)[:500])
 
         if content:
-            self.content = content.replace("**", "").replace("##", "")
+            self.content = ensure_cta(content.replace("**", "").replace("##", ""), facts.get("quiz_keyword"))
+            claims = unsupported_claims(self.content, facts) if facts else []
+            self.content_warning = ("Không có trong dữ liệu CRM, kiểm tra trước khi duyệt: " + ", ".join(claims)
+                                    if claims else "")
             if not self.is_new():
                 try:
                     self.save()
@@ -465,15 +469,12 @@ class FacebookPost(Document):
             except Exception:
                 pass
 
-            # 3. Measure attributed CRM Leads from this post
-            if hasattr(frappe, "db") and hasattr(frappe.db, "sql") and type(frappe.db).__name__ not in ("MagicMock", "Mock"):
+            # 3. Leads this post brought: the comment funnel sets CRM Lead.facebook_post (D-124)
+            if hasattr(frappe, "db") and hasattr(frappe.db, "count") and type(frappe.db).__name__ not in ("MagicMock", "Mock"):
                 try:
-                    res = frappe.db.sql("""
-                        SELECT COUNT(DISTINCT parent) FROM `tabFCRM Note`
-                        WHERE parenttype = 'CRM Lead' AND (content LIKE %s OR title LIKE %s)
-                    """, (f"%{self.fb_post_id}%", f"%{self.name}%"))
-                    if res and len(res) > 0 and len(res[0]) > 0:
-                        self.leads_count = res[0][0] or 0
+                    self.leads_count = frappe.db.count("CRM Lead", {"facebook_post": self.name})
+                    self.registrations_count = frappe.db.count("CRM Lead", {"facebook_post": self.name,
+                                                                            "status": "Converted"})
                 except Exception:
                     pass
 
@@ -554,16 +555,9 @@ class FacebookPost(Document):
                     except Exception:
                         pass
 
-                lower = msg.lower()
-                if any(k in lower for k in ["học phí", "giá", "bao nhiêu", "chi phí", "tiền"]):
-                    sentiment = "Hỏi học phí / lịch"
-                elif any(k in lower for k in ["tư vấn", "khóa học", "học", "lớp", "đăng ký", "cho mình", "inbox"]):
-                    sentiment = "Quan tâm khóa học"
-                elif any(k in lower for k in ["hay", "đẹp", "tuyệt", "xịn", "like", "thích", "chất"]):
-                    sentiment = "Tích cực"
-                else:
-                    sentiment = "Spam / Khác"
+                from mmm_custom.comment_funnel import classify, sentiment as sentiment_of
 
+                sentiment = sentiment_of(classify(msg))  # the comment funnel's classifier (D-124)
                 self.append("comments", {
                     "comment_id": cid,
                     "from_name": from_name,
@@ -921,7 +915,7 @@ def get_marketing_overview():
                 "name", "title", "course", "status", "day_of_week",
                 "scheduled_time", "posted_at", "fb_post_id", "fb_post_url",
                 "likes_count", "comments_count", "shares_count", "reach_count", "leads_count",
-                "ads_recommendation"
+                "registrations_count", "ads_recommendation"
             ]
         )
 
@@ -936,6 +930,7 @@ def get_marketing_overview():
         total_shares = sum(p.get("shares_count") or 0 for p in posts)
         total_reach = sum(p.get("reach_count") or 0 for p in posts)
         total_leads = sum(p.get("leads_count") or 0 for p in posts)
+        total_registrations = sum(p.get("registrations_count") or 0 for p in posts)
         recommended_ads_count = sum(1 for p in posts if p.get("ads_recommendation") == "Recommended")
 
         # Top posts by leads
@@ -961,6 +956,7 @@ def get_marketing_overview():
                 "total_shares": total_shares,
                 "total_reach": total_reach,
                 "total_leads": total_leads,
+                "total_registrations": total_registrations,
                 "recommended_ads_count": recommended_ads_count,
             },
             "top_leads": top_leads,

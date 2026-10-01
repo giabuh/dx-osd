@@ -16,12 +16,14 @@
   "column_break_main",
   "batch_id",
   "boss_directive",
+  "plan_reason",
   "posted_at",
   "fb_post_id",
   "fb_post_url",
   "section_break_content",
   "content",
   "ai_feedback",
+  "content_warning",
   "column_break_content",
   "image",
   "section_break_analytics",
@@ -31,6 +33,7 @@
   "column_break_analytics",
   "reach_count",
   "leads_count",
+  "registrations_count",
   "last_analytics_sync",
   "ads_recommendation",
   "section_break_comments",
@@ -97,6 +100,13 @@
    "label": "Chỉ đạo tuần (Boss Directive)"
   },
   {
+   "fieldname": "plan_reason",
+   "fieldtype": "Small Text",
+   "label": "Vì sao chọn khóa này",
+   "read_only": 1,
+   "description": "Lý do Planner chọn khóa cho tuần này từ dữ liệu CRM (D-125)"
+  },
+  {
    "fieldname": "posted_at",
    "fieldtype": "Datetime",
    "label": "Thời điểm đã đăng",
@@ -129,6 +139,13 @@
    "fieldname": "ai_feedback",
    "fieldtype": "Small Text",
    "label": "Gợi ý cho AI (Tùy chọn)"
+  },
+  {
+   "fieldname": "content_warning",
+   "fieldtype": "Small Text",
+   "label": "Cảnh báo nội dung",
+   "read_only": 1,
+   "description": "Số tiền, mức giảm hoặc số điện thoại trong bài không có trong dữ liệu CRM (D-125)"
   },
   {
    "fieldname": "column_break_content",
@@ -187,6 +204,14 @@
    "read_only": 1
   },
   {
+   "default": "0",
+   "fieldname": "registrations_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Số học viên đăng ký",
+   "read_only": 1
+  },
+  {
    "fieldname": "last_analytics_sync",
    "fieldtype": "Datetime",
    "label": "Lần cập nhật số liệu gần nhất",
@@ -228,7 +253,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-26 11:40:00.000000",
+ "modified": "2026-10-01 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Facebook Post",

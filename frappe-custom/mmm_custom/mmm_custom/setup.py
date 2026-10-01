@@ -193,7 +193,8 @@ def update_crm_fields_layout():
 						fields = ["course_interest", "territory", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
-							fields += ["source_campaign", "facebook_page", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
+							fields += ["source_campaign", "facebook_page", "facebook_post", "referral_code", "referred_by",
+							           "placement_result"]  # D-100, D-124, D-103, D-104
 							fields += ["quiz_detail", "voucher_code", "trial_date"]  # D-106, D-116
 						for f in fields:
 							if f not in present:
@@ -248,6 +249,18 @@ CATALOG_FIELDS = {
 		{"fieldname": "faqs", "label": "Course FAQs", "fieldtype": "Table", "options": "Course FAQ", "description": "Questions customers ask about this course; Jev picks the matching one and the bot sends its answer", "insert_after": "syllabus"},
 	],
 	# Bot Slot lead_field targets that are not standard CRM Lead fields.
+	# Task dispatch (D-126): the system proposes who should take a task, a manager decides. Not shown on the Task page.
+	"CRM Task": [
+		{"fieldname": "proposed_to", "label": "Proposed To", "fieldtype": "Link", "options": "User", "read_only": 1,
+		 "hidden": 1, "insert_after": "assigned_to"},
+		{"fieldname": "proposal_reason", "label": "Proposal Reason", "fieldtype": "Small Text", "read_only": 1,
+		 "hidden": 1, "insert_after": "proposed_to"},
+		{"fieldname": "proposal_status", "label": "Proposal Status", "fieldtype": "Select",
+		 "options": "\nPending\nRejected", "read_only": 1, "hidden": 1, "search_index": 1,
+		 "insert_after": "proposal_reason"},
+		{"fieldname": "proposal_at", "label": "Proposal At", "fieldtype": "Datetime", "read_only": 1, "hidden": 1,
+		 "insert_after": "proposal_status"},
+	],
 	"CRM Lead": [
 		{"fieldname": "learner_type", "label": "Learner", "fieldtype": "Data", "insert_after": "course_interest"},
 		# The person who studies when it is not the contact, e.g. a parent registering a child (D-123)
@@ -275,9 +288,12 @@ CATALOG_FIELDS = {
 		{"fieldname": "facebook_page", "label": "Facebook Page", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "in_list_view": 1, "in_standard_filter": 1, "description": "Trang Facebook khách đã nhắn tin",
 		 "insert_after": "source_campaign"},
+		# The Facebook post whose comment brought the customer (comment funnel, D-124)
+		{"fieldname": "facebook_post", "label": "Facebook Post", "fieldtype": "Link", "options": "Facebook Post",
+		 "read_only": 1, "in_standard_filter": 1, "insert_after": "facebook_page"},
 		# Referral codes (D-103): this Lead's own code, the code a friend gave, and that friend
 		{"fieldname": "referral_code", "label": "Referral Code", "fieldtype": "Data", "length": 10, "unique": 1,
-		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "source_campaign"},
+		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "facebook_post"},
 		{"fieldname": "referred_by_code", "label": "Referred By Code", "fieldtype": "Data", "length": 20,
 		 "insert_after": "referral_code"},
 		{"fieldname": "referred_by", "label": "Referred By", "fieldtype": "Link", "options": "CRM Lead", "read_only": 1,

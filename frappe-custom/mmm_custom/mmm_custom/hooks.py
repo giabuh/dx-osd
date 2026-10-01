@@ -154,9 +154,12 @@ lead_engine_events = {"handed_off": ["mmm_custom.intelligence.on_handed_off"],
 scheduler_events = {
 	"cron": {
 		"0 8 * * *": ["mmm_custom.followup.run_daily"],
+		# Task dispatch (D-126): proposals for a manager to approve, after the follow-up rules made the day's tasks.
+		"15 8 * * *": ["mmm_custom.task_dispatch.run_scheduled"],
 		# Heals failed staff syncs and gives newly connected Facebook pages the bot.
 		"*/10 * * * *": ["mmm_custom.staff_sync.sync_all"],
-		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts"],
+		# Comment funnel (D-124): answers new comments on our posts; off unless site config comment_funnel_enabled.
+		"*/5 * * * *": ["mmm_custom.autopilot.publish_scheduled_posts", "mmm_custom.comment_funnel.run"],
 		# Level tests left half-way get one reminder (D-106).
 		"*/15 * * * *": ["mmm_custom.quiz_reminders.run"],
 		# Staff assist: the bot answers what nobody answered within assist_wait_minutes (D-111).

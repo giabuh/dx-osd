@@ -1,0 +1,153 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-01 09:00:00.000000",
+ "description": "One row per comment the comment funnel handled: intent, replies, the customer's page-scoped id and the Lead it brought (D-124)",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "comment_id",
+  "facebook_post",
+  "from_name",
+  "comment_time",
+  "column_break_1",
+  "intent",
+  "status",
+  "lead",
+  "psid",
+  "section_replies",
+  "comment_message",
+  "public_reply",
+  "private_reply",
+  "error"
+ ],
+ "fields": [
+  {
+   "fieldname": "comment_id",
+   "fieldtype": "Data",
+   "label": "Comment ID",
+   "reqd": 1,
+   "unique": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "facebook_post",
+   "fieldtype": "Link",
+   "label": "Facebook Post",
+   "options": "Facebook Post",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_name",
+   "fieldtype": "Data",
+   "label": "Commenter",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "comment_time",
+   "fieldtype": "Datetime",
+   "label": "Comment Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "intent",
+   "fieldtype": "Select",
+   "label": "Intent",
+   "options": "quiz\nprice\ninterest\npraise\nother",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Processing\nReplied\nSkipped\nFailed",
+   "default": "Processing",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "CRM Lead",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "psid",
+   "fieldtype": "Data",
+   "label": "Messenger PSID",
+   "search_index": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_replies",
+   "fieldtype": "Section Break",
+   "label": "Replies"
+  },
+  {
+   "fieldname": "comment_message",
+   "fieldtype": "Small Text",
+   "label": "Comment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "public_reply",
+   "fieldtype": "Small Text",
+   "label": "Public Reply",
+   "read_only": 1
+  },
+  {
+   "fieldname": "private_reply",
+   "fieldtype": "Small Text",
+   "label": "Private Reply",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-01 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "MMM Custom",
+ "name": "Facebook Comment Reply",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "from_name",
+ "track_changes": 0
+}
