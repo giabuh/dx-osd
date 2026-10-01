@@ -183,13 +183,14 @@
         v-if="sections.data"
         class="flex flex-1 flex-col justify-between overflow-hidden"
       >
-        <SidePanelLayout
+        <LeadSidePanel
           :sections="sections.data"
-          doctype="CRM Lead"
-          :docname="leadId"
+          :leadId="leadId"
+          :canRegister="!isLeadConversionDisabled"
           @reload="sections.reload"
           @beforeFieldChange="beforeStatusChange"
           @afterFieldChange="reloadResources"
+          @register="showConvertToDealModal = true"
         />
       </div>
     </Resizer>
@@ -239,7 +240,7 @@ import LostReasonModal from '@/components/Modals/LostReasonModal.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import Activities from '@/components/Activities/Activities.vue'
 import AssignTo from '@/components/AssignTo.vue'
-import SidePanelLayout from '@/components/SidePanelLayout.vue'
+import LeadSidePanel from '@/components/Customer/LeadSidePanel.vue'
 import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'

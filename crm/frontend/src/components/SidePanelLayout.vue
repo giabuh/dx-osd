@@ -413,6 +413,8 @@
                   </div>
                 </template>
               </FadedScrollableDiv>
+              <!-- Sao Việt (D-122): a card the page adds under a section's fields -->
+              <slot name="after-fields" v-bind="{ section }" />
             </slot>
           </Section>
         </div>
