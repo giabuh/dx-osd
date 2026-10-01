@@ -1,4 +1,6 @@
-"""Daily bot administration summary from CRM and bot records."""
+"""Daily bot administration summary from CRM and bot records, and the manager overview for a period (D-101)."""
+
+from datetime import date, timedelta
 
 try:
     import frappe
@@ -6,9 +8,11 @@ except ImportError:  # offline tests
     frappe = None
 
 from mmm_custom.desk import can_open_bot
-from mmm_custom.lifecycle import QUALIFIED, UNQUALIFIED, reached
+from mmm_custom.lifecycle import CONFIRMED_DEAL, PENDING_PAYMENT, QUALIFIED, UNQUALIFIED, reached
 
 BOT_SOURCE = "Messenger Bot"
+PERIODS = {"today": 1, "7": 7, "30": 30, "90": 90}  # the overview's period buttons → days, today included
+DEFAULT_PERIOD = "7"  # "today" is often empty in the morning
 
 
 def summarize(leads, handoffs, coverages, today, bot_leads=frozenset()):
@@ -71,3 +75,38 @@ def summary():
     else:
         result["latest_posts"] = []
     return result
+
+
+def period_since(period, today):
+    """First day of the period as "YYYY-MM-DD"; an unknown period is the default one."""
+    days = PERIODS.get(str(period), PERIODS[DEFAULT_PERIOD])
+    return (date.fromisoformat(str(today)[:10]) - timedelta(days=days - 1)).isoformat()
+
+
+def fees(deals):
+    """Tuition of the registrations a person confirmed (not drafts, not cancelled): received so far — the deposit
+    alone counts as received, as in `enrolment.compute` — and still due."""
+    confirmed = [d for d in deals if d.get("status") in CONFIRMED_DEAL]
+    received = lambda d: max(float(d.get("paid_amount") or 0), float(d.get("deposit_amount") or 0), 0.0)
+    return {"paid": sum(received(d) for d in confirmed), "due": sum(float(d.get("balance_due") or 0) for d in confirmed),
+            "registrations": len(confirmed), "pending_payment": sum(1 for d in confirmed if d.get("status") == PENDING_PAYMENT)}
+
+
+@frappe.whitelist() if frappe else (lambda fn: fn)
+def overview(period=DEFAULT_PERIOD):
+    """/crm/admin/overview: the customer journey, tuition and the latest Leads of a period."""
+    if not can_open_bot():
+        frappe.throw("Bạn không có quyền xem trang bot.", frappe.PermissionError)
+
+    from mmm_custom.engine.customers import report
+    from mmm_custom.engine.knowledge import overview as knowledge
+
+    period = str(period) if str(period) in PERIODS else DEFAULT_PERIOD
+    since = period_since(period, frappe.utils.today())
+    data = report(since)
+    deals = frappe.get_all("CRM Deal", filters={"creation": [">=", f"{since} 00:00:00"]}, limit_page_length=0,
+                           fields=["status", "deposit_amount", "paid_amount", "balance_due"])
+    coverage = [row["coverage"] for row in knowledge()]
+    return {"period": period, "since": since, "totals": data["totals"], "funnel": data["funnel"],
+            "latest": data["latest"][:10], "fees": fees(deals),
+            "coverage": round(sum(coverage) / len(coverage)) if coverage else 0}

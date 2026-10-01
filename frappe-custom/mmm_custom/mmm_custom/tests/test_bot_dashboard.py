@@ -48,5 +48,33 @@ class TestDashboard(unittest.TestCase):
                 dashboard.summary()
 
 
+class TestOverview(unittest.TestCase):
+    def test_period_starts_counting_today_and_falls_back_to_seven_days(self):
+        self.assertEqual(dashboard.period_since("today", "2026-10-02"), "2026-10-02")
+        self.assertEqual(dashboard.period_since("7", "2026-10-02"), "2026-09-26")
+        self.assertEqual(dashboard.period_since(30, "2026-10-02 08:00:00"), "2026-09-03")
+        self.assertEqual(dashboard.period_since("365", "2026-10-02"), "2026-09-26")
+
+    def test_fees_count_only_confirmed_registrations(self):
+        deals = [
+            {"status": "Pending Payment", "deposit_amount": 0, "paid_amount": 0, "balance_due": 1800000},
+            {"status": "Deposit Paid", "deposit_amount": 500000, "paid_amount": 0, "balance_due": 1300000},
+            {"status": "Won", "deposit_amount": 500000, "paid_amount": 1530000, "balance_due": 0},
+            {"status": "Awaiting Confirmation", "deposit_amount": 0, "paid_amount": 0, "balance_due": 1800000},  # bot draft
+            {"status": "Lost", "deposit_amount": 300000, "paid_amount": 300000, "balance_due": 1500000},  # cancelled
+        ]
+        self.assertEqual(dashboard.fees(deals), {"paid": 2030000.0, "due": 3100000.0, "registrations": 3,
+                                                 "pending_payment": 1})
+        self.assertEqual(dashboard.fees([]), {"paid": 0, "due": 0, "registrations": 0, "pending_payment": 0})
+
+    def test_overview_requires_manager(self):
+        frappe = MagicMock()
+        with patch.object(dashboard, "frappe", frappe), patch.object(dashboard, "can_open_bot", return_value=False):
+            frappe.PermissionError = PermissionError
+            frappe.throw.side_effect = PermissionError
+            with self.assertRaises(PermissionError):
+                dashboard.overview("7")
+
+
 if __name__ == "__main__":
     unittest.main()

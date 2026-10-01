@@ -4,11 +4,14 @@ from pathlib import Path
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine_fixtures import FakeJev, FakeRepo, demo_catalog, render
+from datetime import date
+
+from engine_fixtures import FakeJev, FakeRepo, demo_catalog, demo_consultants, render, schedule
 
 from mmm_custom.engine.effects import RecordingEffects
 from mmm_custom.engine.pipeline import Event, run_turn
-from mmm_custom.engine.playground import inspect, replay_state
+from mmm_custom.engine.playground import actions, inspect, load_demo_scripts, replay_state
+from mmm_custom.engine.scenarios import run_scenario
 
 CAT = demo_catalog()
 PAGE = Path(__file__).resolve().parent.parent / "mmm_custom" / "page" / "bot_playground"
@@ -38,6 +41,49 @@ class TestInspect(unittest.TestCase):
 
     def test_redelivery(self):
         self.assertEqual(inspect(None, RecordingEffects()), {"duplicate": True})
+
+    def test_summary_tells_a_manager_what_the_bot_understood_and_would_do(self):
+        fx = RecordingEffects()
+        turn = run_turn(Event("customer_message", "sandbox-x", 1, "học phí excel ở bình thạnh", {"id": "sandbox-x"}),
+                        FakeRepo(CAT), fx, render)
+        summary = inspect(turn, fx, CAT)["summary"]
+        self.assertEqual((summary["skills"], summary["decision"]), (["học phí"], "Trả lời"))
+        self.assertEqual((summary["keywords"], summary["tapped"]), (["Khóa học", "Chi nhánh", "Câu hỏi: học phí"], False))
+        facts = {f["key"]: f for f in summary["facts"]}
+        self.assertEqual((facts["course"]["value"], facts["course"]["new"]), ("Excel từ cơ bản đến nâng cao", True))
+        self.assertEqual((facts["branch"]["value"], facts["phone"]["value"], facts["phone"]["required"]), ("CN Bình Thạnh", "", True))
+        self.assertNotIn("learner", facts)  # optional and still empty: not listed
+        self.assertEqual(summary["actions"], ["Ghi vào Lead: Khóa học, Chi nhánh"])
+        json.dumps(summary, default=str)
+
+    def test_handoff_actions_name_the_consultant_team_and_status(self):
+        calls = [("save_lead", {"fields": {"mobile_no": "+84901234567", "status": "Qualified"}, "courses": []}),
+                 ("emit", {"event": "handed_off"}),
+                 ("handoff", {"team": "CN Dĩ An", "labels": ["cn-di-an"], "summary": "…", "owner": "bao@x"}),
+                 ("enrol", {"course": "VP-EXCEL", "class_title": "VP-EXCEL · CN Dĩ An · 06/10/2030 · Tối"})]
+        self.assertEqual(actions(calls, ["phone"], CAT, "Lạc Văn Bảo"), [
+            "Ghi vào Lead: Số điện thoại", "Trạng thái Lead → Đủ thông tin",
+            "Giao cho tư vấn viên Lạc Văn Bảo · nhóm CN Dĩ An", "Gắn nhãn Chatwoot: cn-di-an",
+            "Ghi chú tóm tắt hội thoại cho tư vấn viên", "Tạo phiếu ghi danh nháp: VP-EXCEL · CN Dĩ An · 06/10/2030 · Tối"])
+
+
+class TestDemoScripts(unittest.TestCase):
+    """The Playground's sample chats are played live at demos: each must reach a consultant on the demo data."""
+
+    def test_every_demo_script_ends_with_a_handoff(self):
+        classes = [schedule("VP-EXCEL", branch, date(2030, 10, day), shift=shift)
+                   for branch in ("CN Bình Thạnh", "CN Dĩ An")
+                   for day, shift in ((6, "Tối 18:00–20:00"), (8, "Sáng 8:00–10:00"))]
+        scripts = load_demo_scripts()
+        self.assertEqual([s["id"] for s in scripts], ["fee", "quiz", "enrol"])
+        for script in scripts:
+            with self.subTest(script["id"]):
+                repo = FakeRepo(CAT)
+                repo.consultant_rows, repo.schedules = demo_consultants(), classes
+                result = run_scenario({**script, "expect": {}}, repo, render)
+                self.assertTrue(script["title"])
+                self.assertEqual(result["transcript"][-1]["decision"], "handoff", result["transcript"][-1])
+                self.assertTrue(result["assigned"]["owner"])
 
 
 class TestReplayState(unittest.TestCase):
