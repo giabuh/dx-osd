@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 DOCTYPE_DIR = Path(__file__).resolve().parent.parent / "mmm_custom" / "doctype"
-EXTERNAL = {"CRM Product", "CRM Territory", "User", "CRM Lead"}
+EXTERNAL = {"CRM Product", "CRM Territory", "User", "CRM Lead", "Facebook Page"}
 
 
 def load_all():

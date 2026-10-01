@@ -10,6 +10,7 @@
  "field_order": [
   "title",
   "course",
+  "facebook_page",
   "status",
   "day_of_week",
   "scheduled_time",
@@ -58,6 +59,14 @@
    "label": "Khóa học",
    "options": "CRM Product",
    "reqd": 1
+  },
+  {
+   "fieldname": "facebook_page",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Trang Facebook / Fanpage",
+   "options": "Facebook Page"
   },
   {
    "default": "Draft",

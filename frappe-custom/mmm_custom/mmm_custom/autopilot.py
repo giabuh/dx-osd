@@ -95,7 +95,7 @@ def get_weekly_matrix():
 
 
 @frappe.whitelist()
-def generate_weekly_batch(boss_directive=None, target_date=None):
+def generate_weekly_batch(boss_directive=None, target_date=None, facebook_page=None):
     """Generate 4 weekly posts for the target week based on WEEKLY_MATRIX."""
     # Determine reference date
     if target_date:
@@ -142,6 +142,8 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
         doc = frappe.new_doc("Facebook Post")
         doc.title = title
         doc.course = course["code"]
+        if facebook_page:
+            doc.facebook_page = facebook_page
         doc.plan_reason = course["reason"]
         doc.status = "Pending Approval"
         doc.batch_id = batch_id

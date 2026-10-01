@@ -387,6 +387,36 @@ class TestAutopilotEngine(unittest.TestCase):
         self.assertIn('"mmm_custom.autopilot.publish_scheduled_posts"', hooks_content)
         self.assertIn('"*/5 * * * *"', hooks_content)
 
+    @patch("mmm_custom.autopilot.frappe.db.commit")
+    @patch("mmm_custom.autopilot.frappe.new_doc")
+    def test_generate_weekly_batch_with_facebook_page(self, mock_new_doc, mock_commit):
+        """Batch generation should set facebook_page on each post when provided."""
+        created_mock_docs = []
+
+        def side_effect(doctype):
+            d = MagicMock()
+            d.doctype = doctype
+            d.name = f"FB-TEST-{len(created_mock_docs) + 1}"
+            d.title = ""
+            d.course = ""
+            d.facebook_page = None
+            d.status = ""
+            created_mock_docs.append(d)
+            return d
+
+        mock_new_doc.side_effect = side_effect
+
+        target_date = "2026-10-12"
+        res = autopilot.generate_weekly_batch(
+            boss_directive="Chi nhánh 2 ưu đãi",
+            target_date=target_date,
+            facebook_page="1324629057402921",
+        )
+        self.assertEqual(res["status"], "success")
+        self.assertGreater(len(created_mock_docs), 0)
+        for doc in created_mock_docs:
+            self.assertEqual(doc.facebook_page, "1324629057402921")
+
 
 if __name__ == "__main__":
     unittest.main()
