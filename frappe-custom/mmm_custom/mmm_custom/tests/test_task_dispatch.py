@@ -173,6 +173,27 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(td.open_load(tasks), {"mai@x": 2, "nam@x": 1})
 
 
+class TestReminder(unittest.TestCase):
+    def test_nothing_waiting_no_reminder(self):
+        self.assertIsNone(td.reminder([], NOW))
+
+    def test_counts_and_flags_old_proposals(self):
+        rows = [{"proposal_at": NOW - timedelta(hours=2)}, {"proposal_at": NOW - timedelta(days=2)},
+                {"proposal_at": None}]
+        title, message = td.reminder(rows, NOW)
+        self.assertEqual(title, "3 đề xuất giao việc chờ duyệt")
+        self.assertIn("1 đề xuất đã chờ hơn 1 ngày", message)
+        self.assertIn("trang Nhiệm vụ", message)
+        _, fresh = td.reminder(rows[:1], NOW)
+        self.assertNotIn("hơn 1 ngày", fresh)
+
+    def test_an_unchanged_proposal_keeps_its_age(self):
+        before = {7: ("nam@x", NOW - timedelta(days=2))}
+        self.assertEqual(td.proposed_since(7, "nam@x", before, NOW), NOW - timedelta(days=2))
+        self.assertEqual(td.proposed_since(7, "hoa@x", before, NOW), NOW)  # another person: a new proposal
+        self.assertEqual(td.proposed_since(8, "nam@x", before, NOW), NOW)
+
+
 class TestApproval(unittest.TestCase):
     def test_comment_texts(self):
         self.assertEqual(td.approval_comment("mai@x", "nam@x", "chưa có người", "boss@x"),

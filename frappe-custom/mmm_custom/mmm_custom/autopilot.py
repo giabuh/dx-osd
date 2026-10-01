@@ -71,6 +71,23 @@ def _today():
     return date.today()
 
 
+def _now():
+    return now_datetime()
+
+
+def slot_at(base_monday, slot):
+    """When a slot of the week starting `base_monday` is published."""
+    hour, minute, second = (int(x) for x in slot["time"].split(":"))
+    return datetime.combine(base_monday + timedelta(days=slot["day_offset"]), datetime.min.time()).replace(
+        hour=hour, minute=minute, second=second)
+
+
+def open_slots(base_monday, now):
+    """The slots of that week still ahead of `now`: a slot whose time has passed is not planned, or approving
+    the batch would publish it at once (the publisher posts every Scheduled post that is due)."""
+    return [s for s in WEEKLY_MATRIX if slot_at(base_monday, s) > now]
+
+
 @frappe.whitelist()
 def get_weekly_matrix():
     """Return the predefined weekly slots matrix."""
@@ -90,21 +107,30 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
         elif isinstance(target_date, date):
             d = target_date
         else:
-            d = date.today()
+            d = _today()
     else:
-        d = date.today()
+        d = _today()
 
     # Determine base Monday date
     base_monday = d - timedelta(days=d.weekday())
+    now = _now()
+    slots = open_slots(base_monday, now)
+    if not slots and not target_date:  # this week is over: plan the next one
+        base_monday += timedelta(days=7)
+        slots = open_slots(base_monday, now)
+    skipped = [s["day_of_week"] for s in WEEKLY_MATRIX if s not in slots]
     iso_year, iso_week, _ = base_monday.isocalendar()
     batch_id = f"BATCH-{iso_year}-W{iso_week:02d}"
 
     created_posts = []
     # The week's courses from CRM data: open classes, promotions, what earlier posts brought (D-123)
     # Classes and results are judged from today: a class that started on Monday is not "coming up" on Thursday.
-    plan = plan_week(max(_today(), base_monday), n=len(WEEKLY_MATRIX))
+    offer_slot = next((i for i, s in enumerate(slots) if s["day_of_week"] == "Chủ Nhật"), len(slots) - 1)
+    plan = plan_week(max(_today(), base_monday), n=len(slots), offer_slot=offer_slot) if slots else []
 
-    for slot, course in zip(WEEKLY_MATRIX, plan):
+    slot_text = ", ".join(f"{s['day_of_week']} ({s['time'][:5]})" for s in slots)
+
+    for slot, course in zip(slots, plan):
         slot_date = base_monday + timedelta(days=slot["day_offset"])
         scheduled_time = f"{slot_date.isoformat()} {slot['time']}"
 
@@ -177,7 +203,8 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
             "agent": "Scheduler Agent",
             "role": "Trợ lý điều phối lịch",
             "icon": "📅",
-            "action": f"Phân bổ lịch Thứ 2 (08:30), Thứ 4 (11:30), Thứ 6 (19:30), CN (09:00) cho đợt {batch_id}",
+            "action": f"Phân bổ lịch {slot_text or 'không còn khung giờ nào'} cho đợt {batch_id}"
+                      + (f"; bỏ qua {', '.join(skipped)} vì đã qua giờ đăng" if skipped else ""),
             "status": "completed",
         },
         {
@@ -205,6 +232,7 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
         "batch_id": batch_id,
         "count": len(created_posts),
         "posts": [p.name for p in created_posts],
+        "skipped": skipped,
         "pipeline": pipeline,
     }
 
@@ -216,8 +244,8 @@ def approve_weekly_batch(batch_id=None):
     if batch_id:
         filters["batch_id"] = batch_id
 
-    posts = frappe.get_all("Facebook Post", filters=filters, pluck="name")
-    count = 0
+    posts = frappe.get_all("Facebook Post", filters=filters, fields=["name", "scheduled_time"])
+    count, past_due, now = 0, [], _now()
     for post in posts:
         name = (
             post
@@ -228,7 +256,10 @@ def approve_weekly_batch(batch_id=None):
                 else getattr(post, "name", None)
             )
         )
-        if name is not None:
+        when = post.get("scheduled_time") if isinstance(post, dict) else None
+        if name is not None and when and when <= now:
+            past_due.append(name)  # its time has passed: Scheduled would publish it at once, a person picks a new time
+        elif name is not None:
             frappe.db.set_value("Facebook Post", name, "status", "Scheduled")
             count += 1
 
@@ -246,7 +277,7 @@ def approve_weekly_batch(batch_id=None):
     except Exception:
         pass
 
-    return {"status": "success", "approved_count": count}
+    return {"status": "success", "approved_count": count, "past_due": past_due}
 
 
 @frappe.whitelist()

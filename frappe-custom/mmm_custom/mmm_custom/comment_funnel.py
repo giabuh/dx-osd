@@ -181,6 +181,16 @@ def lead_updates(current, post_name, post_title):
     return out
 
 
+def failure_note(rows):
+    """The managers' message when comments could not be answered (no permission, expired token), else ""."""
+    failed = [r for r in rows if r.get("status") == "Failed"]
+    if not failed:
+        return ""
+    first = failed[0]
+    return (f"{len(failed)} bình luận chưa trả lời được. Ví dụ: {first.get('from_name') or 'khách'}: "
+            f"{(first.get('error') or '')[:160]}. Kiểm tra token và quyền trang Facebook.")
+
+
 # ── Bench side ─────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -284,7 +294,21 @@ def run(dry_run=False):
     counts = {}
     for r in rows:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
+    _tell_managers(failure_note(rows))
     return {"status": "ok", "handled": len(rows), **counts}
+
+
+def _tell_managers(note):
+    """At most one notification an hour: an expired token fails every comment of every run."""
+    if not note or not frappe.cache().set("mmm_custom:comment_funnel:failure_note", 1, nx=True, ex=3600):
+        return
+    try:
+        from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+
+        notify_crm_users(title="Phễu bình luận Facebook gặp lỗi", message=note, notification_type="System",
+                         reference_doctype="Facebook Comment Reply")
+    except Exception:
+        frappe.log_error(title="Comment funnel: failure notification not sent", message=note)
 
 
 def attribute(conversation, lead=""):

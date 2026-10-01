@@ -140,6 +140,23 @@ def check_assignee(user, people):
     return "" if person and person.get("active", 1) else f"{user or '(trống)'} không phải tư vấn viên đang hoạt động."
 
 
+def proposed_since(task, to, before, now):
+    """When a proposal started: an unchanged one (same task, same person) keeps its time, so its age is real."""
+    old = before.get(task)
+    return old[1] if old and old[0] == to and old[1] else now
+
+
+def reminder(pending, now, overdue=timedelta(days=1)):
+    """(title, message) for the managers about proposals waiting for a decision, or None when there are none."""
+    if not pending:
+        return None
+    old = sum(1 for p in pending if p.get("proposal_at") and now - p["proposal_at"] > overdue)
+    message = "Mở trang Nhiệm vụ để duyệt, từ chối hoặc giao người khác."
+    if old:
+        message = f"{old} đề xuất đã chờ hơn 1 ngày. {message}"
+    return f"{len(pending)} đề xuất giao việc chờ duyệt", message
+
+
 # ── Bench side ─────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -190,16 +207,19 @@ def _reset(name, **values):
 
 def _run(dry_run):
     now = frappe.utils.now_datetime()
+    before = {}
     if not dry_run:  # a fresh look: a proposal whose reason no longer holds goes away
-        for name in frappe.get_all("CRM Task", filters={"proposal_status": PENDING}, pluck="name"):
-            _reset(name)
+        for row in frappe.get_all("CRM Task", filters={"proposal_status": PENDING},
+                                  fields=["name", "proposed_to", "proposal_at"]):
+            before[row.name] = (row.proposed_to, row.proposal_at)
+            _reset(row.name)
     tasks = frappe.get_all("CRM Task", filters={"status": ["in", OPEN]}, fields=FIELDS)
     people = list(_people().values())
     found = build_proposals(tasks, _context, people, _online(), now)
     if not dry_run:
         for p in found:
             _reset(p["task"], proposed_to=p["to"], proposal_reason=p["reason"], proposal_status=PENDING,
-                   proposal_at=now)
+                   proposal_at=proposed_since(p["task"], p["to"], before, now))
     return found
 
 
@@ -212,8 +232,19 @@ def propose(dry_run=0):
 
 
 def run_scheduled():
-    """08:15 every day, after the follow-up rules: proposals only, never an assignment."""
-    return {"count": len(_run(False))}
+    """08:15 every day, after the follow-up rules: proposals only, never an assignment. The managers get one CRM
+    notification while proposals wait, so "the system proposes, a person decides" does not stall unseen."""
+    found = _run(False)
+    note = reminder(frappe.get_all("CRM Task", filters={"proposal_status": PENDING}, fields=["proposal_at"]),
+                    frappe.utils.now_datetime())
+    if note:
+        try:
+            from crm.fcrm.doctype.crm_notification.crm_notification import notify_crm_users
+
+            notify_crm_users(title=note[0], message=note[1], notification_type="Task", reference_doctype="CRM Task")
+        except Exception:
+            frappe.log_error(title="Task dispatch: reminder not sent")
+    return {"count": len(found)}
 
 
 @whitelist()

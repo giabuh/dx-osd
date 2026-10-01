@@ -155,6 +155,20 @@ class TestHandle(unittest.TestCase):
         self.assertTrue(row["public_reply"])
 
 
+class TestFailureNote(unittest.TestCase):
+    def test_no_failure_no_note(self):
+        self.assertEqual(cf.failure_note([{"status": "Replied"}, {"status": "Skipped"}]), "")
+
+    def test_failures_are_counted_with_the_first_error(self):
+        rows = [{"status": "Failed", "error": "private reply: (#10900) already replied", "from_name": "Lan"},
+                {"status": "Failed", "error": "public reply: token expired", "from_name": "Minh"},
+                {"status": "Replied"}]
+        note = cf.failure_note(rows)
+        self.assertIn("2 bình luận chưa trả lời được", note)
+        self.assertIn("Lan", note)
+        self.assertIn("10900", note)
+
+
 class TestAttribution(unittest.TestCase):
     def test_psid_comes_from_a_facebook_contact_inbox(self):
         conv = {"channel": "Channel::FacebookPage", "contact_inbox": {"source_id": "psid-9"}}

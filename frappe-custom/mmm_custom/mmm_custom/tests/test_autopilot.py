@@ -83,6 +83,10 @@ PLAN = [{"code": c, "name": n, "title": n, "reason": r} for c, n, r in (
     ("KT-TH", "Kế toán tổng hợp", "đang có ưu đãi “Giảm 500.000đ”"))]
 
 
+BEFORE_THE_WEEK = autopilot.datetime(2026, 9, 27, 12, 0)
+
+
+@patch("mmm_custom.autopilot._now", lambda: BEFORE_THE_WEEK)
 @patch("mmm_custom.autopilot.plan_week", lambda *a, **k: PLAN)
 class TestAutopilotEngine(unittest.TestCase):
     def test_get_weekly_matrix(self):
@@ -144,11 +148,42 @@ class TestAutopilotEngine(unittest.TestCase):
     def test_plan_is_judged_from_today_not_from_monday(self):
         """On a Thursday the week's classes are those still to come, not the ones that started on Monday."""
         seen = []
-        with patch("mmm_custom.autopilot.plan_week", lambda today, n=4: seen.append(today) or PLAN),                 patch("mmm_custom.autopilot.frappe") as mock_frappe,                 patch("mmm_custom.autopilot._today", lambda: autopilot.date(2026, 10, 1)):  # a Thursday
+        with patch("mmm_custom.autopilot.plan_week", lambda today, n=4, **kw: seen.append(today) or PLAN),                 patch("mmm_custom.autopilot.frappe") as mock_frappe,                 patch("mmm_custom.autopilot._today", lambda: autopilot.date(2026, 10, 1)):  # a Thursday
             mock_frappe.new_doc.side_effect = lambda doctype: MagicMock()
             autopilot.generate_weekly_batch(target_date="2026-10-01")
             autopilot.generate_weekly_batch(target_date="2026-10-12")  # a later week starts on its Monday
         self.assertEqual(seen, [autopilot.date(2026, 10, 1), autopilot.date(2026, 10, 12)])
+
+    def test_slots_already_past_are_not_planned(self):
+        """Planned on Thursday 01/10 at 10:00: Monday and Wednesday are gone, Friday and Sunday remain."""
+        asked = []
+        with patch("mmm_custom.autopilot._now", lambda: autopilot.datetime(2026, 10, 1, 10, 0)),                 patch("mmm_custom.autopilot._today", lambda: autopilot.date(2026, 10, 1)),                 patch("mmm_custom.autopilot.plan_week", lambda today, n=4, offer_slot=3: asked.append((n, offer_slot)) or PLAN[:n]),                 patch("mmm_custom.autopilot.frappe") as mock_frappe:
+            docs = []
+            mock_frappe.new_doc.side_effect = lambda doctype: docs.append(MagicMock()) or docs[-1]
+            res = autopilot.generate_weekly_batch()
+        self.assertEqual(res["count"], 2)
+        self.assertEqual(res["skipped"], ["Thứ Hai", "Thứ Tư"])
+        self.assertEqual(asked, [(2, 1)])  # Sunday is the second remaining slot: the offer slot
+        self.assertEqual([d.scheduled_time for d in docs], ["2026-10-02 19:30:00", "2026-10-04 09:00:00"])
+        self.assertIn("bỏ qua Thứ Hai, Thứ Tư", res["pipeline"][3]["action"])
+
+    def test_a_finished_week_plans_the_next_one(self):
+        with patch("mmm_custom.autopilot._now", lambda: autopilot.datetime(2026, 10, 4, 20, 0)),                 patch("mmm_custom.autopilot._today", lambda: autopilot.date(2026, 10, 4)),                 patch("mmm_custom.autopilot.frappe") as mock_frappe:
+            docs = []
+            mock_frappe.new_doc.side_effect = lambda doctype: docs.append(MagicMock()) or docs[-1]
+            res = autopilot.generate_weekly_batch()
+        self.assertEqual((res["batch_id"], res["count"], res["skipped"]), ("BATCH-2026-W41", 4, []))
+        self.assertEqual(docs[0].scheduled_time, "2026-10-05 08:30:00")
+
+    @patch("mmm_custom.autopilot.frappe")
+    def test_approving_keeps_posts_whose_time_has_passed(self, mock_frappe):
+        mock_frappe.get_all.return_value = [
+            {"name": 39, "scheduled_time": autopilot.datetime(2026, 9, 26, 11, 30)},
+            {"name": 40, "scheduled_time": autopilot.datetime(2026, 10, 2, 19, 30)},
+        ]
+        res = autopilot.approve_weekly_batch()
+        mock_frappe.db.set_value.assert_called_once_with("Facebook Post", 40, "status", "Scheduled")
+        self.assertEqual((res["approved_count"], res["past_due"]), (1, [39]))
 
     @patch("mmm_custom.autopilot.frappe")
     def test_generate_weekly_batch_no_directive(self, mock_frappe):
@@ -186,13 +221,13 @@ class TestAutopilotEngine(unittest.TestCase):
         mock_frappe.get_all.assert_called_once_with(
             "Facebook Post",
             filters={"status": "Pending Approval", "batch_id": "BATCH-2026-W40"},
-            pluck="name",
+            fields=["name", "scheduled_time"],
         )
         self.assertEqual(mock_frappe.db.set_value.call_count, 2)
         mock_frappe.db.set_value.assert_any_call("Facebook Post", "POST-1", "status", "Scheduled")
         mock_frappe.db.set_value.assert_any_call("Facebook Post", "POST-2", "status", "Scheduled")
         mock_frappe.db.commit.assert_called_once()
-        self.assertEqual(res, {"status": "success", "approved_count": 2})
+        self.assertEqual(res, {"status": "success", "approved_count": 2, "past_due": []})
 
     @patch("mmm_custom.autopilot.frappe")
     def test_approve_weekly_batch_without_id(self, mock_frappe):
@@ -202,11 +237,11 @@ class TestAutopilotEngine(unittest.TestCase):
         mock_frappe.get_all.assert_called_once_with(
             "Facebook Post",
             filters={"status": "Pending Approval"},
-            pluck="name",
+            fields=["name", "scheduled_time"],
         )
         self.assertEqual(mock_frappe.db.set_value.call_count, 3)
         mock_frappe.db.commit.assert_called_once()
-        self.assertEqual(res, {"status": "success", "approved_count": 3})
+        self.assertEqual(res, {"status": "success", "approved_count": 3, "past_due": []})
 
     @patch("mmm_custom.autopilot.frappe")
     def test_approve_weekly_batch_integer_ids(self, mock_frappe):
@@ -218,7 +253,7 @@ class TestAutopilotEngine(unittest.TestCase):
         mock_frappe.db.set_value.assert_any_call("Facebook Post", 11, "status", "Scheduled")
         mock_frappe.db.set_value.assert_any_call("Facebook Post", 12, "status", "Scheduled")
         mock_frappe.db.commit.assert_called_once()
-        self.assertEqual(res, {"status": "success", "approved_count": 3})
+        self.assertEqual(res, {"status": "success", "approved_count": 3, "past_due": []})
 
     @patch("mmm_custom.autopilot.frappe")
     def test_rollback_weekly_batch(self, mock_frappe):

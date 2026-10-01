@@ -373,6 +373,10 @@
                   <LucideSparkles class="size-3.5" />
                   {{ post.leads_count }} leads
                 </span>
+                <span v-if="post.registrations_count" class="flex items-center gap-1 font-semibold text-purple-600" title="Học viên đăng ký từ bài này">
+                  <LucideGraduationCap class="size-3.5" />
+                  {{ post.registrations_count }} học viên
+                </span>
               </div>
               <span
                 v-if="post.ads_recommendation === 'Recommended'"
@@ -954,7 +958,7 @@
               </div>
 
               <!-- Metric KPI Cards -->
-              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                 <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
                   <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
                     <LucideThumbsUp class="size-3 text-blue-500" />
@@ -989,6 +993,13 @@
                     {{ __('Leads') }}
                   </div>
                   <div class="text-lg font-bold text-emerald-600">{{ editingPost.leads_count || 0 }}</div>
+                </div>
+                <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
+                  <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
+                    <LucideGraduationCap class="size-3 text-purple-500" />
+                    {{ __('Học viên') }}
+                  </div>
+                  <div class="text-lg font-bold text-purple-600">{{ editingPost.registrations_count || 0 }}</div>
                 </div>
               </div>
 
@@ -1172,6 +1183,7 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 // Lucide Icons
 import MegaphoneIcon from '~icons/lucide/megaphone'
 import LucideCalendarPlus from '~icons/lucide/calendar-plus'
+import LucideGraduationCap from '~icons/lucide/graduation-cap'
 import LucideImage from '~icons/lucide/image'
 import LucideRefreshCcw from '~icons/lucide/refresh-ccw'
 import LucideCalendar from '~icons/lucide/calendar'
@@ -1482,6 +1494,8 @@ async function handleGenerateWeeklyBatch() {
       showGenerateModal.value = false
       generateForm.value.boss_directive = ''
       toast.success ? toast.success(`Đã tạo thành công ${res.count} bài viết cho đợt ${res.batch_id}!`) : toast.info(`Đã tạo thành công ${res.count} bài viết!`)
+      // a slot whose time has passed is not planned (it would be published the moment it is approved)
+      if (res.skipped?.length) toast.info(`Bỏ qua ${res.skipped.join(', ')} vì đã qua giờ đăng.`)
       await fetchPosts()
     }
   } catch (error) {
@@ -1498,6 +1512,10 @@ async function approveCurrentBatch() {
     const res = await call('mmm_custom.autopilot.approve_weekly_batch')
     if (res.status === 'success') {
       toast.success ? toast.success(`Đã duyệt ${res.approved_count} bài viết!`) : toast.info(`Đã duyệt ${res.approved_count} bài viết!`)
+      if (res.past_due?.length) {
+        const msg = `${res.past_due.length} bài đã qua giờ đăng nên vẫn chờ duyệt (#${res.past_due.join(', #')}). Hãy đổi giờ đăng rồi duyệt lại.`
+        toast.warning ? toast.warning(msg) : toast.info(msg)
+      }
       await fetchPosts()
     }
   } catch (error) {
