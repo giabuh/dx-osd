@@ -204,9 +204,12 @@ class FacebookPost(Document):
             "- Viết như một chuyên gia tâm huyết đang trò chuyện trực tiếp với người đọc, chân thật và cuốn hút."
         )
 
-        clean_hashtag = re.sub(r'[^a-zA-Z0-9_]', '', course_name)
+        # Brand, branches, hotline, fee, offer, next class and the level-test keyword come from CRM data (D-123)
+        from mmm_custom.marketing_plan import caption_rules, ensure_cta, post_facts, unsupported_claims
+
+        facts = post_facts(self.course) if self.course else {}
         prompt = (
-            f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm EduFlow Academy.\n"
+            f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm {facts.get('brand') or 'đào tạo'}.\n"
             f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n\n"
             f"{angle_section}\n\n"
             f"{anti_cliche_rules}\n\n"
@@ -214,9 +217,7 @@ class FacebookPost(Document):
             f"- Ngắn gọn dưới 150 từ, tiếng Việt, giọng văn cuốn hút, tự nhiên\n"
             f"- Kèm emoji sinh động ở tiêu đề, các gạch đầu dòng và phần kêu gọi hành động (ví dụ: 🚀, 💡, 🎯, 👨‍🏫, 🌟, 📚, ✨)\n"
             f"- Nêu bật 3 lợi ích chính dạng gạch đầu dòng rõ ràng, thu hút\n"
-            f"- Đề cập rõ 3 cơ sở: CS1 Bình Thạnh, CS2 Quận 1, CS3 Thủ Đức (kèm hotline 0901.888.666)\n"
-            f"- Kêu gọi hành động rõ ràng: nhắn tin/inbox fanpage để nhận tư vấn và ưu đãi\n"
-            f"- Kèm hashtag: #EduFlow #EduFlowAcademy #{clean_hashtag}\n"
+            f"{caption_rules(facts, course_name)}"
             f"- Tuyệt đối KHÔNG dùng markdown (không dùng **, ##), trả về chữ thuần."
         )
 
@@ -274,7 +275,10 @@ class FacebookPost(Document):
                             frappe.log_error(title="Gemini API Error", message=str(e)[:500])
 
         if content:
-            self.content = content.replace("**", "").replace("##", "")
+            self.content = ensure_cta(content.replace("**", "").replace("##", ""), facts.get("quiz_keyword"))
+            claims = unsupported_claims(self.content, facts) if facts else []
+            self.content_warning = ("Không có trong dữ liệu CRM, kiểm tra trước khi duyệt: " + ", ".join(claims)
+                                    if claims else "")
             if not self.is_new():
                 try:
                     self.save()

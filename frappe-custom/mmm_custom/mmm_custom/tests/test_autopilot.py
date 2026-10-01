@@ -76,34 +76,22 @@ class TestAutopilotSchema(unittest.TestCase):
         self.assertIn("day_of_week", field_order)
 
 
+PLAN = [{"code": c, "name": n, "title": n, "reason": r} for c, n, r in (
+    ("DH-PTS", "Photoshop cơ bản", "lớp khai giảng 05/10 còn 6 chỗ"),
+    ("VP-EXCEL", "Excel cơ bản", "bài gần đây ra 2 khách tiềm năng"),
+    ("TE-ROBO", "Robotics cơ bản", "lâu chưa đăng"),
+    ("KT-TH", "Kế toán tổng hợp", "đang có ưu đãi “Giảm 500.000đ”"))]
+
+
+@patch("mmm_custom.autopilot.plan_week", lambda *a, **k: PLAN)
 class TestAutopilotEngine(unittest.TestCase):
     def test_get_weekly_matrix(self):
+        """A slot is day, time and caption angle; the course comes from marketing_plan.plan_week (D-123)."""
         matrix = autopilot.get_weekly_matrix()
-        self.assertEqual(len(matrix), 4)
-
-        # Slot 0: Monday
-        self.assertEqual(matrix[0]["course"], "Tiếng Anh")
-        self.assertEqual(matrix[0]["day_of_week"], "Thứ Hai")
-        self.assertEqual(matrix[0]["time"], "08:30:00")
-        self.assertEqual(matrix[0]["default_title"], "Khai giảng Tiếng Anh giao tiếp")
-
-        # Slot 1: Wednesday
-        self.assertEqual(matrix[1]["course"], "Toán tư duy")
-        self.assertEqual(matrix[1]["day_of_week"], "Thứ Tư")
-        self.assertEqual(matrix[1]["time"], "11:30:00")
-        self.assertEqual(matrix[1]["default_title"], "Phát triển tư duy logic")
-
-        # Slot 2: Friday
-        self.assertEqual(matrix[2]["course"], "Bơi lội")
-        self.assertEqual(matrix[2]["day_of_week"], "Thứ Sáu")
-        self.assertEqual(matrix[2]["time"], "19:30:00")
-        self.assertEqual(matrix[2]["default_title"], "Khóa bơi sinh tồn cho bé")
-
-        # Slot 3: Sunday
-        self.assertEqual(matrix[3]["course"], "Chung")
-        self.assertEqual(matrix[3]["day_of_week"], "Chủ Nhật")
-        self.assertEqual(matrix[3]["time"], "09:00:00")
-        self.assertEqual(matrix[3]["default_title"], "Tuyển sinh & Học bổng EduFlow")
+        self.assertEqual([(s["day_of_week"], s["time"]) for s in matrix],
+                         [("Thứ Hai", "08:30:00"), ("Thứ Tư", "11:30:00"), ("Thứ Sáu", "19:30:00"),
+                          ("Chủ Nhật", "09:00:00")])
+        self.assertFalse(any("course" in s for s in matrix))
 
     @patch("mmm_custom.autopilot.frappe")
     def test_generate_weekly_batch(self, mock_frappe):
@@ -143,12 +131,13 @@ class TestAutopilotEngine(unittest.TestCase):
             doc.generate_banner.assert_called_once_with(user_feedback=directive)
 
         # Check Monday slot
-        self.assertEqual(created_docs[0].course, "Tiếng Anh")
+        self.assertEqual(created_docs[0].course, "DH-PTS")
+        self.assertEqual(created_docs[0].plan_reason, "lớp khai giảng 05/10 còn 6 chỗ")
         self.assertEqual(created_docs[0].day_of_week, "Thứ Hai")
         self.assertEqual(created_docs[0].scheduled_time, "2026-09-28 08:30:00")
 
         # Check Sunday slot
-        self.assertEqual(created_docs[3].course, "Chung")
+        self.assertEqual(created_docs[3].course, "KT-TH")
         self.assertEqual(created_docs[3].day_of_week, "Chủ Nhật")
         self.assertEqual(created_docs[3].scheduled_time, "2026-10-04 09:00:00")
 
@@ -175,7 +164,7 @@ class TestAutopilotEngine(unittest.TestCase):
         self.assertEqual(res["count"], 4)
 
         # Slot 0 default title
-        self.assertEqual(created_docs[0].title, "Khai giảng Tiếng Anh giao tiếp")
+        self.assertEqual(created_docs[0].title, "Photoshop cơ bản")
         self.assertEqual(created_docs[0].boss_directive, "")
         created_docs[0].generate_ai_content.assert_called_once_with(user_feedback=None)
         created_docs[0].generate_banner.assert_called_once_with(user_feedback=None)

@@ -430,7 +430,8 @@ def generate_hero_image(course, title=None, feedback=None, api_key=None, app_roo
     return canvas
 
 
-def compose_commercial_banner(hero_image, course, title=None, feedback=None, app_root=None):
+def compose_commercial_banner(hero_image, course, title=None, feedback=None, app_root=None, footer=None,
+                              has_offer=False):
     """
     Composite a vibrant, commercial-grade 9:16 vertical poster (1080x1920) in the exact style of Sao Việt Robotics:
       - Vibrant Electric Blue gradient with tech particle grid
@@ -440,7 +441,8 @@ def compose_commercial_banner(hero_image, course, title=None, feedback=None, app
       - High-impact commercial hero photo of student & project
       - 3 Transformation Roadmap Cards connected by yellow vector arrows
       - Giant bright golden-yellow CTA button with target icon 🎯
-      - Modern footer with Hotline and branches
+      - Modern footer with Hotline and branches: `footer` from CRM data (marketing_plan.footer_text, D-123);
+        without it a neutral line, never invented contact details. `has_offer`: an active promotion applies.
     """
     W, H = 1080, 1920
     meta = get_course_meta(course)
@@ -605,7 +607,7 @@ def compose_commercial_banner(hero_image, course, title=None, feedback=None, app
     draw.ellipse([tcx - 10, tcy - 10, tcx + 10, tcy + 10], fill=(220, 38, 38))
 
     cta_txt = meta.get("cta", "BẮT ĐẦU DỰ ÁN ĐẦU TIÊN")
-    if feedback and ("ưu đãi" in feedback.lower() or "giảm" in feedback.lower() or "học bổng" in feedback.lower()):
+    if has_offer or (feedback and ("ưu đãi" in feedback.lower() or "giảm" in feedback.lower() or "học bổng" in feedback.lower())):
         cta_txt = "INBOX NHẬN ƯU ĐÃI NGAY"
     cta_txt = strip_emoji(cta_txt)
 
@@ -619,7 +621,9 @@ def compose_commercial_banner(hero_image, course, title=None, feedback=None, app
 
     # 8. Modern Footer Bar
     draw.rectangle([0, 1835, W, H], fill=(0, 20, 60))
-    foot_txt = "Hotline: 0901.888.666  •  CS1: Bình Thạnh  •  CS2: Quận 1  •  CS3: Thủ Đức"
+    from mmm_custom.marketing_plan import NEUTRAL_FOOTER
+
+    foot_txt = footer or NEUTRAL_FOOTER
     bbf = draw.textbbox((0, 0), foot_txt, font=f_foot)
     wf = bbf[2] - bbf[0]
     draw.text(((W - wf) // 2, 1860), foot_txt, fill=(203, 213, 225), font=f_foot)
@@ -643,7 +647,11 @@ def generate_and_save_banner(doc, user_feedback=None):
     hero_image = generate_hero_image(course, title=title, feedback=feedback)
 
     # 2. Composite Sao Việt style commercial ad banner
-    banner = compose_commercial_banner(hero_image, course, title=title, feedback=feedback)
+    from mmm_custom.marketing_plan import footer_text, post_facts
+
+    facts = post_facts(course)
+    banner = compose_commercial_banner(hero_image, course, title=title, feedback=feedback,
+                                       footer=footer_text(facts), has_offer=bool(facts.get("promo")))
 
     # 3. Save to BytesIO
     buf = io.BytesIO()

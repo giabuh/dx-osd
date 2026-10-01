@@ -167,13 +167,19 @@
                   {{ slot.time.substring(0, 5) }}
                 </span>
               </div>
-              <div class="flex items-center gap-1.5 mb-2">
-                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="getCourseBadgeClass(slot.course)">
-                  {{ slot.course }}
+              <div v-if="getSlotPost(slot)?.course" class="flex items-center gap-1.5 mb-2">
+                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="getCourseBadgeClass(getSlotPost(slot).course)">
+                  {{ getSlotPost(slot).course }}
                 </span>
               </div>
               <div class="text-xs text-ink-gray-7 line-clamp-2">
-                {{ getSlotPost(slot)?.title || slot.default_title }}
+                {{ getSlotPost(slot)?.title || __('Chưa lên kế hoạch') }}
+              </div>
+              <div v-if="getSlotPost(slot)?.plan_reason" class="mt-1 text-[11px] text-ink-gray-5 line-clamp-2" :title="getSlotPost(slot).plan_reason">
+                {{ __('Vì sao') }}: {{ getSlotPost(slot).plan_reason }}
+              </div>
+              <div v-if="getSlotPost(slot)?.content_warning" class="mt-1 text-[11px] text-ink-amber-6 line-clamp-2" :title="getSlotPost(slot).content_warning">
+                ⚠ {{ getSlotPost(slot).content_warning }}
               </div>
             </div>
 
@@ -1186,10 +1192,11 @@ const availableCourses = ref([
   { name: 'Chung', product_name: 'Tuyển sinh chung EduFlow' },
 ])
 const weeklyMatrix = ref([
-  { day: 0, day_of_week: 'Thứ Hai', time: '08:30:00', course: 'DH-PTS', default_title: 'Khóa học Photoshop thực chiến' },
-  { day: 2, day_of_week: 'Thứ Tư', time: '11:30:00', course: 'VP-EXCEL', default_title: 'Làm chủ Excel & Báo cáo tự động' },
-  { day: 4, day_of_week: 'Thứ Sáu', time: '19:30:00', course: 'TE-ROBO', default_title: 'Khai giảng Robotics STEM cho bé' },
-  { day: 6, day_of_week: 'Chủ Nhật', time: '09:00:00', course: 'Chung', default_title: 'Tuyển sinh & Học bổng EduFlow' },
+  // Courses are chosen each week from CRM data (marketing_plan.plan_week, D-123); a slot is day, time and angle.
+  { day: 0, day_of_week: 'Thứ Hai', time: '08:30:00' },
+  { day: 2, day_of_week: 'Thứ Tư', time: '11:30:00' },
+  { day: 4, day_of_week: 'Thứ Sáu', time: '19:30:00' },
+  { day: 6, day_of_week: 'Chủ Nhật', time: '09:00:00' },
 ])
 
 const activeFilter = ref('all')
@@ -1326,6 +1333,9 @@ async function fetchPosts() {
         'shares_count',
         'reach_count',
         'leads_count',
+        'registrations_count',
+        'plan_reason',
+        'content_warning',
         'ads_recommendation',
         'last_analytics_sync',
         'error_message',
@@ -1774,8 +1784,8 @@ function openCreateModal() {
 
 function openCreateModalForSlot(slot) {
   createForm.value = {
-    title: slot.default_title,
-    course: slot.course,
+    title: slot.default_title || '',
+    course: slot.course || '',
     day_of_week: slot.day_of_week,
     scheduled_time: '',
     content: '',

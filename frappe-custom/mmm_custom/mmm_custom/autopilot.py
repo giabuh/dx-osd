@@ -4,6 +4,8 @@
 from datetime import date, datetime, timedelta
 import re
 
+from mmm_custom.marketing_plan import plan_week
+
 try:
     import frappe
     import frappe.utils
@@ -35,39 +37,32 @@ except ImportError:
 
 
 
-# 4 standard weekly post slots (Mon, Wed, Fri, Sun)
+# 4 weekly post slots (Mon, Wed, Fri, Sun): day, time and the caption angle of facebook_post.generate_ai_content.
+# Which course goes in each slot is decided every week from CRM data (marketing_plan.plan_week, D-123).
 WEEKLY_MATRIX = [
     {
         "day": 0,
         "day_offset": 0,
         "day_of_week": "Thứ Hai",
         "time": "08:30:00",
-        "course": "Tiếng Anh",
-        "default_title": "Khai giảng Tiếng Anh giao tiếp",
     },
     {
         "day": 2,
         "day_offset": 2,
         "day_of_week": "Thứ Tư",
         "time": "11:30:00",
-        "course": "Toán tư duy",
-        "default_title": "Phát triển tư duy logic",
     },
     {
         "day": 4,
         "day_offset": 4,
         "day_of_week": "Thứ Sáu",
         "time": "19:30:00",
-        "course": "Bơi lội",
-        "default_title": "Khóa bơi sinh tồn cho bé",
     },
     {
         "day": 6,
         "day_offset": 6,
         "day_of_week": "Chủ Nhật",
         "time": "09:00:00",
-        "course": "Chung",
-        "default_title": "Tuyển sinh & Học bổng EduFlow",
     },
 ]
 
@@ -101,19 +96,22 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
     batch_id = f"BATCH-{iso_year}-W{iso_week:02d}"
 
     created_posts = []
+    # The week's courses from CRM data: open classes, promotions, what earlier posts brought (D-123)
+    plan = plan_week(base_monday, n=len(WEEKLY_MATRIX))
 
-    for slot in WEEKLY_MATRIX:
+    for slot, course in zip(WEEKLY_MATRIX, plan):
         slot_date = base_monday + timedelta(days=slot["day_offset"])
         scheduled_time = f"{slot_date.isoformat()} {slot['time']}"
 
         if boss_directive and boss_directive.strip():
-            title = f"{slot['default_title']} - {boss_directive.strip()}"
+            title = f"{course['title']} - {boss_directive.strip()}"
         else:
-            title = slot["default_title"]
+            title = course["title"]
 
         doc = frappe.new_doc("Facebook Post")
         doc.title = title
-        doc.course = slot["course"]
+        doc.course = course["code"]
+        doc.plan_reason = course["reason"]
         doc.status = "Pending Approval"
         doc.batch_id = batch_id
         doc.boss_directive = boss_directive or ""
@@ -159,7 +157,8 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
             "agent": "CRM Data Agent",
             "role": "Trợ lý dữ liệu CRM",
             "icon": "📊",
-            "action": "API GET /api/resource/Course: Đồng bộ thông tin 4 khóa học & học phí ưu đãi",
+            "action": "Chọn khóa theo lớp sắp khai giảng, ưu đãi và kết quả bài trước: "
+                      + "; ".join(f"{c['name']} ({c['reason']})" for c in plan),
             "status": "completed",
         },
         {
