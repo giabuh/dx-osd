@@ -172,7 +172,8 @@ def update_crm_fields_layout():
 						fields = ["course_interest", "territory", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
-							fields += ["source_campaign", "facebook_page", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
+							fields += ["source_campaign", "facebook_page", "facebook_post", "referral_code", "referred_by",
+							           "placement_result"]  # D-100, D-122, D-103, D-104
 							fields += ["quiz_detail", "voucher_code", "trial_date"]  # D-106, D-116
 						for f in fields:
 							if f not in present:
@@ -246,9 +247,12 @@ CATALOG_FIELDS = {
 		{"fieldname": "facebook_page", "label": "Facebook Page", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "in_list_view": 1, "in_standard_filter": 1, "description": "Trang Facebook khách đã nhắn tin",
 		 "insert_after": "source_campaign"},
+		# The Facebook post whose comment brought the customer (comment funnel, D-122)
+		{"fieldname": "facebook_post", "label": "Facebook Post", "fieldtype": "Link", "options": "Facebook Post",
+		 "read_only": 1, "in_standard_filter": 1, "insert_after": "facebook_page"},
 		# Referral codes (D-103): this Lead's own code, the code a friend gave, and that friend
 		{"fieldname": "referral_code", "label": "Referral Code", "fieldtype": "Data", "length": 10, "unique": 1,
-		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "source_campaign"},
+		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "facebook_post"},
 		{"fieldname": "referred_by_code", "label": "Referred By Code", "fieldtype": "Data", "length": 20,
 		 "insert_after": "referral_code"},
 		{"fieldname": "referred_by", "label": "Referred By", "fieldtype": "Link", "options": "CRM Lead", "read_only": 1,

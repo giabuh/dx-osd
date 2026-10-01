@@ -3303,6 +3303,10 @@ msgstr "ID Lead Facebook"
 msgid "Facebook Page"
 msgstr "Trang Facebook"
 
+#. Label of the facebook_post (Link) field in DocType 'CRM Lead' (mmm_custom, D-122)
+msgid "Facebook Post"
+msgstr "Bài đăng Facebook"
+
 #: frontend/src/pages/PersonaForm.vue:74
 msgid "Facebook/Instagram Ads"
 msgstr ""

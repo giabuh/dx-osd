@@ -57,6 +57,21 @@ DEFAULT_SETTINGS = {
                           "{{ course.next_courses | join(', ') }} ạ.",
     "phone_check_template": "Dạ số {{ phone_suspect }} hình như chưa đủ 10 số, {{ brand.you }} kiểm tra lại giúp "
                             "{{ brand.me }} nhé ạ.",
+    # Comment funnel (D-122, mmm_custom/comment_funnel.py): replies under our Facebook posts, from CRM data.
+    "comment_public_template": "Dạ {{ brand.me }} cảm ơn {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} "
+                               "ạ, {{ brand.me }} đã nhắn tin riêng cho {{ brand.you }}{% if course.name %} thông tin khóa "
+                               "{{ course.name }}{% endif %}, {{ brand.you }} xem hộp thư Messenger giúp {{ brand.me }} nhé ạ.",
+    "comment_thanks_template": "Dạ {{ brand.me }} cảm ơn {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} "
+                               "đã ủng hộ ạ 😊",
+    "comment_private_template": "Dạ {{ brand.me }} chào {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} ạ, "
+                                "{{ brand.me }} thấy {{ brand.you }} vừa bình luận{% if course.name %} về khóa "
+                                "{{ course.name }}{% endif %} trên trang."
+                                "{% if intent == 'price' and course.fee %} Học phí khóa hiện là {{ course.fee | vnd }}"
+                                "{% if promo.title %}, đang có ưu đãi \"{{ promo.title }}\" còn {{ promo.final_fee | vnd }}"
+                                "{% endif %} ạ.{% elif promo.title %} Khóa đang có ưu đãi \"{{ promo.title }}\" ạ.{% endif %}"
+                                "{% if quiz.keyword %} {{ brand.you | capitalize }} nhắn \"{{ quiz.keyword }}\" để làm bài "
+                                "test trình độ miễn phí, chừng 1 phút thôi ạ.{% endif %} {{ brand.you | capitalize }} trả lời "
+                                "tin nhắn này để {{ brand.me }} tư vấn lịch học và giữ suất học thử cho {{ brand.you }} nhé ạ.",
 }
 
 

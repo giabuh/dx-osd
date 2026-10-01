@@ -465,15 +465,12 @@ class FacebookPost(Document):
             except Exception:
                 pass
 
-            # 3. Measure attributed CRM Leads from this post
-            if hasattr(frappe, "db") and hasattr(frappe.db, "sql") and type(frappe.db).__name__ not in ("MagicMock", "Mock"):
+            # 3. Leads this post brought: the comment funnel sets CRM Lead.facebook_post (D-122)
+            if hasattr(frappe, "db") and hasattr(frappe.db, "count") and type(frappe.db).__name__ not in ("MagicMock", "Mock"):
                 try:
-                    res = frappe.db.sql("""
-                        SELECT COUNT(DISTINCT parent) FROM `tabFCRM Note`
-                        WHERE parenttype = 'CRM Lead' AND (content LIKE %s OR title LIKE %s)
-                    """, (f"%{self.fb_post_id}%", f"%{self.name}%"))
-                    if res and len(res) > 0 and len(res[0]) > 0:
-                        self.leads_count = res[0][0] or 0
+                    self.leads_count = frappe.db.count("CRM Lead", {"facebook_post": self.name})
+                    self.registrations_count = frappe.db.count("CRM Lead", {"facebook_post": self.name,
+                                                                            "status": "Converted"})
                 except Exception:
                     pass
 
@@ -554,16 +551,9 @@ class FacebookPost(Document):
                     except Exception:
                         pass
 
-                lower = msg.lower()
-                if any(k in lower for k in ["học phí", "giá", "bao nhiêu", "chi phí", "tiền"]):
-                    sentiment = "Hỏi học phí / lịch"
-                elif any(k in lower for k in ["tư vấn", "khóa học", "học", "lớp", "đăng ký", "cho mình", "inbox"]):
-                    sentiment = "Quan tâm khóa học"
-                elif any(k in lower for k in ["hay", "đẹp", "tuyệt", "xịn", "like", "thích", "chất"]):
-                    sentiment = "Tích cực"
-                else:
-                    sentiment = "Spam / Khác"
+                from mmm_custom.comment_funnel import classify, sentiment as sentiment_of
 
+                sentiment = sentiment_of(classify(msg))  # the comment funnel's classifier (D-122)
                 self.append("comments", {
                     "comment_id": cid,
                     "from_name": from_name,
@@ -921,7 +911,7 @@ def get_marketing_overview():
                 "name", "title", "course", "status", "day_of_week",
                 "scheduled_time", "posted_at", "fb_post_id", "fb_post_url",
                 "likes_count", "comments_count", "shares_count", "reach_count", "leads_count",
-                "ads_recommendation"
+                "registrations_count", "ads_recommendation"
             ]
         )
 
@@ -936,6 +926,7 @@ def get_marketing_overview():
         total_shares = sum(p.get("shares_count") or 0 for p in posts)
         total_reach = sum(p.get("reach_count") or 0 for p in posts)
         total_leads = sum(p.get("leads_count") or 0 for p in posts)
+        total_registrations = sum(p.get("registrations_count") or 0 for p in posts)
         recommended_ads_count = sum(1 for p in posts if p.get("ads_recommendation") == "Recommended")
 
         # Top posts by leads
@@ -961,6 +952,7 @@ def get_marketing_overview():
                 "total_shares": total_shares,
                 "total_reach": total_reach,
                 "total_leads": total_leads,
+                "total_registrations": total_registrations,
                 "recommended_ads_count": recommended_ads_count,
             },
             "top_leads": top_leads,

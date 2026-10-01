@@ -31,6 +31,7 @@
   "column_break_analytics",
   "reach_count",
   "leads_count",
+  "registrations_count",
   "last_analytics_sync",
   "ads_recommendation",
   "section_break_comments",
@@ -187,6 +188,14 @@
    "read_only": 1
   },
   {
+   "default": "0",
+   "fieldname": "registrations_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Số học viên đăng ký",
+   "read_only": 1
+  },
+  {
    "fieldname": "last_analytics_sync",
    "fieldtype": "Datetime",
    "label": "Lần cập nhật số liệu gần nhất",
@@ -228,7 +237,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-26 11:40:00.000000",
+ "modified": "2026-10-01 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Facebook Post",

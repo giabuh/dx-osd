@@ -34,6 +34,7 @@ except ImportError:
     frappe.AuthenticationError = AuthenticationError
     frappe.throw = _throw
 
+from mmm_custom.comment_funnel import attribute
 from mmm_custom.data_quality import compute_data_quality
 from mmm_custom.engine.repo import ensure_lead, load_catalog
 from mmm_custom.engine.understand import match_courses
@@ -138,6 +139,8 @@ def chatwoot_sync():
         return {"status": "error", "message": "Invalid JSON body"}
 
     if payload.get("event") == "message_created":
+        if payload.get("message_type") in ("incoming", 0) and not payload.get("private"):
+            attribute(payload.get("conversation") or {})  # a customer we answered under a post comment (D-122)
         return enqueue_analysis(payload)  # [I] layer; ignores everything unless an API key is set
     if payload.get("event") == "conversation_updated":
         from mmm_custom.engine.copilot import on_conversation_updated
@@ -180,6 +183,7 @@ def chatwoot_sync():
     except Exception as e:
         if hasattr(frappe, "log_error"):
             frappe.log_error(title="Failed to record the Lead's Facebook page", message=str(e))
+    attribute(conversation, lead_name)  # the Facebook post whose comment brought this customer (D-122)
 
     if created:
         try:
