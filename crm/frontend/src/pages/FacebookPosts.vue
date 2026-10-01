@@ -190,6 +190,9 @@
               <div v-if="getSlotPost(slot)?.plan_reason" class="mt-1 text-[11px] text-ink-gray-5 line-clamp-2" :title="getSlotPost(slot).plan_reason">
                 {{ __('Vì sao') }}: {{ getSlotPost(slot).plan_reason }}
               </div>
+              <div v-if="isPastDue(getSlotPost(slot))" class="mt-1 text-[11px] font-medium text-ink-red-5">
+                ⏰ {{ __('Đã qua giờ đăng: duyệt cả tuần sẽ bỏ qua bài này, hãy đổi giờ hoặc làm lại tuần') }}
+              </div>
               <div v-if="getSlotPost(slot)?.content_warning" class="mt-1 text-[11px] text-ink-amber-6 line-clamp-2" :title="getSlotPost(slot).content_warning">
                 ⚠ {{ getSlotPost(slot).content_warning }}
               </div>
@@ -1387,6 +1390,13 @@ async function fetchPosts() {
 }
 
 // Matrix Helpers
+// A post still waiting for approval whose publishing time has passed (D-125): approving the week skips it,
+// because the publisher would post it the moment it became Scheduled.
+function isPastDue(post) {
+  if (!post || post.status !== 'Pending Approval' || !post.scheduled_time) return false
+  return new Date(String(post.scheduled_time).replace(' ', 'T')) < new Date()
+}
+
 function getSlotPost(slot) {
   return posts.value.find(
     p => p.day_of_week === slot.day_of_week && ['Pending Approval', 'Scheduled', 'Posted'].includes(p.status)
