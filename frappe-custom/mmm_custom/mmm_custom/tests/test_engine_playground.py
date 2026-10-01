@@ -39,6 +39,14 @@ class TestInspect(unittest.TestCase):
         self.assertEqual(out["effects"][0][0], "save_lead")
         json.dumps(out, default=str)  # must serialise for frappe.call
 
+    def test_state_keeps_the_conversation_signals_on_a_turn_without_jev(self):
+        repo, fx = FakeRepo(CAT), RecordingEffects()
+        repo.jev = FakeJev({"intent": {"choice": "purchase", "confidence": 0.9}, "hotness": {"score": 1.8, "confidence": 0.9}})
+        run_turn(Event("customer_message", "sandbox-x", 1, "học phí excel ở bình thạnh", {"id": "sandbox-x"}), repo, fx, render)
+        out = inspect(run_turn(Event("customer_message", "sandbox-x", 2, "Cho tôi", {"id": "sandbox-x"}), repo, fx, render), fx)
+        self.assertEqual(out["understanding"]["hotness"], {})  # a button reply skips Jev
+        self.assertEqual((out["state"]["ai"]["ai_hotness"], out["state"]["ai"]["ai_intent"]), ("hot", "purchase"))
+
     def test_redelivery(self):
         self.assertEqual(inspect(None, RecordingEffects()), {"duplicate": True})
 
