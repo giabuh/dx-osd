@@ -74,10 +74,21 @@
               :sections="sections.data"
               doctype="CRM Deal"
               :docname="dealId"
+              :showEmpty="true"
               @reload="sections.reload"
               @beforeFieldChange="beforeStatusChange"
               @afterFieldChange="reloadAssignees"
             >
+              <template #after-fields="{ section }">
+                <ClassCard
+                  v-if="section.name == 'enrolment_section'"
+                  :schedule="doc.course_schedule"
+                />
+                <FeeProgress
+                  v-else-if="section.name == 'fee_section'"
+                  :doc="doc"
+                />
+              </template>
               <template #actions="{ section }">
                 <div v-if="section.name == 'contacts_section'" class="pr-2">
                   <Link
@@ -277,7 +288,7 @@ import CommentIcon from '@/components/Icons/CommentIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
-import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
+import MessageCircleIcon from '~icons/lucide/message-circle'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
@@ -291,6 +302,8 @@ import ContactModal from '@/components/Modals/ContactModal.vue'
 import Section from '@/components/CollapsibleSection.vue'
 import Link from '@/components/Controls/Link.vue'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
+import ClassCard from '@/components/Customer/ClassCard.vue'
+import FeeProgress from '@/components/Customer/FeeProgress.vue'
 import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import { setupCustomizations, isTranslatable } from '@/utils'
@@ -434,6 +447,7 @@ usePageMeta(() => {
 })
 
 const tabs = computed(() => {
+  // Sao Việt (D-122): same order as the desktop registration page, after the side panel's Details tab
   let tabOptions = [
     {
       name: 'Details',
@@ -442,9 +456,10 @@ const tabs = computed(() => {
       condition: () => isMobileView.value,
     },
     {
-      name: 'Activity',
-      label: __('Activity'),
-      icon: ActivityIcon,
+      name: 'Messages',
+      label: __('Messages'),
+      icon: MessageCircleIcon,
+      condition: () => !!doc.value.lead,
     },
     {
       name: 'Emails',
@@ -455,11 +470,6 @@ const tabs = computed(() => {
       name: 'Comments',
       label: __('Comments'),
       icon: CommentIcon,
-    },
-    {
-      name: 'Data',
-      label: __('Data'),
-      icon: DetailsIcon,
     },
     {
       name: 'Calls',
@@ -478,15 +488,15 @@ const tabs = computed(() => {
       icon: NoteIcon,
     },
     {
-      name: 'Attachments',
-      label: __('Attachments'),
-      icon: AttachmentIcon,
-    },
-    {
       name: 'WhatsApp',
       label: __('WhatsApp'),
       icon: WhatsAppIcon,
       condition: () => whatsappEnabled.value,
+    },
+    {
+      name: 'Activity',
+      label: __('Activity'),
+      icon: ActivityIcon,
     },
   ]
   return tabOptions.filter((tab) => (tab.condition ? tab.condition() : true))

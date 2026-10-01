@@ -552,15 +552,18 @@ def link_goal_level_slots():
 	frappe.db.commit()
 
 
-def lead_side_panel(has_field):
-	"""LEAD_SIDE_PANEL with only the fields `has_field` knows. Pure."""
+def keep_fields(layout, has_field):
+	"""A copy of a CRM Fields Layout (sections, or tabs of sections) with only the fields `has_field` knows. Pure."""
 	import copy
 
-	layout = copy.deepcopy(LEAD_SIDE_PANEL)
-	for section in layout:
-		for column in section["columns"]:
-			column["fields"] = [f for f in column["fields"] if has_field(f)]
+	layout = copy.deepcopy(layout)
+	remove_fields(layout, {f for f in layout_fields(layout) if not has_field(f)})
 	return layout
+
+
+def lead_side_panel(has_field):
+	"""LEAD_SIDE_PANEL with only the fields `has_field` knows. Pure."""
+	return keep_fields(LEAD_SIDE_PANEL, has_field)
 
 
 def setup():
