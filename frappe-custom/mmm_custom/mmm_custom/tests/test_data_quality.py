@@ -98,12 +98,85 @@ class TestComputeDataQuality(unittest.TestCase):
             "first_name": "Nguyễn Văn A",
             "email": None,
             "mobile_no": "+84901234567",
+            "territory": "CN Bình Thạnh",
+            "course_interest": "Photoshop cơ bản",
         }
         self.mock_frappe.db.count.return_value = 0
+        self.mock_frappe.get_all.return_value = []
         with patch.object(dq_mod, "frappe", self.mock_frappe):
             result = compute_data_quality("CRM-LEAD-006")
         self.assertEqual(result, "Đầy đủ")
 
+    def test_cross_branch_same_course_conflict(self):
+        """Same phone/email and same course at different branches → Trùng chi nhánh."""
+        self.mock_frappe.db.get_value.return_value = {
+            "first_name": "Trần Thị B",
+            "email": "b@example.com",
+            "mobile_no": "+84911223344",
+            "territory": "CN Bình Thạnh",
+            "course_interest": "Photoshop cơ bản",
+        }
+        self.mock_frappe.get_all.return_value = [
+            {
+                "name": "CRM-LEAD-OTHER",
+                "territory": "CN Thủ Đức",
+                "course_interest": "Photoshop cơ bản",
+            }
+        ]
+        with patch.object(dq_mod, "frappe", self.mock_frappe):
+            result = compute_data_quality("CRM-LEAD-007")
+        self.assertEqual(result, "Trùng chi nhánh")
+        self.mock_frappe.db.set_value.assert_any_call(
+            "CRM Lead", "CRM-LEAD-007", "data_quality", "Trùng chi nhánh"
+        )
+
+    def test_different_course_cross_branch_allowed(self):
+        """Same phone/email but different courses → Đầy đủ (multi-course learner)."""
+        self.mock_frappe.db.get_value.return_value = {
+            "first_name": "Lê Văn C",
+            "email": "c@example.com",
+            "mobile_no": "+84922334455",
+            "territory": "CN Bình Thạnh",
+            "course_interest": "Photoshop cơ bản",
+        }
+        self.mock_frappe.get_all.return_value = [
+            {
+                "name": "CRM-LEAD-OTHER-2",
+                "territory": "CN Thủ Đức",
+                "course_interest": "Robotics STEM",
+            }
+        ]
+        with patch.object(dq_mod, "frappe", self.mock_frappe):
+            result = compute_data_quality("CRM-LEAD-008")
+        self.assertEqual(result, "Đầy đủ")
+        self.mock_frappe.db.set_value.assert_any_call(
+            "CRM Lead", "CRM-LEAD-008", "data_quality", "Đầy đủ"
+        )
+
+    def test_same_branch_same_course_duplicate(self):
+        """Same phone/email and same course at same branch → Nghi trùng."""
+        self.mock_frappe.db.get_value.return_value = {
+            "first_name": "Hoàng Văn D",
+            "email": "d@example.com",
+            "mobile_no": "+84933445566",
+            "territory": "CN Bình Thạnh",
+            "course_interest": "Photoshop cơ bản",
+        }
+        self.mock_frappe.get_all.return_value = [
+            {
+                "name": "CRM-LEAD-OTHER-3",
+                "territory": "CN Bình Thạnh",
+                "course_interest": "Photoshop cơ bản",
+            }
+        ]
+        with patch.object(dq_mod, "frappe", self.mock_frappe):
+            result = compute_data_quality("CRM-LEAD-009")
+        self.assertEqual(result, "Nghi trùng")
+        self.mock_frappe.db.set_value.assert_any_call(
+            "CRM Lead", "CRM-LEAD-009", "data_quality", "Nghi trùng"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
+

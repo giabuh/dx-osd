@@ -554,21 +554,24 @@
                 v-model="generateForm.boss_directive"
                 rows="3"
                 class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                :placeholder="__('Ví dụ: Chiến dịch tuyển sinh tháng 10 - Giảm 30% học phí khóa bơi cho bé, tặng 1 buổi học thử Tiếng Anh cho phụ huynh đăng ký sớm...')"
+                :placeholder="__('Ví dụ: Chiến dịch tuyển sinh tháng 10 - Ưu đãi 25% các lớp Robotics STEM và Đồ họa Photoshop khai giảng tuần tới...')"
               />
               <p class="text-[11px] text-ink-gray-5 mt-1">
-                {{ __('Nếu để trống, hệ thống sẽ sử dụng chiến lược mặc định: Tuyển sinh đa kênh các khóa học mũi nhọn.') }}
+                {{ __('Nếu để trống, hệ thống sẽ tự động phân tích CRM để chọn các khóa học có lớp sắp mở và ưu đãi tốt nhất.') }}
               </p>
             </div>
 
             <div class="rounded-lg bg-surface-gray-2 p-3 text-xs text-ink-gray-7 space-y-1">
               <div class="font-semibold text-ink-gray-9 mb-1">
-                {{ __('Ma trận 4 khung giờ phát sóng:') }}
+                {{ __('Ma trận 4 khung giờ phát sóng (Tự động chọn khóa học từ CRM):') }}
               </div>
-              <div>• <strong>Thứ Hai (08:30):</strong> Tiếng Anh giao tiếp (Storytelling)</div>
-              <div>• <strong>Thứ Tư (11:30):</strong> Toán tư duy (Educational Insight)</div>
-              <div>• <strong>Thứ Sáu (19:30):</strong> Bơi lội trẻ em (FOMO Offer / Giảm giá)</div>
-              <div>• <strong>Chủ Nhật (09:00):</strong> Tổng kết & Học bổng EduFlow (Humor / Community)</div>
+              <div>• <strong>Thứ Hai (08:30):</strong> Góc chia sẻ & Câu chuyện học viên (Storytelling)</div>
+              <div>• <strong>Thứ Tư (11:30):</strong> Kiến thức chuyên môn & Mẹo hay công nghệ (Educational Insight)</div>
+              <div>• <strong>Thứ Sáu (19:30):</strong> Ưu đãi tuyển sinh & Lớp sắp khai giảng (FOMO Offer / Giảm giá)</div>
+              <div>• <strong>Chủ Nhật (09:00):</strong> Tổng kết tuần & Học bổng EduFlow (Community / Mini-game)</div>
+              <p class="text-[11px] text-ink-gray-5 mt-1 pt-1 border-t border-outline-gray-1">
+                * Khóa học của từng bài đăng được AI tự động phân tích và chọn lọc từ danh mục khóa học trên CRM (Robotics, Photoshop, Excel, Python, Marketing...).
+              </p>
             </div>
           </div>
 
@@ -1475,7 +1478,7 @@ async function fetchPages() {
   try {
     const res = await call('frappe.client.get_list', {
       doctype: 'Facebook Page',
-      fields: ['name', 'page_name', 'status'],
+      fields: ['name', 'page_name'],
       limit_page_length: 50,
     })
     availablePages.value = res || []

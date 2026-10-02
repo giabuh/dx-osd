@@ -385,7 +385,12 @@ def generate_hero_image(course, title=None, feedback=None, api_key=None, app_roo
         prompt = build_image_prompt(course, title, feedback)
 
         # Attempt A: Google Generative AI generateContent with IMAGE modality
-        gemini_image_models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image", "gemini-3-pro-image"]
+        gemini_image_models = [
+            "gemini-3.1-flash-image",
+            "gemini-3.1-flash-lite-image",
+            "gemini-2.5-flash-image",
+            "gemini-3-pro-image",
+        ]
         for img_model in gemini_image_models:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{img_model}:generateContent?key={effective_api_key}"
