@@ -167,6 +167,23 @@ class TestAutopilotEngine(unittest.TestCase):
         self.assertEqual([d.scheduled_time for d in docs], ["2026-10-02 19:30:00", "2026-10-04 09:00:00"])
         self.assertIn("bỏ qua Thứ Hai, Thứ Tư", res["pipeline"][3]["action"])
 
+    def test_taken_days_per_page(self):
+        rows = [{"day_of_week": "Thứ Sáu", "facebook_page": "P1"}, {"day_of_week": "Chủ Nhật", "facebook_page": None},
+                {"day_of_week": "Thứ Hai", "facebook_page": "P2"}]
+        self.assertEqual(autopilot.taken_days(rows, "P1", default="P1"), {"Thứ Sáu", "Chủ Nhật"})
+        self.assertEqual(autopilot.taken_days(rows, "P2", default="P1"), {"Thứ Hai"})
+
+    def test_generating_twice_does_not_duplicate_a_day(self):
+        """Posts 53/54 and 55/56: the same Friday and Sunday planned twice for the same page."""
+        with patch("mmm_custom.autopilot._now", lambda: autopilot.datetime(2026, 10, 2, 9, 0)),                 patch("mmm_custom.autopilot._today", lambda: autopilot.date(2026, 10, 2)),                 patch("mmm_custom.autopilot.default_page", lambda: "P1"),                 patch("mmm_custom.autopilot.frappe") as mock_frappe:
+            mock_frappe.get_all.return_value = [{"day_of_week": "Thứ Sáu", "facebook_page": "P1"}]
+            docs = []
+            mock_frappe.new_doc.side_effect = lambda doctype: docs.append(MagicMock()) or docs[-1]
+            res = autopilot.generate_weekly_batch()
+        self.assertEqual(res["already"], ["Thứ Sáu"])
+        self.assertEqual([d.day_of_week for d in docs], ["Chủ Nhật"])
+        self.assertEqual(docs[0].facebook_page, "P1")
+
     def test_a_finished_week_plans_the_next_one(self):
         with patch("mmm_custom.autopilot._now", lambda: autopilot.datetime(2026, 10, 4, 20, 0)),                 patch("mmm_custom.autopilot._today", lambda: autopilot.date(2026, 10, 4)),                 patch("mmm_custom.autopilot.frappe") as mock_frappe:
             docs = []
@@ -269,7 +286,7 @@ class TestAutopilotEngine(unittest.TestCase):
             new_directive="Chỉ đạo mới tuần 40",
         )
 
-        mock_frappe.get_all.assert_called_once_with(
+        mock_frappe.get_all.assert_any_call(  # the cancel query; generating then reads the week's posts
             "Facebook Post",
             filters={
                 "status": ["in", ["Pending Approval", "Scheduled"]],
@@ -296,7 +313,7 @@ class TestAutopilotEngine(unittest.TestCase):
 
         res = autopilot.rollback_weekly_batch()
 
-        mock_frappe.get_all.assert_called_once_with(
+        mock_frappe.get_all.assert_any_call(  # the cancel query; generating then reads the week's posts
             "Facebook Post",
             filters={"status": ["in", ["Pending Approval", "Scheduled"]]},
             pluck="name",

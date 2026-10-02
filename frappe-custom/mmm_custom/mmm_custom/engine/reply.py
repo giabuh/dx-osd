@@ -116,6 +116,9 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
     if decision.greet:  # later in the conversation a short greeting back, not the bot's introduction (D-109)
         say(settings["regreet_template"] if state.turns else settings["greeting_template"], ctx,
             "regreet" if state.turns else "greeting")
+    if decision.remark:  # a remark that asks nothing: one fixed line with the way to register (D-130)
+        say(settings["remark_price_template"] if decision.remark == "price" else settings["remark_template"], ctx,
+            "remark")
     if decision.declined:
         say(settings["quiz_decline_template"], ctx, "quiz_decline")
     if decision.fallback:

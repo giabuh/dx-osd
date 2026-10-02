@@ -89,7 +89,7 @@ doctype_js = {"CRM Product": "public/js/crm_product.js"}
 after_install = ["mmm_custom.setup.create_custom_field_and_lead_sources", "mmm_custom.lifecycle.migrate",
                  "mmm_custom.setup.ensure_vnd", "mmm_custom.enrolment.ensure_deal_defaults"]
 # Catalog custom fields are declared in setup.CATALOG_FIELDS; re-applied on every migrate so new ones land without a patch.
-after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.sources.ensure_sources",
+after_migrate = ["mmm_custom.setup.create_catalog_fields", "mmm_custom.setup.ensure_data_quality_options", "mmm_custom.sources.ensure_sources",
                  "mmm_custom.referral.backfill", "mmm_custom.setup.update_crm_fields_layout",
                  # the grouped customer side panel, once (D-122)
                  "mmm_custom.setup.update_lead_side_panel",

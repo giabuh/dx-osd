@@ -367,11 +367,48 @@ def get_fonts(app_root=None):
     return loader
 
 
+STOCK_PHOTO_FALLBACK = {"accounting": "excel"}  # course field → the stock photo that fits it best
+
+
+def brand_pill(meta, brand=""):
+    """Top pill text: the post's brand (its Facebook Page, else the CRM brand) and the course field, e.g.
+    "EduFlow Academy · OFFICE & DATA". COURSE_META keeps a "Sao Việt" prefix from the first demo; it is not a brand
+    and is never printed. Pure."""
+    field = re.sub(r"^\s*Sao Việt\s*", "", meta.get("brand_name") or "").strip()
+    brand = (brand or "").strip()
+    if brand and field:
+        return f"{brand} · {field}"
+    return brand or field or "ACADEMY"
+
+
 def generate_hero_image(course, title=None, feedback=None, api_key=None, app_root=None):
+    """The hero photo only (see hero_image for why a stock photo was used)."""
+    return hero_image(course, title=title, feedback=feedback, api_key=api_key, app_root=app_root)[0]
+
+
+def gemini_failure_note(status, body):
+    """What to tell the person when Gemini gave no image (the stock course photo is used instead). Pure."""
+    if status == 429:
+        return ("Gemini không tạo ảnh: key đang ở gói miễn phí, gói này không có hạn mức tạo ảnh (lỗi 429). "
+                "Bật thanh toán cho key trên Google AI Studio, hoặc tải banner từ máy. Đang dùng ảnh mẫu.")
+    if status in (401, 403):
+        return f"Gemini từ chối key (lỗi {status}): kiểm tra gemini_api_key. Đang dùng ảnh mẫu."
+    message = ""
+    try:
+        import json as _json
+
+        message = (_json.loads(body or "{}").get("error") or {}).get("message", "")
+    except Exception:
+        message = str(body or "")
+    return f"Gemini không tạo được ảnh (lỗi {status}): {message[:140]}. Đang dùng ảnh mẫu."
+
+
+def hero_image(course, title=None, feedback=None, api_key=None, app_root=None):
     """
-    Retrieve or dynamically generate a high quality hero photo for the commercial poster.
-    Prioritizes Gemini / Imagen API if key is present, with instant fallback to verified joyful commercial photography.
+    (image, note): a Gemini / Imagen photo when the key can make one, else the course's stock photo with a note
+    saying why, so a failed Gemini call is no longer silent.
     """
+    note = ""
     meta = get_course_meta(course)
     course_key = meta["key"]
     root = app_root or get_app_root()
@@ -381,6 +418,8 @@ def generate_hero_image(course, title=None, feedback=None, api_key=None, app_roo
     if not effective_api_key and hasattr(frappe, "conf"):
         effective_api_key = frappe.conf.get("gemini_api_key")
 
+    if not effective_api_key:
+        note = "Chưa cấu hình gemini_api_key nên dùng ảnh mẫu."
     if effective_api_key:
         prompt = build_image_prompt(course, title, feedback)
 
@@ -408,12 +447,14 @@ def generate_hero_image(course, title=None, feedback=None, api_key=None, app_roo
                             if "inlineData" in p and p["inlineData"].get("data"):
                                 img_data = base64.b64decode(p["inlineData"]["data"])
                                 img = Image.open(io.BytesIO(img_data)).convert("RGB")
-                                return img.resize((980, 860), Image.Resampling.LANCZOS)
-                elif resp.status_code == 429:
-                    # Free tier quota limit: 0 on Google AI Studio
-                    break
-            except Exception:
-                pass
+                                return img.resize((980, 860), Image.Resampling.LANCZOS), ""
+                    note = "Gemini trả lời nhưng không kèm ảnh. Đang dùng ảnh mẫu."
+                else:
+                    note = gemini_failure_note(resp.status_code, resp.text)
+                    if resp.status_code == 429:  # free tier: no image quota on any image model
+                        break
+            except Exception as e:
+                note = f"Không gọi được Gemini ({type(e).__name__}). Đang dùng ảnh mẫu."
 
         # Attempt B: Imagen 3 Predict endpoint (supports mock responses in unit tests & Vertex/GCP paid keys)
         try:
@@ -433,29 +474,31 @@ def generate_hero_image(course, title=None, feedback=None, api_key=None, app_roo
                 if predictions and "bytesBase64Encoded" in predictions[0]:
                     img_data = base64.b64decode(predictions[0]["bytesBase64Encoded"])
                     img = Image.open(io.BytesIO(img_data)).convert("RGB")
-                    return img.resize((980, 860), Image.Resampling.LANCZOS)
+                    return img.resize((980, 860), Image.Resampling.LANCZOS), ""
         except Exception as e:
             if hasattr(frappe, "log_error"):
                 frappe.log_error(title="Imagen 3 API Error", message=str(e)[:500])
 
     # 2. Tier 2: Curated authentic commercial studio photography
-    candidate_keys = [course_key, "robotics", "design", "autocad", "excel", "programming", "marketing", "ai", "chung"]
+    # the course's own photo, else the closest one (accounting has none: an office photo, never kids with robots),
+    # else the neutral school photo
+    candidate_keys = [course_key, STOCK_PHOTO_FALLBACK.get(course_key, "chung"), "chung"]
     for ck in candidate_keys:
         photo_path = root / "public" / "images" / "courses" / f"{ck}.jpg"
         if photo_path.exists():
             try:
                 img = Image.open(str(photo_path)).convert("RGB")
-                return img.resize((980, 860), Image.Resampling.LANCZOS)
+                return img.resize((980, 860), Image.Resampling.LANCZOS), note
             except Exception:
                 pass
 
     # 3. Emergency fallback canvas
     canvas = Image.new("RGB", (980, 860), meta["theme"])
-    return canvas
+    return canvas, note
 
 
 def compose_commercial_banner(hero_image, course, title=None, feedback=None, app_root=None, footer=None,
-                              has_offer=False):
+                              has_offer=False, brand=""):
     """
     Composite a vibrant, commercial-grade 9:16 vertical poster (1080x1920) in the exact style of Sao Việt Robotics:
       - Vibrant Electric Blue gradient with tech particle grid
@@ -499,7 +542,7 @@ def compose_commercial_banner(hero_image, course, title=None, feedback=None, app
     f_foot = get_font(22, bold=True)
 
     # 2. Top Brand Badge (Clean curved white pill)
-    brand_title = meta.get("brand_name", "Sao Việt ACADEMY")
+    brand_title = brand_pill(meta, brand)
     bbox_br = draw.textbbox((0, 0), brand_title, font=f_brand)
     wbr = bbox_br[2] - bbox_br[0]
     badge_w = wbr + 120
@@ -658,7 +701,7 @@ def compose_commercial_banner(hero_image, course, title=None, feedback=None, app
 def generate_and_save_banner(doc, user_feedback=None):
     """
     High-level banner generator called by FacebookPost.generate_banner().
-    Generates Sao Việt style commercial poster and saves to Frappe files.
+    Generates the commercial poster and saves it to Frappe files.
     """
     course = getattr(doc, "course", "Robotics") or "Robotics"
     title = getattr(doc, "title", None)
@@ -667,15 +710,18 @@ def generate_and_save_banner(doc, user_feedback=None):
     if user_feedback:
         doc.ai_feedback = user_feedback
 
-    # 1. Generate or retrieve joyful commercial hero photo
-    hero_image = generate_hero_image(course, title=title, feedback=feedback)
+    # 1. Generate or retrieve joyful commercial hero photo (with the reason when it is a stock photo)
+    photo, note = hero_image(course, title=title, feedback=feedback)
+    if note and hasattr(frappe, "log_error") and "429" not in note:
+        frappe.log_error(title="Banner: Gemini image not generated", message=note)
 
-    # 2. Composite Sao Việt style commercial ad banner
+    # 2. Composite the poster with the brand of the post's Facebook Page and contact facts from the CRM
     from mmm_custom.marketing_plan import footer_text, post_facts
 
-    facts = post_facts(course)
-    banner = compose_commercial_banner(hero_image, course, title=title, feedback=feedback,
-                                       footer=footer_text(facts), has_offer=bool(facts.get("promo")))
+    facts = post_facts(course, page=getattr(doc, "facebook_page", None))
+    banner = compose_commercial_banner(photo, course, title=title, feedback=feedback,
+                                       footer=footer_text(facts), has_offer=bool(facts.get("promo")),
+                                       brand=facts.get("brand") or "")
 
     # 3. Save to BytesIO
     buf = io.BytesIO()
@@ -686,7 +732,7 @@ def generate_and_save_banner(doc, user_feedback=None):
         doc.insert(ignore_permissions=True)
 
     meta = get_course_meta(course)
-    file_name = f"banner_saoviet_{meta['key']}_{doc.name}.jpg"
+    file_name = f"banner_{meta['key']}_{doc.name}.jpg"
     doctype_name = getattr(doc, "doctype", "Facebook Post")
 
     file_doc = save_file(file_name, buf.getvalue(), doctype_name, doc.name, is_private=0)
@@ -696,4 +742,4 @@ def generate_and_save_banner(doc, user_feedback=None):
     if hasattr(frappe.db, "commit"):
         frappe.db.commit()
 
-    return {"status": "success", "image": doc.image}
+    return {"status": "success", "image": doc.image, "note": note}

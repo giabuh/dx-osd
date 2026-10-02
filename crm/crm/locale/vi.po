@@ -3307,6 +3307,10 @@ msgstr "Trang Facebook"
 msgid "Facebook Post"
 msgstr "Bài đăng Facebook"
 
+#. Label of the duplicate_of (Link) field in DocType 'CRM Lead' (mmm_custom data_quality)
+msgid "Duplicate Of"
+msgstr "Trùng với"
+
 #: frontend/src/pages/PersonaForm.vue:74
 msgid "Facebook/Instagram Ads"
 msgstr ""

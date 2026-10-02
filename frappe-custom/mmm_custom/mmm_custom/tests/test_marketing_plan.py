@@ -135,5 +135,19 @@ class TestFacts(unittest.TestCase):
         self.assertEqual(mp.footer_text({}), "Inbox fanpage để được tư vấn")
 
 
+class TestPageBrand(unittest.TestCase):
+    def test_the_page_name_is_the_brand_and_the_crm_website_is_left_out(self):
+        f = mp.build_facts("DH-PTS", CAT, [], None, brand="EduFlow Academy")
+        self.assertEqual((f["brand"], f["website"]), ("EduFlow Academy", ""))
+        self.assertEqual(f["hotline"], "0931 144 858")
+        rules = mp.caption_rules(f, "Photoshop cơ bản")
+        self.assertIn("EduFlow Academy", rules)
+        self.assertNotIn("tinhocsaoviet", rules)
+
+    def test_without_a_page_the_crm_brand_and_website_stay(self):
+        f = mp.build_facts("DH-PTS", CAT, [], None)
+        self.assertEqual((f["brand"], f["website"]), ("Tin Học Sao Việt", "https://tinhocsaoviet.com"))
+
+
 if __name__ == "__main__":
     unittest.main()

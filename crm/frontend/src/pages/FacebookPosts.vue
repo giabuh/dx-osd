@@ -24,6 +24,17 @@
             <span class="hidden sm:inline">{{ __('Làm mới') }}</span>
           </Button>
 
+          <!-- Comment funnel (D-124): answer new comments now instead of waiting for the 5-minute job -->
+          <Button
+            variant="subtle"
+            :iconLeft="LucideMessageSquare"
+            :loading="answeringComments"
+            :title="__('Trả lời bình luận mới ngay, không chờ 5 phút')"
+            @click="answerCommentsNow"
+          >
+            <span class="hidden sm:inline">{{ __('Trả lời bình luận ngay') }}</span>
+          </Button>
+
           <Dropdown :options="batchActions">
             <Button
               variant="subtle"
@@ -865,6 +876,24 @@
                 <div class="space-y-2 flex flex-col">
                   <div class="flex items-center justify-between">
                     <label class="font-medium text-ink-gray-8">{{ __('Banner bài viết') }}</label>
+                    <FileUploader
+                      v-if="editingPost.name"
+                      :fileTypes="['image/*']"
+                      :uploadArgs="{ doctype: 'Facebook Post', docname: editingPost.name, private: false }"
+                      @success="onBannerUploaded"
+                    >
+                      <template #default="{ uploading, progress, openFileSelector }">
+                        <button
+                          type="button"
+                          class="text-[11px] text-ink-gray-7 hover:underline flex items-center gap-1 font-medium"
+                          :disabled="uploading"
+                          @click="openFileSelector"
+                        >
+                          <LucideUpload class="size-3" />
+                          {{ uploading ? __('Đang tải {0}%', [progress]) : __('Tải ảnh từ máy') }}
+                        </button>
+                      </template>
+                    </FileUploader>
                     <button
                       v-if="editingPost.image"
                       type="button"
@@ -1254,13 +1283,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { call, Button, Badge, Dialog, toast, Dropdown } from 'frappe-ui'
+import { call, Button, Badge, Dialog, toast, Dropdown, FileUploader } from 'frappe-ui'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 
 // Lucide Icons
 import MegaphoneIcon from '~icons/lucide/megaphone'
 import LucideCalendarPlus from '~icons/lucide/calendar-plus'
 import LucideGraduationCap from '~icons/lucide/graduation-cap'
+import LucideUpload from '~icons/lucide/upload'
 import LucideImage from '~icons/lucide/image'
 import LucideRefreshCcw from '~icons/lucide/refresh-ccw'
 import LucideCalendar from '~icons/lucide/calendar'
@@ -1507,6 +1537,45 @@ function getPageBadgeLabel(pageId) {
   return name.length > 20 ? name.substring(0, 18) + '...' : name
 }
 
+const answeringComments = ref(false)
+
+async function answerCommentsNow() {
+  answeringComments.value = true
+  try {
+    const res = await call('mmm_custom.comment_funnel.run_now')
+    if (res?.status === 'disabled') {
+      toast.warning ? toast.warning('Trả lời bình luận đang tắt (comment_funnel_enabled).') : toast.info('Đang tắt.')
+    } else if (!res?.handled) {
+      toast.info('Không có bình luận mới nào cần trả lời.')
+    } else {
+      const failed = res.Failed ? `, ${res.Failed} lỗi` : ''
+      toast.success ? toast.success(`Đã xử lý ${res.handled} bình luận: ${res.Replied || 0} trả lời, ${res.Skipped || 0} bỏ qua${failed}.`) : null
+    }
+  } catch (error) {
+    toast.error ? toast.error('Không chạy được: ' + (error.message || error)) : null
+  } finally {
+    answeringComments.value = false
+  }
+}
+
+// A banner chosen from the computer replaces the generated one (saved on the post right away)
+async function onBannerUploaded(file) {
+  try {
+    await call('frappe.client.set_value', {
+      doctype: 'Facebook Post',
+      name: editingPost.value.name,
+      fieldname: 'image',
+      value: file.file_url,
+    })
+    editingPost.value.image = file.file_url
+    const p = posts.value.find(x => x.name === editingPost.value.name)
+    if (p) p.image = file.file_url
+    toast.success ? toast.success('Đã dùng ảnh từ máy làm banner.') : toast.info('Đã cập nhật banner.')
+  } catch (error) {
+    toast.error ? toast.error('Không lưu được banner: ' + (error.message || error)) : null
+  }
+}
+
 // Matrix Helpers
 // A post still waiting for approval whose publishing time has passed (D-127): approving the week skips it,
 // because the publisher would post it the moment it became Scheduled.
@@ -1630,6 +1699,9 @@ async function handleGenerateWeeklyBatch() {
       toast.success ? toast.success(`Đã tạo thành công ${res.count} bài viết cho đợt ${res.batch_id}!`) : toast.info(`Đã tạo thành công ${res.count} bài viết!`)
       // a slot whose time has passed is not planned (it would be published the moment it is approved)
       if (res.skipped?.length) toast.info(`Bỏ qua ${res.skipped.join(', ')} vì đã qua giờ đăng.`)
+      // one post per day and page: generating again does not duplicate the days that already have one
+      if (res.already?.length) toast.info(`${res.already.join(', ')} đã có bài cho trang này, giữ nguyên. Muốn làm lại thì dùng "Làm lại cả tuần".`)
+      if (!res.count) toast.warning ? toast.warning('Không có bài mới nào được tạo cho tuần này.') : null
       await fetchPosts()
     }
   } catch (error) {
@@ -1926,7 +1998,9 @@ async function handleAiGenerateBanner() {
     if (p && editingPost.value.image) {
       p.image = editingPost.value.image
     }
-    toast.success ? toast.success('AI đã tạo mới Banner chuẩn 1080x1080!') : toast.info('Đã tạo mới Banner!')
+    toast.success ? toast.success('Đã tạo mới banner!') : toast.info('Đã tạo mới Banner!')
+    // Gemini gave no image (free-tier key, wrong key...): say why the stock photo was used
+    if (res?.note) toast.warning ? toast.warning(res.note) : toast.info(res.note)
   } catch (error) {
     console.error('Lỗi AI tạo banner:', error)
     toast.error ? toast.error('Lỗi khi AI tạo banner: ' + (error.message || error)) : null

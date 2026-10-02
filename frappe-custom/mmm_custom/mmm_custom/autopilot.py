@@ -82,6 +82,22 @@ def slot_at(base_monday, slot):
         hour=hour, minute=minute, second=second)
 
 
+ACTIVE = ("Pending Approval", "Scheduled", "Posted")
+
+
+def default_page():
+    """The Facebook Page a post without one is published on (site config `facebook_page_id`)."""
+    page = frappe.conf.get("facebook_page_id") if getattr(frappe, "conf", None) else None
+    return page if isinstance(page, str) else ""
+
+
+def taken_days(rows, page, default=""):
+    """Days of the batch that page already has an active post for; a post with no page belongs to the default
+    page. Generating twice used to give the same days twice (posts 53/54 and 55/56). Pure."""
+    return {r["day_of_week"] for r in rows
+            if isinstance(r, dict) and str(r.get("facebook_page") or default) == str(page or default)}
+
+
 def open_slots(base_monday, now):
     """The slots of that week still ahead of `now`: a slot whose time has passed is not planned, or approving
     the batch would publish it at once (the publisher posts every Scheduled post that is due)."""
@@ -121,6 +137,13 @@ def generate_weekly_batch(boss_directive=None, target_date=None, facebook_page=N
     skipped = [s["day_of_week"] for s in WEEKLY_MATRIX if s not in slots]
     iso_year, iso_week, _ = base_monday.isocalendar()
     batch_id = f"BATCH-{iso_year}-W{iso_week:02d}"
+    # One post per day and page in a week: days this page already has stay as they are ("Làm lại cả tuần" redoes them)
+    page = facebook_page or default_page()
+    existing = frappe.get_all("Facebook Post", filters={"batch_id": batch_id, "status": ["in", list(ACTIVE)]},
+                              fields=["day_of_week", "facebook_page"])
+    taken = taken_days(existing if isinstance(existing, list) else [], page, default_page())
+    already = [s["day_of_week"] for s in slots if s["day_of_week"] in taken]
+    slots = [s for s in slots if s["day_of_week"] not in taken]
 
     created_posts = []
     # The week's courses from CRM data: open classes, promotions, what earlier posts brought (D-125)
@@ -142,8 +165,8 @@ def generate_weekly_batch(boss_directive=None, target_date=None, facebook_page=N
         doc = frappe.new_doc("Facebook Post")
         doc.title = title
         doc.course = course["code"]
-        if facebook_page:
-            doc.facebook_page = facebook_page
+        if page:
+            doc.facebook_page = page
         doc.plan_reason = course["reason"]
         doc.status = "Pending Approval"
         doc.batch_id = batch_id
@@ -235,6 +258,7 @@ def generate_weekly_batch(boss_directive=None, target_date=None, facebook_page=N
         "count": len(created_posts),
         "posts": [p.name for p in created_posts],
         "skipped": skipped,
+        "already": already,
         "pipeline": pipeline,
     }
 

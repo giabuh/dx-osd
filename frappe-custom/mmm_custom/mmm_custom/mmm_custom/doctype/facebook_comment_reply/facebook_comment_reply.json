@@ -13,6 +13,7 @@
   "column_break_1",
   "intent",
   "status",
+  "writer",
   "lead",
   "psid",
   "section_replies",
@@ -60,7 +61,7 @@
    "fieldname": "intent",
    "fieldtype": "Select",
    "label": "Intent",
-   "options": "quiz\nprice\ninterest\npraise\nother",
+   "options": "quiz\nprice\ninterest\npraise\ngreeting\nother",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "read_only": 1
@@ -74,6 +75,15 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "writer",
+   "fieldtype": "Select",
+   "label": "Written By",
+   "options": "\ngemini\nmixed\ntemplate",
+   "in_list_view": 1,
+   "read_only": 1,
+   "description": "gemini: both replies written by Gemini and checked; template: CRM templates; mixed: one of each"
   },
   {
    "fieldname": "lead",
@@ -122,7 +132,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-01 09:00:00.000000",
+ "modified": "2026-10-02 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "MMM Custom",
  "name": "Facebook Comment Reply",

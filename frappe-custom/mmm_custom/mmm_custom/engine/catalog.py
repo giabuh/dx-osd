@@ -22,6 +22,13 @@ DEFAULT_SETTINGS = {
     "assist_disabled": 0, "assist_wait_minutes": 5,
     # Gemini drafts for staff when the bot has no answer (D-115); needs gemini_api_key in the site config.
     "llm_draft_disabled": 0, "llm_drafts_per_hour": 6,
+    # D-130: a remark that asks nothing. The quoted phrase is what the customer types to start registering (D-121).
+    "remark_price_template": "Dạ {{ brand.me }} hiểu băn khoăn của {{ brand.you }} ạ. {{ brand.you | capitalize }} cứ hỏi thêm "
+                             "về nội dung, lịch học hay ưu đãi, {{ brand.me }} giải đáp ngay ạ. Nếu {{ brand.you }} muốn "
+                             "đăng ký học, {{ brand.you }} nhắn \"tôi muốn đăng ký học\" để {{ brand.me }} hỗ trợ ngay ạ.",
+    "remark_template": "Dạ {{ brand.me }} chỉ hỗ trợ được thông tin về khóa học, lịch học và học phí thôi ạ. Nếu "
+                       "{{ brand.you }} muốn đăng ký học, {{ brand.you }} nhắn \"tôi muốn đăng ký học\" để {{ brand.me }} "
+                       "hỗ trợ ngay ạ.",
     "hold_template": "Dạ {{ brand.me }} đã báo tư vấn viên, {{ brand.you }} chờ {{ brand.me }} một chút nhé ạ.",
     "jev_live": 0, "jev_timeout": 8, "catalog_act": 0.95, "catalog_confirm": 0.55, "choice_act": 0.80,
     "choice_confirm": 0.50, "skill_act": 0.90, "skill_confirm": 0.60, "handoff_noul": 0.70, "spam_threshold": 0.80,
@@ -61,6 +68,8 @@ DEFAULT_SETTINGS = {
     "comment_public_template": "Dạ {{ brand.me }} cảm ơn {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} "
                                "ạ, {{ brand.me }} đã nhắn tin riêng cho {{ brand.you }}{% if course.name %} thông tin khóa "
                                "{{ course.name }}{% endif %}, {{ brand.you }} xem hộp thư Messenger giúp {{ brand.me }} nhé ạ.",
+    "comment_greeting_template": "Dạ {{ brand.me }} chào {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} ạ, "
+                                 "{{ brand.you }} cần tư vấn khóa học nào cứ nhắn tin cho trang, {{ brand.me }} hỗ trợ ngay nhé ạ.",
     "comment_thanks_template": "Dạ {{ brand.me }} cảm ơn {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} "
                                "đã ủng hộ ạ 😊",
     "comment_private_template": "Dạ {{ brand.me }} chào {{ brand.you }}{% if customer.name %} {{ customer.name }}{% endif %} ạ, "

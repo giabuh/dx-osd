@@ -96,12 +96,12 @@
           </span>
           <span
             class="text-right text-p-sm tabular-nums text-ink-gray-5"
-            :title="i ? 'So với bước liền trước' : ''"
+            :title="i ? 'So với số Lead mới' : ''"
             >{{ stage.pct }}</span
           >
         </button>
         <span class="text-p-xs text-ink-gray-5"
-          >% ở cột phải: so với bước liền trước</span
+          >% ở cột phải: so với số Lead mới trong kỳ</span
         >
       </div>
 
@@ -228,7 +228,7 @@ const QUALIFIED_ON = [
 ]
 const TRIAL_ON = ['Trial Booked', 'Converted']
 
-const period = ref('7')
+const period = ref('30')  // same default as engine/dashboard.DEFAULT_PERIOD
 const data = ref(null)
 const error = ref('')
 
@@ -306,18 +306,14 @@ const cards = computed(() => {
 const funnel = computed(() => {
   const rows = data.value?.funnel || []
   const top = Math.max(1, rows[0]?.count || 0)
-  return rows.map((row, i) => {
-    const previous = i ? rows[i - 1].count : 0
-    return {
-      ...row,
-      width: row.count ? Math.max(3, Math.round((100 * row.count) / top)) : 0,
-      pct: !i
-        ? ''
-        : previous
-          ? `${Math.round((100 * row.count) / previous)}%`
-          : '—',
-    }
-  })
+  // each step as a share of the new Leads: steps are not strictly nested (a Lead can be handed to a consultant
+  // before it is qualified), so "of the step before" showed 164%
+  const first = rows[0]?.count || 0
+  return rows.map((row, i) => ({
+    ...row,
+    width: row.count ? Math.max(3, Math.round((100 * row.count) / top)) : 0,
+    pct: !i ? '' : first ? `${Math.round((100 * row.count) / first)}%` : '—',
+  }))
 })
 
 const columns = [

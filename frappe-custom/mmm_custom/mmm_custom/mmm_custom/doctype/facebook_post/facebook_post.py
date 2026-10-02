@@ -146,6 +146,14 @@ COURSE_META = {
 
 
 class FacebookPost(Document):
+    def validate(self):
+        # A post without a page is published on the default page (site config facebook_page_id): name it, so the
+        # page filter of the Facebook Marketing screen finds it too.
+        if not getattr(self, "facebook_page", None):
+            default = frappe.conf.get("facebook_page_id") if getattr(frappe, "conf", None) else None
+            if isinstance(default, str) and frappe.db.exists("Facebook Page", default):
+                self.facebook_page = default
+
     @frappe.whitelist()
     def generate_ai_content(self, user_feedback=None):
         """Generate high quality Facebook post caption using Gemini AI or 9Router."""
@@ -207,7 +215,7 @@ class FacebookPost(Document):
         # Brand, branches, hotline, fee, offer, next class and the level-test keyword come from CRM data (D-125)
         from mmm_custom.marketing_plan import caption_rules, ensure_cta, post_facts, unsupported_claims
 
-        facts = post_facts(self.course) if self.course else {}
+        facts = post_facts(self.course, page=getattr(self, "facebook_page", None)) if self.course else {}
         prompt = (
             f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm {facts.get('brand') or 'đào tạo'}.\n"
             f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n\n"
