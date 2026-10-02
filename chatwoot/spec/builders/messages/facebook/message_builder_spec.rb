@@ -77,6 +77,36 @@ describe Messages::Facebook::MessageBuilder do
       expect(contact.name).to eq(default_name)
     end
 
+    context 'when the profile API is unavailable for the page' do
+      let(:profile_error) do
+        Koala::Facebook::ClientError.new(400, '', { 'type' => 'GraphMethodException', 'code' => 100, 'error_subcode' => 33,
+                                                    'message' => 'Unsupported get request.' })
+      end
+      let(:sender_id) { incoming_fb_text_message.sender_id }
+
+      before do
+        allow(Koala::Facebook::API).to receive(:new).and_return(fb_object)
+        allow(fb_object).to receive(:get_object).and_raise(profile_error)
+      end
+
+      it 'uses the name from the conversation participants' do
+        allow(fb_object).to receive(:get_connections).with('me', 'conversations', user_id: sender_id, fields: 'participants').and_return(
+          [{ 'participants' => { 'data' => [{ 'name' => 'Page Name', 'id' => 'page_1' },
+                                            { 'name' => 'Hoàng Thành', 'id' => sender_id.to_s }] } }]
+        )
+        message_builder
+
+        expect(facebook_channel.inbox.contacts.first.name).to eq('Hoàng Thành')
+      end
+
+      it 'falls back to John Doe when the participants lookup also fails' do
+        allow(fb_object).to receive(:get_connections).and_raise(profile_error)
+        message_builder
+
+        expect(facebook_channel.inbox.contacts.first.name).to eq('John Doe')
+      end
+    end
+
     it 'marks echo messages as external echo messages' do
       allow(Koala::Facebook::API).to receive(:new).and_return(fb_object)
       allow(fb_object).to receive(:get_object).and_return(

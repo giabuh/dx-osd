@@ -1,0 +1,1835 @@
+{
+ "leads": [
+  {
+   "email": "hanh.nguyen@demo.saoviet.invalid",
+   "first_name": "Thị Hạnh",
+   "last_name": "Nguyễn",
+   "mobile_no": "0960 578 883",
+   "branch": "CN Bình Thạnh",
+   "lead_owner": "nam.hcm-bt@demo.saoviet.invalid",
+   "courses": [
+    "VKT-REVIT"
+   ],
+   "source": "Hotline",
+   "status": "Qualified",
+   "days_ago": 6,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Nguyễn Thị Hạnh",
+   "learner_age": 37,
+   "learning_goal": "career",
+   "current_level": "basic"
+  },
+  {
+   "email": "quan.tran@demo.saoviet.invalid",
+   "first_name": "Minh Quân",
+   "last_name": "Trần",
+   "mobile_no": "0908 877 911",
+   "branch": "CN Quận 7",
+   "lead_owner": "lan.hcm-q7@demo.saoviet.invalid",
+   "courses": [
+    "VP-EXCEL"
+   ],
+   "source": "Facebook Messenger",
+   "status": "New",
+   "days_ago": 0,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "trang.le@demo.saoviet.invalid",
+   "first_name": "Thu Trang",
+   "last_name": "Lê",
+   "mobile_no": "0911 339 948",
+   "branch": "CN Quận 6",
+   "lead_owner": "long.hcm-q6@demo.saoviet.invalid",
+   "courses": [
+    "KT-TH"
+   ],
+   "source": "Messenger Bot",
+   "status": "Unqualified",
+   "days_ago": 8,
+   "ai_hotness": "cold",
+   "ai_intent": "support",
+   "preferred_shift": "morning",
+   "learner_type": "self",
+   "learner_name": "Lê Thu Trang",
+   "learner_age": 42,
+   "learning_goal": "career",
+   "current_level": "beginner",
+   "lost_reason": "Existing Student"
+  },
+  {
+   "email": "bao.pham@demo.saoviet.invalid",
+   "first_name": "Quốc Bảo",
+   "last_name": "Phạm",
+   "mobile_no": "0974 324 291",
+   "branch": "CN Quận 12",
+   "lead_owner": "hanh.hcm-q12@demo.saoviet.invalid",
+   "courses": [
+    "TE-SCRATCH"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Converted",
+   "days_ago": 18,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "afternoon",
+   "initial_status": "Qualified"
+  },
+  {
+   "email": "lan.vo@demo.saoviet.invalid",
+   "first_name": "Ngọc Lan",
+   "last_name": "Võ",
+   "mobile_no": "0995 711 746",
+   "branch": "CN Thủ Đức",
+   "lead_owner": "trang.hcm-td@demo.saoviet.invalid",
+   "courses": [
+    "VKT-3DS",
+    "VKT-VRAY"
+   ],
+   "source": "Facebook Messenger",
+   "status": "New",
+   "days_ago": 0,
+   "ai_hotness": "cold",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Võ Ngọc Lan",
+   "learner_age": 37,
+   "learning_goal": "career",
+   "current_level": "basic"
+  },
+  {
+   "email": "thanh.dang@demo.saoviet.invalid",
+   "first_name": "Văn Thành",
+   "last_name": "Đặng",
+   "mobile_no": "0914 265 202",
+   "branch": "CN Tân Bình",
+   "lead_owner": "yen.hcm-tb@demo.saoviet.invalid",
+   "courses": [
+    "VP-WORD"
+   ],
+   "source": "Messenger Bot",
+   "status": "Converted",
+   "days_ago": 26,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "morning",
+   "initial_status": "Contacted"
+  },
+  {
+   "email": "hang.bui@demo.saoviet.invalid",
+   "first_name": "Thanh Hằng",
+   "last_name": "Bùi",
+   "mobile_no": "0912 778 283",
+   "branch": "CN Thủ Dầu Một",
+   "lead_owner": "my.bd-tdm@demo.saoviet.invalid",
+   "courses": [
+    "QT-MOS-EXCEL"
+   ],
+   "source": "TikTok",
+   "status": "Contacted",
+   "days_ago": 16,
+   "ai_hotness": "warm",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Bùi Thanh Hằng",
+   "learner_age": 37,
+   "learning_goal": "certificate",
+   "current_level": "advanced"
+  },
+  {
+   "email": "khoa.ho@demo.saoviet.invalid",
+   "first_name": "Anh Khoa",
+   "last_name": "Hồ",
+   "mobile_no": "0936 357 908",
+   "branch": "CN Thuận An",
+   "lead_owner": "diem.bd-ta@demo.saoviet.invalid",
+   "courses": [
+    "DH-PTS"
+   ],
+   "source": "Messenger Bot",
+   "status": "Converted",
+   "days_ago": 13,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "initial_status": "Qualified"
+  },
+  {
+   "email": "linh.do@demo.saoviet.invalid",
+   "first_name": "Mỹ Linh",
+   "last_name": "Đỗ",
+   "mobile_no": "0910 732 512",
+   "branch": "CN Dĩ An",
+   "lead_owner": "hung.bd-da@demo.saoviet.invalid",
+   "courses": [
+    "VP-EXCEL",
+    "VP-WORD"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Converted",
+   "days_ago": 13,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "morning",
+   "learner_type": "staff",
+   "learner_name": "Nhân viên công ty Hòa Phát Logistics",
+   "learner_age": 42,
+   "learning_goal": "office",
+   "current_level": "basic",
+   "initial_status": "Contacted"
+  },
+  {
+   "email": "ngan.ngo@demo.saoviet.invalid",
+   "first_name": "Thị Kim Ngân",
+   "last_name": "Ngô",
+   "mobile_no": "0999 667 253",
+   "branch": "CN Tân Uyên",
+   "lead_owner": "loc.bd-tu@demo.saoviet.invalid",
+   "courses": [
+    "VP-CB"
+   ],
+   "source": "Messenger Bot",
+   "status": "Nurture",
+   "days_ago": 25,
+   "ai_hotness": "cold",
+   "ai_intent": "other",
+   "preferred_shift": "afternoon",
+   "initial_status": "Contacted"
+  },
+  {
+   "email": "vinh.duong@demo.saoviet.invalid",
+   "first_name": "Quang Vinh",
+   "last_name": "Dương",
+   "mobile_no": "0998 986 574",
+   "branch": "CN Biên Hòa",
+   "lead_owner": "xuan.dn-bh@demo.saoviet.invalid",
+   "courses": [
+    "VKT-NOITHAT"
+   ],
+   "source": "Zalo OA",
+   "status": "Nurture",
+   "days_ago": 13,
+   "ai_hotness": "warm",
+   "ai_intent": "other",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Dương Quang Vinh",
+   "learner_age": 30,
+   "learning_goal": "career",
+   "current_level": "basic"
+  },
+  {
+   "email": "thuong.ly@demo.saoviet.invalid",
+   "first_name": "Hoài Thương",
+   "last_name": "Lý",
+   "mobile_no": "0964 399 657",
+   "branch": "CN Long Thành",
+   "lead_owner": "toan.dn-lt@demo.saoviet.invalid",
+   "courses": [
+    "TE-THUD"
+   ],
+   "source": "Messenger Bot",
+   "status": "Contacted",
+   "days_ago": 15,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "morning"
+  },
+  {
+   "email": "kiet.huynh@demo.saoviet.invalid",
+   "first_name": "Tuấn Kiệt",
+   "last_name": "Huỳnh",
+   "mobile_no": "0915 754 918",
+   "branch": "CN Vũng Tàu",
+   "lead_owner": "lien.vt-vt@demo.saoviet.invalid",
+   "courses": [
+    "LT-PY"
+   ],
+   "source": "Messenger Bot",
+   "status": "Junk",
+   "days_ago": 8,
+   "ai_hotness": "cold",
+   "ai_intent": "spam",
+   "preferred_shift": "evening",
+   "lost_reason": "Spam"
+  },
+  {
+   "email": "anh.phan@demo.saoviet.invalid",
+   "first_name": "Thị Mai Anh",
+   "last_name": "Phan",
+   "mobile_no": "0905 303 922",
+   "branch": "CN Bình Thạnh",
+   "lead_owner": "hoa.hcm-bt@demo.saoviet.invalid",
+   "courses": [
+    "DH-TRONGOI"
+   ],
+   "source": "Messenger Bot",
+   "status": "New",
+   "days_ago": 0,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "han.truong@demo.saoviet.invalid",
+   "first_name": "Gia Hân",
+   "last_name": "Trương",
+   "mobile_no": "0991 742 887",
+   "branch": "CN Quận 7",
+   "lead_owner": "huy.hcm-q7@demo.saoviet.invalid",
+   "courses": [
+    "VP-PPT"
+   ],
+   "source": "Messenger Bot",
+   "status": "Unqualified",
+   "days_ago": 16,
+   "ai_hotness": "cold",
+   "ai_intent": "support",
+   "preferred_shift": "afternoon",
+   "learner_type": "self",
+   "learner_name": "Trương Gia Hân",
+   "learner_age": 24,
+   "learning_goal": "office",
+   "current_level": "basic",
+   "lost_reason": "Existing Student"
+  },
+  {
+   "email": "anh.vu@demo.saoviet.invalid",
+   "first_name": "Đức Anh",
+   "last_name": "Vũ",
+   "mobile_no": "0975 481 685",
+   "branch": "CN Quận 6",
+   "lead_owner": "thao.hcm-q6@demo.saoviet.invalid",
+   "courses": [
+    "KT-EXCEL",
+    "KT-MISA"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Qualified",
+   "days_ago": 5,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "thao.dinh@demo.saoviet.invalid",
+   "first_name": "Thị Thanh Thảo",
+   "last_name": "Đinh",
+   "mobile_no": "0934 706 263",
+   "branch": "CN Quận 12",
+   "lead_owner": "vy.hcm-q12@demo.saoviet.invalid",
+   "courses": [
+    "TE-PY"
+   ],
+   "source": "Messenger Bot",
+   "status": "Junk",
+   "days_ago": 1,
+   "ai_hotness": "cold",
+   "ai_intent": "spam",
+   "preferred_shift": "afternoon",
+   "lost_reason": "Spam"
+  },
+  {
+   "email": "nam.lam@demo.saoviet.invalid",
+   "first_name": "Hoàng Nam",
+   "last_name": "Lâm",
+   "mobile_no": "0979 256 218",
+   "branch": "CN Thủ Đức",
+   "lead_owner": "duc.hcm-td@demo.saoviet.invalid",
+   "courses": [
+    "LT-WEB"
+   ],
+   "source": "Zalo OA",
+   "status": "Trial Booked",
+   "days_ago": 14,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "trial_in_days": 3
+  },
+  {
+   "email": "yen.mai@demo.saoviet.invalid",
+   "first_name": "Thị Yến",
+   "last_name": "Mai",
+   "mobile_no": "0937 321 264",
+   "branch": "CN Tân Bình",
+   "lead_owner": "nhung.hcm-tb@demo.saoviet.invalid",
+   "courses": [
+    "VP-TRONGOI"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Junk",
+   "days_ago": 3,
+   "ai_hotness": "cold",
+   "ai_intent": "spam",
+   "preferred_shift": "morning",
+   "lost_reason": "Spam"
+  },
+  {
+   "email": "ngoc.chau@demo.saoviet.invalid",
+   "first_name": "Bảo Ngọc",
+   "last_name": "Châu",
+   "mobile_no": "0981 969 778",
+   "branch": "CN Thủ Dầu Một",
+   "lead_owner": "son.bd-tdm@demo.saoviet.invalid",
+   "courses": [
+    "TE-ROBO-NC"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Qualified",
+   "days_ago": 5,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "afternoon"
+  },
+  {
+   "email": "phuong.to@demo.saoviet.invalid",
+   "first_name": "Thị Bích Phượng",
+   "last_name": "Tô",
+   "mobile_no": "0985 751 359",
+   "branch": "CN Thuận An",
+   "lead_owner": "thanh.bd-ta@demo.saoviet.invalid",
+   "courses": [
+    "KT-THUE"
+   ],
+   "source": "TikTok",
+   "status": "Converted",
+   "days_ago": 25,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Tô Thị Bích Phượng",
+   "learner_age": 36,
+   "learning_goal": "career",
+   "current_level": "basic",
+   "initial_status": "Qualified"
+  },
+  {
+   "email": "son.ha@demo.saoviet.invalid",
+   "first_name": "Văn Sơn",
+   "last_name": "Hà",
+   "mobile_no": "0932 863 943",
+   "branch": "CN Dĩ An",
+   "lead_owner": "bao.bd-da@demo.saoviet.invalid",
+   "courses": [
+    "VKT-CAD2D"
+   ],
+   "source": "Giới thiệu",
+   "status": "New",
+   "days_ago": 6,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "my.cao@demo.saoviet.invalid",
+   "first_name": "Thị Diễm My",
+   "last_name": "Cao",
+   "mobile_no": "0996 948 822",
+   "branch": "CN Tân Uyên",
+   "lead_owner": "hang.bd-tu@demo.saoviet.invalid",
+   "courses": [
+    "MKT-FB"
+   ],
+   "source": "Zalo OA",
+   "status": "Qualified",
+   "days_ago": 3,
+   "ai_hotness": "hot",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Cao Thị Diễm My",
+   "learner_age": 26,
+   "learning_goal": "career",
+   "current_level": "basic"
+  },
+  {
+   "email": "hien.luong@demo.saoviet.invalid",
+   "first_name": "Thế Hiển",
+   "last_name": "Lương",
+   "mobile_no": "0912 377 934",
+   "branch": "CN Biên Hòa",
+   "lead_owner": "tung.dn-bh@demo.saoviet.invalid",
+   "courses": [
+    "LT-MOBILE"
+   ],
+   "source": "Facebook Messenger",
+   "status": "New",
+   "days_ago": 2,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "tu.trinh@demo.saoviet.invalid",
+   "first_name": "Thị Cẩm Tú",
+   "last_name": "Trịnh",
+   "mobile_no": "0910 553 725",
+   "branch": "CN Long Thành",
+   "lead_owner": "toan.dn-lt@demo.saoviet.invalid",
+   "courses": [
+    "VP-EXCEL-NC"
+   ],
+   "source": "Messenger Bot",
+   "status": "Converted",
+   "days_ago": 17,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Trịnh Thị Cẩm Tú",
+   "learner_age": 38,
+   "learning_goal": "office",
+   "current_level": "advanced",
+   "initial_status": "Contacted"
+  },
+  {
+   "email": "tam.ta@demo.saoviet.invalid",
+   "first_name": "Minh Tâm",
+   "last_name": "Tạ",
+   "mobile_no": "0911 729 119",
+   "branch": "CN Vũng Tàu",
+   "lead_owner": "hieu.vt-vt@demo.saoviet.invalid",
+   "courses": [
+    "DH-PR",
+    "DH-AE"
+   ],
+   "source": "Đến trực tiếp",
+   "status": "Nurture",
+   "days_ago": 15,
+   "ai_hotness": "cold",
+   "ai_intent": "other",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "nhung.luu@demo.saoviet.invalid",
+   "first_name": "Thị Hồng Nhung",
+   "last_name": "Lưu",
+   "mobile_no": "0966 718 755",
+   "branch": "CN Bình Thạnh",
+   "lead_owner": "nam.hcm-bt@demo.saoviet.invalid",
+   "courses": [
+    "VP-EXCEL"
+   ],
+   "source": "Giới thiệu",
+   "status": "Trial Booked",
+   "days_ago": 15,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "morning",
+   "learner_type": "self",
+   "learner_name": "Lưu Thị Hồng Nhung",
+   "learner_age": 40,
+   "learning_goal": "office",
+   "current_level": "basic",
+   "trial_in_days": 5
+  },
+  {
+   "email": "thu.kim@demo.saoviet.invalid",
+   "first_name": "Anh Thư",
+   "last_name": "Kim",
+   "mobile_no": "0938 631 858",
+   "branch": "CN Quận 7",
+   "lead_owner": "huy.hcm-q7@demo.saoviet.invalid",
+   "courses": [
+    "TE-SCRATCH",
+    "TE-THUD"
+   ],
+   "source": "Hotline",
+   "status": "Converted",
+   "days_ago": 19,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "afternoon",
+   "initial_status": "Qualified"
+  },
+  {
+   "email": "hai.chu@demo.saoviet.invalid",
+   "first_name": "Văn Hải",
+   "last_name": "Chu",
+   "mobile_no": "0990 818 479",
+   "branch": "CN Quận 6",
+   "lead_owner": "thao.hcm-q6@demo.saoviet.invalid",
+   "courses": [
+    "VP-MOS"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Converted",
+   "days_ago": 15,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Chu Văn Hải",
+   "learner_age": 21,
+   "learning_goal": "certificate",
+   "current_level": "basic",
+   "initial_status": "Contacted"
+  },
+  {
+   "email": "nhu.thai@demo.saoviet.invalid",
+   "first_name": "Thị Quỳnh Như",
+   "last_name": "Thái",
+   "mobile_no": "0918 124 842",
+   "branch": "CN Quận 12",
+   "lead_owner": "khoa.hcm-q12@demo.saoviet.invalid",
+   "courses": [
+    "DH-PTS",
+    "DH-AI"
+   ],
+   "source": "Messenger Bot",
+   "status": "Trial Booked",
+   "days_ago": 16,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "trial_in_days": 2
+  },
+  {
+   "email": "bao.diep@demo.saoviet.invalid",
+   "first_name": "Thế Bảo",
+   "last_name": "Diệp",
+   "mobile_no": "0986 557 510",
+   "branch": "CN Thủ Đức",
+   "lead_owner": "trang.hcm-td@demo.saoviet.invalid",
+   "courses": [
+    "VKT-INV"
+   ],
+   "source": "Messenger Bot",
+   "status": "Contacted",
+   "days_ago": 15,
+   "ai_hotness": "warm",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Diệp Thế Bảo",
+   "learner_age": 29,
+   "learning_goal": "career",
+   "current_level": "basic"
+  },
+  {
+   "email": "mai.la@demo.saoviet.invalid",
+   "first_name": "Thị Tuyết Mai",
+   "last_name": "La",
+   "mobile_no": "0937 558 407",
+   "branch": "CN Tân Bình",
+   "lead_owner": "tai.hcm-tb@demo.saoviet.invalid",
+   "courses": [
+    "VP-WORD"
+   ],
+   "source": "TikTok",
+   "status": "Unqualified",
+   "days_ago": 23,
+   "ai_hotness": "cold",
+   "ai_intent": "support",
+   "preferred_shift": "morning",
+   "lost_reason": "Existing Student"
+  },
+  {
+   "email": "binh.au@demo.saoviet.invalid",
+   "first_name": "Dương Thanh Bình",
+   "last_name": "Âu",
+   "mobile_no": "0908 421 864",
+   "branch": "CN Thủ Dầu Một",
+   "lead_owner": "my.bd-tdm@demo.saoviet.invalid",
+   "courses": [
+    "VKT-SW"
+   ],
+   "source": "Messenger Bot",
+   "status": "Contacted",
+   "days_ago": 11,
+   "ai_hotness": "warm",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Âu Dương Thanh Bình",
+   "learner_age": 30,
+   "learning_goal": "career",
+   "current_level": "basic"
+  },
+  {
+   "email": "diep.quach@demo.saoviet.invalid",
+   "first_name": "Thị Ngọc Diệp",
+   "last_name": "Quách",
+   "mobile_no": "0996 783 871",
+   "branch": "CN Thuận An",
+   "lead_owner": "thanh.bd-ta@demo.saoviet.invalid",
+   "courses": [
+    "QT-MOS-WORD",
+    "QT-MOS-PPT"
+   ],
+   "source": "Messenger Bot",
+   "status": "Qualified",
+   "days_ago": 5,
+   "ai_hotness": "hot",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "phuc.mac@demo.saoviet.invalid",
+   "first_name": "Văn Phúc",
+   "last_name": "Mạc",
+   "mobile_no": "0904 797 406",
+   "branch": "CN Dĩ An",
+   "lead_owner": "kim.bd-da@demo.saoviet.invalid",
+   "courses": [
+    "AI-BASIC"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Contacted",
+   "days_ago": 6,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Mạc Văn Phúc",
+   "learner_age": 23,
+   "learning_goal": "hobby",
+   "current_level": "beginner"
+  },
+  {
+   "email": "yen.tieu@demo.saoviet.invalid",
+   "first_name": "Thị Hải Yến",
+   "last_name": "Tiêu",
+   "mobile_no": "0909 317 591",
+   "branch": "CN Tân Uyên",
+   "lead_owner": "loc.bd-tu@demo.saoviet.invalid",
+   "courses": [
+    "VP-AI"
+   ],
+   "source": "Messenger Bot",
+   "status": "Trial Booked",
+   "days_ago": 14,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "afternoon",
+   "trial_in_days": 2
+  },
+  {
+   "email": "triet.khong@demo.saoviet.invalid",
+   "first_name": "Minh Triết",
+   "last_name": "Khổng",
+   "mobile_no": "0971 698 696",
+   "branch": "CN Biên Hòa",
+   "lead_owner": "xuan.dn-bh@demo.saoviet.invalid",
+   "courses": [
+    "VKT-REVIT",
+    "VKT-VRAY"
+   ],
+   "source": "Hotline",
+   "status": "Qualified",
+   "days_ago": 13,
+   "ai_hotness": "hot",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Khổng Minh Triết",
+   "learner_age": 30,
+   "learning_goal": "career",
+   "current_level": "advanced"
+  },
+  {
+   "email": "chau.ton@demo.saoviet.invalid",
+   "first_name": "Nữ Bảo Châu",
+   "last_name": "Tôn",
+   "mobile_no": "0932 570 211",
+   "branch": "CN Long Thành",
+   "lead_owner": "toan.dn-lt@demo.saoviet.invalid",
+   "courses": [
+    "TE-ROBO"
+   ],
+   "source": "Đến trực tiếp",
+   "status": "New",
+   "days_ago": 0,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "morning"
+  },
+  {
+   "email": "phuoc.giang@demo.saoviet.invalid",
+   "first_name": "Hữu Phước",
+   "last_name": "Giang",
+   "mobile_no": "0971 422 861",
+   "branch": "CN Vũng Tàu",
+   "lead_owner": "lien.vt-vt@demo.saoviet.invalid",
+   "courses": [
+    "AI-N8N"
+   ],
+   "source": "Hotline",
+   "status": "New",
+   "days_ago": 1,
+   "ai_hotness": "cold",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Giang Hữu Phước",
+   "learner_age": 31,
+   "learning_goal": "career",
+   "current_level": "basic"
+  },
+  {
+   "email": "duong.lai@demo.saoviet.invalid",
+   "first_name": "Thị Thùy Dương",
+   "last_name": "Lại",
+   "mobile_no": "0961 442 416",
+   "branch": "CN Bình Thạnh",
+   "lead_owner": "hoa.hcm-bt@demo.saoviet.invalid",
+   "courses": [
+    "DH-PTS-NC"
+   ],
+   "source": "Giới thiệu",
+   "status": "New",
+   "days_ago": 5,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "viet.tu@demo.saoviet.invalid",
+   "first_name": "Quốc Việt",
+   "last_name": "Từ",
+   "mobile_no": "0998 255 386",
+   "branch": "CN Quận 7",
+   "lead_owner": "huy.hcm-q7@demo.saoviet.invalid",
+   "courses": [
+    "KT-CB"
+   ],
+   "source": "Messenger Bot",
+   "status": "Qualified",
+   "days_ago": 5,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Từ Quốc Việt",
+   "learner_age": 32,
+   "learning_goal": "career",
+   "current_level": "beginner"
+  },
+  {
+   "email": "quyen.ma@demo.saoviet.invalid",
+   "first_name": "Thị Lệ Quyên",
+   "last_name": "Mã",
+   "mobile_no": "0933 844 583",
+   "branch": "CN Quận 6",
+   "lead_owner": "thao.hcm-q6@demo.saoviet.invalid",
+   "courses": [
+    "VP-EXCEL"
+   ],
+   "source": "Zalo OA",
+   "status": "Qualified",
+   "days_ago": 5,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "morning"
+  },
+  {
+   "email": "tung.nghiem@demo.saoviet.invalid",
+   "first_name": "Thanh Tùng",
+   "last_name": "Nghiêm",
+   "mobile_no": "0905 618 317",
+   "branch": "CN Quận 12",
+   "lead_owner": "hanh.hcm-q12@demo.saoviet.invalid",
+   "courses": [
+    "LT-VBA"
+   ],
+   "source": "Messenger Bot",
+   "status": "Converted",
+   "days_ago": 23,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Nghiêm Thanh Tùng",
+   "learner_age": 41,
+   "learning_goal": "office",
+   "current_level": "advanced",
+   "initial_status": "Qualified"
+  },
+  {
+   "email": "oanh.uc@demo.saoviet.invalid",
+   "first_name": "Thị Kiều Oanh",
+   "last_name": "Úc",
+   "mobile_no": "0979 471 137",
+   "branch": "CN Thủ Đức",
+   "lead_owner": "duc.hcm-td@demo.saoviet.invalid",
+   "courses": [
+    "MKT-TT",
+    "MKT-SEO"
+   ],
+   "source": "Facebook Messenger",
+   "status": "New",
+   "days_ago": 5,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "loi.ong@demo.saoviet.invalid",
+   "first_name": "Văn Lợi",
+   "last_name": "Ông",
+   "mobile_no": "0971 680 660",
+   "branch": "CN Tân Bình",
+   "lead_owner": "nhung.hcm-tb@demo.saoviet.invalid",
+   "courses": [
+    "VP-CB"
+   ],
+   "source": "Facebook Messenger",
+   "status": "Trial Booked",
+   "days_ago": 9,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "morning",
+   "learner_type": "self",
+   "learner_name": "Ông Văn Lợi",
+   "learner_age": 29,
+   "learning_goal": "office",
+   "current_level": "beginner",
+   "trial_in_days": 4
+  },
+  {
+   "email": "hoa.sam@demo.saoviet.invalid",
+   "first_name": "Thị Hoa",
+   "last_name": "Sầm",
+   "mobile_no": "0935 539 129",
+   "branch": "CN Thủ Dầu Một",
+   "lead_owner": "hai.bd-tdm@demo.saoviet.invalid",
+   "courses": [
+    "VP-EXCEL",
+    "VP-WORD"
+   ],
+   "source": "Messenger Bot",
+   "status": "Converted",
+   "days_ago": 17,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "afternoon",
+   "initial_status": "Contacted"
+  },
+  {
+   "email": "van.vuong@demo.saoviet.invalid",
+   "first_name": "Thị Cẩm Vân",
+   "last_name": "Vương",
+   "mobile_no": "0937 764 263",
+   "branch": "CN Thuận An",
+   "lead_owner": "diem.bd-ta@demo.saoviet.invalid",
+   "courses": [
+    "DH-CRD"
+   ],
+   "source": "Messenger Bot",
+   "status": "Converted",
+   "days_ago": 14,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Vương Thị Cẩm Vân",
+   "learner_age": 25,
+   "learning_goal": "hobby",
+   "current_level": "beginner",
+   "initial_status": "Qualified"
+  },
+  {
+   "email": "huy.lo@demo.saoviet.invalid",
+   "first_name": "Quang Huy",
+   "last_name": "Lò",
+   "mobile_no": "0961 361 178",
+   "branch": "CN Dĩ An",
+   "lead_owner": "hung.bd-da@demo.saoviet.invalid",
+   "courses": [
+    "TE-PY"
+   ],
+   "source": "Zalo OA",
+   "status": "Converted",
+   "days_ago": 29,
+   "ai_hotness": "hot",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "initial_status": "Contacted"
+  },
+  {
+   "email": "y.bach@demo.saoviet.invalid",
+   "first_name": "Thị Như Ý",
+   "last_name": "Bạch",
+   "mobile_no": "0975 339 393",
+   "branch": "CN Tân Uyên",
+   "lead_owner": "hang.bd-tu@demo.saoviet.invalid",
+   "courses": [
+    "KT-TH",
+    "KT-EXCEL"
+   ],
+   "source": "Đến trực tiếp",
+   "status": "Nurture",
+   "days_ago": 10,
+   "ai_hotness": "warm",
+   "ai_intent": "other",
+   "preferred_shift": "morning",
+   "learner_type": "self",
+   "learner_name": "Bạch Thị Như Ý",
+   "learner_age": 28,
+   "learning_goal": "career",
+   "current_level": "beginner"
+  },
+  {
+   "email": "cuong.hoang@demo.saoviet.invalid",
+   "first_name": "Mạnh Cường",
+   "last_name": "Hoàng",
+   "mobile_no": "0910 650 108",
+   "branch": "CN Biên Hòa",
+   "lead_owner": "tung.dn-bh@demo.saoviet.invalid",
+   "courses": [
+    "VKT-CAD3D"
+   ],
+   "source": "Hotline",
+   "status": "Contacted",
+   "days_ago": 11,
+   "ai_hotness": "warm",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening"
+  },
+  {
+   "email": "thao.chung@demo.saoviet.invalid",
+   "first_name": "Thị Phương Thảo",
+   "last_name": "Chung",
+   "mobile_no": "0916 134 163",
+   "branch": "CN Long Thành",
+   "lead_owner": "tuyet.dn-lt@demo.saoviet.invalid",
+   "courses": [
+    "VP-IC3"
+   ],
+   "source": "Messenger Bot",
+   "status": "Contacted",
+   "days_ago": 18,
+   "ai_hotness": "warm",
+   "ai_intent": "purchase",
+   "preferred_shift": "evening",
+   "learner_type": "self",
+   "learner_name": "Chung Thị Phương Thảo",
+   "learner_age": 23,
+   "learning_goal": "certificate",
+   "current_level": "basic"
+  },
+  {
+   "email": "nghia.dao@demo.saoviet.invalid",
+   "first_name": "Hữu Nghĩa",
+   "last_name": "Đào",
+   "mobile_no": "0963 463 449",
+   "branch": "CN Vũng Tàu",
+   "lead_owner": "hieu.vt-vt@demo.saoviet.invalid",
+   "courses": [
+    "MKT-WEB"
+   ],
+   "source": "Giới thiệu",
+   "status": "Qualified",
+   "days_ago": 12,
+   "ai_hotness": "warm",
+   "ai_intent": "price_inquiry",
+   "preferred_shift": "evening"
+  }
+ ],
+ "deals": [
+  {
+   "lead": "bao.pham@demo.saoviet.invalid",
+   "final": "won",
+   "deposit_days_ago": 16
+  },
+  {
+   "lead": "thanh.dang@demo.saoviet.invalid",
+   "final": "deposit",
+   "deposit_days_ago": 23
+  },
+  {
+   "lead": "khoa.ho@demo.saoviet.invalid",
+   "final": "deposit",
+   "deposit_days_ago": 10
+  },
+  {
+   "lead": "linh.do@demo.saoviet.invalid",
+   "final": "won",
+   "deposit_days_ago": 12
+  },
+  {
+   "lead": "phuong.to@demo.saoviet.invalid",
+   "final": "won",
+   "deposit_days_ago": 23
+  },
+  {
+   "lead": "tu.trinh@demo.saoviet.invalid",
+   "final": "deposit",
+   "deposit_days_ago": 14
+  },
+  {
+   "lead": "thu.kim@demo.saoviet.invalid",
+   "final": "pending"
+  },
+  {
+   "lead": "hai.chu@demo.saoviet.invalid",
+   "final": "won",
+   "deposit_days_ago": 14
+  },
+  {
+   "lead": "tung.nghiem@demo.saoviet.invalid",
+   "final": "deposit",
+   "deposit_days_ago": 21
+  },
+  {
+   "lead": "hoa.sam@demo.saoviet.invalid",
+   "final": "pending"
+  },
+  {
+   "lead": "van.vuong@demo.saoviet.invalid",
+   "final": "pending"
+  },
+  {
+   "lead": "huy.lo@demo.saoviet.invalid",
+   "final": "won",
+   "deposit_days_ago": 26
+  },
+  {
+   "lead": "hanh.nguyen@demo.saoviet.invalid",
+   "final": "awaiting"
+  },
+  {
+   "lead": "hang.bui@demo.saoviet.invalid",
+   "final": "awaiting"
+  },
+  {
+   "lead": "ngan.ngo@demo.saoviet.invalid",
+   "final": "lost",
+   "lost_reason": "Postponed"
+  }
+ ],
+ "notes": [
+  {
+   "lead": "hanh.nguyen@demo.saoviet.invalid",
+   "title": "Gọi tư vấn lần 1",
+   "days_ago": 5,
+   "content": "<p>Đã gọi, Hạnh quan tâm Revit kiến trúc. Cần học ca tối. Đã gửi lộ trình và học phí qua Zalo, hẹn gọi lại sau 2 ngày.</p>"
+  },
+  {
+   "lead": "bao.pham@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 17,
+   "content": "<p>Đã tư vấn khóa Lập trình Scratch tại CN Quận 12, Bảo đồng ý đăng ký lớp ca chiều. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "bao.pham@demo.saoviet.invalid",
+   "title": "Xác nhận đăng ký",
+   "days_ago": 16,
+   "content": "<p>Đã xác nhận lớp khai giảng và học phí sau ưu đãi với Bảo. Đã dặn mang CMND/CCCD khi đến nhận lớp.</p>"
+  },
+  {
+   "lead": "thanh.dang@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 25,
+   "content": "<p>Đã tư vấn khóa Word từ cơ bản đến nâng cao tại CN Tân Bình, Thành đồng ý đăng ký lớp ca sáng. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "thanh.dang@demo.saoviet.invalid",
+   "title": "Xác nhận đăng ký",
+   "days_ago": 24,
+   "content": "<p>Đã xác nhận lớp khai giảng và học phí sau ưu đãi với Thành. Đã dặn mang CMND/CCCD khi đến nhận lớp.</p>"
+  },
+  {
+   "lead": "hang.bui@demo.saoviet.invalid",
+   "title": "Tư vấn lộ trình",
+   "days_ago": 15,
+   "content": "<p>Trao đổi qua Zalo và điện thoại. Hằng đang so sánh với một trung tâm khác, quan tâm nhất là lịch học tối và học phí Luyện thi MOS Excel. Sẽ gửi thêm bảng ưu đãi.</p>"
+  },
+  {
+   "lead": "khoa.ho@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 12,
+   "content": "<p>Đã tư vấn khóa Photoshop cơ bản tại CN Thuận An, Khoa đồng ý đăng ký lớp ca tối. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "khoa.ho@demo.saoviet.invalid",
+   "title": "Xác nhận đăng ký",
+   "days_ago": 11,
+   "content": "<p>Đã xác nhận lớp khai giảng và học phí sau ưu đãi với Khoa. Đã dặn mang CMND/CCCD khi đến nhận lớp.</p>"
+  },
+  {
+   "lead": "linh.do@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 12,
+   "content": "<p>Đã tư vấn khóa Excel từ cơ bản đến nâng cao tại CN Dĩ An, Linh đồng ý đăng ký lớp ca sáng. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "linh.do@demo.saoviet.invalid",
+   "title": "Xác nhận đăng ký",
+   "days_ago": 11,
+   "content": "<p>Đã xác nhận lớp khai giảng và học phí sau ưu đãi với Linh. Đã dặn mang CMND/CCCD khi đến nhận lớp.</p>"
+  },
+  {
+   "lead": "ngan.ngo@demo.saoviet.invalid",
+   "title": "Khách xin cân nhắc",
+   "days_ago": 24,
+   "content": "<p>Ngân chưa sắp xếp được thời gian, xin cân nhắc thêm. Hẹn nhắn lại khi có lớp khai giảng mới của khóa Tin học cơ bản.</p>"
+  },
+  {
+   "lead": "vinh.duong@demo.saoviet.invalid",
+   "title": "Khách xin cân nhắc",
+   "days_ago": 12,
+   "content": "<p>Vinh chưa sắp xếp được thời gian, xin cân nhắc thêm. Hẹn nhắn lại khi có lớp khai giảng mới của khóa Thiết kế nội thất trọn gói.</p>"
+  },
+  {
+   "lead": "thuong.ly@demo.saoviet.invalid",
+   "title": "Tư vấn lộ trình",
+   "days_ago": 14,
+   "content": "<p>Trao đổi qua Zalo và điện thoại. Thương đang so sánh với một trung tâm khác, quan tâm nhất là lịch học sáng và học phí Tin học ứng dụng cho trẻ. Sẽ gửi thêm bảng ưu đãi.</p>"
+  },
+  {
+   "lead": "anh.vu@demo.saoviet.invalid",
+   "title": "Gọi tư vấn lần 1",
+   "days_ago": 4,
+   "content": "<p>Đã gọi, Anh quan tâm Kế toán trên Excel. Cần học ca tối. Đã gửi lộ trình và học phí qua Zalo, hẹn gọi lại sau 2 ngày.</p>"
+  },
+  {
+   "lead": "nam.lam@demo.saoviet.invalid",
+   "title": "Hẹn học thử",
+   "days_ago": 13,
+   "content": "<p>Đã chốt buổi học thử/test trình độ khóa Lập trình Web tại CN Thủ Đức. Nhắc Nam mang laptop (nếu có) và đến sớm 10 phút.</p>"
+  },
+  {
+   "lead": "nam.lam@demo.saoviet.invalid",
+   "title": "Nhắc lịch học thử",
+   "days_ago": 12,
+   "content": "<p>Gửi tin nhắn nhắc lịch học thử trước một ngày; Nam xác nhận sẽ đến.</p>"
+  },
+  {
+   "lead": "ngoc.chau@demo.saoviet.invalid",
+   "title": "Gọi tư vấn lần 1",
+   "days_ago": 4,
+   "content": "<p>Đã gọi, Ngọc quan tâm Robotics nâng cao. Cần học ca chiều. Đã gửi lộ trình và học phí qua Zalo, hẹn gọi lại sau 2 ngày.</p>"
+  },
+  {
+   "lead": "phuong.to@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 24,
+   "content": "<p>Đã tư vấn khóa Khai báo &amp; quyết toán thuế tại CN Thuận An, Phượng đồng ý đăng ký lớp ca tối. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "my.cao@demo.saoviet.invalid",
+   "title": "Gọi tư vấn lần 1",
+   "days_ago": 2,
+   "content": "<p>Đã gọi, My quan tâm Quảng cáo Facebook Ads. Cần học ca tối. Đã gửi lộ trình và học phí qua Zalo, hẹn gọi lại sau 2 ngày.</p>"
+  },
+  {
+   "lead": "tu.trinh@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 16,
+   "content": "<p>Đã tư vấn khóa Excel nâng cao &amp; Dashboard tại CN Long Thành, Tú đồng ý đăng ký lớp ca tối. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "tam.ta@demo.saoviet.invalid",
+   "title": "Khách xin cân nhắc",
+   "days_ago": 14,
+   "content": "<p>Tâm chưa sắp xếp được thời gian, xin cân nhắc thêm. Hẹn nhắn lại khi có lớp khai giảng mới của khóa Premiere dựng video.</p>"
+  },
+  {
+   "lead": "nhung.luu@demo.saoviet.invalid",
+   "title": "Hẹn học thử",
+   "days_ago": 14,
+   "content": "<p>Đã chốt buổi học thử/test trình độ khóa Excel từ cơ bản đến nâng cao tại CN Bình Thạnh. Nhắc Nhung mang laptop (nếu có) và đến sớm 10 phút.</p>"
+  },
+  {
+   "lead": "thu.kim@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 18,
+   "content": "<p>Đã tư vấn khóa Lập trình Scratch tại CN Quận 7, Thư đồng ý đăng ký lớp ca chiều. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "hai.chu@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 14,
+   "content": "<p>Đã tư vấn khóa Luyện thi MOS trọn bộ tại CN Quận 6, Hải đồng ý đăng ký lớp ca tối. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "nhu.thai@demo.saoviet.invalid",
+   "title": "Hẹn học thử",
+   "days_ago": 15,
+   "content": "<p>Đã chốt buổi học thử/test trình độ khóa Photoshop cơ bản tại CN Quận 12. Nhắc Như mang laptop (nếu có) và đến sớm 10 phút.</p>"
+  },
+  {
+   "lead": "bao.diep@demo.saoviet.invalid",
+   "title": "Tư vấn lộ trình",
+   "days_ago": 14,
+   "content": "<p>Trao đổi qua Zalo và điện thoại. Bảo đang so sánh với một trung tâm khác, quan tâm nhất là lịch học tối và học phí Inventor. Sẽ gửi thêm bảng ưu đãi.</p>"
+  },
+  {
+   "lead": "binh.au@demo.saoviet.invalid",
+   "title": "Tư vấn lộ trình",
+   "days_ago": 10,
+   "content": "<p>Trao đổi qua Zalo và điện thoại. Bình đang so sánh với một trung tâm khác, quan tâm nhất là lịch học tối và học phí SolidWorks. Sẽ gửi thêm bảng ưu đãi.</p>"
+  },
+  {
+   "lead": "diep.quach@demo.saoviet.invalid",
+   "title": "Gọi tư vấn lần 1",
+   "days_ago": 4,
+   "content": "<p>Đã gọi, Diệp quan tâm Luyện thi MOS Word. Cần học ca tối. Đã gửi lộ trình và học phí qua Zalo, hẹn gọi lại sau 2 ngày.</p>"
+  },
+  {
+   "lead": "phuc.mac@demo.saoviet.invalid",
+   "title": "Tư vấn lộ trình",
+   "days_ago": 5,
+   "content": "<p>Trao đổi qua Zalo và điện thoại. Phúc đang so sánh với một trung tâm khác, quan tâm nhất là lịch học tối và học phí AI cho người mới bắt đầu. Sẽ gửi thêm bảng ưu đãi.</p>"
+  },
+  {
+   "lead": "yen.tieu@demo.saoviet.invalid",
+   "title": "Hẹn học thử",
+   "days_ago": 13,
+   "content": "<p>Đã chốt buổi học thử/test trình độ khóa Ứng dụng AI trong văn phòng tại CN Tân Uyên. Nhắc Yến mang laptop (nếu có) và đến sớm 10 phút.</p>"
+  },
+  {
+   "lead": "triet.khong@demo.saoviet.invalid",
+   "title": "Gọi tư vấn lần 1",
+   "days_ago": 12,
+   "content": "<p>Đã gọi, Triết quan tâm Revit kiến trúc. Cần học ca tối. Đã gửi lộ trình và học phí qua Zalo, hẹn gọi lại sau 2 ngày.</p>"
+  },
+  {
+   "lead": "viet.tu@demo.saoviet.invalid",
+   "title": "Gọi tư vấn lần 1",
+   "days_ago": 4,
+   "content": "<p>Đã gọi, Việt quan tâm Nguyên lý kế toán cho người mới. Cần học ca tối. Đã gửi lộ trình và học phí qua Zalo, hẹn gọi lại sau 2 ngày.</p>"
+  },
+  {
+   "lead": "tung.nghiem@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 22,
+   "content": "<p>Đã tư vấn khóa VBA Excel tại CN Quận 12, Tùng đồng ý đăng ký lớp ca tối. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "loi.ong@demo.saoviet.invalid",
+   "title": "Hẹn học thử",
+   "days_ago": 8,
+   "content": "<p>Đã chốt buổi học thử/test trình độ khóa Tin học cơ bản tại CN Tân Bình. Nhắc Lợi mang laptop (nếu có) và đến sớm 10 phút.</p>"
+  },
+  {
+   "lead": "hoa.sam@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 16,
+   "content": "<p>Đã tư vấn khóa Excel từ cơ bản đến nâng cao tại CN Thủ Dầu Một, Hoa đồng ý đăng ký lớp ca chiều. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "van.vuong@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 13,
+   "content": "<p>Đã tư vấn khóa CorelDraw tại CN Thuận An, Vân đồng ý đăng ký lớp ca tối. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "huy.lo@demo.saoviet.invalid",
+   "title": "Tư vấn và chốt khóa",
+   "days_ago": 28,
+   "content": "<p>Đã tư vấn khóa Python cho trẻ tại CN Dĩ An, Huy đồng ý đăng ký lớp ca tối. Đã gửi học phí và hướng dẫn đóng phí.</p>"
+  },
+  {
+   "lead": "y.bach@demo.saoviet.invalid",
+   "title": "Khách xin cân nhắc",
+   "days_ago": 9,
+   "content": "<p>Ý chưa sắp xếp được thời gian, xin cân nhắc thêm. Hẹn nhắn lại khi có lớp khai giảng mới của khóa Kế toán tổng hợp thực hành.</p>"
+  },
+  {
+   "lead": "cuong.hoang@demo.saoviet.invalid",
+   "title": "Tư vấn lộ trình",
+   "days_ago": 10,
+   "content": "<p>Trao đổi qua Zalo và điện thoại. Cường đang so sánh với một trung tâm khác, quan tâm nhất là lịch học tối và học phí AutoCAD 3D. Sẽ gửi thêm bảng ưu đãi.</p>"
+  },
+  {
+   "lead": "thao.chung@demo.saoviet.invalid",
+   "title": "Tư vấn lộ trình",
+   "days_ago": 17,
+   "content": "<p>Trao đổi qua Zalo và điện thoại. Thảo đang so sánh với một trung tâm khác, quan tâm nhất là lịch học tối và học phí Luyện thi IC3. Sẽ gửi thêm bảng ưu đãi.</p>"
+  }
+ ],
+ "tasks": [
+  {
+   "title": "Gọi lại tư vấn khóa Revit kiến trúc cho Hạnh Nguyễn",
+   "priority": "High",
+   "status": "Todo",
+   "assigned_to": "nam.hcm-bt@demo.saoviet.invalid",
+   "start": 0,
+   "due": 0,
+   "due_time": "17:00:00",
+   "lead": "hanh.nguyen@demo.saoviet.invalid",
+   "description": "<p>Khách hẹn nghe máy sau giờ làm; chốt ca học và gửi học phí.</p>"
+  },
+  {
+   "title": "Gửi bảng học phí và ưu đãi khóa Thiết kế nội thất trọn gói",
+   "priority": "Medium",
+   "status": "Todo",
+   "assigned_to": "xuan.dn-bh@demo.saoviet.invalid",
+   "start": 0,
+   "due": 1,
+   "due_time": "17:00:00",
+   "lead": "vinh.duong@demo.saoviet.invalid",
+   "description": "<p>Gửi bảng học phí kèm ưu đãi đang chạy qua Zalo.</p>"
+  },
+  {
+   "title": "Nhắc lịch học thử khóa Lập trình Web",
+   "priority": "High",
+   "status": "Todo",
+   "assigned_to": "duc.hcm-td@demo.saoviet.invalid",
+   "start": 0,
+   "due": 0,
+   "due_time": "17:00:00",
+   "lead": "nam.lam@demo.saoviet.invalid",
+   "description": "<p>Nhắn nhắc lịch học thử, xác nhận khách sẽ đến.</p>"
+  },
+  {
+   "title": "Hỏi kết quả sau buổi test trình độ của Tâm Tạ",
+   "priority": "Medium",
+   "status": "In Progress",
+   "assigned_to": "hieu.vt-vt@demo.saoviet.invalid",
+   "start": -1,
+   "due": 1,
+   "due_time": "17:00:00",
+   "lead": "tam.ta@demo.saoviet.invalid",
+   "description": "<p>Gọi hỏi cảm nhận sau buổi test và gợi ý lớp phù hợp.</p>"
+  },
+  {
+   "title": "Báo cáo lịch khai giảng khóa Inventor cho Bảo Diệp",
+   "priority": "Low",
+   "status": "Todo",
+   "assigned_to": "trang.hcm-td@demo.saoviet.invalid",
+   "start": 0,
+   "due": 2,
+   "due_time": "17:00:00",
+   "lead": "bao.diep@demo.saoviet.invalid",
+   "description": "<p>Cập nhật lịch khai giảng gần nhất của chi nhánh cho khách.</p>"
+  },
+  {
+   "title": "Gọi nhắc khách Phúc Mạc chưa phản hồi",
+   "priority": "High",
+   "status": "Todo",
+   "assigned_to": null,
+   "start": -1,
+   "due": 0,
+   "due_time": "17:00:00",
+   "lead": "phuc.mac@demo.saoviet.invalid",
+   "description": "<p>Khách chưa trả lời sau 2 lần nhắn; chưa có người nhận việc, cần quản lý phân công.</p>"
+  },
+  {
+   "title": "Tư vấn lại khóa Nguyên lý kế toán cho người mới cho Việt Từ",
+   "priority": "Medium",
+   "status": "Todo",
+   "assigned_to": "long.hcm-q6@demo.saoviet.invalid",
+   "start": 0,
+   "due": 1,
+   "due_time": "17:00:00",
+   "lead": "viet.tu@demo.saoviet.invalid",
+   "description": "<p>Tư vấn viên của chi nhánh đang quá tải, có thể chuyển người khác hỗ trợ.</p>"
+  },
+  {
+   "title": "Chốt lịch học thử cho Ý Bạch",
+   "priority": "High",
+   "status": "Todo",
+   "assigned_to": "xuan.dn-bh@demo.saoviet.invalid",
+   "start": 0,
+   "due": 2,
+   "due_time": "17:00:00",
+   "lead": "y.bach@demo.saoviet.invalid",
+   "description": "<p>Khách hỏi lịch học thử cuối tuần; nhờ tư vấn viên rảnh hơn xử lý.</p>"
+  }
+ ],
+ "quiz_attempts": [
+  {
+   "lead": "quan.tran@demo.saoviet.invalid",
+   "quiz": "excel_quiz",
+   "status": "done",
+   "days_ago": 0,
+   "score": 5,
+   "total": 8,
+   "level": "advanced",
+   "missed": "Data Validation, XLOOKUP, Macro VBA",
+   "phone_after": true
+  },
+  {
+   "lead": "hang.bui@demo.saoviet.invalid",
+   "quiz": "excel_quiz",
+   "status": "done",
+   "days_ago": 15,
+   "score": 2,
+   "total": 8,
+   "level": "beginner",
+   "missed": "VLOOKUP, COUNTIF, Pivot Table",
+   "phone_after": false
+  },
+  {
+   "lead": "linh.do@demo.saoviet.invalid",
+   "quiz": "excel_quiz",
+   "status": "started",
+   "days_ago": 12
+  },
+  {
+   "lead": "ngan.ngo@demo.saoviet.invalid",
+   "quiz": "excel_quiz",
+   "status": "offered",
+   "days_ago": 24
+  },
+  {
+   "lead": "thanh.dang@demo.saoviet.invalid",
+   "quiz": "word_quiz",
+   "status": "done",
+   "days_ago": 25,
+   "score": 4,
+   "total": 5,
+   "level": "advanced",
+   "missed": "Section Break",
+   "phone_after": true
+  },
+  {
+   "lead": "diep.quach@demo.saoviet.invalid",
+   "quiz": "word_quiz",
+   "status": "offered",
+   "days_ago": 4
+  },
+  {
+   "lead": "khoa.ho@demo.saoviet.invalid",
+   "quiz": "design_quiz",
+   "status": "done",
+   "days_ago": 12,
+   "score": 3,
+   "total": 6,
+   "level": "basic",
+   "missed": "Adjustment Layer, Hệ màu in ấn, Blend Mode",
+   "phone_after": false
+  },
+  {
+   "lead": "anh.phan@demo.saoviet.invalid",
+   "quiz": "design_quiz",
+   "status": "started",
+   "days_ago": 0
+  },
+  {
+   "lead": "bao.pham@demo.saoviet.invalid",
+   "quiz": "kids_quiz",
+   "status": "done",
+   "days_ago": 17,
+   "score": 4,
+   "total": 4,
+   "level": "basic",
+   "missed": "",
+   "phone_after": true
+  },
+  {
+   "lead": "thuong.ly@demo.saoviet.invalid",
+   "quiz": "kids_quiz",
+   "status": "done",
+   "days_ago": 14,
+   "score": 2,
+   "total": 4,
+   "level": "beginner",
+   "missed": "Scratch / robot, Sở thích",
+   "phone_after": false
+  }
+ ],
+ "posts": [
+  {
+   "title": "Excel cơ bản trong 8 buổi, học xong làm được báo cáo ngay",
+   "course": "VP-EXCEL",
+   "status": "Posted",
+   "day_offset": -6,
+   "hour": 12,
+   "content": "📊 Bạn còn làm báo cáo bằng tay? Khóa Excel cơ bản của Sao Việt giúp bạn dùng hàm, bảng tính và biểu đồ chỉ sau 8 buổi.\n👉 Nhắn tin cho page để làm thử bài test trình độ miễn phí và nhận ưu đãi khai giảng.\n#TinHocSaoViet #Excel",
+   "batch_id": "DEMO-W40",
+   "likes": 214,
+   "comments": 38,
+   "shares": 12,
+   "reach": 5400,
+   "leads": 9,
+   "registrations": 3,
+   "fb_post_id": "demo-1"
+  },
+  {
+   "title": "Bé học Scratch: làm game đầu tiên sau 4 buổi",
+   "course": "TE-SCRATCH",
+   "status": "Posted",
+   "day_offset": -5,
+   "hour": 15,
+   "content": "🎮 Con bạn mê game? Hãy cho bé tự làm game với Scratch! Lớp nhỏ, giáo viên kèm từng bé, học thử miễn phí buổi đầu.\n#TinHocTreEm #Scratch",
+   "batch_id": "DEMO-W40",
+   "likes": 158,
+   "comments": 24,
+   "shares": 9,
+   "reach": 3900,
+   "leads": 6,
+   "registrations": 2,
+   "fb_post_id": "demo-2"
+  },
+  {
+   "title": "Photoshop cơ bản: chỉnh ảnh, làm banner chuyên nghiệp",
+   "course": "DH-PTS",
+   "status": "Posted",
+   "day_offset": -4,
+   "hour": 9,
+   "content": "🎨 Từ chỉnh sáng ảnh đến thiết kế banner bán hàng, khóa Photoshop cơ bản giúp bạn tự làm mọi thứ. Ưu đãi giảm học phí cho học viên đăng ký tháng này.\n#Photoshop",
+   "batch_id": "DEMO-W40",
+   "likes": 187,
+   "comments": 31,
+   "shares": 14,
+   "reach": 4700,
+   "leads": 7,
+   "registrations": 2,
+   "fb_post_id": "demo-3"
+  },
+  {
+   "title": "Luyện thi MOS: lộ trình chứng chỉ quốc tế cho dân văn phòng",
+   "course": "VP-MOS",
+   "status": "Posted",
+   "day_offset": -2,
+   "hour": 12,
+   "content": "🏅 Chứng chỉ MOS giúp hồ sơ của bạn nổi bật. Sao Việt có lớp luyện thi MOS với đề thi thử sát thực tế.\n#MOS #ChungChi",
+   "batch_id": "DEMO-W40",
+   "likes": 96,
+   "comments": 17,
+   "shares": 6,
+   "reach": 2600,
+   "leads": 3,
+   "registrations": 1,
+   "fb_post_id": "demo-4"
+  },
+  {
+   "title": "Kế toán tổng hợp thực hành: giảm 500.000đ tháng này",
+   "course": "KT-TH",
+   "status": "Posted",
+   "day_offset": -1,
+   "hour": 15,
+   "content": "🧾 Học kế toán trên chứng từ thật, thực hành phần mềm MISA. Giảm 500.000đ học phí khi đăng ký trong tháng.\n#KeToan",
+   "batch_id": "DEMO-W40",
+   "likes": 121,
+   "comments": 22,
+   "shares": 8,
+   "reach": 3100,
+   "leads": 4,
+   "registrations": 1,
+   "fb_post_id": "demo-5"
+  },
+  {
+   "title": "Python cho bạn mới bắt đầu: học lập trình từ con số 0",
+   "course": "LT-PY",
+   "status": "Pending Approval",
+   "day_offset": 1,
+   "hour": 9,
+   "content": "💻 Chưa biết gì về lập trình? Khóa Python cơ bản đi từng bước, có bài tập thực hành sau mỗi buổi.\n#Python #LapTrinh",
+   "batch_id": "DEMO-W40",
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reach": 0,
+   "leads": 0,
+   "registrations": 0
+  },
+  {
+   "title": "Word nâng cao: tự động mục lục, trộn thư, văn bản chuyên nghiệp",
+   "course": "VP-WORD",
+   "status": "Pending Approval",
+   "day_offset": 2,
+   "hour": 12,
+   "content": "📝 Soạn văn bản mất cả buổi? Học Word nâng cao để làm mục lục tự động, trộn thư và định dạng chuẩn.\n#Word",
+   "batch_id": "DEMO-W40",
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reach": 0,
+   "leads": 0,
+   "registrations": 0
+  },
+  {
+   "title": "Ứng dụng AI trong công việc văn phòng",
+   "course": "VP-AI",
+   "status": "Draft",
+   "day_offset": 3,
+   "hour": 15,
+   "content": "🤖 Dùng AI viết email, tóm tắt tài liệu và làm slide nhanh hơn gấp đôi. Khóa Ứng dụng AI trong văn phòng sắp khai giảng.\n#AI",
+   "batch_id": "DEMO-W40",
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reach": 0,
+   "leads": 0,
+   "registrations": 0
+  }
+ ],
+ "comments": [
+  {
+   "post": "Excel cơ bản trong 8 buổi, học xong làm được báo cáo ngay",
+   "comment_id": "demo-c1",
+   "from_name": "Nguyễn Thị Bích",
+   "message": "Cho mình hỏi học phí khóa Excel cơ bản bao nhiêu vậy ạ?",
+   "sentiment": "Hỏi học phí / lịch",
+   "intent": "price",
+   "hours_after": 3
+  },
+  {
+   "post": "Excel cơ bản trong 8 buổi, học xong làm được báo cáo ngay",
+   "comment_id": "demo-c2",
+   "from_name": "Lê Quốc Dũng",
+   "message": "Mình muốn làm thử bài test Excel trước được không?",
+   "sentiment": "Quan tâm khóa học",
+   "intent": "quiz",
+   "hours_after": 5
+  },
+  {
+   "post": "Excel cơ bản trong 8 buổi, học xong làm được báo cáo ngay",
+   "comment_id": "demo-c3",
+   "from_name": "Phạm Thu Hà",
+   "message": "Khóa này rất hữu ích, mình học xong làm việc nhanh hơn hẳn",
+   "sentiment": "Tích cực",
+   "intent": "praise",
+   "hours_after": 8
+  },
+  {
+   "post": "Bé học Scratch: làm game đầu tiên sau 4 buổi",
+   "comment_id": "demo-c4",
+   "from_name": "Trần Hoàng Yến",
+   "message": "Bé nhà mình 9 tuổi học được không ạ? Ở Quận 7 có lớp không?",
+   "sentiment": "Quan tâm khóa học",
+   "intent": "interest",
+   "hours_after": 2
+  },
+  {
+   "post": "Bé học Scratch: làm game đầu tiên sau 4 buổi",
+   "comment_id": "demo-c5",
+   "from_name": "Võ Minh Tuấn",
+   "message": "Mình thấy hay quá, con mình rất thích Scratch",
+   "sentiment": "Tích cực",
+   "intent": "praise",
+   "hours_after": 6
+  },
+  {
+   "post": "Photoshop cơ bản: chỉnh ảnh, làm banner chuyên nghiệp",
+   "comment_id": "demo-c6",
+   "from_name": "Đặng Khánh Linh",
+   "message": "Học phí Photoshop bao nhiêu, có lịch tối không ạ?",
+   "sentiment": "Hỏi học phí / lịch",
+   "intent": "price",
+   "hours_after": 4
+  },
+  {
+   "post": "Photoshop cơ bản: chỉnh ảnh, làm banner chuyên nghiệp",
+   "comment_id": "demo-c7",
+   "from_name": "Bùi Văn Long",
+   "message": "Cần mua phần mềm bản quyền không bạn?",
+   "sentiment": "Quan tâm khóa học",
+   "intent": "interest",
+   "hours_after": 9
+  },
+  {
+   "post": "Photoshop cơ bản: chỉnh ảnh, làm banner chuyên nghiệp",
+   "comment_id": "demo-c8",
+   "from_name": "Shop Thời Trang Mina",
+   "message": "Kết bạn mua sỉ giá rẻ inbox ngay https://spam.example",
+   "sentiment": "Spam / Khác",
+   "intent": "other",
+   "hours_after": 10
+  },
+  {
+   "post": "Luyện thi MOS: lộ trình chứng chỉ quốc tế cho dân văn phòng",
+   "comment_id": "demo-c9",
+   "from_name": "Hồ Thị Ngọc Ánh",
+   "message": "Thi MOS có khó không ạ?",
+   "sentiment": "Quan tâm khóa học",
+   "intent": "interest",
+   "hours_after": 3
+  },
+  {
+   "post": "Luyện thi MOS: lộ trình chứng chỉ quốc tế cho dân văn phòng",
+   "comment_id": "demo-c10",
+   "from_name": "Dương Văn Khải",
+   "message": "Lớp ở Biên Hòa có không ạ?",
+   "sentiment": "Hỏi học phí / lịch",
+   "intent": "price",
+   "hours_after": 7
+  },
+  {
+   "post": "Kế toán tổng hợp thực hành: giảm 500.000đ tháng này",
+   "comment_id": "demo-c11",
+   "from_name": "Lý Thanh Mai",
+   "message": "Học xong có việc làm kế toán luôn không?",
+   "sentiment": "Quan tâm khóa học",
+   "intent": "interest",
+   "hours_after": 2
+  },
+  {
+   "post": "Kế toán tổng hợp thực hành: giảm 500.000đ tháng này",
+   "comment_id": "demo-c12",
+   "from_name": "Ngô Quốc Hưng",
+   "message": "Cảm ơn trung tâm, đã học và rất hài lòng!",
+   "sentiment": "Tích cực",
+   "intent": "praise",
+   "hours_after": 5
+  }
+ ],
+ "comment_replies": [
+  {
+   "comment_id": "demo-c1",
+   "intent": "price",
+   "status": "Replied",
+   "public_reply": "Dạ Bích ơi, học phí khóa này đang có ưu đãi khai giảng ạ. Em đã nhắn riêng chi tiết học phí và lịch học cho Bích rồi nhé!",
+   "private_reply": "Dạ em gửi Bích bảng học phí, lịch khai giảng và ưu đãi hiện có ạ. Bích cho em biết chi nhánh gần nhất để em xếp lớp phù hợp nhé!",
+   "lead": "thanh.dang@demo.saoviet.invalid",
+   "post": "Excel cơ bản trong 8 buổi, học xong làm được báo cáo ngay"
+  },
+  {
+   "comment_id": "demo-c2",
+   "intent": "quiz",
+   "status": "Replied",
+   "public_reply": "Dạ Dũng ơi, em đã nhắn riêng link bài test trình độ miễn phí cho Dũng rồi nhé, làm xong nhận ngay voucher ạ!",
+   "private_reply": "Dạ em gửi Dũng bài test nhỏ 8 câu, làm xong em gợi ý lớp phù hợp và tặng voucher ưu đãi ạ.",
+   "lead": "khoa.ho@demo.saoviet.invalid",
+   "post": "Excel cơ bản trong 8 buổi, học xong làm được báo cáo ngay"
+  },
+  {
+   "comment_id": "demo-c4",
+   "intent": "interest",
+   "status": "Replied",
+   "public_reply": "Dạ cảm ơn Yến đã quan tâm ạ. Em đã nhắn riêng thông tin lớp và chi nhánh gần nhất cho Yến nhé!",
+   "private_reply": "Dạ em gửi Yến thông tin khóa học, lịch khai giảng và chi nhánh gần nhất ạ. Yến cần tư vấn thêm cứ nhắn em nhé!",
+   "lead": "linh.do@demo.saoviet.invalid",
+   "post": "Bé học Scratch: làm game đầu tiên sau 4 buổi"
+  },
+  {
+   "comment_id": "demo-c6",
+   "intent": "price",
+   "status": "Replied",
+   "public_reply": "Dạ Linh ơi, học phí khóa này đang có ưu đãi khai giảng ạ. Em đã nhắn riêng chi tiết học phí và lịch học cho Linh rồi nhé!",
+   "private_reply": "Dạ em gửi Linh bảng học phí, lịch khai giảng và ưu đãi hiện có ạ. Linh cho em biết chi nhánh gần nhất để em xếp lớp phù hợp nhé!"
+  },
+  {
+   "comment_id": "demo-c7",
+   "intent": "interest",
+   "status": "Replied",
+   "public_reply": "Dạ cảm ơn Long đã quan tâm ạ. Em đã nhắn riêng thông tin lớp và chi nhánh gần nhất cho Long nhé!",
+   "private_reply": "Dạ em gửi Long thông tin khóa học, lịch khai giảng và chi nhánh gần nhất ạ. Long cần tư vấn thêm cứ nhắn em nhé!"
+  },
+  {
+   "comment_id": "demo-c3",
+   "intent": "praise",
+   "status": "Replied",
+   "public_reply": "Cảm ơn Hà đã ủng hộ Sao Việt ạ, chúc Hà học thật tốt nhé!",
+   "private_reply": ""
+  },
+  {
+   "comment_id": "demo-c12",
+   "intent": "praise",
+   "status": "Replied",
+   "public_reply": "Cảm ơn Hưng đã ủng hộ Sao Việt ạ, chúc Hưng học thật tốt nhé!",
+   "private_reply": ""
+  },
+  {
+   "comment_id": "demo-c8",
+   "intent": "other",
+   "status": "Skipped",
+   "public_reply": "",
+   "private_reply": ""
+  }
+ ]
+}

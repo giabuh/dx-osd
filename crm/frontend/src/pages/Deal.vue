@@ -16,6 +16,12 @@
         v-if="document.actions?.length"
         :actions="document.actions"
       />
+      <Button
+        v-if="doc.lead"
+        label="Nhắn tin"
+        iconLeft="message-circle"
+        @click="changeTabTo('messages')"
+      />
       <AssignTo v-model="assignees.data" doctype="CRM Deal" :docname="dealId" />
       <Dropdown
         v-if="doc && document.statuses"
@@ -64,18 +70,11 @@
         {{ __(dealId) }}
       </div>
       <div class="flex items-center justify-start gap-5 border-b p-5">
-        <Tooltip :text="__('Organization Logo')">
-          <div class="group relative size-12">
-            <Avatar
-              size="3xl"
-              class="size-12"
-              :label="title"
-              :image="organization?.organization_logo"
-            />
-          </div>
-        </Tooltip>
+        <div class="group relative size-12">
+          <Avatar size="3xl" class="size-12" :label="title" />
+        </div>
         <div class="flex flex-col gap-2.5 truncate text-ink-gray-9">
-          <Tooltip :text="organization?.name || doc.lead_name || doc.first_name || __('Set an Organization')">
+          <Tooltip :text="doc.lead_name || doc.first_name || title">
             <div class="truncate text-3xl-medium">
               {{ title }}
             </div>
@@ -98,22 +97,6 @@
                       __('Please set an email address to send emails'),
                     )
               "
-            />
-
-            <Button
-              :tooltip="__('Go to Website')"
-              :icon="LinkIcon"
-              @click="
-                doc.website
-                  ? openWebsite(doc.website)
-                  : toast.error(__('Please set a website to visit'))
-              "
-            />
-
-            <Button
-              :tooltip="__('Attach a File')"
-              :icon="AttachmentIcon"
-              @click="showFilesUploader = true"
             />
 
             <Button
@@ -141,10 +124,18 @@
           :addContact="addContact"
           doctype="CRM Deal"
           :docname="dealId"
+          :showEmpty="true"
           @reload="sections.reload"
           @beforeFieldChange="beforeStatusChange"
           @afterFieldChange="reloadResources"
         >
+          <template #after-fields="{ section }">
+            <ClassCard
+              v-if="section.name == 'enrolment_section'"
+              :schedule="doc.course_schedule"
+            />
+            <FeeProgress v-else-if="section.name == 'fee_section'" :doc="doc" />
+          </template>
           <template #actions="{ section }">
             <div v-if="section.name == 'contacts_section'" class="pr-2">
               <Link
@@ -309,23 +300,12 @@
       afterInsert: (_doc) => addContact(_doc.name),
     }"
   />
-  <FilesUploader
-    v-model="showFilesUploader"
-    doctype="CRM Deal"
-    :docname="dealId"
-    @after="
-      () => {
-        activities?.all_activities?.reload()
-        changeTabTo('attachments')
-      }
-    "
-  />
   <DeleteLinkedDocModal
     v-if="showDeleteLinkedDocModal"
     v-model="showDeleteLinkedDocModal"
     :doctype="'CRM Deal'"
     :docname="dealId"
-    :title="doc.organization || doc.lead_name || doc.first_name || dealId"
+    :title="doc.lead_name || doc.first_name || dealId"
     name="Deals"
   />
   <LostReasonModal
@@ -345,35 +325,28 @@ import ActivityIcon from '@/components/Icons/ActivityIcon.vue'
 import EmailIcon from '@/components/Icons/EmailIcon.vue'
 import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import CommentIcon from '@/components/Icons/CommentIcon.vue'
-import DetailsIcon from '@/components/Icons/DetailsIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import MessageCircleIcon from '~icons/lucide/message-circle'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
-import LinkIcon from '@/components/Icons/LinkIcon.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
 import SuccessIcon from '@/components/Icons/SuccessIcon.vue'
-import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import Activities from '@/components/Activities/Activities.vue'
 import OrganizationModal from '@/components/Modals/OrganizationModal.vue'
 import LostReasonModal from '@/components/Modals/LostReasonModal.vue'
 import AssignTo from '@/components/AssignTo.vue'
-import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
 import ContactModal from '@/components/Modals/ContactModal.vue'
 import Link from '@/components/Controls/Link.vue'
 import Section from '@/components/CollapsibleSection.vue'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
+import ClassCard from '@/components/Customer/ClassCard.vue'
+import FeeProgress from '@/components/Customer/FeeProgress.vue'
 import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
-import {
-  openWebsite,
-  setupCustomizations,
-  copyToClipboard,
-  isTranslatable,
-} from '@/utils'
+import { setupCustomizations, copyToClipboard, isTranslatable } from '@/utils'
 import { getView } from '@/utils/view'
 import { getSettings } from '@/stores/settings'
 import { globalStore } from '@/stores/global'
@@ -481,24 +454,6 @@ watch(
   { once: true },
 )
 
-const organizationDocument = ref(null)
-
-watch(
-  () => doc.value.organization,
-  (org) => {
-    if (org && !organizationDocument.value?.doc) {
-      let { document: _organizationDocument } = useDocument(
-        'CRM Organization',
-        org,
-      )
-      organizationDocument.value = _organizationDocument
-    }
-  },
-  { immediate: true },
-)
-
-const organization = computed(() => organizationDocument.value?.doc || {})
-
 const { markVisited } = useVisitedRecords('CRM Deal')
 
 onMounted(async () => {
@@ -515,7 +470,6 @@ onBeforeUnmount(() => {
 
 const reload = ref(false)
 const showOrganizationModal = ref(false)
-const showFilesUploader = ref(false)
 const _organization = ref({})
 
 const breadcrumbs = computed(() => {
@@ -549,7 +503,12 @@ const breadcrumbs = computed(() => {
 
 const title = computed(() => {
   let t = doctypeMeta.value?.title_field || 'name'
-  return doc.value?.[t] || doc.value?.lead_name || doc.value?.first_name || props.dealId
+  return (
+    doc.value?.[t] ||
+    doc.value?.lead_name ||
+    doc.value?.first_name ||
+    props.dealId
+  )
 })
 
 const statuses = computed(() => {
@@ -567,11 +526,15 @@ usePageMeta(() => {
 })
 
 const tabs = computed(() => {
+  // Sao Việt (D-122): as on the customer page, the conversation first and the timeline last; the side panel holds
+  // every field (no Data tab) and files are not part of a registration here (no Attachments tab)
   let tabOptions = [
     {
-      name: 'Activity',
-      label: __('Activity'),
-      icon: ActivityIcon,
+      // D-117: the student's Chatwoot conversation, from the Lead the registration came from
+      name: 'Messages',
+      label: __('Messages'),
+      icon: MessageCircleIcon,
+      condition: () => !!doc.value.lead,
     },
     {
       name: 'Emails',
@@ -582,11 +545,6 @@ const tabs = computed(() => {
       name: 'Comments',
       label: __('Comments'),
       icon: CommentIcon,
-    },
-    {
-      name: 'Data',
-      label: __('Data'),
-      icon: DetailsIcon,
     },
     {
       name: 'Calls',
@@ -604,28 +562,21 @@ const tabs = computed(() => {
       icon: NoteIcon,
     },
     {
-      name: 'Attachments',
-      label: __('Attachments'),
-      icon: AttachmentIcon,
-    },
-    {
-      // D-117: the student's Chatwoot conversation, from the Lead the registration came from
-      name: 'Messages',
-      label: __('Messages'),
-      icon: MessageCircleIcon,
-      condition: () => !!doc.value.lead,
-    },
-    {
       name: 'WhatsApp',
       label: __('WhatsApp'),
       icon: WhatsAppIcon,
       condition: () => whatsappEnabled.value,
     },
+    {
+      name: 'Activity',
+      label: __('Activity'),
+      icon: ActivityIcon,
+    },
   ]
   return tabOptions.filter((tab) => (tab.condition ? tab.condition() : true))
 })
 
-const { tabIndex } = useActiveTabManager(tabs, 'lastDealTab')
+const { tabIndex, changeTabTo } = useActiveTabManager(tabs, 'lastDealTab')
 
 const sections = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_sidepanel_sections',
@@ -792,7 +743,7 @@ const activities = ref(null)
 
 function openEmailBox() {
   let currentTab = tabs.value[tabIndex.value]
-  if (!['Emails', 'Comments', 'Activities'].includes(currentTab.name)) {
+  if (!['Emails', 'Comments', 'Activity'].includes(currentTab.name)) {
     activities.value.changeTabTo('emails')
   }
   nextTick(() => (activities.value.emailBox.show = true))

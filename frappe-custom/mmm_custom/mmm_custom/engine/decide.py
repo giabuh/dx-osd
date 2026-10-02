@@ -128,11 +128,15 @@ def merge(slots, u, catalog):
 def pick_skills(state, u, slots, catalog):
     """Skills to answer now (capped, by sort_order) and the first one still waiting for a slot."""
     keys = list(dict.fromkeys(u.skills + ([state.pending_skill] if state.pending_skill else [])))
+    course = catalog.slot_for("course")
+    chosen = bool(course) and filled(slots, course.key)
     ready, waiting = [], ""
     for key in keys:
         skill = catalog.skills.get(key)
         if not skill:
             continue
+        if skill.action == "recommend_courses" and chosen:
+            continue  # "học excel mà chưa biết trình độ": a chosen course needs a level test, not other courses
         missing = [p for p in skill.params if catalog.slot(p) and not filled(slots, p)]
         if missing and skill.missing_policy == "ask":
             waiting = waiting or key

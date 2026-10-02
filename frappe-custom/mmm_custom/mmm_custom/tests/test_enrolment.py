@@ -258,12 +258,22 @@ class TestPage(unittest.TestCase):
 
     def test_side_panel_is_a_registration_not_a_company(self):
         names = [s["name"] for s in enrolment.SIDE_PANEL]
-        self.assertEqual(names, ["contacts_section", "enrolment_section", "fee_section", "source_section"])
+        self.assertEqual(names, ["contacts_section", "learner_section", "enrolment_section", "fee_section",
+                                 "source_section"])
+        self.assertEqual(enrolment.LAYOUT_SENTINELS["Side Panel"], "learner_section")
         self.assertNotIn("organization", self.fields(enrolment.SIDE_PANEL))
 
     def test_fields_named_like_the_lead_s_are_copied_on_ghi_danh(self):
         lead = {f["fieldname"] for f in setup_mod.CATALOG_FIELDS["CRM Lead"]} | {"course_interest"}
-        self.assertLessEqual({"course_interest", "placement_result", "voucher_code", "trial_date"}, lead & self.DEAL_FIELDS)
+        self.assertLessEqual({"course_interest", "placement_result", "voucher_code", "trial_date", "learner_type",
+                              "learner_name", "learner_age"}, lead & self.DEAL_FIELDS)
+
+    def test_a_site_without_the_learner_fields_still_gets_a_valid_panel(self):
+        out = setup_mod.keep_fields(enrolment.SIDE_PANEL, lambda f: not f.startswith("learner_"))
+        learner = next(s for s in out if s["name"] == "learner_section")
+        self.assertEqual(learner["columns"][0]["fields"], [])
+        self.assertIn("contacts", out[0])
+        self.assertIn("learner_name", self.fields(enrolment.SIDE_PANEL))  # the constant is untouched
 
     def test_payment_due_date_is_gone(self):
         self.assertEqual(RETIRED_FIELDS, ("payment_due_date",))

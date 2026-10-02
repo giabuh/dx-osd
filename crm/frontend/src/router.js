@@ -260,10 +260,9 @@ router.beforeEach(async (to, from, next) => {
   } else if (to.matched.length === 0) {
     next({ name: 'Invalid Page' })
   } else if (['Deal', 'Lead'].includes(to.name) && !to.hash) {
-    let storageKey = to.name === 'Deal' ? 'lastDealTab' : 'lastLeadTab'
-    const activeTab = localStorage.getItem(storageKey) || 'activity'
-    const hash = '#' + activeTab
-    next({ ...to, hash })
+    // Sao Việt (D-122): a customer or registration opens on its conversation; a Deal without a Lead has no
+    // Messages tab and falls back to its first tab
+    next({ ...to, hash: '#messages' })
   } else if (
     [
       'Leads',

@@ -133,6 +133,8 @@ class TestBannerGenerator(unittest.TestCase):
             ("AI-VIBE", "ai", "Sao Việt AI & AUTOMATION"),
             ("LT-PY", "programming", "Sao Việt TECH & CODING"),
             ("MKT-FB", "marketing", "Sao Việt DIGITAL MARKETING"),
+            ("KT-CB", "accounting", "Sao Việt KẾ TOÁN"),  # was the Excel poster (D-125)
+            ("KT-EXCEL", "excel", "Sao Việt OFFICE & DATA"),
         ]
         for code, expected_key, expected_brand in test_cases:
             meta = get_course_meta(code)

@@ -161,22 +161,6 @@
                   "
                 />
                 <Button
-                  :tooltip="__('Go to Website')"
-                  :icon="LinkIcon"
-                  @click="
-                    doc.website
-                      ? openWebsite(doc.website)
-                      : toast.error(__('Please set a website to visit'))
-                  "
-                />
-
-                <Button
-                  :tooltip="__('Attach a File')"
-                  :icon="AttachmentIcon"
-                  @click="showFilesUploader = true"
-                />
-
-                <Button
                   v-if="canDelete"
                   :tooltip="__('Delete')"
                   variant="subtle"
@@ -199,13 +183,14 @@
         v-if="sections.data"
         class="flex flex-1 flex-col justify-between overflow-hidden"
       >
-        <SidePanelLayout
+        <LeadSidePanel
           :sections="sections.data"
-          doctype="CRM Lead"
-          :docname="leadId"
+          :leadId="leadId"
+          :canRegister="!isLeadConversionDisabled"
           @reload="sections.reload"
           @beforeFieldChange="beforeStatusChange"
           @afterFieldChange="reloadResources"
+          @register="showConvertToDealModal = true"
         />
       </div>
     </Resizer>
@@ -219,17 +204,6 @@
     v-if="showConvertToDealModal"
     v-model="showConvertToDealModal"
     :lead="doc"
-  />
-  <FilesUploader
-    v-model="showFilesUploader"
-    doctype="CRM Lead"
-    :docname="leadId"
-    @after="
-      () => {
-        activities?.all_activities?.reload()
-        changeTabTo('attachments')
-      }
-    "
   />
   <DeleteLinkedDocModal
     v-if="showDeleteLinkedDocModal"
@@ -256,26 +230,21 @@ import ActivityIcon from '@/components/Icons/ActivityIcon.vue'
 import EmailIcon from '@/components/Icons/EmailIcon.vue'
 import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import CommentIcon from '@/components/Icons/CommentIcon.vue'
-import DetailsIcon from '@/components/Icons/DetailsIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import CameraIcon from '@/components/Icons/CameraIcon.vue'
-import LinkIcon from '@/components/Icons/LinkIcon.vue'
-import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import LostReasonModal from '@/components/Modals/LostReasonModal.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import Activities from '@/components/Activities/Activities.vue'
 import AssignTo from '@/components/AssignTo.vue'
-import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
-import SidePanelLayout from '@/components/SidePanelLayout.vue'
+import LeadSidePanel from '@/components/Customer/LeadSidePanel.vue'
 import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'
 import {
-  openWebsite,
   setupCustomizations,
   copyToClipboard,
   validateIsImageFile,
@@ -325,7 +294,6 @@ const errorTitle = ref('')
 const errorMessage = ref('')
 const showDeleteLinkedDocModal = ref(false)
 const showConvertToDealModal = ref(false)
-const showFilesUploader = ref(false)
 
 const {
   triggerOnChange,
@@ -435,11 +403,14 @@ usePageMeta(() => {
 })
 
 const tabs = computed(() => {
+  // Sao Việt (D-122): the conversation first, the timeline last; the side panel holds every field, so no Data
+  // tab, and files are not part of a customer's record here (no Attachments tab)
   let tabOptions = [
     {
-      name: 'Activity',
-      label: __('Activity'),
-      icon: ActivityIcon,
+      // the customer's Chatwoot conversation (components/Activities/LeadChat.vue)
+      name: 'Messages',
+      label: __('Messages'),
+      icon: MessageCircleIcon,
     },
     {
       name: 'Emails',
@@ -450,11 +421,6 @@ const tabs = computed(() => {
       name: 'Comments',
       label: __('Comments'),
       icon: CommentIcon,
-    },
-    {
-      name: 'Data',
-      label: __('Data'),
-      icon: DetailsIcon,
     },
     {
       name: 'Calls',
@@ -472,21 +438,15 @@ const tabs = computed(() => {
       icon: NoteIcon,
     },
     {
-      name: 'Attachments',
-      label: __('Attachments'),
-      icon: AttachmentIcon,
-    },
-    {
-      // Sao Việt: the customer's Chatwoot conversation (components/Activities/LeadChat.vue)
-      name: 'Messages',
-      label: __('Messages'),
-      icon: MessageCircleIcon,
-    },
-    {
       name: 'WhatsApp',
       label: __('WhatsApp'),
       icon: WhatsAppIcon,
       condition: () => whatsappEnabled.value,
+    },
+    {
+      name: 'Activity',
+      label: __('Activity'),
+      icon: ActivityIcon,
     },
   ]
   return tabOptions.filter((tab) => (tab.condition ? tab.condition() : true))
@@ -543,7 +503,7 @@ function deleteLead() {
 
 function openEmailBox() {
   let currentTab = tabs.value[tabIndex.value]
-  if (!['Emails', 'Comments', 'Activities'].includes(currentTab.name)) {
+  if (!['Emails', 'Comments', 'Activity'].includes(currentTab.name)) {
     activities.value.changeTabTo('emails')
   }
   nextTick(() => (activities.value.emailBox.show = true))

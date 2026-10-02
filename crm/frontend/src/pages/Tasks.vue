@@ -16,6 +16,7 @@
       />
     </template>
   </LayoutHeader>
+  <TaskDispatchPanel @changed="tasks.reload?.()" />
   <ViewControls
     ref="viewControls"
     v-model="tasks"
@@ -204,6 +205,7 @@ import TaskPriorityIcon from '@/components/Icons/TaskPriorityIcon.vue'
 import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewControls from '@/components/ViewControls.vue'
+import TaskDispatchPanel from '@/components/TaskDispatchPanel.vue'
 import TasksListView from '@/components/ListViews/TasksListView.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import KanbanView from '@/components/Kanban/KanbanView.vue'

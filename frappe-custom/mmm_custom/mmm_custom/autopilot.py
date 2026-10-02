@@ -4,6 +4,8 @@
 from datetime import date, datetime, timedelta
 import re
 
+from mmm_custom.marketing_plan import plan_week
+
 try:
     import frappe
     import frappe.utils
@@ -35,41 +37,55 @@ except ImportError:
 
 
 
-# 4 standard weekly post slots (Mon, Wed, Fri, Sun)
+# 4 weekly post slots (Mon, Wed, Fri, Sun): day, time and the caption angle of facebook_post.generate_ai_content.
+# Which course goes in each slot is decided every week from CRM data (marketing_plan.plan_week, D-125).
 WEEKLY_MATRIX = [
     {
         "day": 0,
         "day_offset": 0,
         "day_of_week": "Thứ Hai",
         "time": "08:30:00",
-        "course": "Tiếng Anh",
-        "default_title": "Khai giảng Tiếng Anh giao tiếp",
     },
     {
         "day": 2,
         "day_offset": 2,
         "day_of_week": "Thứ Tư",
         "time": "11:30:00",
-        "course": "Toán tư duy",
-        "default_title": "Phát triển tư duy logic",
     },
     {
         "day": 4,
         "day_offset": 4,
         "day_of_week": "Thứ Sáu",
         "time": "19:30:00",
-        "course": "Bơi lội",
-        "default_title": "Khóa bơi sinh tồn cho bé",
     },
     {
         "day": 6,
         "day_offset": 6,
         "day_of_week": "Chủ Nhật",
         "time": "09:00:00",
-        "course": "Chung",
-        "default_title": "Tuyển sinh & Học bổng EduFlow",
     },
 ]
+
+
+def _today():
+    return date.today()
+
+
+def _now():
+    return now_datetime()
+
+
+def slot_at(base_monday, slot):
+    """When a slot of the week starting `base_monday` is published."""
+    hour, minute, second = (int(x) for x in slot["time"].split(":"))
+    return datetime.combine(base_monday + timedelta(days=slot["day_offset"]), datetime.min.time()).replace(
+        hour=hour, minute=minute, second=second)
+
+
+def open_slots(base_monday, now):
+    """The slots of that week still ahead of `now`: a slot whose time has passed is not planned, or approving
+    the batch would publish it at once (the publisher posts every Scheduled post that is due)."""
+    return [s for s in WEEKLY_MATRIX if slot_at(base_monday, s) > now]
 
 
 @frappe.whitelist()
@@ -91,29 +107,42 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
         elif isinstance(target_date, date):
             d = target_date
         else:
-            d = date.today()
+            d = _today()
     else:
-        d = date.today()
+        d = _today()
 
     # Determine base Monday date
     base_monday = d - timedelta(days=d.weekday())
+    now = _now()
+    slots = open_slots(base_monday, now)
+    if not slots and not target_date:  # this week is over: plan the next one
+        base_monday += timedelta(days=7)
+        slots = open_slots(base_monday, now)
+    skipped = [s["day_of_week"] for s in WEEKLY_MATRIX if s not in slots]
     iso_year, iso_week, _ = base_monday.isocalendar()
     batch_id = f"BATCH-{iso_year}-W{iso_week:02d}"
 
     created_posts = []
+    # The week's courses from CRM data: open classes, promotions, what earlier posts brought (D-125)
+    # Classes and results are judged from today: a class that started on Monday is not "coming up" on Thursday.
+    offer_slot = next((i for i, s in enumerate(slots) if s["day_of_week"] == "Chủ Nhật"), len(slots) - 1)
+    plan = plan_week(max(_today(), base_monday), n=len(slots), offer_slot=offer_slot) if slots else []
 
-    for slot in WEEKLY_MATRIX:
+    slot_text = ", ".join(f"{s['day_of_week']} ({s['time'][:5]})" for s in slots)
+
+    for slot, course in zip(slots, plan):
         slot_date = base_monday + timedelta(days=slot["day_offset"])
         scheduled_time = f"{slot_date.isoformat()} {slot['time']}"
 
         if boss_directive and boss_directive.strip():
-            title = f"{slot['default_title']} - {boss_directive.strip()}"
+            title = f"{course['title']} - {boss_directive.strip()}"
         else:
-            title = slot["default_title"]
+            title = course["title"]
 
         doc = frappe.new_doc("Facebook Post")
         doc.title = title
-        doc.course = slot["course"]
+        doc.course = course["code"]
+        doc.plan_reason = course["reason"]
         doc.status = "Pending Approval"
         doc.batch_id = batch_id
         doc.boss_directive = boss_directive or ""
@@ -159,7 +188,8 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
             "agent": "CRM Data Agent",
             "role": "Trợ lý dữ liệu CRM",
             "icon": "📊",
-            "action": "API GET /api/resource/Course: Đồng bộ thông tin 4 khóa học & học phí ưu đãi",
+            "action": "Chọn khóa theo lớp sắp khai giảng, ưu đãi và kết quả bài trước: "
+                      + "; ".join(f"{c['name']} ({c['reason']})" for c in plan),
             "status": "completed",
         },
         {
@@ -173,7 +203,8 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
             "agent": "Scheduler Agent",
             "role": "Trợ lý điều phối lịch",
             "icon": "📅",
-            "action": f"Phân bổ lịch Thứ 2 (08:30), Thứ 4 (11:30), Thứ 6 (19:30), CN (09:00) cho đợt {batch_id}",
+            "action": f"Phân bổ lịch {slot_text or 'không còn khung giờ nào'} cho đợt {batch_id}"
+                      + (f"; bỏ qua {', '.join(skipped)} vì đã qua giờ đăng" if skipped else ""),
             "status": "completed",
         },
         {
@@ -201,6 +232,7 @@ def generate_weekly_batch(boss_directive=None, target_date=None):
         "batch_id": batch_id,
         "count": len(created_posts),
         "posts": [p.name for p in created_posts],
+        "skipped": skipped,
         "pipeline": pipeline,
     }
 
@@ -212,8 +244,8 @@ def approve_weekly_batch(batch_id=None):
     if batch_id:
         filters["batch_id"] = batch_id
 
-    posts = frappe.get_all("Facebook Post", filters=filters, pluck="name")
-    count = 0
+    posts = frappe.get_all("Facebook Post", filters=filters, fields=["name", "scheduled_time"])
+    count, past_due, now = 0, [], _now()
     for post in posts:
         name = (
             post
@@ -224,7 +256,10 @@ def approve_weekly_batch(batch_id=None):
                 else getattr(post, "name", None)
             )
         )
-        if name is not None:
+        when = post.get("scheduled_time") if isinstance(post, dict) else None
+        if name is not None and when and when <= now:
+            past_due.append(name)  # its time has passed: Scheduled would publish it at once, a person picks a new time
+        elif name is not None:
             frappe.db.set_value("Facebook Post", name, "status", "Scheduled")
             count += 1
 
@@ -242,7 +277,7 @@ def approve_weekly_batch(batch_id=None):
     except Exception:
         pass
 
-    return {"status": "success", "approved_count": count}
+    return {"status": "success", "approved_count": count, "past_due": past_due}
 
 
 @frappe.whitelist()

@@ -66,9 +66,12 @@ def schedule_title(course_name, branch, start_date, shift):
     return " · ".join(p for p in (course_name, branch, day, (shift or "").split(" ")[0]) if p)[:140]
 
 
-# The Deal page of a registration (D-117): student, registration, fee, source; no B2B organization section.
+# The Deal page of a registration (D-117): student, who studies (D-123), registration with its class card, fee with
+# its progress bar (the page draws both after the fields, D-122), source; no B2B organization section.
 SIDE_PANEL = [
     {"label": "Student", "name": "contacts_section", "opened": True, "editable": False, "contacts": []},
+    {"label": "Learner", "name": "learner_section", "opened": True, "columns": [
+        {"name": "column_learner", "fields": ["learner_type", "learner_name", "learner_age"]}]},
     {"label": "Registration", "name": "enrolment_section", "opened": True, "columns": [
         {"name": "column_enrol", "fields": ["enrol_course", "course_schedule", "class_start_date", "territory",
                                             "deal_owner"]}]},
@@ -87,7 +90,7 @@ DATA_FIELDS = [{"name": "first_tab", "sections": [
         {"name": "column_f1", "fields": ["tuition_fee", "promotion", "discount_amount", "final_fee"]},
         {"name": "column_f2", "fields": ["deposit_amount", "deposit_date", "paid_amount", "balance_due"]}]},
     {"label": "Details", "name": "details_section", "opened": False, "columns": [
-        {"name": "column_d1", "fields": ["organization", "next_step"]},
+        {"name": "column_d1", "fields": ["next_step"]},
         {"name": "column_d2", "fields": ["course_interest", "placement_result", "voucher_code"]}]},
 ]}]
 REQUIRED_FIELDS = [{"name": "first_tab", "sections": [
@@ -268,22 +271,30 @@ def ensure_deal_defaults():
     frappe.db.commit()
 
 
+# A stored layout that has its sentinel section is this version's (or a manager's edit of it) and stays as it is
+LAYOUT_SENTINELS = {"Side Panel": "learner_section", "Data Fields": "enrolment_section",
+                    "Required Fields": "enrolment_section"}
+
+
 def update_deal_layouts():
-    """after_migrate: the registration layouts, once; a layout that already has the registration section (or a
-    manager's own edit of it) is left alone."""
+    """after_migrate: the registration layouts, once per version; a layout that already has its sentinel section (or
+    a manager's own edit of it) is left alone. Fields the site does not have yet are left out."""
     import json
 
+    from mmm_custom.setup import keep_fields
+
+    meta = frappe.get_meta("CRM Deal")
     for name, type_, layout in (("CRM Deal-Side Panel", "Side Panel", SIDE_PANEL),
                                 ("CRM Deal-Data Fields", "Data Fields", DATA_FIELDS),
                                 ("CRM Deal-Required Fields", "Required Fields", REQUIRED_FIELDS)):
         if frappe.db.exists("CRM Fields Layout", name):
             doc = frappe.get_doc("CRM Fields Layout", name)
-            if "enrolment_section" in (doc.layout or ""):
+            if LAYOUT_SENTINELS[type_] in (doc.layout or ""):
                 continue
         else:
             doc = frappe.new_doc("CRM Fields Layout")
             doc.update({"dt": "CRM Deal", "type": type_})
-        doc.layout = json.dumps(layout, ensure_ascii=False)
+        doc.layout = json.dumps(keep_fields(layout, lambda f: bool(meta.has_field(f))), ensure_ascii=False)
         if doc.is_new():
             doc.insert(ignore_permissions=True)
         else:

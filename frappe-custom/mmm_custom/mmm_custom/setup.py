@@ -117,8 +117,29 @@ def create_custom_field():
 	create_custom_fields()
 
 
-# Upstream B2B fields a training centre's Lead form does not need (D-116); `organization` stays for companies.
-REMOVE_FROM_LEAD = ("website", "annual_revenue", "no_of_employees", "industry", "job_title", "branch")
+# Upstream B2B fields a training centre's Lead form does not need (D-116); a customer is a person, so no
+# organization either (D-122): a company asking for staff training is handled by the B2B team in the chat.
+REMOVE_FROM_LEAD = ("website", "annual_revenue", "no_of_employees", "industry", "job_title", "branch", "organization")
+
+# The customer page's side panel (D-122): every field of the customer, grouped. `custom` sections have no fields of
+# their own; the page draws them (registrations). The bot and source sections get a card after their fields.
+LEAD_SIDE_PANEL = [
+	{"label": "Contact", "name": "contact_section", "opened": True, "columns": [
+		{"name": "column_contact", "fields": ["first_name", "mobile_no", "email", "gender", "lead_owner"]}]},
+	{"label": "Learning Needs", "name": "needs_section", "opened": True, "columns": [
+		{"name": "column_needs", "fields": ["course_interest", "territory", "learner_type", "learner_name",
+		                                   "learner_age", "preferred_shift", "learning_goal", "current_level",
+		                                   "trial_date"]}]},
+	{"label": "Registrations", "name": "registrations_section", "opened": True, "custom": True, "columns": [
+		{"name": "column_registrations", "fields": []}]},
+	{"label": "Bot & Level Test", "name": "bot_section", "opened": True, "columns": [
+		{"name": "column_bot", "fields": ["ai_hotness", "ai_intent", "data_quality", "placement_result",
+		                                  "quiz_detail", "voucher_code"]}]},
+	{"label": "Source & Referral", "name": "source_section", "opened": False, "columns": [
+		{"name": "column_source", "fields": ["source", "source_campaign", "facebook_page", "referral_code",
+		                                     "referred_by_code", "referred_by"]}]},
+]
+LEAD_PANEL_SENTINEL = "needs_section"
 
 
 def remove_fields(layout, names):
@@ -172,7 +193,8 @@ def update_crm_fields_layout():
 						fields = ["course_interest", "territory", "data_quality"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
-							fields += ["source_campaign", "facebook_page", "referral_code", "referred_by", "placement_result"]  # D-100, D-103, D-104
+							fields += ["source_campaign", "facebook_page", "facebook_post", "referral_code", "referred_by",
+							           "placement_result"]  # D-100, D-124, D-103, D-104
 							fields += ["quiz_detail", "voucher_code", "trial_date"]  # D-106, D-116
 						for f in fields:
 							if f not in present:
@@ -227,10 +249,30 @@ CATALOG_FIELDS = {
 		{"fieldname": "faqs", "label": "Course FAQs", "fieldtype": "Table", "options": "Course FAQ", "description": "Questions customers ask about this course; Jev picks the matching one and the bot sends its answer", "insert_after": "syllabus"},
 	],
 	# Bot Slot lead_field targets that are not standard CRM Lead fields.
+	# Task dispatch (D-126): the system proposes who should take a task, a manager decides. Not shown on the Task page.
+	"CRM Task": [
+		{"fieldname": "proposed_to", "label": "Proposed To", "fieldtype": "Link", "options": "User", "read_only": 1,
+		 "hidden": 1, "insert_after": "assigned_to"},
+		{"fieldname": "proposal_reason", "label": "Proposal Reason", "fieldtype": "Small Text", "read_only": 1,
+		 "hidden": 1, "insert_after": "proposed_to"},
+		{"fieldname": "proposal_status", "label": "Proposal Status", "fieldtype": "Select",
+		 "options": "\nPending\nRejected", "read_only": 1, "hidden": 1, "search_index": 1,
+		 "insert_after": "proposal_reason"},
+		{"fieldname": "proposal_at", "label": "Proposal At", "fieldtype": "Datetime", "read_only": 1, "hidden": 1,
+		 "insert_after": "proposal_status"},
+	],
 	"CRM Lead": [
 		{"fieldname": "learner_type", "label": "Learner", "fieldtype": "Data", "insert_after": "course_interest"},
-		{"fieldname": "learner_age", "label": "Learner Age", "fieldtype": "Int", "insert_after": "learner_type"},
+		# The person who studies when it is not the contact, e.g. a parent registering a child (D-123)
+		{"fieldname": "learner_name", "label": "Learner Name", "fieldtype": "Data", "length": 140,
+		 "insert_after": "learner_type"},
+		{"fieldname": "learner_age", "label": "Learner Age", "fieldtype": "Int", "insert_after": "learner_name"},
 		{"fieldname": "preferred_shift", "label": "Preferred Shift", "fieldtype": "Data", "insert_after": "learner_age"},
+		# What the bot's on-demand goal / level slots learn, kept on the Lead (D-123)
+		{"fieldname": "learning_goal", "label": "Learning Goal", "fieldtype": "Data", "length": 140,
+		 "insert_after": "preferred_shift"},
+		{"fieldname": "current_level", "label": "Current Level", "fieldtype": "Data", "length": 140,
+		 "insert_after": "learning_goal"},
 		{"fieldname": "placement_result", "label": "Level Test", "fieldtype": "Data", "read_only": 1,
 		 "description": "Kết quả bài test trình độ qua chat (D-104)", "insert_after": "preferred_shift"},
 		{"fieldname": "quiz_detail", "label": "Level Test: To Review", "fieldtype": "Small Text", "read_only": 1,
@@ -246,9 +288,12 @@ CATALOG_FIELDS = {
 		{"fieldname": "facebook_page", "label": "Facebook Page", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "in_list_view": 1, "in_standard_filter": 1, "description": "Trang Facebook khách đã nhắn tin",
 		 "insert_after": "source_campaign"},
+		# The Facebook post whose comment brought the customer (comment funnel, D-124)
+		{"fieldname": "facebook_post", "label": "Facebook Post", "fieldtype": "Link", "options": "Facebook Post",
+		 "read_only": 1, "in_standard_filter": 1, "insert_after": "facebook_page"},
 		# Referral codes (D-103): this Lead's own code, the code a friend gave, and that friend
 		{"fieldname": "referral_code", "label": "Referral Code", "fieldtype": "Data", "length": 10, "unique": 1,
-		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "source_campaign"},
+		 "read_only": 1, "description": "Mã giới thiệu của khách này, gửi cho bạn bè", "insert_after": "facebook_post"},
 		{"fieldname": "referred_by_code", "label": "Referred By Code", "fieldtype": "Data", "length": 20,
 		 "insert_after": "referral_code"},
 		{"fieldname": "referred_by", "label": "Referred By", "fieldtype": "Link", "options": "CRM Lead", "read_only": 1,
@@ -286,6 +331,11 @@ CATALOG_FIELDS = {
 		 "insert_after": "placement_result"},
 		{"fieldname": "trial_date", "label": "Trial Date", "fieldtype": "Date", "read_only": 1,
 		 "insert_after": "voucher_code"},
+		# Who studies (D-123); copied from the Lead by name on "Ghi danh", editable here
+		{"fieldname": "learner_type", "label": "Learner", "fieldtype": "Data", "insert_after": "trial_date"},
+		{"fieldname": "learner_name", "label": "Learner Name", "fieldtype": "Data", "length": 140,
+		 "insert_after": "learner_type"},
+		{"fieldname": "learner_age", "label": "Learner Age", "fieldtype": "Int", "insert_after": "learner_name"},
 	],
 }
 
@@ -444,11 +494,100 @@ def setup_workspaces():
 	frappe.db.commit()
 
 
+def update_lead_side_panel():
+	"""after_migrate / after_install: the grouped customer side panel (D-122), once; a panel that already has the
+	needs section (or a manager's own edit of it) is left alone. Fields the site does not have yet are dropped, so a
+	fresh install where catalog fields come later still gets a valid panel."""
+	import json
+
+	name = "CRM Lead-Side Panel"
+	if frappe.db.exists("CRM Fields Layout", name):
+		doc = frappe.get_doc("CRM Fields Layout", name)
+		if LEAD_PANEL_SENTINEL in (doc.layout or ""):
+			return
+	else:
+		doc = frappe.new_doc("CRM Fields Layout")
+		doc.update({"dt": "CRM Lead", "type": "Side Panel"})
+	meta = frappe.get_meta("CRM Lead")
+	layout = lead_side_panel(lambda f: bool(meta.has_field(f)))
+	doc.layout = json.dumps(layout, ensure_ascii=False)
+	if doc.is_new():
+		doc.insert(ignore_permissions=True)
+	else:
+		doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+
+# The bot's on-demand slots whose answer the Lead keeps (D-123); demo/saoviet/bot_slots.json says the same
+SLOT_LEAD_FIELDS = {"goal": "learning_goal", "level": "current_level"}
+
+
+def slot_backfill(slots, labels):
+	"""{Lead field: option label} for the goal / level a conversation learned; `labels` is {slot_key: {value: label}}.
+	Pure."""
+	out = {}
+	for key, field in SLOT_LEAD_FIELDS.items():
+		value = ((slots or {}).get(key) or {}).get("value")
+		if value not in (None, ""):
+			out[field] = labels.get(key, {}).get(value, value)
+	return out
+
+
+def link_goal_level_slots():
+	"""Patch v1_3: the goal / level Bot Slots write to the Lead, and Leads the bot already asked get the answer.
+	A slot a manager pointed elsewhere and a Lead field a person filled are kept."""
+	import json
+
+	from mmm_custom.engine.repo import clear_catalog_cache
+
+	labels = {}
+	for key, field in SLOT_LEAD_FIELDS.items():
+		if not frappe.db.exists("Bot Slot", key):
+			continue
+		if not frappe.db.get_value("Bot Slot", key, "lead_field"):
+			frappe.db.set_value("Bot Slot", key, "lead_field", field)
+		labels[key] = {o.value: o.label for o in frappe.get_all(
+			"Bot Slot Option", filters={"parent": key, "parenttype": "Bot Slot"}, fields=["value", "label"])}
+	clear_catalog_cache()
+	meta = frappe.get_meta("CRM Lead")
+	if not all(meta.has_field(f) for f in SLOT_LEAD_FIELDS.values()):
+		return
+	for conv in frappe.get_all("Bot Conversation", filters={"lead": ["is", "set"], "is_sandbox": 0},
+	                           fields=["lead", "slots"], order_by="modified asc"):
+		try:
+			slots = json.loads(conv.slots) if isinstance(conv.slots, str) else (conv.slots or {})
+		except ValueError:
+			continue
+		updates = slot_backfill(slots, labels)
+		if not updates or not frappe.db.exists("CRM Lead", conv.lead):
+			continue
+		current = frappe.db.get_value("CRM Lead", conv.lead, list(updates), as_dict=True) or {}
+		updates = {k: v for k, v in updates.items() if not current.get(k)}
+		if updates:
+			frappe.db.set_value("CRM Lead", conv.lead, updates, update_modified=False)
+	frappe.db.commit()
+
+
+def keep_fields(layout, has_field):
+	"""A copy of a CRM Fields Layout (sections, or tabs of sections) with only the fields `has_field` knows. Pure."""
+	import copy
+
+	layout = copy.deepcopy(layout)
+	remove_fields(layout, {f for f in layout_fields(layout) if not has_field(f)})
+	return layout
+
+
+def lead_side_panel(has_field):
+	"""LEAD_SIDE_PANEL with only the fields `has_field` knows. Pure."""
+	return keep_fields(LEAD_SIDE_PANEL, has_field)
+
+
 def setup():
 	create_custom_fields()
 	update_crm_fields_layout()
 	create_lead_sources()
 	create_catalog_fields()
+	update_lead_side_panel()
 	setup_workspaces()
 
 

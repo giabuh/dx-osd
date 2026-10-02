@@ -115,6 +115,26 @@ class TestComposeAdvisor(unittest.TestCase):
         self.assertEqual([b["action"]["slot"] for b in r.buttons], ["goal"] * 5)
 
 
+class TestAdvisorNeedsNoCourse(unittest.TestCase):
+    """"Học excel mà chưa biết trình độ": the customer chose a course; suggesting others is off-topic."""
+    KNOWN = {"course": fill("VP-EXCEL"), "branch": fill("CN Bình Thạnh")}
+
+    def test_not_kept_waiting_when_the_course_is_known(self):
+        d = decide(ConversationState("1", turns=1, slots=dict(self.KNOWN)), Understanding(skills=["course_advisor"]), CAT)
+        self.assertNotIn("course_advisor", d.skills)
+        self.assertEqual(d.pending_skill, "")
+
+    def test_a_waiting_advisor_gives_way_to_the_level_test(self):
+        state = ConversationState("1", turns=1, slots=dict(self.KNOWN), pending_skill="course_advisor")
+        d = decide(state, Understanding(fills={"learner": fill("self")}), CAT)
+        self.assertNotIn("course_advisor", d.skills)
+        self.assertEqual(d.offer, "excel_quiz")
+
+    def test_still_answers_without_a_course(self):
+        d = decide(ConversationState("1", turns=1), Understanding(skills=["course_advisor"], fills={"learner": fill("self")}), CAT)
+        self.assertIn("course_advisor", d.skills)
+
+
 class TestOnDemandSlots(unittest.TestCase):
     def test_never_in_the_normal_sequence(self):
         slots = {"course": fill("VP-EXCEL"), "branch": fill("CN Dĩ An"), "learner": fill("self"),

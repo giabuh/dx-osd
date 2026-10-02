@@ -133,13 +133,32 @@ class Messages::Facebook::MessageBuilder < Messages::Messenger::MessageBuilder
   end
 
   def process_contact_params_result(result)
-    name = result['name'].presence || [result['first_name'], result['last_name']].compact_blank.join(' ').presence || 'John Doe'
+    name = profile_name(result) || participant_name(result) || 'John Doe'
 
     {
       name: name,
       account_id: @inbox.account_id,
       avatar_url: result['profile_pic']
     }
+  end
+
+  def profile_name(result)
+    result['name'].presence || [result['first_name'], result['last_name']].compact_blank.join(' ').presence
+  end
+
+  # The User Profile API is unavailable for some pages (GraphMethodException code 100, subcode 33).
+  # Fall back to the participants of the conversation with this PSID, which the page token can read.
+  # Skipped when Meta says the user has no profile at all (subcode 2018218).
+  def participant_name(result)
+    return if result[:skip_participant_lookup] || !@inbox.facebook?
+
+    api = Koala::Facebook::API.new(@inbox.channel.page_access_token)
+    conversations = api.get_connections('me', 'conversations', user_id: @sender_id, fields: 'participants') || []
+    participants = conversations.flat_map { |conversation| conversation.dig('participants', 'data') || [] }
+    participants.find { |participant| participant['id'].to_s == @sender_id.to_s }&.dig('name').presence
+  rescue StandardError => e
+    Rails.logger.warn("Facebook participant name lookup failed for inbox: #{@inbox.id} with error: #{e.message}")
+    nil
   end
 
   # rubocop:disable Metrics/AbcSize
@@ -154,7 +173,7 @@ class Messages::Facebook::MessageBuilder < Messages::Messenger::MessageBuilder
       @inbox.channel.authorization_error!
       raise
     rescue Koala::Facebook::ClientError => e
-      result = {}
+      result = { skip_participant_lookup: e.message.include?('2018218') }
       # OAuthException, code: 100, error_subcode: 2018218, message: (#100) No profile available for this user
       # We don't need to capture this error as we don't care about contact params in case of echo messages
       if e.message.include?('2018218')

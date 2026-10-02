@@ -103,6 +103,8 @@ if (( DEMO )); then
   ok "demo data loaded and staff mirrored to Chatwoot"
   step "Same demo logins in both apps"
   python3 scripts/seed-demo-logins.py
+  step "Sample customers (52 Leads, 15 registrations, notes, tasks, level tests, Facebook posts)"
+  bench execute mmm_custom.demo.customers.seed
 fi
 
 if (( VERIFY )); then

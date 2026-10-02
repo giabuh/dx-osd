@@ -102,6 +102,11 @@ def overview(days=30):
         frappe.throw("Bạn không có quyền xem trang này.", frappe.PermissionError)
     days = int(days) if str(days).isdigit() and int(days) in PERIODS else 30
     since = frappe.utils.add_days(frappe.utils.today(), -days + 1)
+    return {"days": days, **report(since)}
+
+
+def report(since):
+    """`build` over every CRM Lead created on or after `since` (a date string); the caller checks access."""
     leads = [dict(r) for r in frappe.get_all(
         "CRM Lead", filters={"creation": [">=", f"{since} 00:00:00"]}, limit_page_length=0,
         fields=["name", "lead_name", "first_name", "mobile_no", "source", "territory", "lead_owner", "status",
@@ -122,4 +127,4 @@ def overview(days=30):
             reasons[log.lead] = handoff_why(log.reason)
     consultants = [dict(c) for c in frappe.get_all("Consultant", fields=["user", "full_name", "branch", "level", "handles_b2b"],
                                                     limit_page_length=0)]
-    return {"days": days, "since": since, **build(leads, groups_by_lead, consultants, reasons)}
+    return {"since": since, **build(leads, groups_by_lead, consultants, reasons)}

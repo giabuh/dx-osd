@@ -1,0 +1,38 @@
+[
+ {
+  "id": "fee",
+  "title": "Hỏi học phí Excel",
+  "messages": [
+   "học excel ở dĩ an bao nhiêu tiền",
+   "Cho tôi",
+   "Để sau",
+   "Ca tối",
+   "Mình tên Hà",
+   "0901234567"
+  ]
+ },
+ {
+  "id": "quiz",
+  "title": "Làm bài test trình độ",
+  "messages": [
+   "mình muốn học excel ở bình thạnh mà chưa biết trình độ tới đâu",
+   "Cho tôi",
+   "Làm bài test",
+   "SUM",
+   "$A$1",
+   "Dò tìm theo mã",
+   "COUNTIF",
+   "Pivot Table",
+   "0901234567"
+  ]
+ },
+ {
+  "id": "enrol",
+  "title": "Muốn đăng ký lớp",
+  "messages": [
+   "mình muốn đăng ký lớp excel ở bình thạnh",
+   {"tap": 0},
+   "0901234567"
+  ]
+ }
+]

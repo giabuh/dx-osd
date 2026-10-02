@@ -167,13 +167,34 @@
                   {{ slot.time.substring(0, 5) }}
                 </span>
               </div>
-              <div class="flex items-center gap-1.5 mb-2">
-                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="getCourseBadgeClass(slot.course)">
-                  {{ slot.course }}
+              <div v-if="getSlotPost(slot)?.course" class="flex items-center gap-1.5 mb-2">
+                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="getCourseBadgeClass(getSlotPost(slot).course)">
+                  {{ getSlotPost(slot).course }}
                 </span>
               </div>
-              <div class="text-xs text-ink-gray-7 line-clamp-2">
-                {{ getSlotPost(slot)?.title || slot.default_title }}
+              <img
+                v-if="getSlotPost(slot)?.image"
+                :src="getSlotPost(slot).image"
+                :alt="getSlotPost(slot).title"
+                class="w-full h-28 object-cover object-top rounded-md border border-outline-gray-1 mb-2"
+              />
+              <div class="text-xs font-medium text-ink-gray-8 line-clamp-2">
+                {{ getSlotPost(slot)?.title || __('Chưa lên kế hoạch') }}
+              </div>
+              <div v-if="getSlotPost(slot)?.content" class="mt-1 text-[11px] text-ink-gray-6 line-clamp-3 whitespace-pre-line">
+                {{ getSlotPost(slot).content }}
+              </div>
+              <div v-else-if="getSlotPost(slot)" class="mt-1 text-[11px] text-ink-gray-4 italic">
+                {{ __('Chưa có nội dung') }}
+              </div>
+              <div v-if="getSlotPost(slot)?.plan_reason" class="mt-1 text-[11px] text-ink-gray-5 line-clamp-2" :title="getSlotPost(slot).plan_reason">
+                {{ __('Vì sao') }}: {{ getSlotPost(slot).plan_reason }}
+              </div>
+              <div v-if="isPastDue(getSlotPost(slot))" class="mt-1 text-[11px] font-medium text-ink-red-5">
+                ⏰ {{ __('Đã qua giờ đăng: duyệt cả tuần sẽ bỏ qua bài này, hãy đổi giờ hoặc làm lại tuần') }}
+              </div>
+              <div v-if="getSlotPost(slot)?.content_warning" class="mt-1 text-[11px] text-ink-amber-6 line-clamp-2" :title="getSlotPost(slot).content_warning">
+                ⚠ {{ getSlotPost(slot).content_warning }}
               </div>
             </div>
 
@@ -354,6 +375,10 @@
                 <span v-if="post.leads_count" class="flex items-center gap-1 font-semibold text-emerald-600" title="Khách tiềm năng (Leads)">
                   <LucideSparkles class="size-3.5" />
                   {{ post.leads_count }} leads
+                </span>
+                <span v-if="post.registrations_count" class="flex items-center gap-1 font-semibold text-purple-600" title="Học viên đăng ký từ bài này">
+                  <LucideGraduationCap class="size-3.5" />
+                  {{ post.registrations_count }} học viên
                 </span>
               </div>
               <span
@@ -936,7 +961,7 @@
               </div>
 
               <!-- Metric KPI Cards -->
-              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                 <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
                   <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
                     <LucideThumbsUp class="size-3 text-blue-500" />
@@ -971,6 +996,13 @@
                     {{ __('Leads') }}
                   </div>
                   <div class="text-lg font-bold text-emerald-600">{{ editingPost.leads_count || 0 }}</div>
+                </div>
+                <div class="p-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 text-center">
+                  <div class="text-[11px] text-ink-gray-5 flex items-center justify-center gap-1 mb-1">
+                    <LucideGraduationCap class="size-3 text-purple-500" />
+                    {{ __('Học viên') }}
+                  </div>
+                  <div class="text-lg font-bold text-purple-600">{{ editingPost.registrations_count || 0 }}</div>
                 </div>
               </div>
 
@@ -1154,6 +1186,7 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 // Lucide Icons
 import MegaphoneIcon from '~icons/lucide/megaphone'
 import LucideCalendarPlus from '~icons/lucide/calendar-plus'
+import LucideGraduationCap from '~icons/lucide/graduation-cap'
 import LucideImage from '~icons/lucide/image'
 import LucideRefreshCcw from '~icons/lucide/refresh-ccw'
 import LucideCalendar from '~icons/lucide/calendar'
@@ -1186,10 +1219,11 @@ const availableCourses = ref([
   { name: 'Chung', product_name: 'Tuyển sinh chung EduFlow' },
 ])
 const weeklyMatrix = ref([
-  { day: 0, day_of_week: 'Thứ Hai', time: '08:30:00', course: 'DH-PTS', default_title: 'Khóa học Photoshop thực chiến' },
-  { day: 2, day_of_week: 'Thứ Tư', time: '11:30:00', course: 'VP-EXCEL', default_title: 'Làm chủ Excel & Báo cáo tự động' },
-  { day: 4, day_of_week: 'Thứ Sáu', time: '19:30:00', course: 'TE-ROBO', default_title: 'Khai giảng Robotics STEM cho bé' },
-  { day: 6, day_of_week: 'Chủ Nhật', time: '09:00:00', course: 'Chung', default_title: 'Tuyển sinh & Học bổng EduFlow' },
+  // Courses are chosen each week from CRM data (marketing_plan.plan_week, D-125); a slot is day, time and angle.
+  { day: 0, day_of_week: 'Thứ Hai', time: '08:30:00' },
+  { day: 2, day_of_week: 'Thứ Tư', time: '11:30:00' },
+  { day: 4, day_of_week: 'Thứ Sáu', time: '19:30:00' },
+  { day: 6, day_of_week: 'Chủ Nhật', time: '09:00:00' },
 ])
 
 const activeFilter = ref('all')
@@ -1326,6 +1360,9 @@ async function fetchPosts() {
         'shares_count',
         'reach_count',
         'leads_count',
+        'registrations_count',
+        'plan_reason',
+        'content_warning',
         'ads_recommendation',
         'last_analytics_sync',
         'error_message',
@@ -1353,6 +1390,13 @@ async function fetchPosts() {
 }
 
 // Matrix Helpers
+// A post still waiting for approval whose publishing time has passed (D-127): approving the week skips it,
+// because the publisher would post it the moment it became Scheduled.
+function isPastDue(post) {
+  if (!post || post.status !== 'Pending Approval' || !post.scheduled_time) return false
+  return new Date(String(post.scheduled_time).replace(' ', 'T')) < new Date()
+}
+
 function getSlotPost(slot) {
   return posts.value.find(
     p => p.day_of_week === slot.day_of_week && ['Pending Approval', 'Scheduled', 'Posted'].includes(p.status)
@@ -1387,9 +1431,9 @@ function getCourseBadgeClass(course) {
     case 'AI-BASIC':
     case 'AI-N8N':
     case 'AI-VIBE':
-      return 'bg-indigo-100 text-indigo-800'
+      return 'bg-purple-100 text-purple-800'
     case 'MKT-FB':
-      return 'bg-rose-100 text-rose-800'
+      return 'bg-teal-100 text-teal-800'
     case 'Tiếng Anh':
       return 'bg-blue-100 text-blue-800'
     case 'Bơi lội':
@@ -1460,6 +1504,8 @@ async function handleGenerateWeeklyBatch() {
       showGenerateModal.value = false
       generateForm.value.boss_directive = ''
       toast.success ? toast.success(`Đã tạo thành công ${res.count} bài viết cho đợt ${res.batch_id}!`) : toast.info(`Đã tạo thành công ${res.count} bài viết!`)
+      // a slot whose time has passed is not planned (it would be published the moment it is approved)
+      if (res.skipped?.length) toast.info(`Bỏ qua ${res.skipped.join(', ')} vì đã qua giờ đăng.`)
       await fetchPosts()
     }
   } catch (error) {
@@ -1476,6 +1522,10 @@ async function approveCurrentBatch() {
     const res = await call('mmm_custom.autopilot.approve_weekly_batch')
     if (res.status === 'success') {
       toast.success ? toast.success(`Đã duyệt ${res.approved_count} bài viết!`) : toast.info(`Đã duyệt ${res.approved_count} bài viết!`)
+      if (res.past_due?.length) {
+        const msg = `${res.past_due.length} bài đã qua giờ đăng nên vẫn chờ duyệt (#${res.past_due.join(', #')}). Hãy đổi giờ đăng rồi duyệt lại.`
+        toast.warning ? toast.warning(msg) : toast.info(msg)
+      }
       await fetchPosts()
     }
   } catch (error) {
@@ -1774,8 +1824,8 @@ function openCreateModal() {
 
 function openCreateModalForSlot(slot) {
   createForm.value = {
-    title: slot.default_title,
-    course: slot.course,
+    title: slot.default_title || '',
+    course: slot.course || '',
     day_of_week: slot.day_of_week,
     scheduled_time: '',
     content: '',
