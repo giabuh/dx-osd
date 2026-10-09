@@ -233,6 +233,129 @@ class TestReplyComposeCourseAttachment(unittest.TestCase):
         }, reply.attachments)
 
 
+class TestReturningCustomerMemory(unittest.TestCase):
+    def setUp(self):
+        self.cat = demo_catalog()
+
+    def test_returning_customer_memory_context(self):
+        from mmm_custom.engine.context import base_context
+
+        state = ConversationState(
+            "101",
+            contact_id="12",
+            lead="LEAD-001",
+            is_returning=True,
+            slots={
+                "phone": fill("0901234567", source="lead"),
+                "branch": fill("CN Dĩ An", source="lead"),
+            },
+        )
+        state.customer_name = "Nguyễn Văn A"
+        state.previous_course = "Tin học văn phòng"
+        state.previous_branch = "CN Dĩ An"
+
+        ctx = base_context(state.slots, self.cat, state)
+
+        self.assertTrue(ctx["customer"]["is_returning"])
+        self.assertEqual(ctx["customer"]["previous_course"], "Tin học văn phòng")
+        self.assertEqual(ctx["customer"]["previous_branch"], "CN Dĩ An")
+        self.assertEqual(ctx["customer"]["name"], "Nguyễn Văn A")
+        self.assertEqual(ctx["slots"]["phone"], "0901234567")
+        self.assertEqual(ctx["slots"]["branch"], "CN Dĩ An")
+
+    @patch("mmm_custom.engine.repo.frappe")
+    def test_new_state_returning_customer_prefills_slots_and_memory(self, mock_frappe):
+        from mmm_custom.engine.repo import FrappeRepo
+        from mmm_custom.engine.pipeline import Event
+
+        repo = FrappeRepo()
+        repo._catalog = self.cat
+
+        event = Event(
+            kind="customer_message",
+            conversation_id="202",
+            message_id=1,
+            text="Chào trung tâm",
+            contact={"id": "55", "name": "Khách Messenger"},
+            inbox_id="1",
+        )
+
+        mock_frappe.db.exists.side_effect = lambda dt, name: True if dt == "CRM Lead" and name == "LEAD-55" else False
+        mock_frappe.get_meta.return_value = MagicMock(has_field=lambda f: True)
+        mock_frappe.db.count.return_value = 1
+
+        def fake_get_value(doctype, name, fields=None, as_dict=False):
+            if doctype == "CRM Lead" and name == "LEAD-55":
+                if isinstance(fields, list) and "course_interest" in fields:
+                    return {
+                        "first_name": "Nguyễn Thị Mai",
+                        "lead_name": "Nguyễn Thị Mai",
+                        "course_interest": "Luyện thi MOS Excel",
+                        "territory": "CN Dĩ An",
+                        "mobile_no": "0912345678",
+                    }
+                return {"territory": "CN Dĩ An", "mobile_no": "0912345678"}
+            return None
+
+        mock_frappe.db.get_value.side_effect = fake_get_value
+
+        with patch("mmm_custom.engine.repo.find_lead", return_value="LEAD-55"):
+            state = repo.new_state(event)
+
+        self.assertTrue(state.is_returning)
+        self.assertEqual(state.customer_name, "Nguyễn Thị Mai")
+        self.assertEqual(state.previous_course, "Luyện thi MOS Excel")
+        self.assertEqual(state.previous_branch, "CN Dĩ An")
+        self.assertEqual(state.slots["phone"]["value"], "0912345678")
+        self.assertEqual(state.slots["branch"]["value"], "CN Dĩ An")
+
+    @patch("mmm_custom.engine.repo.frappe")
+    def test_new_state_returning_customer_does_not_overwrite_existing_slots(self, mock_frappe):
+        from mmm_custom.engine.repo import FrappeRepo
+        from mmm_custom.engine.pipeline import Event
+
+        repo = FrappeRepo()
+        repo._catalog = self.cat
+
+        event = Event(
+            kind="customer_message",
+            conversation_id="203",
+            message_id=2,
+            text="Chào trung tâm",
+            contact={"id": "56", "name": "Nguyễn Văn B"},
+            inbox_id="1",
+        )
+
+        mock_frappe.db.exists.side_effect = lambda dt, name: True if dt == "CRM Lead" and name == "LEAD-56" else False
+        mock_frappe.get_meta.return_value = MagicMock(has_field=lambda f: True)
+        mock_frappe.db.count.return_value = 1
+
+        def fake_get_value(doctype, name, fields=None, as_dict=False):
+            if doctype == "CRM Lead" and name == "LEAD-56":
+                if isinstance(fields, list) and "course_interest" in fields:
+                    return {
+                        "first_name": "Nguyễn Văn B",
+                        "lead_name": "Nguyễn Văn B",
+                        "course_interest": "Photoshop",
+                        "territory": "CN Bình Thạnh",
+                        "mobile_no": "0987654321",
+                    }
+                return {"territory": "CN Dĩ An", "mobile_no": "0911111111"}
+            return None
+
+        mock_frappe.db.get_value.side_effect = fake_get_value
+
+        with patch("mmm_custom.engine.repo.find_lead", return_value="LEAD-56"):
+            state = repo.new_state(event)
+
+        self.assertTrue(state.is_returning)
+        self.assertEqual(state.slots["phone"]["value"], "0911111111")
+        self.assertEqual(state.slots["branch"]["value"], "CN Dĩ An")
+        self.assertEqual(state.previous_course, "Photoshop")
+        self.assertEqual(state.previous_branch, "CN Bình Thạnh")
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
