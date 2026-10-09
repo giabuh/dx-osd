@@ -8,9 +8,12 @@ if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
 import dataclasses
+import requests
 from mmm_custom.chatwoot_client import ChatwootClient
 from mmm_custom.engine.decide import Decision
 from mmm_custom.engine.effects import ChatwootEffects, RecordingEffects
+from mmm_custom.engine.jev import JevClient, JevResult
+from mmm_custom.engine.pipeline import understand_turn
 from mmm_custom.engine.reply import Reply, compose
 from mmm_custom.engine.state import ConversationState
 
@@ -353,6 +356,33 @@ class TestReturningCustomerMemory(unittest.TestCase):
         self.assertEqual(state.slots["branch"]["value"], "CN Dĩ An")
         self.assertEqual(state.previous_course, "Photoshop")
         self.assertEqual(state.previous_branch, "CN Bình Thạnh")
+
+
+class TestJevTimeoutAndFallback(unittest.TestCase):
+    @patch("mmm_custom.engine.jev.requests.post")
+    def test_jev_client_strict_timeout_and_fallback(self, mock_post):
+        mock_post.side_effect = requests.exceptions.Timeout("Connection timed out after 2.5s")
+        client = JevClient("test-key")
+        result = client.ask({"latest_message": "học phí excel"}, {"intent": {"type": "choice"}})
+
+        self.assertEqual(result.status, "timeout_fallback")
+        self.assertIn("timed out after 2.5s", result.error)
+        mock_post.assert_called_once()
+        self.assertEqual(mock_post.call_args.kwargs.get("timeout"), 2.5)
+
+    @patch("mmm_custom.engine.jev.requests.post")
+    def test_pipeline_understand_turn_timeout_fallback(self, mock_post):
+        mock_post.side_effect = requests.exceptions.Timeout("Connection timed out after 2.5s")
+        client = JevClient("test-key")
+        cat = demo_catalog()
+        state = ConversationState("conv-123")
+        text = "học phí khoá excel bạn ơi"
+
+        u, jev_res = understand_turn(text, state, cat, client)
+
+        self.assertEqual(jev_res.status, "timeout_fallback")
+        self.assertIn("course", u.fills)
+        self.assertEqual(u.fills["course"]["value"], "VP-EXCEL")
 
 
 if __name__ == "__main__":
