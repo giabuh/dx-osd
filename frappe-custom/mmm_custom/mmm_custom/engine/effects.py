@@ -23,6 +23,9 @@ class RecordingEffects:
     def send(self, conversation_id, reply):
         self.calls.append(("send", {"messages": list(reply.messages), "buttons": [b["title"] for b in reply.buttons]}))
 
+    def toggle_typing(self, conversation_id, status):
+        self.calls.append(("toggle_typing", {"conversation_id": str(conversation_id), "status": status}))
+
     def emit(self, event, payload):
         self.calls.append(("emit", {"event": event, **payload}))
 
@@ -61,13 +64,38 @@ class ChatwootEffects:
         self.crm_url = crm_url  # CRM public base URL for the contact's ho_so_crm link
 
     def send(self, conversation_id, reply):
+        import time
+        cid = int(conversation_id) if str(conversation_id).isdigit() else conversation_id
+        # 1. Activate typing indicator
+        try:
+            self.bot.toggle_typing(cid, "on")
+        except Exception:
+            pass
+
+        # 2. Simulate natural typing pause based on text length (1.5s - 2.5s)
+        total_len = sum(len(m) for m in reply.messages)
+        delay = min(2.5, max(1.5, total_len * 0.012))
+        time.sleep(delay)
+
+        # 3. Dispatch media attachments if present
+        for att in getattr(reply, "attachments", []) or []:
+            if att.get("type") == "image" and att.get("url"):
+                img_url = att["url"]
+                title = att.get("title") or "Hình ảnh"
+                self.bot.send_message(
+                    cid,
+                    f"![{title}]({img_url})",
+                    content_attributes={"image_url": img_url}
+                )
+
+        # 4. Dispatch messages & quick replies
         last = len(reply.messages) - 1
         for i, text in enumerate(reply.messages):
             if i == last and reply.buttons:
                 items = [{"title": b["title"], "value": b["title"]} for b in reply.buttons]
-                self.bot.send_quick_replies(conversation_id, text, items)
+                self.bot.send_quick_replies(cid, text, items)
             else:
-                self.bot.send_message(conversation_id, text)
+                self.bot.send_message(cid, text)
 
     def emit(self, event, payload):
         events.emit(event, payload)
