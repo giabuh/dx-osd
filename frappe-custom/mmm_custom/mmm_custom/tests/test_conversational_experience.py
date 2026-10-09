@@ -7,9 +7,17 @@ APP_DIR = Path(__file__).resolve().parent.parent.parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
+import dataclasses
 from mmm_custom.chatwoot_client import ChatwootClient
+from mmm_custom.engine.decide import Decision
 from mmm_custom.engine.effects import ChatwootEffects, RecordingEffects
-from mmm_custom.engine.reply import Reply
+from mmm_custom.engine.reply import Reply, compose
+from mmm_custom.engine.state import ConversationState
+
+TESTS_DIR = Path(__file__).resolve().parent
+if str(TESTS_DIR) not in sys.path:
+    sys.path.insert(0, str(TESTS_DIR))
+from engine_fixtures import demo_catalog, fill, render
 
 
 class TestChatwootClientTyping(unittest.TestCase):
@@ -153,5 +161,78 @@ class TestChatwootEffectsSend(unittest.TestCase):
         )
 
 
+class TestReplyComposeCourseAttachment(unittest.TestCase):
+    def setUp(self):
+        self.cat = demo_catalog()
+        course = dataclasses.replace(
+            self.cat.courses["VP-EXCEL"],
+            image="https://example.com/excel-brochure.jpg"
+        )
+        self.cat = dataclasses.replace(self.cat, courses={**self.cat.courses, "VP-EXCEL": course})
+
+    def test_reply_compose_attaches_course_image(self):
+        decision = Decision("answer", slots={"course": fill("VP-EXCEL")}, skills=["fee_quote"])
+        state = ConversationState("1", turns=1)
+        reply = compose(decision, state, self.cat, render)
+
+        self.assertTrue(any(
+            att.get("type") == "image" and att.get("url") == "https://example.com/excel-brochure.jpg"
+            for att in reply.attachments
+        ))
+        excel_att = next(att for att in reply.attachments if att.get("url") == "https://example.com/excel-brochure.jpg")
+        self.assertEqual(excel_att, {
+            "type": "image",
+            "url": "https://example.com/excel-brochure.jpg",
+            "title": self.cat.courses["VP-EXCEL"].name,
+        })
+
+    def test_reply_compose_attaches_course_image_from_dict_slot(self):
+        decision = Decision("answer", slots={"course": {"value": "VP-EXCEL"}}, skills=["fee_quote"])
+        state = ConversationState("1", turns=1)
+        reply = compose(decision, state, self.cat, render)
+        self.assertTrue(any(
+            att.get("url") == "https://example.com/excel-brochure.jpg"
+            for att in reply.attachments
+        ))
+
+    def test_reply_compose_no_image_when_course_has_no_image(self):
+        decision = Decision("answer", slots={"course": fill("VP-WORD")}, skills=["fee_quote"])
+        state = ConversationState("1", turns=1)
+        reply = compose(decision, state, self.cat, render)
+        self.assertEqual(reply.attachments, [])
+
+    def test_reply_compose_attaches_course_image_from_state_slots(self):
+        decision = Decision("answer", slots={}, skills=["duration"])
+        state = ConversationState("1", turns=1, slots={"course": fill("VP-EXCEL")})
+        reply = compose(decision, state, self.cat, render)
+        self.assertTrue(any(
+            att.get("url") == "https://example.com/excel-brochure.jpg"
+            for att in reply.attachments
+        ))
+
+    def test_reply_compose_attaches_course_image_dict_course(self):
+        cat_mock = MagicMock()
+        cat_mock.settings = self.cat.settings
+        cat_mock.slots = []
+        cat_mock.slot_for.return_value = None
+        cat_mock.branches = self.cat.branches
+        cat_mock.skills = self.cat.skills
+        cat_mock.courses = {
+            "CUSTOM-COURSE": {
+                "image": "https://example.com/custom.png",
+                "product_name": "Khoá học Custom",
+            }
+        }
+        decision = Decision("answer", slots={"course": "CUSTOM-COURSE"})
+        state = ConversationState("1")
+        reply = compose(decision, state, cat_mock, render)
+        self.assertIn({
+            "type": "image",
+            "url": "https://example.com/custom.png",
+            "title": "Khoá học Custom",
+        }, reply.attachments)
+
+
 if __name__ == "__main__":
     unittest.main()
+
