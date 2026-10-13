@@ -1,3 +1,6 @@
+// Copyright (c) 2026 DX-OSD contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Cold-lead follow-up agent (DX-OS [I] space). Source of the "Plan follow-ups with Jev" Code step in
 // activepieces/flows/cold-lead-followup.json, which runs on a daily schedule. For every open Lead with
 // no change in `staleDays`, Jev decides the next action and a CRM Task is created for the Lead owner.
