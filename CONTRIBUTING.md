@@ -1,32 +1,61 @@
 # Contributing to DX-OSD
 
-Thanks for helping. By contributing you agree your contribution is licensed under the project's [AGPL-3.0](LICENSE) (inside `frappe-custom/mmm_custom/`: MIT; inside a vendored directory: that directory's own license).
+Thank you for your interest in contributing to **DX-OSD (Open-Core DX-Lab)**! This project strictly enforces 100% pure Free and Open Source Software (FOSS) under OSI-approved licenses (AGPL-3.0 and MIT).
 
-## Reporting bugs and requesting features
+---
 
-Use [GitHub Issues](https://github.com/giabuh/dx-osd/issues) with the **Bug report** or **Feature request** template. For a bug, include the steps to reproduce, what you expected, what happened, and which part (Chatwoot / Frappe CRM / `mmm_custom`) is involved. Never paste `.env` contents, site config secrets, or API keys.
+## 🛠️ Contribution Workflow
 
-## Making a change
+To maintain code quality, test coverage, and smooth team collaboration, please adhere to this process:
 
-1. Fork, then branch from `main` (`feat/<topic>` or `fix/<topic>`).
-2. Build and run the stacks from source as described in [`README.md`](README.md).
-3. Make the change. Larger work starts with a spec or plan under [`docs/superpowers/`](docs/superpowers/).
-4. Run the checks for the area you touched:
+### 1. Find or Report an Issue
+Before writing code:
+- Search existing [GitHub Issues](https://github.com/giabuh/dx-osd/issues) to avoid duplicate work.
+- If proposing a bug fix or new capability, open an issue detailing the context, reproduction steps, or architecture rationale.
 
-   | Area | Check |
-   |---|---|
-   | `mmm_custom` (webhooks, dedup, bot, AI agents) | `python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests` |
-   | Chatwoot → CRM sync, end to end | `python scripts/test-chatwoot-crm-sync.py --secret "$SECRET"` (see [`AGENTS.md`](AGENTS.md)) |
-   | Chatwoot (`chatwoot/`, `docker/chatwoot/`) | Rebuild; `http://127.0.0.1:3000` answers 200/302 |
-   | CRM (`crm/`, `frappe-custom/mmm_custom/`) | `bench --site crm.localhost list-apps` shows `mmm_custom`; `http://127.0.0.1:8000` answers 200 |
+### 2. Branching Model (Git Flow)
+Always create a descriptive branch from `main`:
+```bash
+git checkout -b feat/conversational-memory   # New features or capabilities
+git checkout -b fix/webhook-signature        # Bug fixes
+git checkout -b docs/update-architecture     # Documentation updates
+```
 
-5. If you edited anything inside `chatwoot/` or `crm/`, add a row to [`docs/vendored-upstreams.md`](docs/vendored-upstreams.md).
-6. Add a line under **Unreleased** in [`CHANGELOG.md`](CHANGELOG.md).
-7. Open a pull request describing what changed and how you verified it.
+### 3. Development & Testing Discipline (TDD)
+- **Zero regressions**: Ensure existing unit and integration tests pass before and after your change.
+- **Run tests locally**:
+  ```bash
+  python -m unittest discover -s frappe-custom/mmm_custom/mmm_custom/tests -v
+  ```
+- **Never destroy shared state**: Do not run `docker compose down -v` or prune persistent volumes on development stacks.
 
-## Conventions
+### 4. Commit Standards
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+- Format: `type(scope): brief explanation in imperative mood`
+- Examples:
+  - `feat(bot): add Chatwoot typing toggle and media attachment dispatching`
+  - `fix(chatwoot): default conversation list to all statuses`
+  - `docs(roadmap): record conversational AI experience and memory milestone`
+- **Stage explicit paths only**: Never use `git add .` or `git add -A`.
 
-- Code, comments, commit messages, and docs in English.
-- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `feat(scope): ...`, `fix(scope): ...`, `docs: ...`.
-- Never commit `.env` files, site config secrets, or `scripts/seed-shared-accounts/credentials.local.json`.
-- Every new dependency must have an OSI-approved license compatible with AGPL-3.0; list it in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).
+### 5. Open a Pull Request (PR)
+1. Push your branch to the remote repository.
+2. Open a Pull Request against `main`.
+3. Provide a clear summary of changes, linked issues, and verification proof (quote actual test command outputs).
+4. Request a review from maintainers.
+
+---
+
+## 🎨 Coding & Licensing Standards
+
+1. **Licensing**:
+   - `chatwoot/`: Vendored Community Edition under MIT.
+   - `crm/`: Frappe CRM under AGPL-3.0.
+   - `frappe-custom/mmm_custom/`: Custom app under MIT.
+   - All third-party additions must be OSI-approved (no proprietary or closed-source code).
+2. **Language**: Code, docstrings, comments, commit messages, and documentation must be written in **English**. User-facing UI labels are in Vietnamese.
+3. **Security**: Webhook endpoints must enforce HMAC-SHA256 signature verification and anti-replay timestamps. Ports must bind strictly to `127.0.0.1`.
+
+---
+
+Thank you for helping build an open-core digital transformation platform for Vietnam's SMEs and education centers!

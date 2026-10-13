@@ -11,3 +11,16 @@ cloudflared.log
 *.exe
 .playwright-mcp/
 images/
+
+# Presentation & draft slides (keep codebase clean per OLP criteria)
+*.html
+*.pptx
+*.key
+Kich ban*
+presentation/
+
+# Scratch & logs
+scratch/
+*.log
+.pytest_cache/
+.coverage
