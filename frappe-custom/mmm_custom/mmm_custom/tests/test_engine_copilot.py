@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-111: the bot answers at once when no staff member is around; while one watches, has claimed or has written
 in the conversation it only drafts (private note) and answers itself what nobody answered in time."""
 

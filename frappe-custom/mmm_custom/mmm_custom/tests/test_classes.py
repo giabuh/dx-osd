@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Classes page helpers (D-120): what a row shows and which values a save may carry."""
 
 import sys

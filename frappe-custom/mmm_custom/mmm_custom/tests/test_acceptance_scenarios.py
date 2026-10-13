@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The acceptance scenarios (engine/eval/scenarios.json, D-098) on the demo catalog, keyword tier."""
 
 import sys

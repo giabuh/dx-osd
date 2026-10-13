@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-114: the staff reply library — capture helpers, retrieval, Jev's choice, and the demo seed."""
 
 import sys

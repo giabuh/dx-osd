@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The registration record (D-117): fee maths, status on deposit, the page layouts and hooks."""
 
 import sys

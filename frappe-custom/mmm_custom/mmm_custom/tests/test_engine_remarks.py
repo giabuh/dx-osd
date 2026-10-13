@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-130: a remark that asks nothing ("giá sao đắt thế", "trời ơi") gets one fixed line with the way to register
 ("tôi muốn đăng ký học"): no buttons, no next question, no Jev call, never a step into registration."""
 

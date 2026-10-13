@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 import sys
 import unittest
 from datetime import date, datetime, timedelta

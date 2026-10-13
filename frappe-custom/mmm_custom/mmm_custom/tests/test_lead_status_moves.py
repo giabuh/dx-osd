@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-116: status moves the engine and events make on a real CRM Lead (repo + lifecycle hooks, frappe mocked)."""
 
 import sys

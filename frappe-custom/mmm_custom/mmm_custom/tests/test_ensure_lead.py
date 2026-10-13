@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """One Lead writer for a Chatwoot contact (D-116): repo.ensure_lead, used by the Chatwoot webhook."""
 
 import sys

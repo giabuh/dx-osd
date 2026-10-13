@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-115: a Gemini draft for staff only when the bot has no answer, checked by Jev and by code against the course
 data, never sent to a customer."""
 
