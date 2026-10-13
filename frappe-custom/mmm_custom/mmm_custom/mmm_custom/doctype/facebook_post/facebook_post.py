@@ -146,6 +146,14 @@ COURSE_META = {
 
 
 class FacebookPost(Document):
+    def validate(self):
+        # A post without a page is published on the default page (site config facebook_page_id): name it, so the
+        # page filter of the Facebook Marketing screen finds it too.
+        if not getattr(self, "facebook_page", None):
+            default = frappe.conf.get("facebook_page_id") if getattr(frappe, "conf", None) else None
+            if isinstance(default, str) and frappe.db.exists("Facebook Page", default):
+                self.facebook_page = default
+
     @frappe.whitelist()
     def generate_ai_content(self, user_feedback=None):
         """Generate high quality Facebook post caption using Gemini AI or 9Router."""
@@ -207,7 +215,7 @@ class FacebookPost(Document):
         # Brand, branches, hotline, fee, offer, next class and the level-test keyword come from CRM data (D-125)
         from mmm_custom.marketing_plan import caption_rules, ensure_cta, post_facts, unsupported_claims
 
-        facts = post_facts(self.course) if self.course else {}
+        facts = post_facts(self.course, page=getattr(self, "facebook_page", None)) if self.course else {}
         prompt = (
             f"Bạn là chuyên viên marketing nội dung cao cấp của trung tâm {facts.get('brand') or 'đào tạo'}.\n"
             f"Hãy viết bài đăng Facebook hấp dẫn để quảng cáo: \"{title_context}\" (Khóa {course_name}).\n\n"
@@ -299,6 +307,35 @@ class FacebookPost(Document):
         from mmm_custom.banner_generator import generate_and_save_banner
         return generate_and_save_banner(self, user_feedback=user_feedback)
 
+    def _get_page_credentials(self):
+        """Retrieve (page_id, access_token) for posting and fetching insights.
+        If self.facebook_page is set, loads credentials from the Facebook Page doctype.
+        Otherwise falls back to FACEBOOK_PAGE_ID and FACEBOOK_PAGE_ACCESS_TOKEN from env/conf.
+        """
+        page_id = None
+        token = None
+        if getattr(self, "facebook_page", None):
+            try:
+                page_doc = frappe.get_doc("Facebook Page", self.facebook_page)
+                page_id = getattr(page_doc, "id", None) or getattr(page_doc, "name", None)
+                token = getattr(page_doc, "access_token", None)
+            except Exception:
+                pass
+
+        if not page_id or not token:
+            env_pid = os.getenv("FACEBOOK_PAGE_ID")
+            conf_pid = frappe.conf.get("facebook_page_id") if hasattr(frappe, "conf") and frappe.conf else None
+            page_id = page_id or env_pid or conf_pid
+
+            env_tok = os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN")
+            conf_tok = frappe.conf.get("facebook_page_access_token") if hasattr(frappe, "conf") and frappe.conf else None
+            token = token or env_tok or conf_tok
+
+        return page_id, token
+
+    def post_to_facebook(self):
+        """Alias for post_now."""
+        return self.post_now()
 
     @frappe.whitelist()
     def post_now(self):
@@ -306,19 +343,19 @@ class FacebookPost(Document):
         if not self.content:
             frappe.throw(_("Bài đăng chưa có nội dung. Vui lòng soạn nội dung trước."))
 
-        page_id = os.getenv("FACEBOOK_PAGE_ID") or frappe.conf.get("facebook_page_id")
-        token = os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN") or frappe.conf.get("facebook_page_access_token")
+        page_id, token = self._get_page_credentials()
 
         if not page_id or not token:
             frappe.throw(_("Chưa cấu hình FACEBOOK_PAGE_ID hoặc FACEBOOK_PAGE_ACCESS_TOKEN."))
 
         try:
             # Check if there is an attached image
-            if self.image:
+            img = getattr(self, "image", None)
+            if img:
                 image_abs_path = None
                 # If image is a local uploaded file (e.g. /files/banner.png)
-                if self.image.startswith("/files/") or self.image.startswith("/private/files/"):
-                    site_path = frappe.get_site_path("public" if not self.image.startswith("/private") else "", self.image.lstrip("/"))
+                if img.startswith("/files/") or img.startswith("/private/files/"):
+                    site_path = frappe.get_site_path("public" if not img.startswith("/private") else "", img.lstrip("/"))
                     if os.path.exists(site_path):
                         image_abs_path = site_path
 
@@ -425,8 +462,7 @@ class FacebookPost(Document):
         if getattr(self, "status", None) != "Posted" or not getattr(self, "fb_post_id", None):
             frappe.throw(_("Chỉ có thể đồng bộ số liệu cho bài viết đã xuất bản (status = Posted)."))
 
-        page_id = os.getenv("FACEBOOK_PAGE_ID") or (frappe.conf.get("facebook_page_id") if hasattr(frappe, "conf") else None)
-        token = os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN") or (frappe.conf.get("facebook_page_access_token") if hasattr(frappe, "conf") else None)
+        page_id, token = self._get_page_credentials()
         if not token:
             frappe.throw(_("Chưa cấu hình FACEBOOK_PAGE_ACCESS_TOKEN."))
 
@@ -515,8 +551,7 @@ class FacebookPost(Document):
                 frappe.throw(_("Chỉ có thể đồng bộ bình luận cho bài viết đã xuất bản (status = Posted)."))
             return {"status": "skipped", "count": 0}
 
-        page_id = os.getenv("FACEBOOK_PAGE_ID") or (frappe.conf.get("facebook_page_id") if hasattr(frappe, "conf") else None)
-        token = os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN") or (frappe.conf.get("facebook_page_access_token") if hasattr(frappe, "conf") else None)
+        page_id, token = self._get_page_credentials()
         if not token:
             if save:
                 frappe.throw(_("Chưa cấu hình FACEBOOK_PAGE_ACCESS_TOKEN."))

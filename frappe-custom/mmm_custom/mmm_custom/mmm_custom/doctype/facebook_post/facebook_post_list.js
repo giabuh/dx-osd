@@ -326,15 +326,16 @@ function open_agent_command_center(listview, mode) {
 								'Ví dụ: Viết lại theo hướng kể chuyện xúc động hơn, tập trung gói kèm 1-1, bỏ bớt emoji...'
 						  )
 						: __(
-								'Ví dụ: Tuần lễ vàng bơi lội hè, tặng mũ và kính bơi cho 50 bé đăng ký sớm, ưu đãi 35%...'
+								'Ví dụ: Tuần lễ vàng Robotics & Đồ họa, tặng suất học thử 1-1 cho 50 bạn đăng ký sớm, ưu đãi 25%...'
 						  )
 				}"></textarea>
 			
 			<div style="margin-bottom: 14px;">
 				<span style="font-size: 11.5px; color: #6B7280; margin-right: 6px;">💡 Gợi ý nhanh:</span>
-				<span class="agent-chip" data-text="Tuần lễ vàng Bơi lội hè cho bé (Giảm 30% + Tặng mũ kính)">🏊 Bơi lội hè giảm 30%</span>
-				<span class="agent-chip" data-text="Khai giảng Tiếng Anh Giao tiếp bứt phá (Học thử 1-1 miễn phí)">🇬🇧 Tiếng Anh giao tiếp</span>
-				<span class="agent-chip" data-text="Toán tư duy Logic & Sáng tạo (Tặng buổi test IQ & Đánh giá năng lực)">🧮 Toán tư duy logic</span>
+				<span class="agent-chip" data-text="Tuần lễ vàng Robotics STEM cho bé (Giảm 25% + Tặng buổi trải nghiệm)">🤖 Robotics STEM giảm 25%</span>
+				<span class="agent-chip" data-text="Khai giảng Photoshop & Thiết kế đồ họa thực chiến (Tặng bộ quà tặng)">🎨 Đồ họa Photoshop</span>
+				<span class="agent-chip" data-text="Tin học văn phòng & Excel Dashboard chuyên sâu cho người đi làm">📊 Excel & Tin học VP</span>
+				<span class="agent-chip" data-text="Lập trình Python & Ứng dụng AI từ cơ bản đến nâng cao">💻 Python & AI cơ bản</span>
 				<span class="agent-chip" data-text="Ngày hội Tuyển sinh & Học bổng EduFlow Academy 2026">🎓 Tuyển sinh toàn diện</span>
 			</div>
 
@@ -512,7 +513,7 @@ function execute_multi_agent_pipeline(listview, dialog, directive, is_rollback) 
 		add_log(
 			"📊",
 			"CRM Agent",
-			"API GET /api/resource/Course: Đồng bộ thành công 4 khóa học (Tiếng Anh, Toán, Bơi lội, Chung)"
+			"API GET /api/resource/Course: Đồng bộ thành công khóa học từ CRM (Robotics, Photoshop, Excel, Python, Marketing...)"
 		);
 	}, 1100);
 

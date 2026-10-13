@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from mmm_custom.engine import enrol_flow
 from mmm_custom.engine.reply_match import match_class, match_pending, yes_no
 from mmm_custom.engine.slot_types import REGISTRY, CatalogSlot, course_phrases
-from mmm_custom.engine.text import content_words, find_phrases, fold, is_question, is_smalltalk
+from mmm_custom.engine.text import content_words, find_phrases, fold, is_question, is_smalltalk, remark_kind
 
 YES = frozenset({"dung", "dung roi", "dung a", "dung roi a", "phai", "phai a", "vang", "da", "da dung", "da phai",
                  "ok", "oke", "uh", "u", "chuan", "chinh xac"})
@@ -43,6 +43,7 @@ class Understanding:
     phone_suspect: str = ""                        # digits that look like a phone number with a digit missing
     gives_contact: bool = False                    # "số điện thoại của tôi là …": the customer's number, not ours
     greeting: bool = False                         # only a greeting or a laugh: "hihi", "chào em" (D-109)
+    remark: str = ""                               # "price" / "exclaim": a remark that asks nothing (D-130)
     question: bool = False                         # the message asks something ("có khóa robotics không")
     enrol_step: str = ""                           # Jev: where a message inside the registration dialogue leads (D-121)
 
@@ -100,6 +101,7 @@ def understand(text, state, catalog):
         return u
     folded = fold(text)
     u.greeting = is_smalltalk(folded)
+    u.remark = "" if u.greeting else remark_kind(folded)
     pending = state.pending.get("slot") or ""
     if pending and yes_no(folded) is True:
         u.focus = pending  # "ok" to "cho em xin số điện thoại": ask again gently, it is not a misunderstanding

@@ -91,6 +91,28 @@ def is_smalltalk(folded_text):
     return bool(greetings) and all(w in SMALLTALK_WORDS or GREETING_RE.fullmatch(w) for w in words)
 
 
+# A remark that asks nothing (D-130): a complaint about the price, or an exclamation. Folded phrases.
+PRICE_COMPLAINTS = ("dat qua", "dat the", "dat vay", "dat lam", "dat ghe", "hoi dat", "dat nha", "mac qua", "mac the",
+                    "mac vay", "mac lam", "hoi mac", "cao qua", "chat qua", "dat xat")
+EXCLAMATIONS = ("troi oi", "troi dat oi", "oi troi", "chan qua", "chan the", "met qua", "buon qua", "oi gioi",
+                "omg", "wow", "haizz", "haiz", "hic", "huhu", "hu hu")
+MAX_REMARK_WORDS = 7
+
+
+def remark_kind(folded_text):
+    """"price" for a short complaint about the price ("giá sao đắt thế"), "exclaim" for an exclamation ("trời ơi"),
+    "" otherwise. A long message is not a remark: it may also ask something. Pure."""
+    words = (folded_text or "").split()
+    if not words or len(words) > MAX_REMARK_WORDS:
+        return ""
+    padded = f" {' '.join(words)} "
+    if any(f" {p} " in padded for p in PRICE_COMPLAINTS):
+        return "price"
+    if any(f" {p} " in padded for p in EXCLAMATIONS):
+        return "exclaim"
+    return ""
+
+
 def normalize_vn_phone(raw):
     """0901234567 / +84 901 234 567 / 84901234567 → +84901234567; anything else → None."""
     digits = re.sub(r"[\s.\-()]+", "", (raw or "").strip())

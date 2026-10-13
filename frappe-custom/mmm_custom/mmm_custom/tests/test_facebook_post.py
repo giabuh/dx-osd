@@ -439,6 +439,66 @@ class TestFacebookPost(unittest.TestCase):
                 self.assertEqual(doc.comments[2]["sentiment"], "Tích cực")
                 self.assertEqual(doc.comments[3]["sentiment"], "Spam / Khác")
 
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.frappe.get_doc")
+    def test_get_page_credentials_from_facebook_page(self, mock_get_doc):
+        """When facebook_page is specified, credentials should be fetched from Facebook Page doctype."""
+        doc = FacebookPost()
+        doc.facebook_page = "1324629057402921"
+
+        mock_page = MagicMock()
+        mock_page.id = "1324629057402921"
+        mock_page.access_token = "EAAPageToken123"
+        mock_get_doc.return_value = mock_page
+
+        page_id, token = doc._get_page_credentials()
+        self.assertEqual(page_id, "1324629057402921")
+        self.assertEqual(token, "EAAPageToken123")
+        mock_get_doc.assert_called_with("Facebook Page", "1324629057402921")
+
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.os.getenv")
+    def test_get_page_credentials_fallback_to_env(self, mock_env):
+        """When facebook_page is not specified, credentials should fall back to environment variables."""
+        doc = FacebookPost()
+        doc.facebook_page = None
+
+        mock_env.side_effect = lambda k: "ENV_PAGE_ID" if k == "FACEBOOK_PAGE_ID" else ("ENV_TOKEN" if k == "FACEBOOK_PAGE_ACCESS_TOKEN" else None)
+
+        page_id, token = doc._get_page_credentials()
+        self.assertEqual(page_id, "ENV_PAGE_ID")
+        self.assertEqual(token, "ENV_TOKEN")
+
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.requests.post")
+    @patch("mmm_custom.mmm_custom.doctype.facebook_post.facebook_post.frappe.get_doc")
+    def test_post_to_facebook_with_page_credentials(self, mock_get_doc, mock_post):
+        """post_to_facebook should post to the specific page endpoint with page token."""
+        doc = FacebookPost()
+        doc.title = "Khai giảng chi nhánh 2"
+        doc.content = "Nội dung bài viết chi nhánh 2"
+        doc.facebook_page = "1324629057402921"
+        doc.status = "Draft"
+        doc.save = MagicMock()
+
+        mock_page = MagicMock()
+        mock_page.id = "1324629057402921"
+        mock_page.access_token = "EAAPageToken123"
+        mock_get_doc.return_value = mock_page
+
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {"id": "1324629057402921_99999"}
+        mock_post.return_value = mock_resp
+
+        res = doc.post_to_facebook()
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(doc.status, "Posted")
+        self.assertEqual(doc.fb_post_id, "1324629057402921_99999")
+        # Ensure requests.post was called with page_id in url and token in data
+        mock_post.assert_called_once()
+        call_url = mock_post.call_args[0][0]
+        call_data = mock_post.call_args[1]["data"]
+        self.assertIn("1324629057402921", call_url)
+        self.assertEqual(call_data["access_token"], "EAAPageToken123")
+
 
 if __name__ == "__main__":
     unittest.main()

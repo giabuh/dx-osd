@@ -53,7 +53,7 @@ class TestOverview(unittest.TestCase):
         self.assertEqual(dashboard.period_since("today", "2026-10-02"), "2026-10-02")
         self.assertEqual(dashboard.period_since("7", "2026-10-02"), "2026-09-26")
         self.assertEqual(dashboard.period_since(30, "2026-10-02 08:00:00"), "2026-09-03")
-        self.assertEqual(dashboard.period_since("365", "2026-10-02"), "2026-09-26")
+        self.assertEqual(dashboard.period_since("365", "2026-10-02"), "2026-09-03")  # unknown: the default 30 days
 
     def test_fees_count_only_confirmed_registrations(self):
         deals = [

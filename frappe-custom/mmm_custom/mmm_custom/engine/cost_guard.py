@@ -32,6 +32,8 @@ def allow_jev(u, state, catalog, now, tokens_today=0, budget=0, text="", person_
         return False, "button"
     if u.greeting:
         return False, "greeting"  # nothing to understand, and a greeting must never read as a button (D-109)
+    if u.remark:
+        return False, "remark"  # "giá sao đắt thế" / "trời ơi": a fixed line answers it, not a skill (D-130)
     if keywords_resolved(u, state) and not library_has(u, state, catalog, text):
         return False, "keywords_resolved"
     if len(recent_calls(state.jev_calls, now)) >= int(settings["jev_calls_per_hour"]):

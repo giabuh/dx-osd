@@ -44,7 +44,15 @@
       :rows="rows"
       doctype="CRM Lead"
     >
-      <ListRowItem :item="item" :align="column.align" class="overflow-hidden">
+      <ListRowItem
+        :item="item"
+        :align="column.align"
+        class="overflow-hidden transition-colors"
+        :class="[
+          row.data_quality?.color === 'amber' ? 'bg-amber-50/40 dark:bg-amber-950/20' : '',
+          idx === 0 && row.data_quality?.color === 'amber' ? 'border-l-4 border-l-amber-500 pl-1' : ''
+        ]"
+      >
         <template #prefix>
           <div
             v-if="column.key === '_assign'"

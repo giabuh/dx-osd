@@ -116,6 +116,9 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
     if decision.greet:  # later in the conversation a short greeting back, not the bot's introduction (D-109)
         say(settings["regreet_template"] if state.turns else settings["greeting_template"], ctx,
             "regreet" if state.turns else "greeting")
+    if decision.remark:  # a remark that asks nothing: one fixed line with the way to register (D-130)
+        say(settings["remark_price_template"] if decision.remark == "price" else settings["remark_template"], ctx,
+            "remark")
     if decision.declined:
         say(settings["quiz_decline_template"], ctx, "quiz_decline")
     if decision.fallback:
@@ -212,5 +215,20 @@ def compose(decision, state, catalog, render, data=None, today=None, extra=None,
         if group:
             add_buttons(reply, group)
             break
+
+    # Attach course brochure image when course is selected / inquired
+    course_code = decision.slots.get("course") or (state.slots.get("course") if state else None)
+    if isinstance(course_code, dict):
+        course_code = course_code.get("value")
+    if course_code and catalog.courses.get(course_code):
+        c = catalog.courses[course_code]
+        img_url = getattr(c, "image", None) or (c.get("image") if isinstance(c, dict) else None)
+        if img_url and not any(a.get("url") == img_url for a in reply.attachments):
+            reply.attachments.append({
+                "type": "image",
+                "url": img_url,
+                "title": getattr(c, "name", course_code) if hasattr(c, "name") else (c.get("product_name") or course_code),
+            })
+
     reply.messages = split_messages(paragraphs)
     return reply

@@ -1,6 +1,8 @@
 import frappe
 
 
+from mmm_custom.data_quality import SELECT_OPTIONS as DATA_QUALITY_OPTIONS
+
 def create_custom_fields():
 	if not frappe.db.exists("Custom Field", "CRM Lead-chatwoot_contact_id"):
 		frappe.get_doc({
@@ -65,7 +67,7 @@ def create_custom_fields():
 			"fieldname": "data_quality",
 			"label": "Data Quality",
 			"fieldtype": "Select",
-			"options": "\nĐầy đủ\nThiếu SĐT/Email\nNghi trùng",
+			"options": DATA_QUALITY_OPTIONS,  # every value data_quality.compute_data_quality writes
 			"in_list_view": 1,
 			"in_standard_filter": 1,
 			"read_only": 1,
@@ -74,7 +76,7 @@ def create_custom_fields():
 		print("Custom field data_quality created")
 	else:
 		doc = frappe.get_doc("Custom Field", "CRM Lead-data_quality")
-		doc.options = "\nĐầy đủ\nThiếu SĐT/Email\nNghi trùng"
+		doc.options = DATA_QUALITY_OPTIONS
 		doc.in_list_view = 1
 		doc.in_standard_filter = 1
 		doc.read_only = 1
@@ -190,7 +192,7 @@ def update_crm_fields_layout():
 					columns = section.get("columns", [])
 					if columns:
 						col_fields = columns[-1].setdefault("fields", [])
-						fields = ["course_interest", "territory", "data_quality"]
+						fields = ["course_interest", "territory", "data_quality", "duplicate_of"]
 						if layout_name != "CRM Lead-Quick Entry":
 							fields += [f["fieldname"] for f in AI_FIELDS]  # read-only, filled by the AI agents
 							fields += ["source_campaign", "facebook_page", "facebook_post", "referral_code", "referred_by",
@@ -281,6 +283,10 @@ CATALOG_FIELDS = {
 		 "description": "Mã ưu đãi bot tặng sau bài test (D-106)", "insert_after": "quiz_detail"},
 		# The trial class / level test date a booking set (D-102, D-116): follow-up checks in after it
 		{"fieldname": "trial_date", "label": "Trial Date", "fieldtype": "Date", "insert_after": "voucher_code"},
+		# The Lead a duplicate / cross-branch flag points at (data_quality.py): open it from the Lead page
+		{"fieldname": "duplicate_of", "label": "Duplicate Of", "fieldtype": "Link", "options": "CRM Lead",
+		 "read_only": 1, "insert_after": "data_quality",
+		 "description": "Lead có cùng SĐT/email và cùng khóa học (Nghi trùng / Trùng chi nhánh)"},
 		# Where the Lead first came from, next to the standard `source` (D-100)
 		{"fieldname": "source_campaign", "label": "Campaign", "fieldtype": "Data", "length": 140, "read_only": 1,
 		 "description": "Campaign or landing page reported by the channel", "insert_after": "source"},
@@ -352,6 +358,17 @@ def ensure_custom_field(dt, field):
 			doc.save(ignore_permissions=True)
 	else:
 		frappe.get_doc({"doctype": "Custom Field", "dt": dt, **field}).insert(ignore_permissions=True)
+
+
+def ensure_data_quality_options():
+	"""after_migrate: the data_quality Select accepts every value data_quality.py writes ("Trùng chi nhánh" was
+	missing, so a flagged Lead could not be saved from the form)."""
+	name = "CRM Lead-data_quality"
+	if frappe.db.exists("Custom Field", name) and frappe.db.get_value("Custom Field", name, "options") != DATA_QUALITY_OPTIONS:
+		doc = frappe.get_doc("Custom Field", name)
+		doc.options = DATA_QUALITY_OPTIONS
+		doc.save(ignore_permissions=True)
+		frappe.db.commit()
 
 
 def create_catalog_fields():

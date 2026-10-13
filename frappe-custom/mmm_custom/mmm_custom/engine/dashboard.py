@@ -12,7 +12,7 @@ from mmm_custom.lifecycle import CONFIRMED_DEAL, PENDING_PAYMENT, QUALIFIED, UNQ
 
 BOT_SOURCE = "Messenger Bot"
 PERIODS = {"today": 1, "7": 7, "30": 30, "90": 90}  # the overview's period buttons → days, today included
-DEFAULT_PERIOD = "7"  # "today" is often empty in the morning
+DEFAULT_PERIOD = "30"  # a week is often empty for a small centre (the demo data looked like "0 registrations")
 
 
 def summarize(leads, handoffs, coverages, today, bot_leads=frozenset()):

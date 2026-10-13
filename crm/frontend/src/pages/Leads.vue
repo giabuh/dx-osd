@@ -493,9 +493,11 @@ function parseRows(rows, columns = []) {
         if (value === 'Đầy đủ') color = 'green'
         else if (value === 'Thiếu SĐT/Email') color = 'orange'
         else if (value === 'Nghi trùng') color = 'red'
+        else if (value === 'Trùng chi nhánh') color = 'amber'
+        let displayLabel = value === 'Trùng chi nhánh' ? '⚠️ Trùng chi nhánh' : value
         _rows[row] = {
-          label: value,
-          value: value,
+          label: displayLabel,
+          value: displayLabel,
           color: color,
         }
       } else if (row == 'ai_hotness') {

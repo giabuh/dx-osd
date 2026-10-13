@@ -44,14 +44,20 @@ def shown_slots(slots, catalog):
     return {s.key: display(s, value(slots, s.key), catalog) for s in catalog.slots if filled(slots, s.key)}
 
 
-def base_context(slots, catalog, state):
+def base_context(slots, catalog, state=None):
     shown = shown_slots(slots, catalog)
     course_slot, branch_slot = catalog.slot_for("course"), catalog.slot_for("branch")
     course = catalog.courses.get(value(slots, course_slot.key)) if course_slot else None
     branch = catalog.branches.get(value(slots, branch_slot.key)) if branch_slot else None
     area = branch.area if branch else ((slots.get(branch_slot.key) or {}).get("parent", "") if branch_slot else "")
     customer = {key: shown.get(slot_key, "") for key, slot_key in CUSTOMER_SLOTS.items()}
-    customer["is_returning"] = state.is_returning
+    customer["is_returning"] = bool(state.is_returning) if state else False
+    if state:
+        if not customer.get("name") and getattr(state, "customer_name", ""):
+            customer["name"] = getattr(state, "customer_name", "")
+        if getattr(state, "previous_course", None) is not None or getattr(state, "previous_branch", None) is not None:
+            customer["previous_course"] = getattr(state, "previous_course", "") or ""
+            customer["previous_branch"] = getattr(state, "previous_branch", "") or ""
     return {
         "brand": brand_context(catalog.settings), "customer": customer, "course": course_context(course, catalog),
         "branch": branch_context(branch), "area": area, "schedules": [], "promotions": [],

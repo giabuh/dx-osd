@@ -53,6 +53,9 @@ class TestClassify(unittest.TestCase):
             "Hay quá": "praise",
             "đẹp xịn": "praise",
             "Nguyễn Văn A": "other",
+            "hi": "greeting",
+            "chào shop ạ": "greeting",
+            "chào shop, học phí bao nhiêu": "price",
             "😍😍": "other",
             "": "other",
         }
@@ -75,6 +78,7 @@ class TestPlan(unittest.TestCase):
         self.assertEqual(cf.plan("quiz"), (True, True))
         self.assertEqual(cf.plan("interest"), (True, True))
         self.assertEqual(cf.plan("praise"), (True, False))
+        self.assertEqual(cf.plan("greeting"), (True, False))  # a hello back, never a private message
         self.assertEqual(cf.plan("other"), (False, False))
 
 
@@ -108,7 +112,7 @@ class TestMessages(unittest.TestCase):
 
     def test_texts_follow_the_house_tone(self):
         c = ctx(promotions=[promo("Đồ họa -10%")])
-        for intent in ("quiz", "price", "interest", "praise"):
+        for intent in ("quiz", "price", "interest", "praise", "greeting"):
             for kind, text in cf.compose(intent, "Lan", c).items():
                 if text:
                     self.assertEqual(problems(text), [], f"{intent}/{kind}: {text}")
@@ -153,6 +157,72 @@ class TestHandle(unittest.TestCase):
         self.assertEqual(row["status"], "Failed")
         self.assertIn("10900", row["error"])
         self.assertTrue(row["public_reply"])
+
+
+class TestGeminiWriter(unittest.TestCase):
+    """Gemini writes the replies (D-129); anything it writes is checked, and a failed check falls back to the template."""
+
+    def ctx_with(self, answer):
+        from mmm_custom.marketing_plan import build_facts
+
+        c = ctx(promotions=[promo("Đồ họa giảm 10%", groups=["Thiết kế đồ họa"])])
+        c.facts = build_facts("DH-PTS", CAT, [promo("Đồ họa giảm 10%", groups=["Thiết kế đồ họa"])], None,
+                              brand="EduFlow Academy")
+        c.prompts = []
+        c.writer = lambda prompt, system="": c.prompts.append((prompt, system)) or answer
+        return c
+
+    def good(self):
+        return ('{"public": "Dạ em cảm ơn anh/chị Lan ạ, em đã nhắn tin riêng, anh/chị xem Messenger giúp em nhé.", '
+                '"private": "Dạ em chào anh/chị Lan ạ. Khóa Photoshop cơ bản học phí 1.800.000đ, đang giảm còn '
+                '1.620.000đ ạ. Anh/chị trả lời tin này để em giữ suất học thử nhé ạ."}')
+
+    def test_good_gemini_replies_are_sent_and_marked(self):
+        c, sender = self.ctx_with(self.good()), FakeSender()
+        row = cf.handle(comment("học phí bao nhiêu ạ"), 33, c, sender, PAGE, NOW)
+        self.assertEqual(row["writer"], "gemini")
+        self.assertIn("1.620.000đ", row["private_reply"])
+        self.assertIn('nhắn "test photoshop"', row["private_reply"])  # the level test is always offered
+        prompt, system = c.prompts[0]
+        self.assertIn("EduFlow Academy", prompt)
+        self.assertIn("học phí bao nhiêu", prompt)
+        self.assertIn("không bịa", system)
+
+    def test_an_invented_price_falls_back_to_the_template(self):
+        bad = self.good().replace("1.620.000đ", "990.000đ")
+        row = cf.handle(comment("học phí bao nhiêu ạ"), 33, self.ctx_with(bad), FakeSender(), PAGE, NOW)
+        self.assertEqual(row["writer"], "mixed")
+        self.assertNotIn("990.000đ", row["private_reply"])
+        self.assertIn("Dạ em chào anh/chị Lan Anh ạ", row["private_reply"])  # the template
+
+    def test_wrong_pronoun_link_or_garbage_is_never_sent(self):
+        self.assertIn("xưng hô", cf.acceptable("Dạ chào bạn ạ", {}, 300))
+        self.assertEqual(cf.acceptable("Dạ xem tại https://x.vn ạ", {}, 300), "có đường link")
+        for answer in ("không phải json", None, "{}"):
+            row = cf.handle(comment("tư vấn em"), 33, self.ctx_with(answer), FakeSender(), PAGE, NOW)
+            self.assertEqual(row["writer"], "template", answer)
+
+    def test_a_public_reply_never_shows_a_price(self):
+        leaky = self.good().replace("em đã nhắn tin riêng", "khóa chỉ 1.620.000đ, em đã nhắn tin riêng")
+        row = cf.handle(comment("học phí bao nhiêu ạ"), 33, self.ctx_with(leaky), FakeSender(), PAGE, NOW)
+        self.assertNotIn("1.620.000đ", row["public_reply"])  # the template answered in public
+        self.assertIn("1.620.000đ", row["private_reply"])  # the price stays in the private message
+        self.assertEqual(cf.acceptable("Dạ giảm 10% ạ", {}, 300, public=True), "nêu giá công khai")
+        self.assertIn("KHÔNG nêu học phí", self.ctx_with(self.good()).writer and cf.writer_prompt(
+            "price", "Lan", "giá?", self.ctx_with(self.good()), True, True))
+
+    def test_every_private_reply_ends_with_how_to_register(self):
+        for c in (self.ctx_with(self.good()), ctx()):  # Gemini and template
+            row = cf.handle(comment("tư vấn em"), 33, c, FakeSender(), PAGE, NOW)
+            self.assertTrue(row["private_reply"].endswith(cf.REGISTER_HINT), row["private_reply"])
+            self.assertEqual(row["writer"], "gemini" if c.writer else "template")
+            # the quoted phrase is what the customer types; the rest keeps the house tone
+            self.assertEqual(problems(row["private_reply"].replace(cf.REGISTER_HINT, "")), [])
+        self.assertEqual(cf.with_register_hint("Dạ nhắn tôi muốn đăng ký học nhé ạ"), "Dạ nhắn tôi muốn đăng ký học nhé ạ")
+
+    def test_no_writer_means_templates(self):
+        row = cf.handle(comment("hay quá"), 33, ctx(), FakeSender(), PAGE, NOW)
+        self.assertEqual(row["writer"], "template")
 
 
 class TestFailureNote(unittest.TestCase):

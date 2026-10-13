@@ -24,6 +24,17 @@
             <span class="hidden sm:inline">{{ __('Làm mới') }}</span>
           </Button>
 
+          <!-- Comment funnel (D-124): answer new comments now instead of waiting for the 5-minute job -->
+          <Button
+            variant="subtle"
+            :iconLeft="LucideMessageSquare"
+            :loading="answeringComments"
+            :title="__('Trả lời bình luận mới ngay, không chờ 5 phút')"
+            @click="answerCommentsNow"
+          >
+            <span class="hidden sm:inline">{{ __('Trả lời bình luận ngay') }}</span>
+          </Button>
+
           <Dropdown :options="batchActions">
             <Button
               variant="subtle"
@@ -167,9 +178,16 @@
                   {{ slot.time.substring(0, 5) }}
                 </span>
               </div>
-              <div v-if="getSlotPost(slot)?.course" class="flex items-center gap-1.5 mb-2">
-                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="getCourseBadgeClass(getSlotPost(slot).course)">
+              <div v-if="getSlotPost(slot)?.course || getSlotPost(slot)?.facebook_page" class="flex items-center gap-1.5 mb-2 flex-wrap">
+                <span v-if="getSlotPost(slot)?.course" class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="getCourseBadgeClass(getSlotPost(slot).course)">
                   {{ getSlotPost(slot).course }}
+                </span>
+                <span
+                  v-if="getSlotPost(slot)?.facebook_page"
+                  class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+                  :title="getPageName(getSlotPost(slot).facebook_page)"
+                >
+                  📍 {{ getPageBadgeLabel(getSlotPost(slot).facebook_page) }}
                 </span>
               </div>
               <img
@@ -227,27 +245,43 @@
       </div>
 
       <!-- Filter Tabs and Stats Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-outline-gray-1">
-        <div class="flex items-center gap-1 overflow-x-auto py-1">
-          <button
-            v-for="tab in filterTabs"
-            :key="tab.key"
-            class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5"
-            :class="activeFilter === tab.key ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'text-ink-gray-6 hover:bg-surface-gray-2'"
-            @click="activeFilter = tab.key"
-          >
-            <span>{{ tab.label }}</span>
-            <span
-              class="px-1.5 py-0.2 rounded-full text-[10px]"
-              :class="activeFilter === tab.key ? 'bg-surface-base text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-5'"
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-2 border-b border-outline-gray-1">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Page / Branch Selector -->
+          <div class="flex items-center gap-1.5 bg-surface-gray-2 px-2.5 py-1.5 rounded-lg border border-outline-gray-2">
+            <span class="text-xs font-medium text-ink-gray-6 whitespace-nowrap">📍 Chi nhánh / Trang:</span>
+            <select
+              v-model="selectedPageFilter"
+              class="bg-transparent text-ink-gray-9 font-semibold text-xs focus:outline-none cursor-pointer"
             >
-              {{ getCountForFilter(tab.key) }}
-            </span>
-          </button>
+              <option value="all">{{ __('Tất cả chi nhánh / trang') }}</option>
+              <option v-for="page in availablePages" :key="page.name" :value="page.name">
+                {{ page.page_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1 overflow-x-auto py-1">
+            <button
+              v-for="tab in filterTabs"
+              :key="tab.key"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5"
+              :class="activeFilter === tab.key ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'text-ink-gray-6 hover:bg-surface-gray-2'"
+              @click="activeFilter = tab.key"
+            >
+              <span>{{ tab.label }}</span>
+              <span
+                class="px-1.5 py-0.2 rounded-full text-[10px]"
+                :class="activeFilter === tab.key ? 'bg-surface-base text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-5'"
+              >
+                {{ getCountForFilter(tab.key) }}
+              </span>
+            </button>
+          </div>
         </div>
 
-        <div class="flex items-center gap-3 text-xs text-ink-gray-5">
-          <span>Tổng số: <strong class="text-ink-gray-9">{{ posts.length }}</strong> bài</span>
+        <div class="flex items-center gap-3 text-xs text-ink-gray-5 shrink-0">
+          <span>Tổng số: <strong class="text-ink-gray-9">{{ filteredPosts.length }}</strong> bài</span>
           <span>•</span>
           <span class="text-amber-600">Chờ duyệt: <strong>{{ pendingCount }}</strong></span>
           <span>•</span>
@@ -300,6 +334,13 @@
                   :class="getCourseBadgeClass(post.course)"
                 >
                   {{ post.course }}
+                </span>
+                <span
+                  v-if="post.facebook_page"
+                  class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+                  :title="getPageName(post.facebook_page)"
+                >
+                  📍 {{ getPageBadgeLabel(post.facebook_page) }}
                 </span>
               </div>
               <Badge
@@ -503,27 +544,45 @@
           <div class="space-y-4 text-xs">
             <div>
               <label class="block font-medium text-ink-gray-8 mb-1.5">
+                {{ __('Chi nhánh / Trang Facebook đăng bài') }}
+              </label>
+              <select
+                v-model="generateForm.facebook_page"
+                class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">{{ __('Mặc định (EduFlow Academy - Trang chính)') }}</option>
+                <option v-for="page in availablePages" :key="page.name" :value="page.name">
+                  {{ page.page_name }} (ID: {{ page.name }})
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-medium text-ink-gray-8 mb-1.5">
                 {{ __('Định hướng tuần này (Tùy chọn)') }}
               </label>
               <textarea
                 v-model="generateForm.boss_directive"
                 rows="3"
                 class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 placeholder:text-ink-gray-4 p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                :placeholder="__('Ví dụ: Chiến dịch tuyển sinh tháng 10 - Giảm 30% học phí khóa bơi cho bé, tặng 1 buổi học thử Tiếng Anh cho phụ huynh đăng ký sớm...')"
+                :placeholder="__('Ví dụ: Chiến dịch tuyển sinh tháng 10 - Ưu đãi 25% các lớp Robotics STEM và Đồ họa Photoshop khai giảng tuần tới...')"
               />
               <p class="text-[11px] text-ink-gray-5 mt-1">
-                {{ __('Nếu để trống, hệ thống sẽ sử dụng chiến lược mặc định: Tuyển sinh đa kênh các khóa học mũi nhọn.') }}
+                {{ __('Nếu để trống, hệ thống sẽ tự động phân tích CRM để chọn các khóa học có lớp sắp mở và ưu đãi tốt nhất.') }}
               </p>
             </div>
 
             <div class="rounded-lg bg-surface-gray-2 p-3 text-xs text-ink-gray-7 space-y-1">
               <div class="font-semibold text-ink-gray-9 mb-1">
-                {{ __('Ma trận 4 khung giờ phát sóng:') }}
+                {{ __('Ma trận 4 khung giờ phát sóng (Tự động chọn khóa học từ CRM):') }}
               </div>
-              <div>• <strong>Thứ Hai (08:30):</strong> Tiếng Anh giao tiếp (Storytelling)</div>
-              <div>• <strong>Thứ Tư (11:30):</strong> Toán tư duy (Educational Insight)</div>
-              <div>• <strong>Thứ Sáu (19:30):</strong> Bơi lội trẻ em (FOMO Offer / Giảm giá)</div>
-              <div>• <strong>Chủ Nhật (09:00):</strong> Tổng kết & Học bổng EduFlow (Humor / Community)</div>
+              <div>• <strong>Thứ Hai (08:30):</strong> Góc chia sẻ & Câu chuyện học viên (Storytelling)</div>
+              <div>• <strong>Thứ Tư (11:30):</strong> Kiến thức chuyên môn & Mẹo hay công nghệ (Educational Insight)</div>
+              <div>• <strong>Thứ Sáu (19:30):</strong> Ưu đãi tuyển sinh & Lớp sắp khai giảng (FOMO Offer / Giảm giá)</div>
+              <div>• <strong>Chủ Nhật (09:00):</strong> Tổng kết tuần & Học bổng EduFlow (Community / Mini-game)</div>
+              <p class="text-[11px] text-ink-gray-5 mt-1 pt-1 border-t border-outline-gray-1">
+                * Khóa học của từng bài đăng được AI tự động phân tích và chọn lọc từ danh mục khóa học trên CRM (Robotics, Photoshop, Excel, Python, Marketing...).
+              </p>
             </div>
           </div>
 
@@ -696,7 +755,20 @@
                   />
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  <div class="col-span-2 sm:col-span-1">
+                    <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Trang / Chi nhánh') }}</label>
+                    <select
+                      v-model="editingPost.facebook_page"
+                      class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="">{{ __('Mặc định (Trang chính)') }}</option>
+                      <option v-for="p in availablePages" :key="p.name" :value="p.name">
+                        {{ p.page_name }}
+                      </option>
+                    </select>
+                  </div>
+
                   <div>
                     <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Khóa học') }}</label>
                     <select
@@ -804,6 +876,24 @@
                 <div class="space-y-2 flex flex-col">
                   <div class="flex items-center justify-between">
                     <label class="font-medium text-ink-gray-8">{{ __('Banner bài viết') }}</label>
+                    <FileUploader
+                      v-if="editingPost.name"
+                      :fileTypes="['image/*']"
+                      :uploadArgs="{ doctype: 'Facebook Post', docname: editingPost.name, private: false }"
+                      @success="onBannerUploaded"
+                    >
+                      <template #default="{ uploading, progress, openFileSelector }">
+                        <button
+                          type="button"
+                          class="text-[11px] text-ink-gray-7 hover:underline flex items-center gap-1 font-medium"
+                          :disabled="uploading"
+                          @click="openFileSelector"
+                        >
+                          <LucideUpload class="size-3" />
+                          {{ uploading ? __('Đang tải {0}%', [progress]) : __('Tải ảnh từ máy') }}
+                        </button>
+                      </template>
+                    </FileUploader>
                     <button
                       v-if="editingPost.image"
                       type="button"
@@ -1088,6 +1178,19 @@
 
           <div class="space-y-3 text-xs">
             <div>
+              <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Trang Facebook / Chi nhánh') }}</label>
+              <select
+                v-model="createForm.facebook_page"
+                class="w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-9 p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">{{ __('Mặc định (EduFlow Academy - Trang chính)') }}</option>
+                <option v-for="p in availablePages" :key="p.name" :value="p.name">
+                  {{ p.page_name }}
+                </option>
+              </select>
+            </div>
+
+            <div>
               <label class="block font-medium text-ink-gray-8 mb-1">{{ __('Tiêu đề') }} *</label>
               <input
                 v-model="createForm.title"
@@ -1180,13 +1283,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { call, Button, Badge, Dialog, toast, Dropdown } from 'frappe-ui'
+import { call, Button, Badge, Dialog, toast, Dropdown, FileUploader } from 'frappe-ui'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 
 // Lucide Icons
 import MegaphoneIcon from '~icons/lucide/megaphone'
 import LucideCalendarPlus from '~icons/lucide/calendar-plus'
 import LucideGraduationCap from '~icons/lucide/graduation-cap'
+import LucideUpload from '~icons/lucide/upload'
 import LucideImage from '~icons/lucide/image'
 import LucideRefreshCcw from '~icons/lucide/refresh-ccw'
 import LucideCalendar from '~icons/lucide/calendar'
@@ -1209,6 +1313,8 @@ import LucideSparkles from '~icons/lucide/sparkles'
 // State
 const posts = ref([])
 const loading = ref(false)
+const availablePages = ref([])
+const selectedPageFilter = ref('all')
 const availableCourses = ref([
   { name: 'DH-PTS', product_name: 'Photoshop cơ bản' },
   { name: 'TE-ROBO', product_name: 'Robotics STEM' },
@@ -1282,36 +1388,44 @@ const previewImageUrl = ref('')
 const activeModalTab = ref('content') // 'content', 'comments', 'analytics'
 
 // Form states
-const generateForm = ref({ boss_directive: '' })
+const generateForm = ref({ boss_directive: '', facebook_page: '' })
 const rollbackForm = ref({ new_directive: '' })
 const editingPost = ref(null)
 const createForm = ref({
   title: '',
   course: 'DH-PTS',
+  facebook_page: '',
   day_of_week: 'Thứ Hai',
   scheduled_time: '',
   content: '',
 })
 
 // Counts
-const pendingCount = computed(() => posts.value.filter(p => p.status === 'Pending Approval').length)
-const scheduledCount = computed(() => posts.value.filter(p => p.status === 'Scheduled').length)
-const postedCount = computed(() => posts.value.filter(p => p.status === 'Posted').length)
+const pageFilteredPosts = computed(() => {
+  if (selectedPageFilter.value === 'all') return posts.value
+  return posts.value.filter(p => String(p.facebook_page || '') === String(selectedPageFilter.value))
+})
+
+const pendingCount = computed(() => pageFilteredPosts.value.filter(p => p.status === 'Pending Approval').length)
+const scheduledCount = computed(() => pageFilteredPosts.value.filter(p => p.status === 'Scheduled').length)
+const postedCount = computed(() => pageFilteredPosts.value.filter(p => p.status === 'Posted').length)
 
 const filteredPosts = computed(() => {
-  if (activeFilter.value === 'all') return posts.value
+  let list = pageFilteredPosts.value
+  if (activeFilter.value === 'all') return list
   if (activeFilter.value === 'Cancelled') {
-    return posts.value.filter(p => ['Cancelled', 'Failed'].includes(p.status))
+    return list.filter(p => ['Cancelled', 'Failed'].includes(p.status))
   }
-  return posts.value.filter(p => p.status === activeFilter.value)
+  return list.filter(p => p.status === activeFilter.value)
 })
 
 function getCountForFilter(key) {
-  if (key === 'all') return posts.value.length
+  let list = pageFilteredPosts.value
+  if (key === 'all') return list.length
   if (key === 'Cancelled') {
-    return posts.value.filter(p => ['Cancelled', 'Failed'].includes(p.status)).length
+    return list.filter(p => ['Cancelled', 'Failed'].includes(p.status)).length
   }
-  return posts.value.filter(p => p.status === key).length
+  return list.filter(p => p.status === key).length
 }
 
 // Fetch posts list & courses
@@ -1344,6 +1458,7 @@ async function fetchPosts() {
         'name',
         'title',
         'course',
+        'facebook_page',
         'status',
         'day_of_week',
         'scheduled_time',
@@ -1389,6 +1504,78 @@ async function fetchPosts() {
   }
 }
 
+async function fetchPages() {
+  try {
+    const res = await call('frappe.client.get_list', {
+      doctype: 'Facebook Page',
+      fields: ['name', 'page_name'],
+      limit_page_length: 50,
+    })
+    availablePages.value = res || []
+  } catch (error) {
+    console.error('Lỗi tải danh sách Facebook Page:', error)
+  }
+}
+
+function getPageName(pageId) {
+  if (!pageId) return ''
+  const p = availablePages.value.find(x => String(x.name) === String(pageId))
+  return p ? p.page_name : pageId
+}
+
+function getPageBadgeLabel(pageId) {
+  if (!pageId) return 'Chung'
+  const p = availablePages.value.find(x => String(x.name) === String(pageId))
+  if (!p) return 'Trang ' + pageId
+  const name = p.page_name || ''
+  if (name.toLowerCase().includes('chi nhánh 2') || name.toLowerCase().includes('cn 2')) {
+    return 'Chi nhánh 2'
+  }
+  if (name.toLowerCase().includes('chi nhánh 1') || name.toLowerCase().includes('cn 1')) {
+    return 'Chi nhánh 1'
+  }
+  return name.length > 20 ? name.substring(0, 18) + '...' : name
+}
+
+const answeringComments = ref(false)
+
+async function answerCommentsNow() {
+  answeringComments.value = true
+  try {
+    const res = await call('mmm_custom.comment_funnel.run_now')
+    if (res?.status === 'disabled') {
+      toast.warning ? toast.warning('Trả lời bình luận đang tắt (comment_funnel_enabled).') : toast.info('Đang tắt.')
+    } else if (!res?.handled) {
+      toast.info('Không có bình luận mới nào cần trả lời.')
+    } else {
+      const failed = res.Failed ? `, ${res.Failed} lỗi` : ''
+      toast.success ? toast.success(`Đã xử lý ${res.handled} bình luận: ${res.Replied || 0} trả lời, ${res.Skipped || 0} bỏ qua${failed}.`) : null
+    }
+  } catch (error) {
+    toast.error ? toast.error('Không chạy được: ' + (error.message || error)) : null
+  } finally {
+    answeringComments.value = false
+  }
+}
+
+// A banner chosen from the computer replaces the generated one (saved on the post right away)
+async function onBannerUploaded(file) {
+  try {
+    await call('frappe.client.set_value', {
+      doctype: 'Facebook Post',
+      name: editingPost.value.name,
+      fieldname: 'image',
+      value: file.file_url,
+    })
+    editingPost.value.image = file.file_url
+    const p = posts.value.find(x => x.name === editingPost.value.name)
+    if (p) p.image = file.file_url
+    toast.success ? toast.success('Đã dùng ảnh từ máy làm banner.') : toast.info('Đã cập nhật banner.')
+  } catch (error) {
+    toast.error ? toast.error('Không lưu được banner: ' + (error.message || error)) : null
+  }
+}
+
 // Matrix Helpers
 // A post still waiting for approval whose publishing time has passed (D-127): approving the week skips it,
 // because the publisher would post it the moment it became Scheduled.
@@ -1398,9 +1585,13 @@ function isPastDue(post) {
 }
 
 function getSlotPost(slot) {
-  return posts.value.find(
+  let list = posts.value
+  if (selectedPageFilter.value !== 'all') {
+    list = list.filter(p => String(p.facebook_page || '') === String(selectedPageFilter.value))
+  }
+  return list.find(
     p => p.day_of_week === slot.day_of_week && ['Pending Approval', 'Scheduled', 'Posted'].includes(p.status)
-  ) || posts.value.find(p => p.day_of_week === slot.day_of_week)
+  ) || list.find(p => p.day_of_week === slot.day_of_week)
 }
 
 function getSlotCardClass(slot) {
@@ -1497,15 +1688,20 @@ async function handleGenerateWeeklyBatch() {
   try {
     const res = await call('mmm_custom.autopilot.generate_weekly_batch', {
       boss_directive: generateForm.value.boss_directive || null,
+      facebook_page: generateForm.value.facebook_page || null,
     })
     if (res.status === 'success') {
       currentBatchId.value = res.batch_id
       pipelineSteps.value = res.pipeline || []
       showGenerateModal.value = false
       generateForm.value.boss_directive = ''
+      generateForm.value.facebook_page = ''
       toast.success ? toast.success(`Đã tạo thành công ${res.count} bài viết cho đợt ${res.batch_id}!`) : toast.info(`Đã tạo thành công ${res.count} bài viết!`)
       // a slot whose time has passed is not planned (it would be published the moment it is approved)
       if (res.skipped?.length) toast.info(`Bỏ qua ${res.skipped.join(', ')} vì đã qua giờ đăng.`)
+      // one post per day and page: generating again does not duplicate the days that already have one
+      if (res.already?.length) toast.info(`${res.already.join(', ')} đã có bài cho trang này, giữ nguyên. Muốn làm lại thì dùng "Làm lại cả tuần".`)
+      if (!res.count) toast.warning ? toast.warning('Không có bài mới nào được tạo cho tuần này.') : null
       await fetchPosts()
     }
   } catch (error) {
@@ -1726,6 +1922,7 @@ async function savePostChanges() {
       fieldname: {
         title: editingPost.value.title,
         course: editingPost.value.course,
+        facebook_page: editingPost.value.facebook_page || null,
         day_of_week: editingPost.value.day_of_week,
         scheduled_time: editingPost.value.scheduled_time,
         status: editingPost.value.status,
@@ -1801,7 +1998,9 @@ async function handleAiGenerateBanner() {
     if (p && editingPost.value.image) {
       p.image = editingPost.value.image
     }
-    toast.success ? toast.success('AI đã tạo mới Banner chuẩn 1080x1080!') : toast.info('Đã tạo mới Banner!')
+    toast.success ? toast.success('Đã tạo mới banner!') : toast.info('Đã tạo mới Banner!')
+    // Gemini gave no image (free-tier key, wrong key...): say why the stock photo was used
+    if (res?.note) toast.warning ? toast.warning(res.note) : toast.info(res.note)
   } catch (error) {
     console.error('Lỗi AI tạo banner:', error)
     toast.error ? toast.error('Lỗi khi AI tạo banner: ' + (error.message || error)) : null
@@ -1815,6 +2014,7 @@ function openCreateModal() {
   createForm.value = {
     title: '',
     course: availableCourses.value[0]?.name || 'DH-PTS',
+    facebook_page: availablePages.value[0]?.name || '',
     day_of_week: 'Thứ Hai',
     scheduled_time: '',
     content: '',
@@ -1826,6 +2026,7 @@ function openCreateModalForSlot(slot) {
   createForm.value = {
     title: slot.default_title || '',
     course: slot.course || '',
+    facebook_page: selectedPageFilter.value !== 'all' ? selectedPageFilter.value : (availablePages.value[0]?.name || ''),
     day_of_week: slot.day_of_week,
     scheduled_time: '',
     content: '',
@@ -1845,6 +2046,7 @@ async function handleCreatePost() {
         doctype: 'Facebook Post',
         title: createForm.value.title,
         course: createForm.value.course,
+        facebook_page: createForm.value.facebook_page || null,
         day_of_week: createForm.value.day_of_week,
         scheduled_time: createForm.value.scheduled_time || null,
         status: 'Draft',
@@ -1872,5 +2074,6 @@ function openImagePreview(url) {
 onMounted(() => {
   fetchPosts()
   fetchCourses()
+  fetchPages()
 })
 </script>

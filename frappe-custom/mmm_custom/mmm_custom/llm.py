@@ -1,5 +1,6 @@
 """The one call to a generative model (Gemini), for text only staff read first (D-115). Customers never get
-generated text: the bot's replies stay templates chosen by Jev (D-002, D-003). Same configuration as the
+generated text: the bot's replies stay templates chosen by Jev (D-002, D-003), except
+Facebook comment replies, which Gemini writes and comment_funnel.acceptable checks (D-129). Same configuration as the
 Facebook post writer: `gemini_api_key` (site config) or GEMINI_API_KEY, model `gemini_model` or GEMINI_MODEL."""
 
 import os

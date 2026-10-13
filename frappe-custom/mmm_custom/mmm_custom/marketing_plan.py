@@ -88,12 +88,17 @@ def title_for(c):
     return f"{c['name']} – khai giảng {_ddmm(nxt['date'])}" if nxt else c["name"]
 
 
-def build_facts(course_code, catalog, promotions, next_class):
-    """What a post about this course may state, from CRM data only. Pure."""
+def build_facts(course_code, catalog, promotions, next_class, brand=""):
+    """What a post about this course may state, from CRM data only. `brand`: the post's Facebook Page name, which
+    is the brand readers see (one CRM can run several pages); the CRM website belongs to the CRM brand and is left
+    out for a page of another name. Pure."""
     settings = catalog.settings
     ctx = post_context({"course": course_code}, catalog, promotions, None)
-    return {"brand": settings.get("brand_name") or "", "hotline": settings.get("hotline") or "",
-            "website": settings.get("website") or "", "branches": sorted(catalog.branches),
+    crm_brand = settings.get("brand_name") or ""
+    brand = (brand or "").strip() or crm_brand
+    same_brand = fold(brand) == fold(crm_brand)
+    return {"brand": brand, "hotline": settings.get("hotline") or "",
+            "website": (settings.get("website") or "") if same_brand else "", "branches": sorted(catalog.branches),
             "course": ctx.course, "promo": ctx.promo, "quiz_keyword": ctx.quiz_keyword,
             "next_class": next_class or None}
 
@@ -253,14 +258,23 @@ def plan_week(today, n=4, offer_slot=3):
     return [{**c, "title": title_for(c), "reason": "; ".join(c["reasons"]) or "luân phiên khóa học"} for c in picked]
 
 
-def post_facts(course_code):
-    """build_facts on live data; {} when it cannot be read (the caller then states no contact details)."""
+def page_name(page):
+    """The name of a Facebook Page record, "" when there is none."""
+    if not page:
+        return ""
+    return frappe.db.get_value("Facebook Page", page, "page_name") or ""
+
+
+def post_facts(course_code, page=None):
+    """build_facts on live data, branded with the post's Facebook Page; {} when it cannot be read (the caller then
+    states no contact details)."""
     if frappe is None:
         return {}
     try:
         today = frappe.utils.getdate()
         catalog, promotions = _data(today)
-        return build_facts(course_code, catalog, promotions, _next_classes(today).get(course_code))
+        return build_facts(course_code, catalog, promotions, _next_classes(today).get(course_code),
+                           brand=page_name(page))
     except Exception:
         frappe.log_error(title="Marketing facts not read", message=str(course_code))
         return {}

@@ -84,7 +84,7 @@ def parse_event(payload):
 
 
 def understand_turn(text, state, catalog, jev, now=0.0, tokens_today=0, budget=0, person_ok=False):
-    """Always run keywords; call Jev only when available and within the cost guard."""
+    """Always run keywords; call Jev only when available and within the cost guard. On timeout or error (status != "ok"), falls back cleanly to keyword rules (u, result)."""
     u = understand(text, state, catalog)
     if jev is None:
         return u, JevResult("disabled")

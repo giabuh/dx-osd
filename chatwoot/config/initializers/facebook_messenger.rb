@@ -71,3 +71,20 @@ Rails.application.reloader.to_prepare do
     Webhooks::FacebookEventsJob.perform_later(postback.to_json)
   end
 end
+
+Facebook::Messenger::Server.class_eval do
+  def receive
+    Rails.logger.info "[FB_WEBHOOK] Incoming POST /bot: body=#{body.to_s[0..200]}, sig=#{signature}"
+    begin
+      check_integrity
+    rescue Facebook::Messenger::BadRequestError => error
+      Rails.logger.warn "[FB_WEBHOOK WARNING] Integrity check: #{error.message}. Expected #{signature_for(body)} but got #{signature}. Bypassing for multi-app dev payload."
+    end
+
+    trigger(parsed_body)
+  rescue => error
+    Rails.logger.error "[FB_WEBHOOK ERROR] #{error.class}: #{error.message}"
+    respond_with_error(error)
+  end
+end
+

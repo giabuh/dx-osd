@@ -1,4 +1,19 @@
+<div align="center">
+
 # DX-OSD
+
+### Open-Core Digital Transformation Operating System (DX-OS) for Education & SMEs
+
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](docker-compose.yml)
+[![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen)](THIRD_PARTY_LICENSES.md)
+[![OLP 2026](https://img.shields.io/badge/Competition-OLP%20PMNM%202026-orange)](https://vfossa.vn)
+
+[Quick Start](#quick-start-reviewers) | [Architecture](#architecture-dx-os-h-p-d-i) | [Build From Source](BUILD.md) | [Licenses](THIRD_PARTY_LICENSES.md) | [Security](SECURITY.md) | [Contributing](CONTRIBUTING.md) | [Issues](https://github.com/giabuh/dx-osd/issues)
+
+</div>
+
+---
 
 An open-source, self-hosted lead-to-CRM platform for SMBs, built as a **DX-Lab** for the OLP Open Source Software 2026 competition. Leads from Facebook Lead Ads and conversations from Messenger/Instagram converge into one deduplicated CRM, on top of mature open-source products instead of reinventing them. The reference deployment is an education center (EduFlow Academy: English, swimming, and math courses across several branches).
 

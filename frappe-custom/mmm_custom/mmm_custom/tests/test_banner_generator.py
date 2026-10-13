@@ -150,5 +150,45 @@ class TestBannerGenerator(unittest.TestCase):
             self.assertEqual(banner.size, (1080, 1920))
 
 
+class TestBrandAndGeminiNote(unittest.TestCase):
+    def test_pill_uses_the_page_brand_never_sao_viet(self):
+        from mmm_custom.banner_generator import brand_pill, get_course_meta
+
+        meta = get_course_meta("VP-EXCEL")
+        self.assertEqual(brand_pill(meta, "EduFlow Academy"), "EduFlow Academy · OFFICE & DATA")
+        self.assertEqual(brand_pill(meta, ""), "OFFICE & DATA")
+        self.assertNotIn("Sao Việt", brand_pill(get_course_meta("Chung"), "EduFlow Academy"))
+
+    def test_accounting_gets_an_office_photo_not_robots(self):
+        from unittest.mock import MagicMock, patch
+
+        import mmm_custom.banner_generator as bg
+
+        opened, real_open = [], bg.Image.open
+        quota = MagicMock(status_code=429, text="{}")
+        with patch.object(bg.requests, "post", return_value=quota),                 patch.object(bg.Image, "open", side_effect=lambda p, *a, **k: opened.append(str(p)) or real_open(p, *a, **k)):
+            bg.hero_image("KT-CB", api_key="key")
+        self.assertTrue(opened[0].replace(chr(92), "/").endswith("courses/excel.jpg"), opened)
+
+    def test_gemini_failures_are_explained(self):
+        from mmm_custom.banner_generator import gemini_failure_note
+
+        self.assertIn("gói miễn phí", gemini_failure_note(429, "{}"))
+        self.assertIn("kiểm tra gemini_api_key", gemini_failure_note(403, "{}"))
+        self.assertIn("model not found", gemini_failure_note(404, '{"error": {"message": "model not found"}}'))
+
+    def test_quota_error_falls_back_with_a_note(self):
+        from unittest.mock import MagicMock, patch
+
+        import mmm_custom.banner_generator as bg
+
+        resp = MagicMock(status_code=429, text="{}")
+        with patch.object(bg.requests, "post", return_value=resp) as post:
+            img, note = bg.hero_image("VP-EXCEL", api_key="free-key")
+        self.assertEqual(img.size, (980, 860))
+        self.assertIn("429", note)
+        self.assertEqual(post.call_count, 2)  # one image model, then Imagen; the other models are not tried
+
+
 if __name__ == "__main__":
     unittest.main()

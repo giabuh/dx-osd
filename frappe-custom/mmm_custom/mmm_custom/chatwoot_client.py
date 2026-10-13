@@ -84,6 +84,17 @@ class ChatwootClient:
         resp.raise_for_status()
         return resp.json()
 
+    def toggle_typing(self, conversation_id: int, status: str = "on") -> dict:
+        """Toggle typing indicator (typing_on / typing_off) for a conversation."""
+        resp = requests.post(
+            f"{self._base}/conversations/{conversation_id}/toggle_typing_status",
+            headers=self._headers,
+            json={"typing_status": status},
+            timeout=3,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     def assign_conversation(self, conversation_id: int,
                             assignee_id: int) -> dict:
         """Assign a conversation to an agent."""

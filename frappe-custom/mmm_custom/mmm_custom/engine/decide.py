@@ -34,6 +34,7 @@ class Decision:
     skills: list = field(default_factory=list)  # skill keys to answer, in reply order
     ask: str = ""                               # slot whose question ends the reply
     greet: bool = False
+    remark: str = ""                            # "price" / "exclaim": answer with the fixed line only (D-130)
     fallback: bool = False
     handoff_reason: str = ""                    # button | skill | required_filled | stuck
     pending_skill: str = ""
@@ -207,6 +208,9 @@ def decide(state, u, catalog, person_ok=False):
     small_talk = u.greeting and not (new or changed or faq or staff or fact)
     if small_talk:
         skills = []  # "hihi" / "chào em" asks nothing: greet back and invite, never hand off (D-109)
+    remark = u.remark if u.remark and not small_talk and not (new or changed or faq or staff or fact) else ""
+    if remark:
+        skills = []  # "giá sao đắt thế" is not a fee question to answer again with branch buttons (D-130)
     alone = [k for k in skills if catalog.skills[k].config.get("alone")]
     if alone:  # e.g. a company asking for a quote: no retail fee or course FAQ on top (D-099)
         skills, faq, staff, fact = alone, {}, {}, {}
@@ -243,7 +247,7 @@ def decide(state, u, catalog, person_ok=False):
     side = [k for k in skills if k != resume]
     unclear = bool(resume) and not (new or changed or side or know or waiting)  # nothing but an unknown answer
     progress = bool(new or changed or skills or waiting or know or u.handoff or u.focus or u.confirm or u.rejected
-                    or u.declined or u.phone_suspect or u.enrol_step)
+                    or u.declined or u.phone_suspect or u.enrol_step or remark)
     stuck = 0 if progress or greet else state.stuck_turns + 1
     common = dict(slots=slots, new_slots=new, skills=skills, pending_skill=waiting, stuck_turns=stuck, faq=faq, fact=fact, staff_reply=staff,
                   declined=u.declined, resume=resume, phone_check=phone_check, enrol_stop=stop, ai={k: v for k, v in (("intent", u.intent), ("hotness", u.hotness)) if v})
@@ -257,6 +261,11 @@ def decide(state, u, catalog, person_ok=False):
         if skills or know:
             return Decision("answer", **common, reason=f"Đã chuyển tư vấn viên; trả lời: {answered}")
         return Decision("silent", **common, reason="Đã chuyển tư vấn viên, chờ tư vấn viên nhắn")
+
+    if remark and not resume and not enrolling:  # one fixed line and the way to register; no question, no buttons
+        return Decision("answer", **common, remark=remark,
+                        reason="Khách than giá; trả lời một câu, hướng dẫn cách đăng ký" if remark == "price"
+                        else "Khách cảm thán / ngoài khóa học; trả lời một câu cố định")
 
     confirm = u.confirm
     if confirm.get("kind") == "skill" and (new or changed or skills or waiting or know):

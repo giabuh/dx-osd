@@ -15,12 +15,13 @@ EMOJI = re.compile("[\U0001F300-\U0001FAFF☀-➿]")
 JINJA = re.compile(r"\{\{.*?\}\}|\{%.*?%\}", re.DOTALL)
 ADDRESSES_CUSTOMER = re.compile(r"^\s*(\{%.*?%\}\s*)*\{\{\s*brand\.you")
 MAX_EMOJI = 1
+QUOTED = re.compile(r'"[^"]*"|“[^”]*”')  # what the customer is told to type ("tôi muốn đăng ký học"), not a pronoun
 
 
 def problems(template):
     """What breaks the house tone in one customer-facing template ([] when fine). Pure."""
     template = template or ""
-    text = JINJA.sub("", template).strip()
+    text = QUOTED.sub("", JINJA.sub("", template)).strip()
     if not text:
         return []
     found = []

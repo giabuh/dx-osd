@@ -417,6 +417,29 @@ class FrappeRepo:
         earlier = state.contact_id and frappe.db.exists("Bot Conversation", {"contact_id": state.contact_id, "is_sandbox": 0})
         has_products = frappe.db.count("CRM Products", {"parenttype": "CRM Lead", "parent": lead})
         state.is_returning = bool(earlier or has_products or values.get("territory"))
+        if state.is_returning and lead:
+            lead_data = frappe.db.get_value("CRM Lead", lead,
+                                            ["first_name", "lead_name", "course_interest", "territory", "mobile_no"],
+                                            as_dict=True) or {}
+            first = lead_data.get("first_name") or ""
+            lead_nm = lead_data.get("lead_name") or ""
+            cust_name = first if first not in PLACEHOLDER_NAMES else (lead_nm if lead_nm not in PLACEHOLDER_NAMES else "")
+            state.customer_name = cust_name or ""
+            state.previous_course = lead_data.get("course_interest") or ""
+            state.previous_branch = lead_data.get("territory") or ""
+
+            def _is_set(slots, key):
+                val = slots.get(key)
+                if isinstance(val, dict):
+                    return val.get("value") not in (None, "")
+                return val not in (None, "")
+
+            if lead_data.get("mobile_no") and not _is_set(state.slots, "phone"):
+                state.slots["phone"] = {"value": lead_data["mobile_no"], "source": "lead", "confidence": 1.0}
+            if lead_data.get("territory") and not _is_set(state.slots, "branch"):
+                state.slots["branch"] = {"value": lead_data["territory"], "source": "lead", "confidence": 1.0}
+            if state.customer_name and not _is_set(state.slots, "customer_name"):
+                state.slots["customer_name"] = {"value": state.customer_name, "source": "lead", "confidence": 1.0}
         return state
 
     def save_state(self, state):
