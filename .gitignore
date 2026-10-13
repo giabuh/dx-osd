@@ -24,3 +24,4 @@ scratch/
 *.log
 .pytest_cache/
 .coverage
+.superpowers/
