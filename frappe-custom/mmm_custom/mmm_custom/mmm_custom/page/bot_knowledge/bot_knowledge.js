@@ -1,3 +1,6 @@
+// Copyright (c) 2026 DX-OSD contributors
+// SPDX-License-Identifier: MIT
+
 // Bot Knowledge (edu lead engine, D-086): what the bot knows about every course and what is missing.
 // Data comes from mmm_custom.engine.knowledge; the course data itself is edited on the CRM Product form.
 frappe.pages["bot-knowledge"].on_page_load = function (wrapper) {

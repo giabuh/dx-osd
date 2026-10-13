@@ -1,3 +1,6 @@
+// Copyright (c) 2026 DX-OSD contributors
+// SPDX-License-Identifier: MIT
+
 // CRM Product form: open the course in the Bot Knowledge page (D-086).
 frappe.ui.form.on("CRM Product", {
 	refresh(frm) {

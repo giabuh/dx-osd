@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 [project]
 name = "mmm_custom"
 authors = [

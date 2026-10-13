@@ -1,3 +1,6 @@
+// Copyright (c) 2026 DX-OSD contributors
+// SPDX-License-Identifier: MIT
+
 // Bot Playground (edu lead engine, D-038/D-060): chat as a customer and inspect every step of each turn.
 // Runs dry: mmm_custom.engine.playground never sends to Chatwoot and never writes Leads.
 frappe.pages["bot-playground"].on_page_load = function (wrapper) {
