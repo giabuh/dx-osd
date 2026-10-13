@@ -55,6 +55,15 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
    - All third-party additions must be OSI-approved (no proprietary or closed-source code).
 2. **Language**: Code, docstrings, comments, commit messages, and documentation must be written in **English**. User-facing UI labels are in Vietnamese.
 3. **Security**: Webhook endpoints must enforce HMAC-SHA256 signature verification and anti-replay timestamps. Ports must bind strictly to `127.0.0.1`.
+4. **License headers**: Every source file we own starts with an SPDX header (after any shebang line):
+   - `frappe-custom/mmm_custom/` (MIT):
+     ```python
+     # Copyright (c) 2026 DX-OSD contributors
+     # SPDX-License-Identifier: MIT
+     ```
+   - `scripts/`, `docker/`, `activepieces/`, root Compose files (AGPL-3.0-or-later): same lines with `AGPL-3.0-or-later`; JavaScript uses `//` comments.
+   - Vendored trees `chatwoot/` and `crm/` keep their upstream license files and are not re-headed.
+   - Check before opening a PR: `python scripts/check-license-headers.py`
 
 ---
 
