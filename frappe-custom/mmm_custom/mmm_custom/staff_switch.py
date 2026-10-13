@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Switch into a consultant's account for demos, and back (spec 2026-09-27-one-customer-record).
 
 A System Manager can view the CRM exactly as an active consultant sees it. It reuses Frappe's own

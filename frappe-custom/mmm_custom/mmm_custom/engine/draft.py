@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """What the bot would answer, for staff (D-110): the reply suggestion is the bot's own answer from the course's
 data (FAQ, facts, fee, schedules, promotions), never a canned template. Runs `run_turn(draft=True)` on a repo
 that reads everything and writes nothing, with effects that only record."""

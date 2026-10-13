@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Facebook pages: log in once, pick many pages, each becomes a Chatwoot inbox with the lead-engine bot.
 
 Flow (spec 2026-09-28-multi-channel-connections):

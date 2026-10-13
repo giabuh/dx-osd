@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The template context contract (D-050). Every template — skill answers, slot questions, greeting,
 fallback, handoff and summary — gets exactly these keys; a skill's action adds schedules, promotions,
 final_fee or recommendations for that skill only."""

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Database side of the engine: the catalog snapshot (cached in Redis, cleared on edits) and
 Bot Conversation state. Verified against a running bench (the offline tests use FakeRepo)."""
 

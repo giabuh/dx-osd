@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Facebook Lead Ads configuration API. Sync logic stays in crm/lead_syncing (Lead Sync Source,
 Facebook Page, Facebook Lead Form, Failed Lead Sync Log); this module only lets managers configure it.
 It has no screen: the /admin tab was hidden and not ported to /crm/admin."""

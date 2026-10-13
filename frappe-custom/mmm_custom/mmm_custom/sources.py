@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Lead channels (D-100): the one list of where customers come from. The bot stamps a new Lead's
 standard `source` from the Chatwoot conversation's channel, the manager dashboard groups Leads by it,
 and channels not connected yet (Zalo, TikTok) are shown as planned so the demo presents the roadmap.

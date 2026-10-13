@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 from mmm_custom.enrolment import update_deal_layouts
 from mmm_custom.setup import create_catalog_fields
 

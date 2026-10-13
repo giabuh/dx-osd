@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """C3.1 go-live gate (D-033). Labelled hard Vietnamese utterances go through the same keyword tier and
 question builder as the bot and are answered by real Jev; every labelled question is graded by band.
 Jev may serve real customers only when no course/branch/skill answer is wrong in the act band.

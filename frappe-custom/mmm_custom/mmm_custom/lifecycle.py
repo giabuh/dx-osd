@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The customer journey of a training centre (D-116, D-117; spec 2026-09-30-customer-lifecycle-design.md).
 
 Lead statuses keep upstream English keys (record names, code, the EN/VI switch); `crm/crm/locale/vi.po` gives

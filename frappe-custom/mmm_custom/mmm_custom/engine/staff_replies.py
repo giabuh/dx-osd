@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The staff reply library (D-114): what staff answered customers, kept as templates the bot can reuse.
 
 Jev writes no text, so the bot sounds like staff by choosing among replies staff actually wrote: every staff

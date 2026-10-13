@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """A Lead's Chatwoot conversation on the Lead page (spec 2026-09-27-one-customer-record, B3/B4).
 
 Consultants read and answer their branch's customers without the Chatwoot inbox. Access is the CRM's:

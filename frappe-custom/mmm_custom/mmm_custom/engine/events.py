@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Lead-engine events (D-036). Any app subscribes in its hooks.py, for example:
 
     lead_engine_events = {"handed_off": ["my_app.crm.notify_manager"]}

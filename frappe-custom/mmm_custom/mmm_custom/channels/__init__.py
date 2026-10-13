@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Messaging channels a manager connects from /crm/admin/channels (spec 2026-09-28-multi-channel-connections).
 
 Each connected page/account is one Channel Connection row. Facebook is live (channels/facebook.py); the other

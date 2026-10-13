@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 app_name = "mmm_custom"
 app_title = "MMM Custom"
 app_publisher = "MMM"

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Every side effect of a bot turn goes through an Effects object (D-060): real Chatwoot/CRM calls
 in production (`ChatwootEffects`), a recorder in the Playground and in tests (`RecordingEffects`)."""
 

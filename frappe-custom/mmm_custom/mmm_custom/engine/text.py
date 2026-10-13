@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Text helpers for the keyword tier (D-028): Vietnamese diacritic folding, whole-word phrase search,
 Vietnamese phone numbers."""
 

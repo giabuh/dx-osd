@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Comment funnel (D-124, spec 2026-10-01-comment-funnel-design.md): a comment under one of our Facebook posts
 is classified, answered from CRM data (public reply, and a private reply that brings the customer into
 Messenger, where Chatwoot and the bot take over), and the Lead that follows remembers the post it came from.

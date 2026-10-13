@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Per-conversation bot state (the `Bot Conversation` DocType, D-024) as a plain object.
 
 `slots` maps slot_key → entry dict: `value` (when filled), `source` (button / keyword / jev / lead /

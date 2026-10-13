@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Branches, staff and courses for the manager screens (/crm/admin, crm/frontend pages/Admin.vue). CRM is where both live; saving a Consultant
 triggers the Chatwoot staff sync (mmm_custom.staff_sync)."""
 

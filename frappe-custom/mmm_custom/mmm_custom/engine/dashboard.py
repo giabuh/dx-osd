@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Daily bot administration summary from CRM and bot records, and the manager overview for a period (D-101)."""
 
 from datetime import date, timedelta

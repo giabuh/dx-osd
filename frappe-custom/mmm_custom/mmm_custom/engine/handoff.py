@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Handoff to a consultant (D-058): who gets the conversation, which Chatwoot team, labels, conversation
 attributes (D-027) and the private summary note. Reads through the repo; the Chatwoot/CRM calls happen
 in Effects.handoff."""

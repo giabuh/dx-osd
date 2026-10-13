@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Acceptance scenarios (D-098): scripted customer chats with the outcome the business expects —
 which branch, which kind of consultant, which Lead fields. Runs dry through `run_turn` with
 RecordingEffects, so nothing is sent to Chatwoot and no Lead is written.

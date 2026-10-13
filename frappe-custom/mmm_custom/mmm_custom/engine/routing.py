@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Consultant pick, rule D (D-006, D-087) — pure: branch + course-group specialty + hotness."""
 
 CENTRAL_TEAM = "Tổng đài"

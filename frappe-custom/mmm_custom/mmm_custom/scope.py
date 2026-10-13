@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Branch scope for consultants (spec 2026-09-27-one-customer-record, B2), plugged into Frappe CRM's
 record permissions through the `crm_record_scope` hook (crm/permissions/org_hierarchy.py).
 

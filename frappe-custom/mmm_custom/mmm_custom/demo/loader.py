@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Idempotent loader for the Tin Học Sao Việt demo dataset.
 
 Run: bench --site crm.localhost execute mmm_custom.demo.loader.load

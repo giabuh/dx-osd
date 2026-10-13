@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Slot-type registry (D-023): how each kind of slot is understood from a message and offered as
 quick-reply buttons. A new kind of answer = one SlotType subclass + @register("name") + the Select
 option in catalog_rules.SLOT_TYPES / the Bot Slot DocType."""

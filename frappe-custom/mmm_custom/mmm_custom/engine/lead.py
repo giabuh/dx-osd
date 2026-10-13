@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """What a conversation's slots mean for the CRM Lead, both ways (D-014, D-022, D-070) — pure.
 
 Each Bot Slot names its Lead field in `lead_field`: `products` appends the course to the Lead's

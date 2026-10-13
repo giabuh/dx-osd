@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Level quiz (D-104, adaptive since D-106): a few multiple-choice questions over Messenger buttons that
 place the customer at a level and recommend a course — a free "test your level" hook that brings in Leads
 with a known level. The quiz is data in its Bot Skill's `action_config`:

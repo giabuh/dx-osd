@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """What the customer page shows beside a Lead's own fields (D-122; spec 2026-10-01-customer-page-design.md).
 
 The Lead page's side panel draws three cards no field layout can: the customer's registrations (CRM Deal), the bot's

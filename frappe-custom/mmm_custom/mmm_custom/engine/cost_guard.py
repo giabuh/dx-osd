@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Decide whether a turn may spend a Jev call; rejected calls use keyword understanding."""
 
 HOUR = 3600

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """What a typed message answers among the buttons the bot just offered (D-107). Pure, no I/O.
 
 Customers rarely tap: they type "sumif", "câu b", "ok", "thôi để sau", "học thử thứ 7 ngày 3/10". Every

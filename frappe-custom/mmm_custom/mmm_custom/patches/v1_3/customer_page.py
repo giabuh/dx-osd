@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 from mmm_custom.setup import create_catalog_fields, link_goal_level_slots, update_crm_fields_layout, \
 	update_lead_side_panel
 

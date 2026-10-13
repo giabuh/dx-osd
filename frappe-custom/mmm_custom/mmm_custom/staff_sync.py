@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """CRM → Chatwoot staff sync: CRM is the only place where branches and consultants are managed.
 
 Every consultant becomes a Chatwoot agent, each branch a Chatwoot team holding exactly its active

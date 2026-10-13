@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Turn a Decision into what the customer sees (D-050…D-054, D-072): paragraphs rendered from
 templates with the context contract and the render guard, split under Messenger's limit, plus one set
 of quick-reply buttons."""

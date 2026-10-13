@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Daily nurturing (D-116, roadmap C6.4): every open Lead gets the next step its status calls for, as a CRM
 Task for the Lead owner, at 08:00 so consultants find it when their day starts.
 

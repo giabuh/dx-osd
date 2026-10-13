@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Action registry (D-049): what a Bot Skill computes before its template renders. All lookups and
 arithmetic are code here, never Jev (D-003). A new action = one function decorated with
 @action("name") + the Select option in catalog_rules.ACTION_TYPES / the Bot Skill DocType.

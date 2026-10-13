@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Write the live branches, staff and course knowledge back into the demo dataset.
 
 Run: bench --site crm.localhost execute mmm_custom.demo.exporter.export

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Jev questions generated from CRM data (D-028, D-039, D-075): only what is still open, criteria in
 English carrying the Vietnamese names and aliases customers use. Keys:
     parent:<slot>  course group / area          slot:<slot>  course, branch, choice or number value

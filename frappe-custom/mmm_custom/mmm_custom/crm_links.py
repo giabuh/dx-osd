@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Links between a Chatwoot contact and its CRM Lead: the `ho_so_crm` contact attribute points at the Lead.
 The Lead page reads and answers the conversation itself (mmm_custom.lead_chat, "Tin nhắn" tab); the first
 version's "Mở cuộc chat" form script is switched off on migrate."""

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The registration record (D-117; spec 2026-09-30-customer-lifecycle-design.md): a CRM Deal is created when a
 customer agrees to register ("Ghi danh"). It carries the course, the class, the fee after the promotion and what
 has been paid; `compute` and `next_status` are pure, the doc_events hooks below fill and check the Deal.

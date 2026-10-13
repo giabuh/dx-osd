@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Referral codes (D-103): every CRM Lead gets a short code (SV + 5 characters) that a student can pass
 to friends. A new customer who writes the code in chat is recognised by the bot (slot type
 `referral_code`); the Lead stores the code in `referred_by_code`, and on save the code is resolved to

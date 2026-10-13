@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Staff assist (D-111): who answers a customer message.
 
 Nobody from the staff is around → the bot answers at once (AUTO). A person watches the conversation, has

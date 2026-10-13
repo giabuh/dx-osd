@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """AI Decision Log rows (D-056) and Bot Learning Signals (D-057), built from a finished turn (pure),
 plus the daily retention purge (personal data, Decree 13/2023)."""
 

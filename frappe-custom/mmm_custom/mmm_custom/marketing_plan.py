@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Weekly plan from CRM data (D-125, spec 2026-10-01-weekly-plan-from-data-design.md): which courses the
 autopilot posts about this week and why, and the facts a caption or banner may state.
 

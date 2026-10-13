@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """`consultant_corrected` learning signals (D-057): a person changed a Lead's branch or course away from
 what the bot set. Hooked on CRM Lead on_update; the engine's own saves carry doc.flags.lead_engine."""
 

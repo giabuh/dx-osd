@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Registration dialogue (D-121). Pure, no I/O.
 
 A customer who wants to register is led by the bot before any consultant is involved: pick a class (buttons, or

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Level tests on the manager screens (/crm/admin/quizzes, D-106): list, edit and add the level quizzes
 (Bot Skills with action `level_quiz`), and how many customers each one moves along: offered → took it →
 finished → left a phone → enrolled. Saving checks the quiz (engine.quiz.validate) and the house tone of

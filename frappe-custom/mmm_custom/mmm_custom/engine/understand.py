@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """What a customer message says, as data for decide(): filled slots, chosen parents, skills."""
 
 import re
