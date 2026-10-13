@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Read-only snapshot of the lead-engine data: catalog, bot slots, bot skills and settings.
 
 `build_catalog` takes plain dicts shaped like the demo dataset (`mmm_custom/demo/saoviet/*.json`);

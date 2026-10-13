@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """VND as the CRM currency (D-120): the planner only writes what is missing."""
 
 import sys

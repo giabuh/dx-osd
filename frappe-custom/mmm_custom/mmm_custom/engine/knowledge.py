@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """What the bot knows about each course (D-086): an overview per course — the data templates use, the
 FAQ replies as the customer would read them, what Jev reads to recognise the course — and a coverage
 table of every course listing the gaps that make the bot answer less. Shown on the Bot Knowledge page."""

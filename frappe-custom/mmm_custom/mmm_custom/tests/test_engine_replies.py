@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-107: typed answers to the bot's own question, names, phone numbers with a digit missing, a quiz that
 survives side questions, and one focus per reply."""
 

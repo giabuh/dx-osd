@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Customer dashboard (D-101) for managers at /crm/admin/customers: who the customers are, where they
 come from, which courses and branches they want, who serves them and why. Covers every CRM Lead of
 the period, not only the bot's. `build` is pure; `overview` reads the rows."""

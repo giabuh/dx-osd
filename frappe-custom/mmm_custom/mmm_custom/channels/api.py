@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The channels tab (/crm/admin/channels): providers, connections and the branch each page belongs to."""
 
 try:

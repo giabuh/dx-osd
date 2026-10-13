@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """House tone for what customers read (D-106): gentle, cheerful, and addressing people the way a
 consultant does. The bot never writes free text (Jev only decides), so every customer-facing template is
 checked here: by the tests over the demo data and when a manager saves a quiz in /crm/admin.

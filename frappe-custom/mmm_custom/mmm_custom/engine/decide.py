@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """decide(): the pure heart of a bot turn (D-025) — no I/O, offline-testable.
 
 Given the conversation state, what the message was understood to say, and the catalog, return one

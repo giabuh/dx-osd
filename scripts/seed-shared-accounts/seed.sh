@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Seeds matching demo staff accounts (same email + same password) into both
 # Chatwoot and Frappe CRM, since Chatwoot CE has no built-in way to accept a
 # custom OAuth/SSO provider without patching its code. See accounts.json for

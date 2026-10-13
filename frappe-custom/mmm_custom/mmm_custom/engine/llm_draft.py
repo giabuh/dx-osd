@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """A Gemini draft for staff, for a question neither the course data nor the staff reply library answers (D-115).
 
 Only staff see it, as a private note ("✍️ Nháp AI"), and only after two checks: Jev reads the draft against the

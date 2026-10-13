@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Thin REST client for the Chatwoot API v1.
 
 Used by the bot engine to send messages, update contacts, toggle conversation

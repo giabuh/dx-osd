@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Level-test reward (D-106): once a customer who took the level test leaves a phone number, the bot sends
 the recommended course's syllabus and, when a promotion applies to that course, a personal voucher code.
 Pure, no I/O: the code is derived from the conversation, so a replayed turn gives the same code."""

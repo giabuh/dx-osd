@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Proactive level-test offer (D-106). Pure, no I/O.
 
 Once the bot knows which course (or course group) the customer wants but not their level, it offers the

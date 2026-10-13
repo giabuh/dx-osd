@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Automatic lead qualification (D-083, statuses D-116) — pure. The bot's target status for its Lead:
 Qualified (đủ thông tin) once it has a course and a phone, or Jev reads the customer as hot;
 Unqualified (không phù hợp) when Jev reads an existing student's support request, Junk when it reads spam.

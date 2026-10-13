@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Bot Playground (D-038, D-060): chat as a customer or replay a logged decision, and see every step.
 Runs dry — RecordingEffects means nothing is sent to Chatwoot and no Lead is written; sandbox
 conversations carry is_sandbox and are excluded from dashboards and consultant load."""

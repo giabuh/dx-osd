@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Activepieces Community Edition (MIT). Based on upstream's docker-compose.yml at 0.92.0.
 services:
   app:

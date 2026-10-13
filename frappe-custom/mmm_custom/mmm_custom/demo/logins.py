@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Demo logins shared with Chatwoot: the same email and password sign in to both apps.
 
 Chatwoot CE has no SSO, so for the demo every active consultant gets one known password here and in

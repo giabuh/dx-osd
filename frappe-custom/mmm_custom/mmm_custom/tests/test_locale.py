@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Every word of the customer journey has its Vietnamese label in crm/crm/locale/vi.po (D-116, D-117)."""
 
 import re

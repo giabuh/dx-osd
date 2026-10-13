@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Course advisor scoring (D-040, D-055, D-079): Jev scores how well each shortlisted course fits the
 customer's goal and level (0–2) and whether anything rules it out; code computes the composite."""
 

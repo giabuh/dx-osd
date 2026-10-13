@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 """Seed branch consultant staff accounts across Chatwoot and Frappe CRM.
 
 Creates 3 consultant accounts (one for each branch) in both Chatwoot and Frappe CRM:

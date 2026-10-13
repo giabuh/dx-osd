@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Who is looking at a conversation right now (D-112). A staff member counts as watching for VIEWER_TTL seconds
 after the last sign: the Lead page chat polling it (lead_chat.chat → `seen`), or the Chatwoot dashboard's
 presence ping from the open conversation (our Chatwoot fork: RoomChannel#update_presence → GET …/viewers)."""

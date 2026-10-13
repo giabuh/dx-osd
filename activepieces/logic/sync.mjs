@@ -1,3 +1,6 @@
+// Copyright (c) 2026 DX-OSD contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Chatwoot -> Frappe CRM sync. This whole file is the source of the "Sync to CRM" Code step in
 // activepieces/flows/messenger-to-crm.json (Activepieces Code steps can't import local files);
 // sync.test.mjs fails if the two copies drift.

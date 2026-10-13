@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """[I] Intelligence layer: AI agents on TypeSafe Jev (optional).
 
 For every incoming Chatwoot message, `analyze_conversation` asks Jev — a decision model

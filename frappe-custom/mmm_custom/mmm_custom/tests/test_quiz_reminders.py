@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 import contextlib
 import sys
 from datetime import date, datetime, timedelta

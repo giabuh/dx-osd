@@ -1,3 +1,6 @@
+// Copyright (c) 2026 DX-OSD contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Lead intelligence agent (DX-OS [I] space). Source of the "Analyze with Jev" Code step in
 // activepieces/flows/lead-intelligence.json (Activepieces Code steps can't import local files).
 // On every incoming Chatwoot message it asks TypeSafe Jev for structured decisions about the

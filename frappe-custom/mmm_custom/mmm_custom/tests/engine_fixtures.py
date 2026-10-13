@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Shared offline fixtures for the lead-engine tests: the demo catalog and in-memory fakes."""
 
 import copy

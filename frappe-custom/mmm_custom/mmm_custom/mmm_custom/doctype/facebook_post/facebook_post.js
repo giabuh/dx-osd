@@ -1,5 +1,6 @@
 // Copyright (c) 2026, MMM and contributors
 // For license information, please see license.txt
+// SPDX-License-Identifier: MIT
 
 frappe.ui.form.on("Facebook Post", {
 	refresh: function (frm) {

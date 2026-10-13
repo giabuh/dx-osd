@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Compute data quality indicators for CRM Leads.
 
 Classifies each lead into data quality tiers:

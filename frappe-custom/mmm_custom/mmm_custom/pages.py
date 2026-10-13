@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Which Facebook page a Lead messaged. Each connected page is its own Chatwoot inbox, so a person who
 messages two pages is two Chatwoot contacts and usually two Leads; `facebook_page` tells them apart in
 the Leads list and on the Lead's chat. A Lead matched from a second page (same phone) lists both."""

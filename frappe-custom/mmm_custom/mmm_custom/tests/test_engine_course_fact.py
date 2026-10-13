@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-110: questions about a course's own data (content, length, audience, next course) are answered from that
 data, and the staff suggestion is the bot's own draft, never a canned template."""
 

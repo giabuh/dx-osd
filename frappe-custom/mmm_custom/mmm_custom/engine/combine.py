@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Keyword tier + Jev answers → one Understanding (D-029, D-030, D-063). Pure, no I/O.
 
 Rules: a button tap is final; a unique keyword match wins unless Jev confidently picks another value

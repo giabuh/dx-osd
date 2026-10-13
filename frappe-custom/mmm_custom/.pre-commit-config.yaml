@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 exclude: 'node_modules|.git'
 default_stages: [pre-commit]
 fail_fast: false

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The bot leads a registration (D-118, D-121): class buttons, then the phone, then the handoff with a draft; Jev reads
 a message that leaves the dialogue."""
 

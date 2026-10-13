@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The "Khóa học & Lớp" page (D-120): every consultant reads the courses' open classes with the seats left; managers
 add and edit classes. Access is the Course Schedule doctype's own: Sales User read, Sales Manager / System Manager
 write, so the page needs no role check of its own. Courses themselves are edited in /crm/admin (bot_admin.save_course)."""

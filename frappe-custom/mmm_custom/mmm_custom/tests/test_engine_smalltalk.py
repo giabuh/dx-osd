@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """D-109: a greeting or a laugh ("hihi", "chào em") is greeted back with an invitation, never read as a button,
 never counted as a stuck turn and never a reason to hand off."""
 

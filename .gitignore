@@ -13,11 +13,11 @@ cloudflared.log
 images/
 
 # Presentation & draft slides (keep codebase clean per OLP criteria)
-*.html
-*.pptx
-*.key
-Kich ban*
-presentation/
+/*.html
+/*.pptx
+/*.key
+/Kich ban*
+/presentation/
 
 # Scratch & logs
 scratch/

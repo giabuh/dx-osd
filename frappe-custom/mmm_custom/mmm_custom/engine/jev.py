@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """TypeSafe Jev in the bot path (D-028, D-031, D-076): one System One call with parallel typed
 questions and an 2.5 s budget. Any failure returns status "unavailable" or "timeout_fallback" and
 the turn continues on the keyword tier; Jev never writes text (D-003)."""

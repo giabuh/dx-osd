@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The CRM Leads list shows the same context as the admin customer dashboard (spec
 2026-09-27-one-customer-record, B1): branch, course and hotness are quick filters next to the ones the
 site already has."""

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """A bot turn (D-025): webhook payload → Event → per-conversation lock → load → understand →
 decide (pure) → act through Effects. `process_event` is the RQ job the webhook enqueues."""
 

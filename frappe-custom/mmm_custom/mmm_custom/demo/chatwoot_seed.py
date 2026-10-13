@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Mirror the demo consultants into Chatwoot (agents, one team per branch + B2B + central, bot on every
 Facebook page inbox) through the regular CRM → Chatwoot staff sync.
 

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """One branch field (D-116): the standard `territory` is the Lead's branch everywhere (engine, list, scope,
 routing). The legacy `branch` select (CS1 Bình Thạnh…) is hidden; a value still written to it — old sites,
 scripts/comment-reply.py — fills `territory` when that is empty."""

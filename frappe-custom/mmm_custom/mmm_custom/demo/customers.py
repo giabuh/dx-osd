@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Sample customers for the demo CRM (spec 2026-10-01-demo-seed-design.md): 52 Leads, 15 registrations, notes, tasks,
 level-test attempts and Facebook posts with comments, from `saoviet/customers.json`.
 

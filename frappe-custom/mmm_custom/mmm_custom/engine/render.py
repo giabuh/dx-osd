@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Template rendering for the bot (D-016, D-050, D-051): Vietnamese filters and the render guard.
 
 Frappe's Jinja is sandboxed but uses DebugUndefined, so a missing value prints as template syntax;

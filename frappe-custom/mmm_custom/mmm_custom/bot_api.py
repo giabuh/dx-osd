@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Webhook endpoint for the Chatwoot Agent Bot (spec 2026-09-26-edu-lead-engine §7.2).
 
 Verifies the HMAC signature and anti-replay timestamp, then hands each customer message to the lead

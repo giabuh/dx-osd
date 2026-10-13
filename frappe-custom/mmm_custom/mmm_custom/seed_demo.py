@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Demo CRM Tasks. Dates are days from today, so a demo on any day shows tasks due today and soon instead of all
 overdue; running it again moves the dates of the tasks it created before (matched by title)."""
 

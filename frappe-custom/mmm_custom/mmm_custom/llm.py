@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """The one call to a generative model (Gemini), for text only staff read first (D-115). Customers never get
 generated text: the bot's replies stay templates chosen by Jev (D-002, D-003), except
 Facebook comment replies, which Gemini writes and comment_funnel.acceptable checks (D-129). Same configuration as the

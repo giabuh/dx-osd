@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Chatwoot conversation custom-attribute definitions for the bot's slots (D-027), so the values the bot
 mirrors onto a conversation at handoff show in Chatwoot's sidebar. Idempotent; run after adding slots:
 

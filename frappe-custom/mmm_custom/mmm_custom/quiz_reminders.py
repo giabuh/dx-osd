@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 """Reminder for level tests left half-way (D-106): once, a couple of hours after the customer's last message
 and well inside Messenger's 24-hour window, the bot sends "còn 2 câu nữa là xong…" with the buttons of the
 question they stopped at. Never after a consultant has written, never twice, never in the playground.

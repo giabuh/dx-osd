@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 from mmm_custom.pages import backfill, ensure_list_column
 from mmm_custom.setup import create_catalog_fields
 

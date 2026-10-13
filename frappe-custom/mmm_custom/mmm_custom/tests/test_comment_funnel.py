@@ -1,3 +1,6 @@
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: MIT
+
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path

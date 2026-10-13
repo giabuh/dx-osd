@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # One-command setup for a fresh clone: secrets, build, start, wire Chatwoot <-> CRM, demo data.
 # Safe to re-run: every step is idempotent and existing data volumes are kept.
 #
