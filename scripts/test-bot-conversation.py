@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 """End-to-end check of the lead-engine bot (spec 2026-09-26-edu-lead-engine §7.2, D-062).
 
 Sends signed Chatwoot Agent Bot webhooks to a CRM bench and reads back the AI Decision Log rows the

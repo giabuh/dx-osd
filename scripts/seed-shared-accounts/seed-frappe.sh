@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Upserts one Frappe User with a given password. Sourced by seed.sh.
 set -euo pipefail
 

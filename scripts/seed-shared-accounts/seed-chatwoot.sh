@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Upserts one Chatwoot agent with a given password via `rails runner`,
 # since Chatwoot CE's agent-invite API only sets a password through an
 # email confirmation link, and this environment has no mailer configured.

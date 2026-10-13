@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 DX-OSD contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # One command for a full demo CRM: catalog, staff, bot knowledge, level tests and the sample customers
 # (52 Leads, 15 registrations, notes, tasks, level-test attempts, Facebook posts with comments).
 # Idempotent: re-running creates nothing new and moves the sample dates to today.
